@@ -2,7 +2,7 @@
 [![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
 
-<img src="NamooCalendar/src/main/ic_luncher-web.png" alt="Calendar + Sunnah Prayer Times">
+![image] (https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
 
 ## تقویم + اوقات شرعی اهل سنت
 
