@@ -36,7 +36,7 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdkVersion(17)
         targetSdkVersion(29)
-        versionCode = 4300
+        versionCode = 4310
         versionName = "8.3.2020"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
