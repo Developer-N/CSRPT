@@ -2,7 +2,7 @@
 [![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
 
-![image] (https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
 
 ## تقویم + اوقات شرعی اهل سنت
 
