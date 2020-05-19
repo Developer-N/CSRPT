@@ -2,11 +2,14 @@
 [![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
 
+<img src="NamooCalendar/src/main/ic_luncher-web.png" alt="Calendar + Sunnah Prayer Times">
+
 ## تقویم + اوقات شرعی اهل سنت
 
-یک توسعه از تقویم فارسی با تمرکز روی اوقات دقیق نماز.
+یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز.
 <br>
-آدرس تقویم فارسی 
+آدرس تقویم فارسی
+<br>
 https://github.com/persian-calendar/DroidPersianCalendar
 
 </div>
@@ -45,4 +48,9 @@ https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)
 توضیح داده شده است، خلاصه‌اش تقریبا اینگونه است که لازم است به همان شکلی سورس برنامه را به همراه برنامه دریافت کرده‌اید،  بسورس برنامه تغییر داده شده خود را حداقل در هر انتشار در جایی عمومی قرار دهید و پیوند آن را هم به صورت عمومی قرار دهید و ارجاع مناسب به سورس اصلی دهید، همانطور که اشاره شد از آنجایی که از سورس دیگرانی با همین مجوز در این برنامه استفاده شده است در اختیار ما نیست که به شکل دیگری استفاده از این سورس را مجاز کنیم. با تشکر
 </div>
 
+## Build
+Require android studio 4.0 rc1
+
+1. `git clone https://github.com/Developer-N/CSRPT`
+1. Import the project on Android Studio
 
