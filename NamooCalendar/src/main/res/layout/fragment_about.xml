@@ -94,25 +94,25 @@
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <ImageView
+                    <androidx.appcompat.widget.AppCompatImageView
                         android:layout_width="150dp"
                         android:layout_height="100dp"
                         android:layout_gravity="center"
                         android:contentDescription="@string/gpl_logo"
                         android:src="@drawable/gpl3_logo" />
 
-                    <LinearLayout
+                    <androidx.appcompat.widget.LinearLayoutCompat
                         style="@style/AboutCard"
                         android:background="?attr/colorCard">
 
-                        <TextView
+                        <androidx.appcompat.widget.AppCompatTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_margin="5dp"
                             android:text="@string/about_license"
                             android:textColor="?attr/colorTextDrawer" />
 
-                        <LinearLayout
+                        <androidx.appcompat.widget.LinearLayoutCompat
                             android:id="@+id/licenses"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -131,12 +131,12 @@
                                 android:tint="?attr/colorDrawerIcon"
                                 app:srcCompat="@drawable/ic_licences" />
 
-                            <LinearLayout
+                            <androidx.appcompat.widget.LinearLayoutCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical">
 
-                                <TextView
+                                <androidx.appcompat.widget.AppCompatTextView
                                     android:id="@id/title"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
@@ -144,18 +144,18 @@
                                     android:textColor="?attr/colorTextDrawer"
                                     android:textStyle="bold" />
 
-                                <TextView
+                                <androidx.appcompat.widget.AppCompatTextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="@string/about_license_sum"
                                     android:textColor="?attr/colorTextSecond"
                                     android:textSize="12sp" />
 
-                            </LinearLayout>
+                            </androidx.appcompat.widget.LinearLayoutCompat>
 
-                        </LinearLayout>
+                        </androidx.appcompat.widget.LinearLayoutCompat>
 
-                    </LinearLayout>
+                    </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
             </com.google.android.material.card.MaterialCardView>
