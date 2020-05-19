@@ -6,7 +6,6 @@
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
 </div>
 
-
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز.
 <br>
 آدرس تقویم فارسی
