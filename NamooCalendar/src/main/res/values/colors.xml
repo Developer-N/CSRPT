@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="yellow">#FFC107</color>
+    <color name="red">#F44336</color>
+    <color name="colorHighlight">#F44336</color>
+    <color name="colorSplashBackground">#E0F7FA</color>
+
+    <color name="qibla_color">#888</color>
+    <color name="widget_holiday">#ff8a65</color>
+    <color name="widget_divider">#46ffffff</color>
+
+    <color name="dark_primary">#272727</color>
+    <color name="dark_primary_dark">#272727</color>
+    <color name="dark_accent">#1DE9B6</color>
+    <color name="dark_text_normal">#ffffff</color>
+    <color name="dark_text_second">#cfcfcf</color>
+    <color name="dark_text_primary">#009688</color>
+    <color name="dark_text_drawer">#ffffff</color>
+    <color name="dark_text_holiday">#ef6c00</color>
+    <color name="dark_holiday">#e65100</color>
+    <color name="dark_text_day">#ffffff</color>
+    <color name="dark_text_today">#ffffff</color>
+    <color name="dark_text_day_name">#9e9e9e</color>
+    <color name="dark_month_switch">#1de9b6</color>
+    <color name="dark_text_athan">#ffffff</color>
+    <color name="dark_divider">#272727</color>
+    <color name="dark_background">#272727</color>
+    <color name="dark_card_background">#202020</color>
+    <color name="dark_current_day">#64ffda</color>
+    <color name="dark_select_day">#e0e0e0</color>
+    <color name="dark_event_line">#e0e0e0</color>
+    <color name="dark_drawer_background">#212121</color>
+    <color name="dark_drawer_select">#282828</color>
+    <color name="dark_icon">#00bfa5</color>
+    <color name="dark_icon_drawer">#00bfa5</color>
+    <color name="dark_menu_icon_color">#88ffffff</color>
+    <color name="dark_drag_icon_color">#88ffffff</color>
+    <color name="dark_warning">#FF9800</color>
+
+    <color name="light_primary">#00695c</color>
+    <color name="light_primary_dark">#004d40</color>
+    <color name="light_accent">#00796b</color>
+    <color name="light_text_normal">#232323</color>
+    <color name="light_text_second">#737373</color>
+    <color name="light_text_primary">#00796b</color>
+    <color name="light_text_drawer">#737373</color>
+    <color name="light_text_holiday">#d84315</color>
+    <color name="light_holiday">#ff8a65</color>
+    <color name="light_text_day">#ffffff</color>
+    <color name="light_text_today">#ffffff</color>
+    <color name="light_text_day_name">#b2dfdb</color>
+    <color name="light_month_switch">#ff7043</color>
+    <color name="light_text_athan">#ffffff</color>
+    <color name="light_divider">#e0e0e0</color>
+    <color name="light_background">#f4f4f4</color>
+    <color name="light_card_background">#fafafa</color>
+    <color name="light_current_day">#ff7043</color>
+    <color name="light_select_day">#eff2f1</color>
+    <color name="light_event_line">#eff2f1</color>
+    <color name="light_drawer_background">#f4f4f4</color>
+    <color name="light_drawer_select">#eeeeee</color>
+    <color name="light_icon">#00897b</color>
+    <color name="light_icon_drawer">#00897b</color>
+    <color name="light_menu_icon_color">#88ffffff</color>
+    <color name="light_drag_icon_color">#880A0A0A</color>
+    <color name="light_warning">#FFCC80</color>
+
+    <color name="cyan_primary">#00ACC1</color>
+    <color name="cyan_primary_dark">#00838F</color>
+    <color name="cyan_accent">#4DD0E1</color>
+    <color name="cyan_text_normal">#232323</color>
+    <color name="cyan_text_second">#737373</color>
+    <color name="cyan_text_primary">#0097A7</color>
+    <color name="cyan_text_drawer">#737373</color>
+    <color name="cyan_text_holiday">#d84315</color>
+    <color name="cyan_holiday">#FFD180</color>
+    <color name="cyan_text_day">#ffffff</color>
+    <color name="cyan_text_today">#ffffff</color>
+    <color name="cyan_text_day_name">#FFFFFF</color>
+    <color name="cyan_month_switch">#FFD180</color>
+    <color name="cyan_text_athan">#ffffff</color>
+    <color name="cyan_divider">#e0e0e0</color>
+    <color name="cyan_background">#f4f4f4</color>
+    <color name="cyan_card_background">#fafafa</color>
+    <color name="cyan_current_day">#ffffff</color>
+    <color name="cyan_select_day">#eff2f1</color>
+    <color name="cyan_event_line">#eff2f1</color>
+    <color name="cyan_drawer_background">#f4f4f4</color>
+    <color name="cyan_drawer_select">#eeeeee</color>
+    <color name="cyan_icon">#00ACC1</color>
+    <color name="cyan_icon_drawer">#00ACC1</color>
+    <color name="cyan_menu_icon_color">#88ffffff</color>
+    <color name="cyan_drag_icon_color">#880A0A0A</color>
+    <color name="cyan_warning">#FFCC80</color>
+
+    <color name="blue_primary">#00838f</color>
+    <color name="blue_primary_dark">#000000</color>
+    <color name="blue_accent">#1a237e</color>
+    <color name="blue_text_normal">#232323</color>
+    <color name="blue_text_second">#737373</color>
+    <color name="blue_text_primary">#0D47A1</color>
+    <color name="blue_text_drawer">#737373</color>
+    <color name="blue_text_holiday">#d84315</color>
+    <color name="blue_holiday">#ff8a65</color>
+    <color name="blue_text_day">#ffffff</color>
+    <color name="blue_text_today">#ffffff</color>
+    <color name="blue_text_day_name">#b2dfdb</color>
+    <color name="blue_month_switch">#ff7043</color>
+    <color name="blue_text_athan">#ffffff</color>
+    <color name="blue_divider">#e0e0e0</color>
+    <color name="blue_background">#f4f4f4</color>
+    <color name="blue_card_background">#fafafa</color>
+    <color name="blue_current_day">#ff7043</color>
+    <color name="blue_select_day">#F5F5F5</color>
+    <color name="blue_event_line">#eff2f1</color>
+    <color name="blue_drawer_background">#f4f4f4</color>
+    <color name="blue_drawer_select">#eeeeee</color>
+    <color name="blue_icon">#0D47A1</color>
+    <color name="blue_icon_drawer">#1a237e</color>
+    <color name="blue_menu_icon_color">#88ffffff</color>
+    <color name="blue_drag_icon_color">#880A0A0A</color>
+    <color name="blue_warning">#FFCC80</color>
+
+    <color name="modern_primary">#fafafa</color>
+    <color name="modern_primary_dark">#191919</color>
+    <color name="modern_accent">#42AFBF</color>
+    <color name="modern_text_normal">#232323</color>
+    <color name="modern_text_second">#737373</color>
+    <color name="modern_text_primary">#587994</color>
+    <color name="modern_text_drawer">#737373</color>
+    <color name="modern_text_holiday">#E51C23</color>
+    <color name="modern_holiday">#E51C23</color>
+    <color name="modern_text_day">#000000</color>
+    <color name="modern_text_today">#42AFBF</color>
+    <color name="modern_text_day_name">#424242</color>
+    <color name="modern_month_switch">#42AFBF</color>
+    <color name="modern_text_athan">#ffffff</color>
+    <color name="modern_divider">#e0e0e0</color>
+    <color name="modern_background">#f4f4f4</color>
+    <color name="modern_card_background">#fafafa</color>
+    <color name="modern_current_day">#42AFBF</color>
+    <color name="modern_select_day">#DDDEE2</color>
+    <color name="modern_event_line">#4CB5DE</color>
+    <color name="modern_drawer_background">#f4f4f4</color>
+    <color name="modern_drawer_select">#eeeeee</color>
+    <color name="modern_icon">#587994</color>
+    <color name="modern_icon_drawer">#587994</color>
+    <color name="modern_menu_icon_color">#880A0A0A</color>
+    <color name="modern_drag_icon_color">#880A0A0A</color>
+    <color name="modern_warning">#FFCC80</color>
+
+    <!-- Custom view SunView default colors -->
+    <color name="sViewHorizonColorLight">#32000000</color>
+    <color name="sViewTimelineColorLight">#32000000</color>
+    <color name="sViewTaglineColorLight">#14000000</color>
+    <color name="sViewHorizonColorDark">#eeeeee</color>
+    <color name="sViewTimelineColorDark">#eeeeee</color>
+    <color name="sViewTaglineColorDark">#c1eeeeee</color>
+    <color name="sViewSunColor">#ffcc00</color>
+    <color name="sViewDayColor">#74BBEF</color>
+    <color name="sViewDaySecondColor">#B2D5F1</color>
+    <color name="sViewNightColor">#383C7C</color>
+    <color name="sViewSunBeforeMiddayColor">#FFF9C4</color>
+    <color name="sViewSunAfterMiddayColor">#FF9100</color>
+    <color name="sViewSunEveningColor">#904d00</color>
+    <color name="sViewSunriseTextColorLight">#FF9800</color>
+    <color name="sViewMiddayTextColorLight">#FFC107</color>
+    <color name="sViewSunsetTextColorLight">#B71C1C</color>
+    <color name="sViewSunriseTextColorDark">#FF9800</color>
+    <color name="sViewMiddayTextColorDark">#FFC107</color>
+    <color name="sViewSunsetTextColorDark">#B71C1C</color>
+
+
+    <!-- General colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black_reflect">#FF666666</color>
+    <color name="translucent">#00FFFFFF</color>
+    <!-- Level -->
+    <color name="level_liquid_reflect">#FFE9DF00</color>
+    <color name="level_border_reflect">@color/black_reflect</color>
+    <color name="level_liquid_dark">#FFB1C800</color>
+    <color name="level_border">@color/black</color>
+    <!-- Markers -->
+    <color name="marker_stroke">#DD222222</color>
+    <color name="marker_reflect">@color/black_reflect</color>
+    <color name="marker_dark">@color/black</color>
+    <!-- Bubble -->
+    <color name="bubble_center">@color/white</color>
+    <color name="bubble_border">@color/level_liquid_dark</color>
+    <!-- LCD -->
+    <color name="lcd_front">#FF00FF00</color>
+    <color name="lcd_back">#44FFFFFF</color>
+    <!-- LOCK -->
+    <color name="lock_front">#FFFF0000</color>
+    <color name="lock_back">#44FFFFFF</color>
+    <!-- Display -->
+    <color name="display_border">#FF333333</color>
+    <color name="display_dark">@color/black</color>
+    <color name="display_reflect">@color/black_reflect</color>
+</resources>

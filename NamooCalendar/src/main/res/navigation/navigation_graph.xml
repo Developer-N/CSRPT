@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/calendar">
+
+    <activity
+        android:id="@+id/main_activity"
+        android:name="ir.namoo.religiousprayers.ui.MainActivity"
+        android:label="Main Activity"
+        tools:layout="@layout/activity_main" />
+
+    <fragment
+        android:id="@+id/calendar"
+        android:name="ir.namoo.religiousprayers.ui.calendar.CalendarFragment"
+        android:label="Calendar Fragment"
+        tools:layout="@layout/fragment_calendar">
+        <action
+            android:id="@+id/navigate_to_converter"
+            app:destination="@id/converter" />
+        <action
+            android:id="@+id/navigate_to_azkar"
+            app:destination="@id/azkar" />
+        <action
+            android:id="@+id/navigate_to_monthly"
+            app:destination="@id/monthly" />
+        <action
+            android:id="@+id/navigate_to_edit"
+            app:destination="@id/edit" />
+        <action
+            android:id="@+id/navigate_to_downup"
+            app:destination="@id/downup" />
+        <action
+            android:id="@+id/navigate_to_about"
+            app:destination="@id/about" />
+        <action
+            android:id="@+id/navigate_to_settings"
+            app:destination="@id/settings" />
+        <action
+            android:id="@+id/navigate_to_compass"
+            app:destination="@id/compass" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/converter"
+        android:name="ir.namoo.religiousprayers.ui.converter.ConverterFragment"
+        android:label="Converter Fragment"
+        tools:layout="@layout/fragment_converter" />
+    <fragment
+        android:id="@+id/azkar"
+        android:name="ir.namoo.religiousprayers.ui.azkar.AzkarFragment"
+        android:label="Azkar Fragment"
+        tools:layout="@layout/fragment_azkar" />
+
+    <fragment
+        android:id="@+id/monthly"
+        android:name="ir.namoo.religiousprayers.ui.monthly.MonthlyFragment"
+        android:label="Azkar Monthly"
+        tools:layout="@layout/fragment_monthly" />
+    <fragment
+        android:id="@+id/edit"
+        android:name="ir.namoo.religiousprayers.ui.edit.EditFragment"
+        android:label="Edit Fragment"
+        tools:layout="@layout/fragment_edit" />
+    <fragment
+        android:id="@+id/downup"
+        android:name="ir.namoo.religiousprayers.ui.downup.DownloadUploadFragment"
+        android:label="Download Upload Fragment"
+        tools:layout="@layout/fragment_downup" />
+
+    <fragment
+        android:id="@+id/compass"
+        android:name="ir.namoo.religiousprayers.ui.compass.CompassFragment"
+        android:label="Compass Fragment"
+        tools:layout="@layout/fragment_compass">
+        <action
+            android:id="@+id/action_compass_to_level"
+            app:destination="@id/level" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/level"
+        android:name="net.androgames.level.LevelFragment"
+        android:label="Level Fragment" />
+
+    <fragment
+        android:id="@+id/settings"
+        android:name="ir.namoo.religiousprayers.ui.preferences.PreferencesFragment"
+        android:label="Settings Fragment"
+        tools:layout="@layout/fragment_calendar" />
+
+    <fragment
+        android:id="@+id/about"
+        android:name="ir.namoo.religiousprayers.ui.about.AboutFragment"
+        android:label="About Fragment"
+        tools:layout="@layout/fragment_about">
+        <action
+            android:id="@+id/action_about_to_deviceinfo"
+            app:destination="@id/deviceInformation" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/deviceInformation"
+        android:name="ir.namoo.religiousprayers.ui.about.DeviceInformationFragment"
+        android:label="Device Information Fragment" />
+
+</navigation>

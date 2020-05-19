@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/islamic_background">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:focusableInTouchMode="true"
+            android:gravity="center_horizontal"
+
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:padding="7dp"
+                app:cardBackgroundColor="?attr/colorCard"
+                app:cardCornerRadius="10dp">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/textView_info_namoo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="5dp"
+                        android:text="@string/namoo_developer_group"
+                        android:textColor="?attr/colorTextNormal"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/textView_info_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:padding="5dp"
+                        android:text="@string/srt_info2"
+                        android:textColor="?attr/colorTextNormal"
+                        android:textSize="16sp" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:padding="7dp"
+                app:cardBackgroundColor="?attr/colorCard"
+                app:cardCornerRadius="10dp">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/textView_info_msg"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="start"
+                        android:padding="10dp"
+                        android:text="@string/str_info_msg"
+                        android:textColor="?attr/colorTextNormal"
+                        android:textSize="16sp" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/textView_info_version"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:padding="10dp"
+                        android:text="@string/version"
+                        android:textColor="?attr/colorTextNormal"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_contact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:padding="7dp"
+                app:cardBackgroundColor="?attr/colorCard"
+                app:cardCornerRadius="10dp">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    app:divider="?attr/appDivider"
+                    app:dividerPadding="@dimen/divider_margin"
+                    app:showDividers="middle">
+
+
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:orientation="vertical">
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_tg_developer"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginEnd="2dp"
+                                android:layout_marginBottom="5dp"
+                                android:padding="5dp"
+                                android:text="@string/telegram_developer"
+                                android:textColor="?attr/colorTextNormal"
+                                app:chipIcon="@drawable/ic_tg"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_tg"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="2dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginEnd="2dp"
+                                android:layout_marginBottom="5dp"
+                                android:padding="5dp"
+                                android:text="@string/telegram"
+                                android:textColor="?attr/colorTextNormal"
+                                app:chipIcon="@drawable/ic_tg"
+                                app:chipIconTint="?attr/colorIcon" />
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/btn_gmail"
+                            style="@style/Widget.MaterialComponents.Chip.Action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="2dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginEnd="2dp"
+                            android:layout_marginBottom="5dp"
+                            android:padding="5dp"
+                            android:text="@string/mail"
+                            android:textColor="?attr/colorTextNormal"
+                            app:chipIcon="@drawable/ic_gmail"
+                            app:chipIconTint="?attr/colorIcon" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+            </com.google.android.material.card.MaterialCardView>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/owghat_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:orientation="vertical">
+
+    <!-- sun content -->
+    <ir.namoo.religiousprayers.ui.calendar.times.SunView
+        android:id="@+id/sunView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginTop="10dp" />
+
+    <!-- Times -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/timesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_item"
+        android:paddingBottom="@dimen/padding_item" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/city_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:padding="4dp"
+            android:textSize="@dimen/text_size_title"
+            tools:text="City" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btn_owghat_share"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:background="@color/translucent"
+            android:tint="?attr/colorIcon"
+            app:srcCompat="@drawable/ic_share" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btn_owghat_tack_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="4dp"
+            android:background="@color/translucent"
+            android:tint="?attr/colorIcon"
+            app:srcCompat="@drawable/ic_camera" />
+        <!--        <ImageView-->
+        <!--            android:id="@+id/more_owghat"-->
+        <!--            android:layout_width="@dimen/icon_size"-->
+        <!--            android:layout_height="@dimen/icon_size"-->
+        <!--            android:tint="?attr/colorAccent"-->
+        <!--            app:srcCompat="@drawable/ic_keyboard_arrow_down" />-->
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.appcompat.widget.LinearLayoutCompat>
+

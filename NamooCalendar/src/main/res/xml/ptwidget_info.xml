@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Developer_N on 7/8/18 6:41 PM.
+  -->
+
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialKeyguardLayout="@layout/n_widget"
+    android:initialLayout="@layout/n_widget"
+    android:minHeight="40dp"
+    android:minWidth="250dp"
+    android:previewImage="@drawable/example_appwidget_preview"
+    android:updatePeriodMillis="900000"
+    android:resizeMode="horizontal"
+    android:minResizeWidth="250dp"
+    android:widgetCategory="home_screen"/>

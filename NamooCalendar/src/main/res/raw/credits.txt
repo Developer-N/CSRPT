@@ -1,0 +1,215 @@
+Copyright (C) 2012-2020  Android Persian Calendar Developers
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+
+Assets:
+* {fajr,dhuhr,asr,maghrib,isha}.jpg by Mehrara Abedi (CC BY SA 4.0)
+* {spring,summer,fall,winter}.jpg by Lotta Nieminen (CC BY NC 4.0)
+* Material design icons, https://github.com/google/material-design-icons (CC-BY 4.0)
+* kaaba.png from Emoji One project, 1f54b.svg, http://emojione.com (CC BY 4.0)
+  https://www.behance.net/gallery/21015893/Google-Calendar
+* abdulbasit.ogg Abdulbasit takbir, not a free work but probably is on Public Domain due to being so
+  old and related Egypt laws, anyway just a portion of it used in hope to not be copyvio at least.
+* Noto Naskh Arabic from Noto fonts project https://github.com/googlei18n/noto-fonts (OFL 1.1)
+
+
+Libraries:
+* Calendar converter http://code.google.com/p/mobile-persian-calendar/ (GPLv2)
+
+  Copyright (C) 2006  Amir Khosroshahi (amir.khosroshahi)
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+* PrayTimes.js (ported on this project to Java) http://praytimes.org/ (LGPLv3)
+
+  Copyright (C) 2007-2011 PrayTimes.org
+
+  Developer: Hamid Zarrabi-Zadeh
+  License: GNU LGPL v3.0
+
+  TERMS OF USE:
+    Permission is granted to use this code, with or
+    without modification, in any website or application
+    provided that credit is given to the original work
+    with a link back to PrayTimes.org.
+
+  This program is distributed in the hope that it will
+  be useful, but WITHOUT ANY WARRANTY.
+
+* Part of holidays list from https://github.com/ilius/starcal (GPLv3)
+  * Saeed Rasooli <saeed.gnu@gmail.com>
+  * Mola Pahnadayan <mola.mp@gmail.com>
+  * شورای مرکز تقویم مؤسسهٔ ژئوفیزیک دانشگاه تهران‬، و شورای فرهنگ عمومی
+  * رضا مرادی غیاث‌آبادی
+
+  Copyright (C) 2017  Saeed Rasooli
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+* QiblaCompassView.java and its dependencies from https://code.google.com/p/android-salat-times (GPLv3)
+
+  Copyright (C) 2012  cepmuvakkit
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+* DashClock API https://github.com/romannurik/dashclock (Apache 2.0)
+
+  Copyright 2015 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+* Android Support Library http://developer.android.com/tools/support-library (Apache 2.0)
+  Flexbox for Android https://github.com/google/flexbox-layout (Apache 2.0)
+
+  Copyright (C) 2018 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+* Android-ItemTouchHelper-Demo https://github.com/iPaulPro/Android-ItemTouchHelper-Demo
+
+  Copyright (C) 2015 Paul Burke
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+* UmmalquraGregorianConverter.java https://github.com/msarhan/ummalqura-calendar
+
+  The MIT License
+
+  Copyright 2018 Mouaffak A. Sarhan
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+* An Android bubble level application https://github.com/avianey/Level
+
+  Copyright (C) 2014 Antoine Vianey
+
+  Level is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Level is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Level. If not, see <http://www.gnu.org/licenses/>
+
+* https://gist.github.com/vestrel00/64be913f954989fe52c674247e093218 but adopted with newer changes
+
+* Ported from Calendar package for Go https://github.com/xyproto/calendar/blob/master/equinox.go
+
+  The MIT License (MIT)
+
+  Copyright (c) 2017 Alexander F Rødseth
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.

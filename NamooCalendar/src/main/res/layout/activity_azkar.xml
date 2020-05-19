@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/azkar_activity_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.azkar.AzkarActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/azkarBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/navigationBarColor"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/azkarToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:theme="?attr/toolbarTheme" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/txt_azkar_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:padding="2dp"
+        android:text="title"
+        android:textColor="?attr/colorTextSecond"
+        android:textSize="20sp"
+        android:transitionName="azkarT"
+        tools:targetApi="lollipop" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_sub_azkars"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        tools:listitem="@layout/azkar_subitems" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>

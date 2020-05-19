@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:targetApi="25">
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_compass"
+        android:shortcutId="COMPASS"
+        android:shortcutLongLabel="@string/compass"
+        android:shortcutShortLabel="@string/compass">
+
+        <intent
+            android:action="COMPASS"
+            android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_level"
+        android:shortcutId="LEVEL"
+        android:shortcutLongLabel="@string/level"
+        android:shortcutShortLabel="@string/level">
+
+        <intent
+            android:action="LEVEL"
+            android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_converter"
+        android:shortcutId="CONVERTER"
+        android:shortcutLongLabel="@string/date_converter"
+        android:shortcutShortLabel="@string/date_converter">
+
+        <intent
+            android:action="CONVERTER"
+            android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+</shortcuts>
