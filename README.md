@@ -1,10 +1,10 @@
 # Calendar + Sunnah Prayer Times
 [![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
-
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
-
 ## تقویم + اوقات شرعی اهل سنت
+<div style="text-align:center; width:200px;">
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
+</div>
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز.
 <br>
