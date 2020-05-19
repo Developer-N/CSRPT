@@ -1,10 +1,11 @@
 # Calendar + Sunnah Prayer Times
-
+[![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
 
 ## تقویم + اوقات شرعی اهل سنت
 
 یک توسعه از تقویم فارسی با تمرکز روی اوقات دقیق نماز.
+<br>
 آدرس تقویم فارسی 
 https://github.com/persian-calendar/DroidPersianCalendar
 
@@ -12,7 +13,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 
 ## Download
 
-- [Github](https://github.com/persian-calendar/DroidPersianCalendar/releases/)
+- [Github](https://github.com/Developer-N/CSRPT)
 - [Bazaar](https://cafebazaar.ir/app/ir.namoo.religiousprayers)
 - [Myket](https://myket.ir/app/ir.namoo.religiousprayers)
 - [Charkhoneh](https://www.charkhoneh.com/content/930720320)
