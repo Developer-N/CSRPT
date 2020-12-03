@@ -113,7 +113,7 @@
     <string name="default_athan_name">ناصر القطامی</string>
     <string name="about_license">مجوز</string>
     <string name="about_license_title">مجوزهای برنامه</string>
-    <string name="about_license_sum">مجوز GPL3، شرایط مجوزهای استفاده شده در تقویم فارسی و کتابخانه‌های استفاده شده را بررسی کنید.</string>
+    <string name="about_license_sum">مجوز GPL3، شرایط مجوزهای استفاده شده در تقویم + اوقات شرعی اهل سنت و کتابخانه‌های استفاده شده را بررسی کنید.</string>
     <string name="about_license_dialog_close">بستن</string>
     <string name="help">راهنما</string>
     <string name="about_report_bug">گزارش اشکال</string>
@@ -134,6 +134,7 @@
     <string name="no_event">مناسبت یا رویدادی برای این روز یافت نشد.</string>
     <string name="length_of_day">طول روز: %1$sس %2$sد</string>
     <string name="remaining_daylight">باقی‌مانده: %1$sس %2$sد</string>
+    <string name="remaning_to_next">%1$sس %2$sد</string>
     <string name="more">بیشتر</string>
     <string name="zodiac">برج فلکی</string>
     <string name="capricorn">جَدْی (بزغاله)</string>
@@ -142,7 +143,7 @@
     <string name="aries">حَمَل (بره)</string>
     <string name="taurus">ثَور (گاو)</string>
     <string name="gemini">جَوزا (دوپیکر)</string>
-    <string name="cancer">سَرَطان (خرچنگ️)</string>
+    <string name="cancer">سَرَطان (خرچنگ)</string>
     <string name="leo">اسد (شیر)</string>
     <string name="virgo">سُنبُله (خوشه)</string>
     <string name="libra">میزان (ترازو)</string>
@@ -354,6 +355,13 @@
 
 
     <string name="changes">
+        \n----تغییرات نسخه : 9.0.2020----\n
+1.	اضافه شدن قرآن با امکانات پخش با صدای سیزده قاری و ترجمه فارسی و کوردی، جستجو، شخصی سازی نوع فونت و اندازه متن و …\n
+2.	اضافه شدن رویدادهای سال 1400 به تقویم\n
+3.	رفع مشکل پخش به موقع اذان\n
+4.	بهینه شدن کلی و سازگاری بیشتر برنامه برای اندروید 8 به بالا\n
+5.	بهبودهای ظاهری و رفع مشکلات گزارش شده\n
+
         \n----تغییرات نسخه : 8.3.2020----\n
 1.	رفع مشکل پخش اذان و بروز نشدن نوار اعلان در اندروید 8 به بالا\n
 2.	دوباره اضافه شدن امکان انتخاب فقه\n
@@ -457,5 +465,82 @@
     <string name="support">پشتیبانی</string>
     <string name="select_asr_juristics">انتخاب فقه</string>
     <string name="enable_notification_play_athan">پخش اذان در حالت اعلان</string>
+
+    <!--    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Quran -->
+    <string name="quran">قرآن</string>
+    <string name="chapter">فهرست</string>
+    <string name="search_the_whole_quran">جستجو در کل قرآن</string>
+    <string name="notes">یادداشت ها</string>
+    <string name="bookmarks">آیه های علامت گذاری شده</string>
+    <string name="download_audios">دانلود فایل های صوتی</string>
+    <string name="back_to_calendar">برگشت به تقویم</string>
+    <string name="create_shortcut">اضافه کردن میانبر</string>
+    <string name="shortcut_created">میانبر اضافه شد!</string>
+    <string name="pin_not_supported">دستگاه شما از میانبرهای داخل برنامه ای پشتیبانی نمی کند!</string>
+    <string name="quran_database_not_exist">پایگاه داده قرآن وجود ندارد باید ابتدا آن را دانلود کنید!</string>
+    <string name="sura_name">نام سوره</string>
+    <string name="aya_count">%s آیه</string>
+    <string name="revelation_order">شماره نزول %s</string>
+    <string name="meccan">مکی</string>
+    <string name="medinan">مدنی</string>
+    <string name="size_8mb">حجم دانلود : 8مگ</string>
+    <string name="sort_order">مرتب سازی فهرست</string>
+    <string name="go_to_page">برو به صفحه</string>
+    <string name="go_to_juz">برو به جزء</string>
+    <string name="go_to_hizb">برو به حزب</string>
+    <string name="chapter_sort_dialog_title">نوع ترتیب فهرست</string>
+    <string name="default_sort">پیش فرض</string>
+    <string name="alphabet_sort">الفبا</string>
+    <string name="revelation_sort">نزول</string>
+    <string name="aya_inc_sort">تعداد آیه(صعودی)</string>
+    <string name="aya_dec_sort">تعداد آیه(نزولی)</string>
+    <string name="select_page">انتخاب صفحه</string>
+    <string name="page_out_of_bounds">
+		خطا!!!
+		\n
+		صفحه باید کمتر از 605 باشد.
+	</string>
+    <string name="select_hizb">انتخاب حزب</string>
+    <string name="select_juz">انتخاب جزء</string>
+    <string name="your_note">یادداشت شما</string>
+    <string name="str_bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
+    <string name="arabic_font_setting">تنظیم فونت عربی</string>
+    <string name="english_font_setting">تنظیم فونت انگلیسی</string>
+    <string name="kurdish_font_setting">تنظیم فونت کوردی</string>
+    <string name="farsi_font_setting">تنظیم فونت فارسی</string>
+    <string name="select_translates">انتخاب ترجمه ها</string>
+    <string name="farsi_translate">ترجمه فارسی</string>
+    <string name="kurdish_translate">ترجمه کوردی</string>
+    <string name="english_transliteration">تلفظ انگلیسی</string>
+    <string name="english_translate">ترجمه انگلیسی</string>
+    <string name="farsi_full_translate">ترجمه کامل فارسی</string>
+    <string name="sura">سوره</string>
+    <string name="aya">آیه</string>
+    <string name="note_saved">یادداشت ذخیره شد</string>
+    <string name="no_bookmark">هیچ آیه ای علامت گذاری نشده است!</string>
+    <string name="go_to_aya">برو به آیه</string>
+    <string name="search_head">%s آیه %s</string>
+    <string name="no_note">هیچ یادداشتی وجود ندارد!</string>
+    <string name="delete">حذف</string>
+    <string name="save">ذخیره</string>
+    <string name="alert">هشدار!</string>
+    <string name="save_alert_message">آیا از ثبت تغییرات مطمئن هستید؟</string>
+    <string name="delete_alert_message">آیا از حذف یادداشت مطمئن هستید؟!</string>
+    <string name="select_file_for_download">نوع فایل ها برای دانلود را انتخاب کنید:</string>
+    <string name="download_completed_unzip">دانلود تمام شد! -> در حال استخراج فایل ها …</string>
+    <string name="select_qari_translate">انتخاب قاری و ترجمه برای پخش</string>
+    <string name="play_translate">پخش ترجمه</string>
+    <string name="playing_verse">در حال پخش آیه %s</string>
+    <string name="error">خطا!</string>
+    <string name="audio_files_error">فایل های صوتی برای قاری انتخابی و این سوره هنوز دانلود نشده اند!</string>
+    <string name="audio_translate_files_error">فایل های صوتی ترجمه برای این سوره هنوز دانلود نشده اند!</string>
+    <string name="downloaded">دانلود تمام شد!</string>
+    <string name="download_failed_tray_again">دانلود با شکست مواجه شد! لطفا دوباره تلاش کنید.</string>
+    <string name="latest_visited">آخرین بازدید : سوره %s آیه %s</string>
+    <string name="enable_location_services">خدمات موقعیت غیرفعال است، برای استفاده از این ویژگی لطفاً آن را فعال سازید.</string>
+    <string name="result_found">تعداد %s نتیجه پیدا شد.</string>
+    <string name="kurdish_file_not_available">هنوز تمام فایل های ترجمه کوردی آماده نشده اند و ان شاءالله به مرور در دسترس قرار خواهند گرفت!</string>
+    <string name="requset_permision">درخواست مجوز</string>
+    <string name="need_full_screen_permision">برای نمایش اذان در حالت تمام صفحه هنگام استفاده از گوشی باید مجوز لازم را فعال کنید</string>
 
 </resources>

@@ -23,9 +23,11 @@ class IntroActivity : AppCompatActivity() {
         appPrefs.edit {
             putString(PREF_APP_LANGUAGE, LANG_FA)
             putString(PREF_PRAY_TIME_METHOD, "Karachi")
-            putInt(LAST_CHOSEN_TAB_KEY, 2)
             putBoolean("showWeekOfYearNumber", true)
             putBoolean("astronomicalFeatures", true)
+        }
+        appPrefsLite.edit {
+            putInt(LAST_CHOSEN_TAB_KEY, 2)
         }
         binding = ActivityIntroBinding.inflate(layoutInflater).apply {
             setContentView(root)

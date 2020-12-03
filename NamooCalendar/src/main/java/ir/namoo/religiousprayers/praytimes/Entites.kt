@@ -16,6 +16,7 @@ data class CurrentPrayTimesEntity(
     @ColumnInfo(name = "isha") var isha: String
 )
 
+
 @Entity(tableName = "EditedPrayTimes")
 data class EditedPrayTimesEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") var id: Int,

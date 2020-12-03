@@ -15,7 +15,6 @@ import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.Filter
 import android.widget.Filterable
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.widget.addTextChangedListener
@@ -32,12 +31,9 @@ import ir.namoo.religiousprayers.PREF_LONGITUDE
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentDownupBinding
 import ir.namoo.religiousprayers.databinding.ItemAvailableCityBinding
-import ir.namoo.religiousprayers.praytimes.JSONUtils
-import ir.namoo.religiousprayers.praytimes.PrayTimesDB
-import ir.namoo.religiousprayers.praytimes.getAllAvailableCityName
+import ir.namoo.religiousprayers.praytimes.*
 import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.*
-import kotlinx.android.synthetic.main.time_item.*
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
@@ -48,7 +44,6 @@ import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.*
 
@@ -147,9 +142,11 @@ class DownloadUploadFragment : Fragment() {
             PrayTimesDB.getInstance(requireContext()).prayTimes()
                 .getAllEdited()?.size == 366 -> { //have custom
                 binding.txtUploadTitle.text = String.format(
-                    getString(R.string.you_edited), " ${requireContext().appPrefs.getString(
-                        PREF_GEOCODED_CITYNAME, " - "
-                    )} "
+                    getString(R.string.you_edited), " ${
+                        requireContext().appPrefs.getString(
+                            PREF_GEOCODED_CITYNAME, " - "
+                        )
+                    } "
                 )
                 binding.btnUpload.visibility = View.VISIBLE
                 binding.btnUpload.setOnClickListener { v ->
@@ -172,7 +169,7 @@ class DownloadUploadFragment : Fragment() {
                         R.string.yes
                     ) { dialog: DialogInterface, _: Int ->
                         try {
-                            val city: JSONUtils.City = JSONUtils.City()
+                            val city: JSONCity = JSONCity()
                             city.name =
                                 requireContext().appPrefs.getString(PREF_GEOCODED_CITYNAME, "-")
                             city.lat =
@@ -185,9 +182,9 @@ class DownloadUploadFragment : Fragment() {
                                 PrayTimesDB.getInstance(requireContext().applicationContext)
                                     .prayTimes()
                                     .getAllEdited() ?: return@setPositiveButton
-                            val times = arrayListOf<JSONUtils.PrayTime>()
+                            val times = arrayListOf<JSONPrayTime>()
                             for (t in allEdited) {
-                                val temp = JSONUtils.PrayTime()
+                                val temp = JSONPrayTime()
                                 temp.dayNum = t.dayNumber
                                 temp.fajr = t.fajr
                                 temp.sunrise = t.sunrise
@@ -197,7 +194,7 @@ class DownloadUploadFragment : Fragment() {
                                 temp.isha = t.isha
                                 times.add(temp)
                             }
-                            val json = JSONUtils.toJson(city, times)
+                            val json = toJson(city, times)
                             val file =
                                 File(getDatabasesDirectory(requireContext()) + "${city.name}.json")
                             if (!file.exists())
@@ -312,7 +309,10 @@ class DownloadUploadFragment : Fragment() {
                     list.sortBy { it.name }
                     filteredList.clear()
                     filteredList.addAll(list)
-                    downloadedList = getAllAvailableCityName(requireContext())
+                    downloadedList.addAll(
+                        DPTDB.getInstance(requireContext().applicationContext).downloadedPrayTimes()
+                            .getCities()!!
+                    )
                 } else return "error"
             } catch (ex: Exception) {
                 Log.d(TAG, "Error get available cities!$ex")
@@ -458,9 +458,11 @@ class DownloadUploadFragment : Fragment() {
                         if (response.statusLine.statusCode == 200) {
                             val serverResponse = EntityUtils.toString(response.entity)
                             val outFile = File(
-                                "${getTimesDirectoryPath(requireContext())}/${getCity(
-                                    serverResponse
-                                )?.name ?: "_"}"
+                                "${getTimesDirectoryPath(requireContext())}/${
+                                    getCity(
+                                        serverResponse
+                                    )?.name ?: "_"
+                                }"
                             )
                             val outStream = FileOutputStream(outFile)
                             if (!outFile.exists())
@@ -469,12 +471,22 @@ class DownloadUploadFragment : Fragment() {
                             outStream.flush()
                             outStream.close()
                             val city = getCity(serverResponse)
-                            if (city != null)
+                            if (city != null) {
                                 requireContext().appPrefs.edit {
                                     putString(PREF_GEOCODED_CITYNAME, city.name)
                                     putString(PREF_LATITUDE, city.lat.toString())
                                     putString(PREF_LONGITUDE, city.lng.toString())
                                 }
+                                val times = getPrayTimes(serverResponse)
+                                if (times != null) {
+                                    val db =
+                                        DPTDB.getInstance(requireContext().applicationContext)
+                                            .downloadedPrayTimes()
+                                    if (db.getDownloadFor(city.name!!) != null)
+                                        db.clearDownloadFor(city.name!!)
+                                    db.insertToDownload(getPrayTimes(serverResponse)!!)
+                                }
+                            }
                             initUtils(requireContext().applicationContext)
                             loadApp(requireContext())
                             update(requireContext(), true)
@@ -495,13 +507,13 @@ class DownloadUploadFragment : Fragment() {
                     super.onPostExecute(result)
                     binding.progressItemAvailable.visibility = View.GONE
                     downloadedList.clear()
-                    downloadedList = getAllAvailableCityName(requireContext())
+                    downloadedList.addAll(
+                        DPTDB.getInstance(requireContext()).downloadedPrayTimes().getCities()!!
+                    )
                     notifyItemChanged(position)
                     prev?.setTextColor(getColorFromAttr(requireContext(), R.attr.colorTextNormal))
                 }
             }
         }
-
-
     }
 }//end of DownloadUploadFragment

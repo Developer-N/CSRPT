@@ -49,14 +49,18 @@ fun getCalendarFragmentFont(context: Context): Typeface =
 fun changeToolbarTypeface(toolbar: MaterialToolbar) {
     try {
         val field = Toolbar::class.java.getDeclaredField("mTitleTextView")
-        val field2 = Toolbar::class.java.getDeclaredField("mSubtitleTextView")
         field.isAccessible = true
-        field2.isAccessible = true
         (field.get(toolbar) as TextView).typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+    } catch (ex: Exception) {
+        Log.e(TAG, "changeToolbarTitleTypeface: $ex")
+    }
+    try {
+        val field2 = Toolbar::class.java.getDeclaredField("mSubtitleTextView")
+        field2.isAccessible = true
         (field2.get(toolbar) as TextView).typeface =
             Typeface.create(Typeface.SERIF, Typeface.NORMAL)
     } catch (ex: Exception) {
-        Log.e(TAG, "changeToolbarTypeface: $ex")
+        Log.e(TAG, "changeToolbarSubTitleTypeface: $ex")
     }
 }
 

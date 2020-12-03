@@ -28,6 +28,8 @@ const val TAG = "NAMOO"
 const val CHANGE_DATE_TAG = "changeDate"
 const val UPDATE_TAG = "update"
 const val TWO_SECONDS_IN_MILLIS: Long = 2000
+const val HALF_SECOND_IN_MILLIS: Long = 500
+const val SECOND_IN_MILLIS: Long = 1000
 const val DAY_IN_SECOND: Long = 86400
 const val DAY_IN_MILLIS: Long = 86400000
 val monthNameEmptyList = (1..12).map { "" }.toList()
@@ -243,12 +245,22 @@ fun loadEvents(context: Context) {
         gregorianCalendarEvents = allTheEvents.getArray("Gregorian Calendar").mapNotNull {
             val month = it.getInt("month")
             val day = it.getInt("day")
-            var title = it.getString("title")
+            val title = it.getString("title")
 
-            if (international) {
-                title += " (" + formatDayAndMonth(day, gregorianMonths[month - 1]) + ")"
+            val isOfficialInIran = it.has("type") && it.getString("type") == "Iran"
+            val isOfficialInAfghanistan = it.has("type") && it.getString("type") == "Afghanistan"
+            val isOthers = !isOfficialInIran && !isOfficialInAfghanistan
 
-                GregorianCalendarEvent(CivilDate(-1, month, day), title, false)
+            if (
+                (isOthers && international) ||
+                (isOfficialInIran && (iranOthers || international)) ||
+                (isOfficialInAfghanistan && afghanistanOthers)
+            ) {
+                GregorianCalendarEvent(
+                    CivilDate(-1, month, day),
+                    title + " (" + formatDayAndMonth(day, gregorianMonths[month - 1]) + ")",
+                    false
+                )
             } else null
         }.toList().also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
 

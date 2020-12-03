@@ -1,5 +1,7 @@
 package ir.namoo.religiousprayers.ui.monthly
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Intent
@@ -9,6 +11,7 @@ import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.AdapterView
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
@@ -77,7 +80,6 @@ class MonthlyFragment : Fragment() {
         inflater.inflate(R.menu.monthly_menu, menu)
     }
 
-    @SuppressLint("WrongThread")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.mnu_monthly_share -> {
@@ -128,10 +130,12 @@ class MonthlyFragment : Fragment() {
                     )
                     val text =
                         "${getString(R.string.owghat)} ${getString(R.string.in_city_time)} " +
-                                "${requireContext().appPrefs.getString(
-                                    PREF_GEOCODED_CITYNAME,
-                                    ""
-                                )}" +
+                                "${
+                                    requireContext().appPrefs.getString(
+                                        PREF_GEOCODED_CITYNAME,
+                                        ""
+                                    )
+                                }" +
                                 "\n\n" +
                                 "${getString(R.string.app_name)}\n$appLink"
                     putExtra(Intent.EXTRA_TEXT, text)
@@ -228,7 +232,9 @@ class MonthlyFragment : Fragment() {
             val civilDate = calendarToCivilDate(makeCalendarFromDate(Date()))
             for (day in 1..monthDays) {
                 val persianDate = PersianDate(PersianDate(civilDate.toJdn()).year, month, day)
+//                Log.e(TAG, "getTimesFor: ${dayTitleSummary(persianDate)}")
                 val date = CivilDate(persianDate.toJdn()).toCalendar().time
+//                Log.e(TAG, "getTimesFor: $date")
                 publishProgress(
                     PrayTimeProvider.calculate(
                         calculationMethod,

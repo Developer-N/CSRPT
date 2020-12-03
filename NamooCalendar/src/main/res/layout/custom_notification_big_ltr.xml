@@ -26,7 +26,6 @@
         android:layout_height="wrap_content"
         tools:text="آزمایش" />
 
-
     <TextView
         android:id="@+id/holidays"
         style="@style/TextAppearance.Compat.Notification"

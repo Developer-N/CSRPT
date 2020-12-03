@@ -1,13 +1,14 @@
 package ir.namoo.religiousprayers.praytimes
 
 import android.content.Context
-import android.util.Log
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinate
 import io.github.persiancalendar.praytimes.PrayTimes
 import io.github.persiancalendar.praytimes.PrayTimesCalculator
+import ir.namoo.religiousprayers.DEFAULT_CITY
 import ir.namoo.religiousprayers.PREF_ENABLE_EDIT
+import ir.namoo.religiousprayers.PREF_GEOCODED_CITYNAME
 import ir.namoo.religiousprayers.PREF_SUMMER_TIME
 import ir.namoo.religiousprayers.utils.*
 import java.util.*
@@ -86,9 +87,11 @@ class PrayTimeProvider {
 
         private fun replaceTimes(times: PrayTimes?, dayOfYear: Int, context: Context): PrayTimes? {
             var res = times
-            val ts = getTimesForCurrentCity(context)
+            val ts = DPTDB.getInstance(context.applicationContext).downloadedPrayTimes().getDownloadFor(
+                context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
+            )
             for (t in ts!!) {
-                if (t.dayNum == dayOfYear) {
+                if (t.dayNumber == dayOfYear) {
                     val strImsak = fixTime(t.fajr, -10)
                     val imsak =
                         toDouble(strImsak.split(":")[0].toInt(), strImsak.split(":")[1].toInt())
@@ -149,7 +152,9 @@ class PrayTimeProvider {
         }
 
         private fun isExistExactTimes(context: Context): Boolean {
-            return getTimesForCurrentCity(context) != null
+            return DPTDB.getInstance(context.applicationContext).downloadedPrayTimes().getDownloadFor(
+                context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
+            )?.size == 366
         }
 
         private fun isExistAndEnabledEdit(context: Context): Boolean {

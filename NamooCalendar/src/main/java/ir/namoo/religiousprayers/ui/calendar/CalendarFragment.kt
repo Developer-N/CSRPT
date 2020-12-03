@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.CalendarContract
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -86,24 +87,15 @@ class CalendarFragment : Fragment() {
     private lateinit var eventsBinding: EventsTabContentBinding
     private var searchView: SearchView? = null
     private var todayButton: MenuItem? = null
-
-    abstract class TabsAdapter : RecyclerView.Adapter<TabsAdapter.ViewHolder>() {
-        inner class ViewHolder(private val frame: FrameLayout) : RecyclerView.ViewHolder(frame) {
-            fun bind(view: View) = frame.run {
-                removeAllViews()
-                addView(view)
-            }
-        }
-    }
-
     lateinit var mainActivity: MainActivity
-    private val initialDate = getTodayOfCalendar(mainCalendar)
+    val initialDate = getTodayOfCalendar(mainCalendar)
 
     @SuppressLint("PrivateResource")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View = FragmentCalendarBinding.inflate(inflater, container, false).apply {
         mainBinding = this
+
         mainActivity = activity as MainActivity
 
         val tabs = listOf(
@@ -138,15 +130,17 @@ class CalendarFragment : Fragment() {
                         setOnClickListener { onOwghatClick() }
                         // Easter egg to test AthanActivity
                         setOnLongClickListener {
-//                            startAthan(context, "ASR", "00:00")
+                            startAthan(context, "FAJR", "00:00")
                             true
                         }
                         var cityName = getCityName(context, false)
-                        cityName += "( ${when (PrayTimeProvider.ptFrom) {
-                            0 -> context.resources.getString(R.string.calculated_time)
-                            1 -> context.resources.getString(R.string.exact_time)
-                            else -> context.resources.getString(R.string.edited_time)
-                        }})"
+                        cityName += "( ${
+                            when (PrayTimeProvider.ptFrom) {
+                                0 -> context.resources.getString(R.string.calculated_time)
+                                1 -> context.resources.getString(R.string.exact_time)
+                                else -> context.resources.getString(R.string.edited_time)
+                            }
+                        })"
                         if (cityName.isNotEmpty()) text = cityName
 
                         this.setTextColor(
@@ -242,12 +236,14 @@ class CalendarFragment : Fragment() {
                                     )
                                     val length =
                                         Clock.fromInt(times.maghribClock.toInt() - times.fajrClock.toInt())
-                                    text += "\n${formatNumber(
-                                        String.format(
-                                            getString(R.string.length_of_day),
-                                            length.hour, length.minute
+                                    text += "\n${
+                                        formatNumber(
+                                            String.format(
+                                                getString(R.string.length_of_day),
+                                                length.hour, length.minute
+                                            )
                                         )
-                                    )}"
+                                    }"
                                 }
 
                                 text += "\n\n${getString(R.string.app_name)}\n$appLink"
@@ -264,51 +260,60 @@ class CalendarFragment : Fragment() {
                     }
                     timesRecyclerView.run {
                         layoutManager = LinearLayoutManager(requireContext())
+//                            FlexboxLayoutManager(context).apply {
+//                            flexWrap = FlexWrap.NOWRAP
+//                            justifyContent = JustifyContent.CENTER
+//                        }
                         adapter = TimeItemAdapter()
                     }
                 }.root
             )
         } ?: emptyList())
 
-        calendarPager.onDayClicked = fun(jdn: Long) { bringDate(jdn, monthChange = false) }
-        calendarPager.onDayLongClicked = fun(jdn: Long) { addEventOnCalendar(jdn) }
-        calendarPager.onMonthSelected = fun() {
-            val date = calendarPager.selectedMonth
-            mainActivity.setTitleAndSubtitle(getMonthName(date), formatNumber(date.year))
-            todayButton?.isVisible =
-                date.year != initialDate.year || date.month != initialDate.month
-        }
-        viewPager.adapter = object : TabsAdapter() {
-            override fun getItemCount(): Int = tabs.size
-            override fun onBindViewHolder(holder: ViewHolder, position: Int) =
-                holder.bind(tabs[position].second)
-
-            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-                FrameLayout(mainActivity).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
+        // tabs should fill their parent otherwise view pager can't handle it
+        tabs.forEach {
+            it.second.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
             )
+        }
+
+        calendarPager.run {
+            onDayClicked = fun(jdn: Long) { bringDate(jdn, monthChange = false) }
+            onDayLongClicked = fun(jdn: Long) { addEventOnCalendar(jdn) }
+            onMonthSelected = fun() {
+                selectedMonth.let {
+                    mainActivity.setTitleAndSubtitle(getMonthName(it), formatNumber(it.year))
+                    todayButton?.isVisible =
+                        it.year != initialDate.year || it.month != initialDate.month
+                }
+            }
+        }
+
+        viewPager.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun getItemCount(): Int = tabs.size
+            override fun getItemViewType(position: Int) = position // set viewtype equal to position
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+                object : RecyclerView.ViewHolder(tabs[viewType].second) {}
         }
         TabLayoutMediator(tabLayout, viewPager) { tab, i -> tab.setText(tabs[i].first) }.attach()
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 if (position == OWGHAT_TAB) {
                     owghatBinding?.sunView?.startAnimate()
-                    Handler().postDelayed(kotlinx.coroutines.Runnable {
+                    Handler(Looper.getMainLooper()).postDelayed(kotlinx.coroutines.Runnable {
                         (owghatBinding?.timesRecyclerView?.adapter as? TimeItemAdapter)?.run {
                             isExpanded = true
                         }
-                    }, 1000)
+                    }, 1500)
                 } else owghatBinding?.sunView?.clear()
-                mainActivity.appPrefs.edit { putInt(LAST_CHOSEN_TAB_KEY, position) }
+                mainActivity.appPrefsLite.edit { putInt(LAST_CHOSEN_TAB_KEY, position) }
             }
         })
 
-        var lastTab = mainActivity.appPrefs.getInt(LAST_CHOSEN_TAB_KEY, CALENDARS_TAB)
+        var lastTab = mainActivity.appPrefsLite.getInt(LAST_CHOSEN_TAB_KEY, CALENDARS_TAB)
         if (lastTab >= tabs.size) lastTab = CALENDARS_TAB
-        viewPager.setCurrentItem(lastTab, false)
+        viewPager.setCurrentItem(lastTab, true)
         //################################### notify for generated and edited time if exact is available
         try {
             if (isNetworkConnected(requireContext()) && PrayTimeProvider.ptFrom != 1)
@@ -347,13 +352,15 @@ class CalendarFragment : Fragment() {
                     "${resources.getString(R.string.asr)} : ${formatNumber(times.asrClock.toFormattedString())}\r\n" +
                     "${resources.getString(R.string.maghrib)} : ${formatNumber(times.maghribClock.toFormattedString())}\r\n" +
                     "${resources.getString(R.string.isha)} : ${formatNumber(times.ishaClock.toFormattedString())}\r\n" +
-                    "${formatNumber(
-                        String.format(
-                            resources.getString(R.string.length_of_day),
-                            dayLength.hour,
-                            dayLength.minute
+                    "${
+                        formatNumber(
+                            String.format(
+                                resources.getString(R.string.length_of_day),
+                                dayLength.hour,
+                                dayLength.minute
+                            )
                         )
-                    )} \r\n\r\n" +
+                    } \r\n\r\n" +
                     appLink
 
         val intent = Intent(Intent.ACTION_SEND)
@@ -551,13 +558,18 @@ class CalendarFragment : Fragment() {
             if (deviceEvents.isNotEmpty()) {
                 noEvent.visibility = View.GONE
                 deviceEventTitle.text = deviceEvents
-                contentDescription.append("\n")
-                contentDescription.append(getString(R.string.show_device_calendar_events))
-                contentDescription.append("\n")
-                contentDescription.append(deviceEvents)
-                deviceEventTitle.movementMethod = LinkMovementMethod.getInstance()
+                contentDescription
+                    .append("\n")
+                    .append(getString(R.string.show_device_calendar_events))
+                    .append("\n")
+                    .append(deviceEvents)
 
-                deviceEventTitle.visibility = View.VISIBLE
+
+                deviceEventTitle.run {
+                    movementMethod = LinkMovementMethod.getInstance()
+                    visibility = View.VISIBLE
+                }
+
             } else {
                 deviceEventTitle.visibility = View.GONE
             }
@@ -565,10 +577,12 @@ class CalendarFragment : Fragment() {
             if (nonHolidays.isNotEmpty()) {
                 noEvent.visibility = View.GONE
                 eventTitle.text = nonHolidays
-                contentDescription.append("\n")
-                contentDescription.append(getString(R.string.events))
-                contentDescription.append("\n")
-                contentDescription.append(nonHolidays)
+                contentDescription
+                    .append("\n")
+                    .append(getString(R.string.events))
+                    .append("\n")
+                    .append(nonHolidays)
+
 
                 eventTitle.visibility = View.VISIBLE
             } else {
@@ -593,14 +607,17 @@ class CalendarFragment : Fragment() {
                 ss.setSpan(clickableSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 messageToShow.append(ss)
 
-                contentDescription.append("\n")
-                contentDescription.append(title)
+                contentDescription
+                    .append("\n")
+                    .append(title)
             }
 
             if (messageToShow.isNotEmpty()) {
-                eventMessage.text = messageToShow
-                eventMessage.movementMethod = LinkMovementMethod.getInstance()
-                eventMessage.visibility = View.VISIBLE
+                eventMessage.run {
+                    text = messageToShow
+                    movementMethod = LinkMovementMethod.getInstance()
+                    visibility = View.VISIBLE
+                }
             }
 
             root.contentDescription = contentDescription
@@ -632,12 +649,12 @@ class CalendarFragment : Fragment() {
     }
 
     private fun onOwghatClick() {
-        (owghatBinding?.timesRecyclerView?.adapter as? TimeItemAdapter)?.run {
+        (owghatBinding?.timesRecyclerView?.adapter as? TimeItemAdapter)?.apply {
             isExpanded = true
-//            owghatBinding?.moreOwghat?.setImageResource(
-//                if (isExpanded) R.drawable.ic_keyboard_arrow_up
-//                else R.drawable.ic_keyboard_arrow_down
-//            )
+//            owghatBinding?.moreOwghat?.animate()
+//                ?.rotation(if (isExpanded) 180f else 0f)
+//                ?.setDuration(resources.getInteger(android.R.integer.config_shortAnimTime).toLong())
+//                ?.start()
         }
     }
 
@@ -767,29 +784,30 @@ class CalendarFragment : Fragment() {
             try {
                 val city = list.find { it.name == cityName.trimStart().trimEnd() }
                 if (city != null) {
-                    Snackbar.make(
-                        mainBinding.root,
-                        R.string.exact_time_is_available,
-                        Snackbar.LENGTH_INDEFINITE
-                    ).apply {
-                        (view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView)
-                            .typeface = getAppFont(requireContext())
-                        setAction(R.string.download) { _ ->
-                            val intent = Intent(NAVIGATE_TO_UD)
-                            requireActivity().sendBroadcast(intent)
-                        }
-                        view.setBackgroundColor(
-                            getColorFromAttr(
-                                requireContext(),
-                                R.attr.colorSnack
+                    val snackBar =
+                        Snackbar.make(
+                            mainBinding.root,
+                            R.string.exact_time_is_available,
+                            Snackbar.LENGTH_INDEFINITE
+                        ).apply {
+                            (view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView)
+                                .typeface = getAppFont(requireContext())
+                            setAction(R.string.download) { _ ->
+                                val intent = Intent(NAVIGATE_TO_UD)
+                                requireActivity().sendBroadcast(intent)
+                            }
+                            view.setBackgroundColor(
+                                getColorFromAttr(
+                                    requireContext(),
+                                    R.attr.colorSnack
+                                )
                             )
-                        )
-                        view.setOnClickListener {
-                            dismiss()
-                            val intent = Intent(NAVIGATE_TO_UD)
-                            requireActivity().sendBroadcast(intent)
-                        }
-                    }.show()
+                            view.setOnClickListener {
+                                dismiss()
+                                val intent = Intent(NAVIGATE_TO_UD)
+                                requireActivity().sendBroadcast(intent)
+                            }
+                        }.show()
                 }
             } catch (ex: java.lang.Exception) {
                 Log.e(TAG, "Check for exact time error : $ex")
@@ -798,5 +816,3 @@ class CalendarFragment : Fragment() {
 
     } //end of class GetAvailableCitiesTask
 }//end of class CalendarFragment
-
-

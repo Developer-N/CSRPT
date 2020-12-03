@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -25,8 +24,8 @@ fun String.runCommand(
 }
 
 android {
-    compileSdkVersion(29)
-    buildToolsVersion("29.0.3")
+    compileSdkVersion(30)
+    buildToolsVersion("30.0.2")
 
     buildFeatures {
         viewBinding = true
@@ -35,9 +34,9 @@ android {
     defaultConfig {
         applicationId = "ir.namoo.religiousprayers"
         minSdkVersion(17)
-        targetSdkVersion(29)
-        versionCode = 4310
-        versionName = "8.3.2020"
+        targetSdkVersion(30)
+        versionCode = 9002
+        versionName = "9.0.2020"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
@@ -67,43 +66,44 @@ tasks.withType<KotlinCompile> {
 
 dependencies {
     implementation("com.github.persian-calendar:equinox:1.0.0")
-    implementation("com.github.persian-calendar:calendar:1.0.0")
+    implementation("com.github.persian-calendar:calendar:1.0.1")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.72")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.20")
     implementation("androidx.multidex:multidex:2.0.1")
 
-    implementation("androidx.appcompat:appcompat:1.1.0")
+    implementation("androidx.appcompat:appcompat:1.2.0")
     implementation("androidx.preference:preference-ktx:1.1.1")
     implementation("androidx.recyclerview:recyclerview:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation("com.google.android.material:material:1.2.0-alpha06")
-    implementation("com.google.android:flexbox:1.1.0")
+    implementation("com.google.android.material:material:1.3.0-alpha04")
+    implementation("com.google.android:flexbox:2.0.1")
     implementation("com.google.android.apps.dashclock:dashclock-api:2.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:1.1.3")
+    implementation("com.google.openlocationcode:openlocationcode:1.0.4")
+    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar", "*.jar"))))
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
 
-    implementation("androidx.navigation:navigation-fragment-ktx:2.2.2")
-    implementation("androidx.navigation:navigation-ui-ktx:2.2.2")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.3.2")
+    implementation("androidx.navigation:navigation-ui-ktx:2.3.2")
 
-    implementation("androidx.core:core-ktx:1.2.0")
-    implementation("androidx.fragment:fragment-ktx:1.2.4")
+    implementation("androidx.core:core-ktx:1.3.2")
+    implementation("androidx.fragment:fragment-ktx:1.2.5")
     implementation("androidx.activity:activity-ktx:1.1.0")
 
-    implementation("androidx.browser:browser:1.2.0")
+    implementation("androidx.browser:browser:1.3.0")
 
-//    implementation("androidx.work:work-runtime-ktx:2.3.4")
+    implementation("androidx.work:work-runtime-ktx:2.4.0")
 
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.0-alpha-2")
     // debugImplementation("com.github.pedrovgs:lynx:1.1.0")
 
     testImplementation("junit:junit:4.13")
 
-    androidTestImplementation("androidx.test:runner:1.2.0")
-    androidTestImplementation("androidx.test:rules:1.2.0")
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.2.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.2.0")
+    androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.test:rules:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
 
     implementation("com.googlecode.json-simple:json-simple:1.1")
 

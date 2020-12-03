@@ -27,7 +27,8 @@ HrBDev: Hamidreza Bayat
 alirezaafkar: Alireza Afkar
 MEHDIMYADI: Mehdi Dimyadi
 runo280: Ruhollah Nosrati
-FtADev: Fatemeh Akhlaghi"</string>
+FtADev: Fatemeh Akhlaghi
+MasoodFallahpoor: Masood Fallahpoor"</string>
     <string name="about_designers_list" translatable="false">"MEHDIMYADI: Mehdi Dimyadi
 MehraraAbedi: Mehrara Abedi
 behdude: Behdad Pournader
@@ -38,7 +39,6 @@ Matjafari: Mahdieh Jafari
 raminjavadi: Ramin Javadi"</string>
     <string name="about_contributors_list" translatable="false">"La-Volpe: Javad Arjmandi
 mehdisadeghi: Mehdi Sadeghi
-MasoodFallahpoor: Masood Fallahpoor
 abbas-oveissi: Abbas Oveissi
 aysha319: Aysha Aminnejad
 Tenkei: Keivan Esbati
@@ -438,5 +438,81 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="select_widgets_next_athan_text_color">Select custom color for widgets next athan texts</string>
     <string name="select_asr_juristics">Asr Juristics</string>
     <string name="enable_notification_play_athan">Enable playing athan in notification</string>
+    <string name="remaning_to_next">%1$sh %2$sm</string>
+    <string name="quran">Quran</string>
+    <string name="chapter">Chapter</string>
+    <string name="search_the_whole_quran">Search the whole Quran</string>
+    <string name="notes">Notes</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="download_audios">Download audio files</string>
+    <string name="back_to_calendar">Back to Calendar</string>
+    <string name="create_shortcut">Create Shortcut</string>
+    <string name="shortcut_created">Shortcut created!</string>
+    <string name="pin_not_supported">Your device doesn\'t support pin shortcuts!</string>
+    <string name="quran_database_not_exist">Quran database not exist, you must download it!</string>
+    <string name="sura_name">Sura Name</string>
+    <string name="aya_count">%s verse</string>
+    <string name="revelation_order">Revelation order %s</string>
+    <string name="meccan">Meccan</string>
+    <string name="medinan">Medinan</string>
+    <string name="size_8mb">Size : 8mb</string>
+    <string name="sort_order">Chapter sort order</string>
+    <string name="go_to_page">Go to page</string>
+    <string name="go_to_juz">Go to juz</string>
+    <string name="go_to_hizb">Go to hizb</string>
+    <string name="chapter_sort_dialog_title">Chapter sort order</string>
+    <string name="default_sort">Default</string>
+    <string name="alphabet_sort">Alphabet</string>
+    <string name="revelation_sort">Revelation</string>
+    <string name="aya_inc_sort">Verse count (increase)</string>
+    <string name="aya_dec_sort">Verse count(decrease )</string>
+    <string name="select_page">Select page</string>
+    <string name="page_out_of_bounds">Page out of bounds!!!\nPage must be under 605</string>
+    <string name="select_hizb">Select Hizb</string>
+    <string name="select_juz">Select Juz</string>
+    <string name="your_note">Your note</string>
+    <string name="str_bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
+    <string name="free_as_in_freedom_logo" translatable="false">Free as in Freedom logo</string>
+    <string name="arabic_font_setting">Arabic font setting</string>
+    <string name="english_font_setting">English font setting</string>
+    <string name="english_font_preview" translatable="false">English font preview</string>
+    <string name="kurdish_font_setting">Kurdish font setting</string>
+    <string name="str_kurdish_prev" translatable="false">فۆنتی کوردی بەم شێوەیە</string>
+    <string name="farsi_font_setting">Farsi font setting</string>
+    <string name="str_farsi_font" translatable="false">پیشنمایش فونت فارسی</string>
+    <string name="select_translates">Select translates</string>
+    <string name="farsi_translate">Farsi translate</string>
+    <string name="kurdish_translate">Kurdish translate</string>
+    <string name="english_transliteration">English transliteration</string>
+    <string name="english_translate">English translate</string>
+    <string name="farsi_full_translate">Farsi full translate</string>
+    <string name="sura">Chapter</string>
+    <string name="aya">Verse</string>
+    <string name="note_saved">Note Saved</string>
+    <string name="no_bookmark">No Bookmark!</string>
+    <string name="go_to_aya">Go to verse</string>
+    <string name="search_head">%s verse %s</string>
+    <string name="no_note">There is no note!</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="alert">Alert!</string>
+    <string name="save_alert_message">Are you sure to save changes?</string>
+    <string name="delete_alert_message">Are you sure want to delete this note?!</string>
+    <string name="select_file_for_download">Select file for download</string>
+    <string name="download_completed_unzip">Download Completed! -> Unzip …</string>
+    <string name="select_qari_translate">Select qari and translate to play</string>
+    <string name="play_translate">Play translate</string>
+    <string name="playing_verse">playing verse %s</string>
+    <string name="error">Error!</string>
+    <string name="audio_files_error">Audio files for this sura and selected qari not exist!</string>
+    <string name="audio_translate_files_error">Translate audio files for this sura and selected not exist!</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="download_failed_tray_again">Download failed! try again.</string>
+    <string name="latest_visited">Latest visited : chapter %s verse %s</string>
+    <string name="enable_location_services">Location Services is disabled, please turn it on to use the feature.</string>
+    <string name="result_found">%s result dound.</string>
+    <string name="kurdish_file_not_available">All Kurdish file not available yet, they will be soon!</string>
+    <string name="requset_permision">Request Permission</string>
+    <string name="need_full_screen_permision">For show full screen athan notification need grant permission.</string>
 
 </resources>

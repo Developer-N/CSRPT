@@ -7,7 +7,6 @@
     android:layout_marginLeft="1dp"
     android:layout_marginRight="1dp"
     android:gravity="center"
-    android:layoutDirection="rtl"
     android:orientation="vertical"
     tools:context=".Widget4x2"
     tools:targetApi="JELLY_BEAN_MR1">
@@ -17,6 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
+        android:layoutDirection="rtl"
         android:orientation="horizontal">
 
         <TextClock
@@ -45,7 +45,7 @@
             style="@style/ShadowTextStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="right|center_vertical"
+            android:gravity="start|center_vertical"
             android:lineSpacingExtra="6dp"
             android:minLines="4"
             android:text=""

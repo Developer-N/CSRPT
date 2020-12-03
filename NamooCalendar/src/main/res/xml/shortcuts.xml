@@ -5,13 +5,13 @@
 
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/sc_compass"
-        android:shortcutId="COMPASS"
-        android:shortcutLongLabel="@string/compass"
-        android:shortcutShortLabel="@string/compass">
+        android:icon="@drawable/ic_azkar2"
+        android:shortcutId="AZKAR"
+        android:shortcutLongLabel="@string/azkar"
+        android:shortcutShortLabel="@string/azkar">
 
         <intent
-            android:action="COMPASS"
+            android:action="AZKAR"
             android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
             android:targetPackage="ir.namoo.religiousprayers" />
 
@@ -19,28 +19,14 @@
 
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/sc_level"
-        android:shortcutId="LEVEL"
-        android:shortcutLongLabel="@string/level"
-        android:shortcutShortLabel="@string/level">
+        android:icon="@drawable/ic_quran"
+        android:shortcutId="QURAN"
+        android:shortcutLongLabel="@string/quran"
+        android:shortcutShortLabel="@string/quran">
 
         <intent
-            android:action="LEVEL"
-            android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
-            android:targetPackage="ir.namoo.religiousprayers" />
-
-    </shortcut>
-
-    <shortcut
-        android:enabled="true"
-        android:icon="@drawable/sc_converter"
-        android:shortcutId="CONVERTER"
-        android:shortcutLongLabel="@string/date_converter"
-        android:shortcutShortLabel="@string/date_converter">
-
-        <intent
-            android:action="CONVERTER"
-            android:targetClass="ir.namoo.religiousprayers.ui.MainActivity"
+            android:action="android.intent.action.VIEW"
+            android:targetClass="ir.namoo.quran.ui.QuranActivity"
             android:targetPackage="ir.namoo.religiousprayers" />
 
     </shortcut>

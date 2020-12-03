@@ -26,11 +26,13 @@ class PreferencesFragment : Fragment() {
             R.string.pref_header_nsetting to NSettingFragment::class.java,
             R.string.pref_header_interface_calendar to InterfaceCalendarFragment::class.java,
             R.string.pref_header_widget_location to WidgetNotificationFragment::class.java
+//            ,R.string.pref_header_location_athan to LocationAthanFragment::class.java
         )
         viewPager.adapter = object : FragmentStateAdapter(this@PreferencesFragment) {
             override fun getItemCount() = tabs.size
             override fun createFragment(position: Int) = tabs[position].second.newInstance()
         }
+//        viewPager.setPageTransformer(ZoomOutPageTransformer())
         TabLayoutMediator(tabLayout, viewPager) { tab, i ->
             tab.setText(tabs[i].first)
             tab.setIcon(
@@ -38,6 +40,7 @@ class PreferencesFragment : Fragment() {
                     0 -> R.drawable.ic_settings
                     1 -> R.drawable.ic_calendar
                     2 -> R.drawable.ic_widgets
+//                    3 -> R.drawable.ic_location
                     else -> R.drawable.ic_settings
                 }
             )

@@ -11,6 +11,7 @@ import android.location.*
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
@@ -61,15 +62,7 @@ class NSettingFragment : Fragment() {
     private var long = ""
     private var mediaPlayer: MediaPlayer? = null
     private var audioManager: AudioManager? = null
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location?) {
-            location?.let { showLocation(it) }
-        }
-
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-        override fun onProviderEnabled(provider: String?) {}
-        override fun onProviderDisabled(provider: String?) {}
-    }
+    private val locationListener = LocationListener { showLocation(it) }
 
     private fun showLocation(it: Location) {
         lat = it.latitude.toString()
@@ -156,7 +149,7 @@ class NSettingFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentNsettingBinding.inflate(inflater)
         lm = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -435,7 +428,34 @@ class NSettingFragment : Fragment() {
             listOf("FAJR", "SUNRISE", "DHUHR", "ASR", "MAGHRIB", "ISHA")
         ) { switch, name ->
             switch.isChecked = isExistAthanInPrefs(requireContext(), name)
-            switch.setOnClickListener { updateAthanInPref(requireContext(), name) }
+            switch.setOnClickListener {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && switch.isChecked &&
+                        !Settings.canDrawOverlays(requireContext())
+                    ) {
+                        AlertDialog.Builder(requireContext()).apply {
+                            setTitle(getString(R.string.requset_permision))
+                            setMessage(getString(R.string.need_full_screen_permision))
+                            setPositiveButton(R.string.ok) { _: DialogInterface, _: Int ->
+                                requireActivity().startActivity(
+                                    Intent(
+                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        Uri.parse("package:" + requireActivity().packageName)
+                                    )
+                                )
+                            }
+                            setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int ->
+                                dialog.cancel()
+                            }
+                            create()
+                            show()
+                        }
+                    }
+                } catch (ex: Exception) {
+                    Log.e(TAG, "initSwitches: ", ex)
+                }
+                updateAthanInPref(requireContext(), name)
+            }
         }
 
         binding.switchAscendingAthanVolume.isChecked = requireContext().appPrefs.getBoolean(
@@ -466,7 +486,7 @@ class NSettingFragment : Fragment() {
                 getColorFromAttr(requireContext(), R.attr.colorTextNormal)
         )
         val audioManager = requireContext().getSystemService<AudioManager>()
-        var volume = requireContext().appPrefs.getInt(PREF_ATHAN_VOLUME, DEFAULT_ATHAN_VOLUME)
+        val volume = requireContext().appPrefs.getInt(PREF_ATHAN_VOLUME, DEFAULT_ATHAN_VOLUME)
         binding.seekBarAthanVolume.apply {
             max = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
             progress = volume
@@ -477,7 +497,6 @@ class NSettingFragment : Fragment() {
                     progress: Int,
                     fromUser: Boolean
                 ) {
-                    volume = progress
                     audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, progress, 0)
                     playAthan()
                 }
@@ -486,7 +505,7 @@ class NSettingFragment : Fragment() {
 
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {
                     requireContext().appPrefs.edit {
-                        putInt(PREF_ATHAN_VOLUME, volume)
+                        putInt(PREF_ATHAN_VOLUME, progress)
                     }
                 }
             })
@@ -921,7 +940,7 @@ class NSettingFragment : Fragment() {
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @SuppressLint("StaticFieldLeak")
     private inner class GetAthansTask(val type: Int) : AsyncTask<String, String, String>() {
-        private val url ="http://www.namoo.ir/Home/GetAthans"
+        private val url = "http://www.namoo.ir/Home/GetAthans"
 
         override fun doInBackground(vararg params: String?): String {
             return try {

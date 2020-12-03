@@ -12,18 +12,23 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
         tools:background="@drawable/adhan_background">
 
-        <com.google.android.material.card.MaterialCardView
+        <ir.namoo.religiousprayers.ui.shared.MaskedCardView
             android:id="@+id/athan_head_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:alpha="0.8"
+            android:padding="4dp"
             app:cardBackgroundColor="?attr/colorCard"
-            app:cardCornerRadius="10dp">
+            app:cardElevation="@dimen/card_elevation"
+            app:cardPreventCornerOverlap="false"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -63,7 +68,7 @@
                 android:padding="4dp"
                 android:tint="?attr/colorWarning"
                 app:srcCompat="@drawable/ic_cancel" />
-        </com.google.android.material.card.MaterialCardView>
+        </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
 
 
     </androidx.appcompat.widget.LinearLayoutCompat>

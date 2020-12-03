@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:padding="2dp"
             android:text="title"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorTextPrimary"
             android:textIsSelectable="true"
             android:textSize="@dimen/text_size_title" />
 
@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:padding="2dp"
             android:text="description"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorTextNormal"
             android:textIsSelectable="true"
             android:textSize="@dimen/text_size_title" />
 

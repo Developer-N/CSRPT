@@ -1,6 +1,8 @@
 package ir.namoo.religiousprayers.ui.azkar
 
+import android.animation.AnimatorSet
 import android.animation.LayoutTransition
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.content.Context
@@ -14,6 +16,7 @@ import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
+import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.LinearLayout
@@ -197,12 +200,20 @@ class AzkarFragment : Fragment() {
                 AzkarDB.getInstance(it.context).azkarsDAO().updateAzkarTitle(title)
                 notifyItemChanged(position)
             }
-            val anim = AnimationUtils.loadAnimation(
-                holder.binding.root.context,
-                com.google.android.material.R.anim.abc_popup_enter
-            )
-            anim.duration = 500
-            holder.binding.root.startAnimation(anim)
+            val scaleDownX = ObjectAnimator.ofFloat(holder.binding.root, "scaleX", 0.7f, 1f).apply {
+                duration = 250
+                interpolator = AnticipateOvershootInterpolator()
+            }
+            val scaleDownY = ObjectAnimator.ofFloat(holder.binding.root, "scaleY", 0.7f, 1f).apply {
+                duration = 250
+                interpolator = AnticipateOvershootInterpolator()
+            }
+            val scaleDown = AnimatorSet()
+            scaleDown.play(scaleDownX).with(scaleDownY)
+            scaleDownX.addUpdateListener {
+                holder.binding.root.invalidate()
+            }
+            scaleDown.start()
         }
 
         private class AV(val binding: AzkarItemBinding) :

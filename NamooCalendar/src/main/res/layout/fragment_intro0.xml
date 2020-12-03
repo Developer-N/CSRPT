@@ -11,11 +11,13 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         app:cardBackgroundColor="?attr/colorCard"
-        app:cardCornerRadius="10dp"
+        app:cardElevation="@dimen/card_elevation"
+        app:cardPreventCornerOverlap="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
@@ -44,9 +46,14 @@
                 android:visibility="visible"
                 app:chipIconTint="?attr/colorIcon" />
 
-            <com.google.android.material.card.MaterialCardView
+            <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                app:cardBackgroundColor="?attr/colorCard"
+                app:cardElevation="@dimen/card_elevation"
+                app:cardPreventCornerOverlap="false"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                 <androidx.core.widget.ContentLoadingProgressBar
                     android:id="@+id/progressIntro0"
@@ -88,7 +95,7 @@
                         android:padding="5dp"
                         tools:listitem="@layout/item_available_city" />
                 </androidx.appcompat.widget.LinearLayoutCompat>
-            </com.google.android.material.card.MaterialCardView>
+            </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 

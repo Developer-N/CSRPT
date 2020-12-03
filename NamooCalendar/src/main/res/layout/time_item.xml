@@ -1,52 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.circularreveal.CircularRevealLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ir.namoo.religiousprayers.ui.shared.MaskedCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
-    android:layout_marginTop="@dimen/item_calendar_margin_top"
+    android:layout_marginTop="2dp"
     android:layout_marginEnd="8dp"
-    android:gravity="start"
+    android:layout_marginBottom="2dp"
     android:minWidth="@dimen/owghatSize"
-    android:orientation="horizontal">
+    android:padding="4dp"
+    app:cardBackgroundColor="?attr/colorCard"
+    app:cardPreventCornerOverlap="false"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/name"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:layout_weight="6"
-        android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:textColor="?attr/colorTextSecond"
-        android:textSize="@dimen/text_size_note"
-        app:drawableStartCompat="@drawable/ic_morning_isha"
-        app:drawableTint="?attr/colorIcon"
-        tools:text="Time" />
+    <com.google.android.material.circularreveal.CircularRevealLinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:orientation="horizontal">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/time"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start|center_vertical"
-        android:layout_weight="3"
-        android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:textColor="?attr/colorTextNormal"
-        android:textSize="@dimen/text_size_description"
-        tools:text="12:34" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/name"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="4"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="?attr/colorTextSecond"
+            android:textSize="@dimen/text_size_note"
+            app:drawableStartCompat="@drawable/ic_morning_isha"
+            app:drawableTint="?attr/colorIcon"
+            tools:text="Time" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/btn_athan_state"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/icon_size"
-        android:layout_weight="1"
-        android:background="@android:color/transparent"
-        app:srcCompat="@drawable/ic_speaker"
-        app:tint="?attr/colorIcon" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/remainToNext"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start|center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="?attr/colorTextHoliday"
+            android:textSize="@dimen/text_size_description" />
 
-</com.google.android.material.circularreveal.CircularRevealLinearLayout>
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/time"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start|center_vertical"
+            android:layout_weight="2"
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="?attr/colorTextNormal"
+            android:textSize="@dimen/text_size_description"
+            tools:text="12:34" />
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/btn_athan_state"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_size"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_speaker"
+            app:tint="?attr/colorIcon" />
+
+    </com.google.android.material.circularreveal.CircularRevealLinearLayout>
+
+</ir.namoo.religiousprayers.ui.shared.MaskedCardView>

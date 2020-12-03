@@ -22,7 +22,7 @@
             android:layout_margin="4sp"
             android:textColor="?attr/colorTextNormal"
             android:textSize="32sp"
-            tools:text="a" />
+            tools:text="23" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/month_year"
@@ -31,7 +31,7 @@
             android:layout_gravity="center_vertical"
             android:textColor="?attr/colorTextNormal"
             android:textSize="@dimen/text_size_description"
-            tools:text="a\nb" />
+            tools:text="May\n1999" />
 
     </com.google.android.material.circularreveal.CircularRevealLinearLayout>
 

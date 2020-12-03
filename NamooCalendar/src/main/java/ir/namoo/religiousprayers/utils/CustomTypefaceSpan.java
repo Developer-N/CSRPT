@@ -19,12 +19,12 @@ public class CustomTypefaceSpan extends TypefaceSpan {
     }
 
     @Override
-    public void updateDrawState(@NotNull TextPaint ds) {
+    public void updateDrawState(TextPaint ds) {
         applyCustomTypeFace(ds, newType);
     }
 
     @Override
-    public void updateMeasureState(@NotNull TextPaint paint) {
+    public void updateMeasureState(TextPaint paint) {
         applyCustomTypeFace(paint, newType);
     }
 

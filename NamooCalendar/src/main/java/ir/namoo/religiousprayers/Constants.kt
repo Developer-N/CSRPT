@@ -1,7 +1,7 @@
 package ir.namoo.religiousprayers
 
-//const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
-const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
+const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
+//const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
 //const val appLink="\r\n https://bit.ly/2juUc1y"//myket
 //const val appLink = "\r\n https://bit.ly/3fUiP3L"//charkhoneh
 

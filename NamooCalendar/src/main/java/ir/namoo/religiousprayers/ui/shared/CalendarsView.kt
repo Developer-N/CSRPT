@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.ChangeBounds
+import androidx.transition.TransitionManager
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.praytimes.Clock
 import ir.namoo.religiousprayers.R
@@ -20,6 +22,9 @@ import kotlin.math.abs
 class CalendarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     FrameLayout(context, attrs) {
 
+    private val changeBoundTransition = ChangeBounds()
+    private val arrowRotationAnimationDuration =
+        resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
     private val calendarItemAdapter = CalendarItemAdapter(context)
     private val binding: CalendarsViewBinding =
         CalendarsViewBinding.inflate(context.layoutInflater, this, true).apply {
@@ -40,12 +45,13 @@ class CalendarsView @JvmOverloads constructor(context: Context, attrs: Attribute
     fun expand(expanded: Boolean) {
         calendarItemAdapter.isExpanded = expanded
 
-        binding.moreCalendar.setImageResource(
-            if (expanded)
-                R.drawable.ic_keyboard_arrow_up
-            else
-                R.drawable.ic_keyboard_arrow_down
-        )
+        // Rotate expansion arrow
+        binding.moreCalendar.animate()
+            .rotation(if (expanded) 180f else 0f)
+            .setDuration(arrowRotationAnimationDuration)
+            .start()
+
+        TransitionManager.beginDelayedTransition(binding.calendarsTabContent, changeBoundTransition)
         binding.extraInformationContainer.visibility = if (expanded) View.VISIBLE else View.GONE
     }
 
@@ -121,10 +127,15 @@ class CalendarsView @JvmOverloads constructor(context: Context, attrs: Attribute
                 val springEquinox = getSpringEquinox(mainDate.toJdn())
                 equinox = context.getString(R.string.spring_equinox).format(
                     formatNumber(mainDate.year + addition),
-                    Clock(
-                        springEquinox[Calendar.HOUR_OF_DAY],
-                        springEquinox[Calendar.MINUTE]
-                    ).toFormattedString()
+                    Clock(springEquinox[Calendar.HOUR_OF_DAY], springEquinox[Calendar.MINUTE])
+                        .toFormattedString(forcedIn12 = true) + " " +
+                            formatDate(
+                                getDateFromJdnOfCalendar(
+                                    mainCalendar,
+                                    calendarToCivilDate(springEquinox).toJdn()
+                                ),
+                                forceNonNumerical = true
+                            )
                 )
             }
         }

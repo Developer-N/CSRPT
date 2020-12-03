@@ -80,7 +80,7 @@ class ShiftWorkDialog : AppCompatDialogFragment() {
 
                 mainActivity.appPrefs.edit {
                     putLong(PREF_SHIFT_WORK_STARTING_JDN, if (result.isEmpty()) -1 else jdn)
-                    putString(PREF_SHIFT_WORK_SETTING, result.toString())
+                    putString(PREF_SHIFT_WORK_SETTING, result)
                     putBoolean(PREF_SHIFT_WORK_RECURS, binding.recurs.isChecked)
                 }
 
@@ -101,7 +101,7 @@ class ShiftWorkDialog : AppCompatDialogFragment() {
         }
     }
 
-    private inner class ItemsAdapter internal constructor(
+    private inner class ItemsAdapter(
         var rows: List<ShiftWorkRecord> = emptyList(),
         private val binding: ShiftWorkSettingsBinding
     ) : RecyclerView.Adapter<ItemsAdapter.ViewHolder>() {
@@ -129,13 +129,13 @@ class ShiftWorkDialog : AppCompatDialogFragment() {
 
         override fun getItemCount(): Int = rows.size + 1
 
-        internal fun reset() {
+        fun reset() {
             rows = listOf(ShiftWorkRecord("d", 0))
             notifyDataSetChanged()
             updateShiftWorkResult()
         }
 
-        internal inner class ViewHolder(private val binding: ShiftWorkItemBinding) :
+        inner class ViewHolder(private val binding: ShiftWorkItemBinding) :
             RecyclerView.ViewHolder(binding.root) {
 
             init {

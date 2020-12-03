@@ -44,11 +44,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
             <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Date start -->
-            <androidx.cardview.widget.CardView
+            <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
-                app:cardBackgroundColor="?attr/colorCard">
+                app:cardBackgroundColor="?attr/colorCard"
+                app:cardPreventCornerOverlap="false"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
@@ -82,20 +84,22 @@
                         android:textSize="@dimen/text_size_description" />
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
-            </androidx.cardview.widget.CardView>
+            </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
             <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Date end-->
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ fajr start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_fajr"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -129,17 +133,19 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ fajr end-->
 
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ sunrise start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_sunrise"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -173,7 +179,7 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ sunrise end-->
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -182,13 +188,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ dhuhr start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_dhuhr"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -222,17 +230,19 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ dhuhr end-->
 
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ asr start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_asr"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -266,7 +276,7 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ asr end-->
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -275,13 +285,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ maghrib start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_maghrib"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -315,17 +327,19 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ maghrib end-->
 
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ isha start -->
-                <androidx.cardview.widget.CardView
+                <ir.namoo.religiousprayers.ui.shared.MaskedCardView
                     android:id="@+id/card_isha"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
                     android:layout_weight="5"
-                    app:cardBackgroundColor="?attr/colorCard">
+                    app:cardBackgroundColor="?attr/colorCard"
+                    app:cardPreventCornerOverlap="false"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
@@ -359,7 +373,7 @@
                             android:textSize="@dimen/text_size_description" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.cardview.widget.CardView>
+                </ir.namoo.religiousprayers.ui.shared.MaskedCardView>
                 <!--     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ isha end-->
             </androidx.appcompat.widget.LinearLayoutCompat>
         </androidx.appcompat.widget.LinearLayoutCompat>

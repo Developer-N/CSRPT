@@ -2,13 +2,16 @@ package ir.namoo.religiousprayers.ui.intro
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.*
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -27,9 +30,9 @@ import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import ir.namoo.religiousprayers.*
+import ir.namoo.religiousprayers.databinding.FragmentIntro1Binding
 import ir.namoo.religiousprayers.db.CityDB
 import ir.namoo.religiousprayers.db.CityInDB
-import ir.namoo.religiousprayers.databinding.FragmentIntro1Binding
 import ir.namoo.religiousprayers.ui.IntroActivity
 import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.*
@@ -48,15 +51,8 @@ class Intro1Fragment : Fragment() {
     private var lacksPermission = false
     private var everRegisteredCallback = false
     private lateinit var allCities: List<CityInDB>
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location?) {
-            location?.let { Handler().postDelayed({ showLocation(it) }, 2000) }
-        }
-
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-        override fun onProviderEnabled(provider: String?) {}
-        override fun onProviderDisabled(provider: String?) {}
-    }
+    private val locationListener =
+        LocationListener { Handler(Looper.getMainLooper()).postDelayed({ showLocation(it) }, 2000) }
 
     @SuppressLint("PrivateResource")
     override fun onCreateView(
@@ -71,14 +67,14 @@ class Intro1Fragment : Fragment() {
             allCities = CityDB.getInstance(requireContext().applicationContext).cityDBDAO()
                 .getAllCity()
         }
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             val animation =
                 AnimationUtils.loadAnimation(context, androidx.appcompat.R.anim.abc_fade_in)
             animation.interpolator = LinearInterpolator()
             animation.repeatCount = Animation.INFINITE
             binding.iconLocation.startAnimation(animation)
         }, 1000)
-        locationManager = activity?.getSystemService()
+        locationManager = requireActivity().getSystemService()
         getLocation()
         if (lacksPermission) {
             askForPermission()
@@ -186,6 +182,7 @@ class Intro1Fragment : Fragment() {
         }
     }
 
+    @SuppressLint("PrivateResource")
     private fun getLocation() {
         if (ActivityCompat.checkSelfPermission(
                 requireActivity(),
@@ -198,16 +195,58 @@ class Intro1Fragment : Fragment() {
             lacksPermission = true
             return
         }
-
-        locationManager?.apply {
-            if (LocationManager.GPS_PROVIDER in allProviders) {
-                requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
-                everRegisteredCallback = true
+        // request for new location
+        var gpsEnabled = false
+        var networkEnabled = false
+        try {
+            gpsEnabled = locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
+        } catch (ex: Exception) {
+            Log.d(TAG, "checkLocationEnabled: $ex")
+        }
+        try {
+            networkEnabled =
+                locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ?: false
+        } catch (ex: Exception) {
+            Log.d(TAG, "checkLocationEnabled: $ex")
+        }
+        if (!gpsEnabled && !networkEnabled) {
+            val dialog =
+                AlertDialog.Builder(requireContext())
+            dialog.setMessage(requireContext().resources.getString(R.string.gps_network_not_enabled))
+            dialog.setPositiveButton(
+                requireContext().resources.getString(R.string.open_location_setting)
+            ) { _: DialogInterface?, _: Int ->
+                val myIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                requireContext().startActivity(myIntent)
             }
+            dialog.setNegativeButton(
+                requireContext().getString(R.string.cancel)
+            ) { paramDialogInterface: DialogInterface, _: Int -> paramDialogInterface.dismiss() }
+            dialog.show()
+        } else {
+            try {
+                val animation =
+                    AnimationUtils.loadAnimation(context, androidx.appcompat.R.anim.abc_fade_in)
+                animation.interpolator = LinearInterpolator()
+                animation.repeatCount = Animation.INFINITE
+                binding.iconLocation.startAnimation(animation)
+            } catch (ex: Exception) {
+            }
+            locationManager?.apply {
+                if (LocationManager.GPS_PROVIDER in allProviders) {
+                    requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
+                    everRegisteredCallback = true
+                }
 
-            if (LocationManager.NETWORK_PROVIDER in allProviders) {
-                requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, locationListener)
-                everRegisteredCallback = true
+                if (LocationManager.NETWORK_PROVIDER in allProviders) {
+                    requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER,
+                        0,
+                        0f,
+                        locationListener
+                    )
+                    everRegisteredCallback = true
+                }
             }
         }
     }

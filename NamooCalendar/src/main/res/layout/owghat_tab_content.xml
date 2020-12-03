@@ -21,8 +21,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingTop="@dimen/padding_item"
-        android:paddingBottom="@dimen/padding_item" />
+        android:padding="@dimen/padding_item"
+        tools:itemCount="6"
+        tools:listitem="@layout/time_item" />
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -59,12 +60,6 @@
             android:background="@color/translucent"
             android:tint="?attr/colorIcon"
             app:srcCompat="@drawable/ic_camera" />
-        <!--        <ImageView-->
-        <!--            android:id="@+id/more_owghat"-->
-        <!--            android:layout_width="@dimen/icon_size"-->
-        <!--            android:layout_height="@dimen/icon_size"-->
-        <!--            android:tint="?attr/colorAccent"-->
-        <!--            app:srcCompat="@drawable/ic_keyboard_arrow_down" />-->
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

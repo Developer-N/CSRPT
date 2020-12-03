@@ -131,14 +131,12 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
         ),
         Item(
             "RAM",
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-                android.text.format.Formatter.formatShortFileSize(
-                    activity,
-                    ActivityManager.MemoryInfo().apply {
-                        activity.getSystemService<ActivityManager>()?.getMemoryInfo(this)
-                    }.totalMem
-                )
-            else "",
+            android.text.format.Formatter.formatShortFileSize(
+                activity,
+                ActivityManager.MemoryInfo().apply {
+                    activity.getSystemService<ActivityManager>()?.getMemoryInfo(this)
+                }.totalMem
+            ),
             ""
         ),
         Item(
@@ -245,7 +243,7 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
         )
     } catch (e: Exception) {
         e.printStackTrace()
-        emptyList<Item>()
+        emptyList()
     })
 
     class DeviceInformationDiffCallback : DiffUtil.ItemCallback<Item>() {

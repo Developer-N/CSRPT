@@ -11,25 +11,27 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
-import android.os.AsyncTask
-import android.os.Build
-import android.os.Bundle
+import android.os.*
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import androidx.core.view.GravityCompat
+import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.calendar.PersianDate
+import ir.namoo.quran.ui.QuranActivity
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.ActivityMainBinding
 import ir.namoo.religiousprayers.databinding.NavigationHeaderBinding
@@ -73,6 +75,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
+//        ReleaseDebugDifference.startLynxListenerIfIsDebug(this)
         initUtils(this)
 
         // Don't apply font override to English and Japanese locale
@@ -139,6 +142,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     "CONVERTER" -> R.id.converter
                     "SETTINGS" -> R.id.settings
                     "DEVICE" -> R.id.deviceInformation
+                    "AZKAR" -> R.id.azkar
                     else -> R.id.calendar
                 }
             )
@@ -158,6 +162,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0))
             .seasonImage.setImageResource(run {
+//                var season = (getTodayOfCalendar(CalendarType.SHAMSI).month - 1) / 3
+//
+//                 Southern hemisphere
+//                if ((getCoordinate(this)?.latitude ?: 1.0) < .0) season = (season + 2) % 4
+//
+//                when (season) {
+//                    0 -> R.drawable.spring
+//                    1 -> R.drawable.summer
+//                    2 -> R.drawable.fall
+//                    else -> R.drawable.winter
+//                }
                 val c = getTodayOfCalendar(CalendarType.ISLAMIC)
                 when {
                     c.month == 9 -> R.drawable.ramadhan
@@ -165,6 +180,24 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     else -> R.drawable.drawer_background
                 }
             })
+
+//        if (appPrefs.getString(PREF_APP_LANGUAGE, null) == null &&
+//            !appPrefs.getBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)
+//        ) {
+//            Snackbar.make(coordinator, "✖  Change app language?", 7000).apply {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//                    view.layoutDirection = View.LAYOUT_DIRECTION_LTR
+//                }
+//                view.setOnClickListener { dismiss() }
+//                setAction("Settings") {
+//                    appPrefs.edit {
+//                        putString(PREF_APP_LANGUAGE, LANG_EN_US)
+//                    }
+//                }
+//                setActionTextColor(resources.getColor(R.color.dark_accent))
+//            }.show()
+//            appPrefs.edit { putBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }
+//        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             binding.appbarLayout.outlineProvider = null
@@ -174,24 +207,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         if (mainCalendar == CalendarType.SHAMSI &&
             isIranHolidaysEnabled &&
             getTodayOfCalendar(CalendarType.SHAMSI).year > supportedYearOfIranCalendar
-        ) Snackbar.make(coordinator, getString(R.string.outdated_app), 10000).apply {
-            setAction(getString(R.string.update)) {
-                try {
-                    startActivity(
-                        Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri())
-                    )
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            "https://play.google.com/store/apps/details?id=$packageName".toUri()
-                        )
-                    )
-                }
-            }
-            setActionTextColor(getColorFromAttr(context, R.attr.colorAccent))
-        }.show()
+        ) outDatedSnackbar().show()
 
         applyAppLanguage(this)
 
@@ -210,6 +226,39 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         } catch (ex: java.lang.Exception) {
             Log.d(TAG, "register error: $ex")
         }
+
+        //check for overly permission
+        Handler(Looper.getMainLooper()).post {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    !Settings.canDrawOverlays(binding.root.context)
+                ) {
+                    AlertDialog.Builder(binding.root.context).apply {
+                        setTitle(binding.root.context.getString(R.string.requset_permision))
+                        setMessage(binding.root.context.getString(R.string.need_full_screen_permision))
+                        setPositiveButton(R.string.ok) { _: DialogInterface, _: Int ->
+                            binding.root.context.startActivity(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:" + binding.root.context.packageName)
+                                )
+                            )
+                        }
+                        setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int ->
+                            dialog.cancel()
+                        }
+                        create()
+                        show()
+                    }
+                }
+            } catch (ex: Exception) {
+                Log.e(TAG, "getPermission: ", ex)
+            }
+        }
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1)
+//            runOnUiThread { createShortcut() }
+
     }//end of onCreate
 
     @SuppressLint("PrivateResource")
@@ -229,12 +278,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
         val navO = NavOptions.Builder()
             .setEnterAnim(R.anim.slide_in_right)
-            .setExitAnim(R.anim.slide_out_right)
-            .setPopEnterAnim(R.anim.slide_in_right)
+            .setExitAnim(R.anim.slide_out_left)
+            .setPopEnterAnim(R.anim.slide_in_left)
             .setPopExitAnim(R.anim.slide_out_right)
             .build()
 
-        Navigation.findNavController(this, R.id.nav_host_fragment).navigate(id, null, navO)
+        navController?.navigate(id, null, navO)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -343,10 +392,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             stopService(Intent(this, ApplicationService::class.java))
             startEitherServiceOrWorker(applicationContext)
         }
-
         updateStoredPreference(this)
         update(applicationContext, true)
-
     }
 
     override fun onRequestPermissionsResult(
@@ -409,11 +456,18 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == R.id.exit) {
-            finish()
-        } else {
-            binding.drawer.closeDrawers()
-            clickedItem = menuItem.itemId
+        when (menuItem.itemId) {
+            R.id.exit -> {
+                finish()
+            }
+            R.id.quran -> {
+                binding.drawer.closeDrawers()
+                startActivity(Intent(this, QuranActivity::class.java))
+            }
+            else -> {
+                binding.drawer.closeDrawers()
+                clickedItem = menuItem.itemId
+            }
         }
         return true
     }
@@ -438,9 +492,19 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    private fun getCurrentDestinationId(): Int? = Navigation
-        .findNavController(this, R.id.nav_host_fragment)
-        .currentDestination?.id
+    private val navController: NavController?
+        get() =
+            (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment)
+                ?.findNavController()
+
+    private fun getCurrentDestinationId(): Int? = navController?.currentDestination?.id
+    private fun outDatedSnackbar() =
+        Snackbar.make(coordinator, getString(R.string.outdated_app), 10000).apply {
+            setAction(getString(R.string.update)) {
+                bringMarketPage(this@MainActivity)
+            }
+            getColorFromAttr(this@MainActivity, R.attr.colorAccent)
+        }
 
     //######################################## Update Checker
     @SuppressLint("StaticFieldLeak")
@@ -449,8 +513,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             try {
                 val t = AppInfoEntity()
                 val httpclient: HttpClient = DefaultHttpClient()
-                val uri =
-                    "http://www.namoo.ir/Home/GetAppInfo/1"
+                val uri = "http://www.namoo.ir/Home/GetAppInfo/1"
                 val httpGet = HttpGet(uri)
                 val response: HttpResponse = httpclient.execute(httpGet)
                 if (response.statusLine.statusCode == 200) {
@@ -563,4 +626,20 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         } catch (e: Exception) {
         }
     }
-}
+
+//    @TargetApi(25)
+//    private fun createShortcut() {
+//        val shortcutManager = getSystemService(ShortcutManager::class.java)
+//        val intent1 = Intent(applicationContext, MainActivity::class.java)
+//        intent1.action = "AZKAR"
+//
+//        val azkarShortcut = ShortcutInfo.Builder(this, "azkar")
+//            .setIntent(intent1)
+//            .setShortLabel(getString(R.string.azkar))
+//            .setLongLabel(getString(R.string.azkar))
+//            .setIcon(Icon.createWithResource(this, R.drawable.ic_azkar2))
+//            .build()
+//        if (!shortcutManager.dynamicShortcuts.contains(azkarShortcut))
+//            shortcutManager.dynamicShortcuts.add(azkarShortcut)
+//    }
+}//end of MainActivity

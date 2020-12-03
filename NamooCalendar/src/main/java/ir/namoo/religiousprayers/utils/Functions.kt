@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers.utils
 
-
 import android.Manifest
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
@@ -19,6 +18,7 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -27,17 +27,16 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.annotation.AttrRes
-import androidx.annotation.RawRes
-import androidx.annotation.StringRes
-import androidx.annotation.StyleRes
+import androidx.annotation.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
+import androidx.work.*
 import com.google.android.material.circularreveal.CircularRevealCompat
 import com.google.android.material.circularreveal.CircularRevealWidget
 import com.google.android.material.snackbar.Snackbar
@@ -51,18 +50,20 @@ import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.Coordinate
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.religiousprayers.*
+import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.entities.CalendarTypeItem
 import ir.namoo.religiousprayers.entities.CityItem
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import ir.namoo.religiousprayers.service.ApplicationService
 import ir.namoo.religiousprayers.service.BroadcastReceivers
+import ir.namoo.religiousprayers.service.UpdateWorker
 import net.lingala.zip4j.ZipFile
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.File
-import java.io.FileOutputStream
+import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 // This should be called before any use of Utils on the activity and services
@@ -91,12 +92,17 @@ fun toLinearDate(date: AbstractDate): String = "%s/%s/%s".format(
 fun isNightModeEnabled(context: Context): Boolean =
     context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
-fun formatDate(date: AbstractDate): String = if (numericalDatePreferred)
-    (toLinearDate(date) + " " + getCalendarNameAbbr(date)).trim()
-else when (language) {
-    LANG_CKB -> "%sی %sی %s"
-    else -> "%s %s %s"
-}.format(formatNumber(date.dayOfMonth), getMonthName(date), formatNumber(date.year))
+fun formatDate(
+    date: AbstractDate,
+    calendarNameInLinear: Boolean = true,
+    forceNonNumerical: Boolean = false
+): String =
+    if (numericalDatePreferred && !forceNonNumerical)
+        (toLinearDate(date) + if (calendarNameInLinear) (" " + getCalendarNameAbbr(date)) else "").trim()
+    else when (language) {
+        LANG_CKB -> "%sی %sی %s"
+        else -> "%s %s %s"
+    }.format(formatNumber(date.dayOfMonth), getMonthName(date), formatNumber(date.year))
 
 fun isNonArabicScriptSelected() = when (language) {
     LANG_EN_US, LANG_JA -> true
@@ -107,6 +113,12 @@ fun isNonArabicScriptSelected() = when (language) {
 fun isLocaleRTL(): Boolean = when (language) {
     LANG_EN_US, LANG_JA -> false
     else -> true
+}
+
+fun formatNumber(number: Double): String = when (preferredDigits) {
+    ARABIC_DIGITS -> number.toString()
+    else -> formatNumber(number.toString())
+        .replace(".", "٫" /* U+066B, Arabic Decimal Separator */)
 }
 
 fun formatNumber(number: Int): String = formatNumber(number.toString())
@@ -160,14 +172,13 @@ fun getCalendarNameAbbr(date: AbstractDate): String {
 }
 
 fun getThemeFromPreference(context: Context, prefs: SharedPreferences): String =
-    prefs.getString(PREF_THEME, null)
+    prefs.getString(PREF_THEME, null)?.takeIf { it != "SystemDefault" }
         ?: if (isNightModeEnabled(context)) DARK_THEME else CYAN_THEME
 
 fun getEnabledCalendarTypes(): List<CalendarType> = listOf(mainCalendar) + otherCalendars
 
 fun loadApp(context: Context) {
-//    if (goForWorker()) return
-
+    if (goForWorker()) return
     try {
         val alarmManager = context.getSystemService<AlarmManager>() ?: return
 
@@ -291,24 +302,31 @@ private fun setAlarm(
         )
 
         when {
-            Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 ->
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime.timeInMillis,
-                    pendingIntent
+            Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP -> {
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(
+                        triggerTime.timeInMillis,
+                        pendingIntent
+                    ), pendingIntent
                 )
-            Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ->
+//                appendLog(context, "setAlarmClock alarm for: " + triggerTime.time)
+            }
+            Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 -> {
                 alarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
                     triggerTime.timeInMillis,
                     pendingIntent
                 )
-            else ->
+//                appendLog(context, "setExact alarm for: " + triggerTime.time)
+            }
+            else -> {
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
                     triggerTime.timeInMillis,
                     pendingIntent
                 )
+//                appendLog(context, "set alarm for: " + triggerTime.time)
+            }
         }
     }
 }
@@ -339,11 +357,22 @@ fun readRawResource(context: Context, @RawRes res: Int) =
     context.resources.openRawResource(res).use { String(it.readBytes()) }
 
 fun formatCoordinate(context: Context, coordinate: Coordinate, separator: String) =
-    "%s: %.4f%s%s: %.4f".format(
+    "%s: %.7f%s%s: %.7f".format(
         Locale.getDefault(),
         context.getString(R.string.latitude), coordinate.latitude, separator,
         context.getString(R.string.longitude), coordinate.longitude
     )
+
+// https://stackoverflow.com/a/62499553
+// https://en.wikipedia.org/wiki/ISO_6709#Representation_at_the_human_interface_(Annex_D)
+fun formatCoordinateISO6709(lat: Double, long: Double, alt: Double? = null) = listOf(
+    abs(lat) to if (lat >= 0) "N" else "S", abs(long) to if (long >= 0) "E" else "W"
+).joinToString(" ") {
+    val degrees = it.first.toInt()
+    val minutes = ((it.first - degrees) * 60).toInt()
+    val seconds = ((it.first - degrees) * 3600 % 60).toInt()
+    "%d°%02d′%02d%s".format(Locale.US, degrees, minutes, seconds, it.second)
+} + (alt?.let { " %s%.1fm".format(Locale.US, if (alt < 0) "−" else "", abs(alt)) } ?: "")
 
 fun getCityName(context: Context, fallbackToCoord: Boolean): String =
     getCityFromPreference(context)?.let {
@@ -383,6 +412,17 @@ fun getPrayTimeText(athanKey: String?): Int = when (athanKey) {
     "SUNRISE" -> R.string.sunrise
     "BFAJR" -> R.string.alarm_before_fajr
     else -> R.string.isha
+}
+
+@DrawableRes
+fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
+    "FAJR" -> R.drawable.fajr
+    "DHUHR" -> R.drawable.dhuhr
+    "ASR" -> R.drawable.asr
+    "MAGHRIB" -> R.drawable.maghrib
+    "ISHA" -> R.drawable.isha
+    "SUNRISE" -> R.drawable.fajr
+    else -> R.drawable.isha
 }
 
 fun getDateFromJdnOfCalendar(calendar: CalendarType, jdn: Long): AbstractDate = when (calendar) {
@@ -458,32 +498,72 @@ fun copyToClipboard(view: View?, label: CharSequence?, text: CharSequence?) {
 fun dateStringOfOtherCalendars(jdn: Long, separator: String) =
     otherCalendars.joinToString(separator) { formatDate(getDateFromJdnOfCalendar(it, jdn)) }
 
+private fun calculateDiffToChangeDate(): Long = Calendar.getInstance().apply {
+    set(Calendar.HOUR_OF_DAY, 0)
+    set(Calendar.MINUTE, 0)
+    set(Calendar.SECOND, 1)
+}.timeInMillis / 1000 + DAY_IN_SECOND - Calendar.getInstance().time.time / 1000
+
+fun setChangeDateWorker(context: Context) {
+    val remainedSeconds = calculateDiffToChangeDate()
+    val changeDateWorker = OneTimeWorkRequest.Builder(UpdateWorker::class.java)
+        .setInitialDelay(
+            remainedSeconds,
+            TimeUnit.SECONDS
+        )// Use this when you want to add initial delay or schedule initial work to `OneTimeWorkRequest` e.g. setInitialDelay(2, TimeUnit.HOURS)
+        .build()
+
+    WorkManager.getInstance(context).beginUniqueWork(
+        CHANGE_DATE_TAG,
+        ExistingWorkPolicy.REPLACE,
+        changeDateWorker
+    ).enqueue()
+}
 
 fun String.splitIgnoreEmpty(delim: String) = this.split(delim).filter { it.isNotEmpty() }
 
 fun startEitherServiceOrWorker(context: Context) {
-    val isRunning = context.getSystemService<ActivityManager>()?.let { am ->
-        try {
-            am.getRunningServices(Integer.MAX_VALUE).any {
-                ApplicationService::class.java.name == it.service.className
+    val workManager = WorkManager.getInstance(context)
+    if (goForWorker()) {
+        val updateBuilder =
+            PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1L, TimeUnit.HOURS)
+
+        val updateWork = updateBuilder.build()
+        workManager.enqueueUniquePeriodicWork(
+            UPDATE_TAG,
+            ExistingPeriodicWorkPolicy.REPLACE,
+            updateWork
+        )
+    } else {
+        // Disable all the scheduled workers, just in case enabled before
+        workManager.cancelAllWork()
+        // Or,
+        // workManager.cancelAllWorkByTag(UPDATE_TAG);
+        // workManager.cancelUniqueWork(CHANGE_DATE_TAG);
+
+        val isRunning = context.getSystemService<ActivityManager>()?.let { am ->
+            try {
+                am.getRunningServices(Integer.MAX_VALUE).any {
+                    ApplicationService::class.java.name == it.service.className
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "startEitherServiceOrWorker service's first part fail", e)
+                false
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "startEitherServiceOrWorker service's first part fail", e)
-            false
-        }
-    } ?: false
+        } ?: false
 
-    if (!isRunning) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                ContextCompat.startForegroundService(
-                    context,
-                    Intent(context, ApplicationService::class.java)
-                )
+        if (!isRunning) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    ContextCompat.startForegroundService(
+                        context,
+                        Intent(context, ApplicationService::class.java)
+                    )
 
-            context.startService(Intent(context, ApplicationService::class.java))
-        } catch (e: Exception) {
-            Log.e(TAG, "startEitherServiceOrWorker service's second part fail", e)
+                context.startService(Intent(context, ApplicationService::class.java))
+            } catch (e: Exception) {
+                Log.e(TAG, "startEitherServiceOrWorker service's second part fail", e)
+            }
         }
     }
 }
@@ -597,6 +677,9 @@ fun getAllCities(context: Context, needsSort: Boolean): List<CityItem> {
 
 val Context.appPrefs: SharedPreferences
     get() = PreferenceManager.getDefaultSharedPreferences(this)
+
+val Context.appPrefsLite: SharedPreferences
+    get() = this.getSharedPreferences("lite_prefs", Context.MODE_PRIVATE)
 
 val Context.layoutInflater: LayoutInflater
     get() = LayoutInflater.from(this)
@@ -821,9 +904,20 @@ fun fixTime(time: String, min: Int): String {
     val nm: String
     nh = sh.toString() + ""
     nm = sm.toString() + ""
+//    if (sh <= 9) nh = "0$nh"
+//    if (sm <= 9) nm = "0$nm"
     return "$nh:$nm"
 }
 
+//fun add0ToTime(time: String): String {
+//    val h = if (time.split(":")[0].length == 2) time.split(":")[0] else "0${time.split(":")[0]}"
+//    val m = if (time.split(":")[1].length == 2) time.split(":")[1] else "0${time.split(":")[1]}"
+//    return "$h:$m"
+//}
+
+@SuppressLint("HardwareIds")
+fun getUniqueID(context: Context): String =
+    Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
 fun snackMessage(view: View?, msg: String) {
     if (view != null) {
@@ -835,6 +929,36 @@ fun snackMessage(view: View?, msg: String) {
         snack.show()
     }
 }
+
+//fun toastMessage(context:Context, msg:String){
+//    Toast.makeText(context,msg,Toast.LENGTH_SHORT).apply {
+//        show()
+//    }
+//}
+
+//fun makeByteArrayFromEditedTimes(context: Context): ByteArray? {
+//    val editedPrayTimesEntity =
+//        PrayTimesDB.getInstance(context.applicationContext).prayTimes().getAllEdited()
+//    if (editedPrayTimesEntity.isNullOrEmpty()) return null
+//    val city = JSONCity()
+//    city.name = context.appPrefs.getString(PREF_GEOCODED_CITYNAME, "")
+//    city.lat = context.appPrefs.getString(PREF_LATITUDE, "")?.toDouble() ?: 0.0
+//    city.lng = context.appPrefs.getString(PREF_LONGITUDE, "")?.toDouble() ?: 0.0
+//    val prayList = arrayListOf<JSONPrayTime>()
+//    for (p in editedPrayTimesEntity) {
+//        val t = JSONPrayTime()
+//        t.dayNum = p.dayNumber
+//        t.asr = p.asr
+//        t.dhuhr = p.dhuhr
+//        t.fajr = p.fajr
+//        t.isha = p.isha
+//        t.maghrib = p.maghrib
+//        t.sunrise = p.sunrise
+//        prayList.add(t)
+//    }
+//    val res = toJson(city, prayList).toString()
+//    return res.toByteArray(Charset.forName("UTF-8"))
+//}
 
 fun getTimesDirectoryPath(context: Context): String =
     context.getExternalFilesDir("times")?.absolutePath ?: ""
@@ -986,4 +1110,39 @@ fun isPackageInstalled(packageName: String, packageManager: PackageManager): Boo
     } catch (ex: Exception) {
         false
     }
+}
+
+fun appendLog(context: Context, text: String?) {
+    if (text.isNullOrEmpty() || text.isNullOrBlank()) return
+    val logFile = File("${context.getExternalFilesDir("logs")?.absolutePath ?: ""}/log.file")
+    if (logFile.exists() && logFile.length() > 1024 * 500) logFile.delete()//if log size > 500kb delete it
+    if (!logFile.exists()) {
+        try {
+            if (!File(context.getExternalFilesDir("logs")?.absolutePath ?: "").exists())
+                File(context.getExternalFilesDir("logs")?.absolutePath ?: "").mkdirs()
+            logFile.createNewFile()
+        } catch (e: IOException) {
+        }
+    }
+    try {
+        val buf = BufferedWriter(FileWriter(logFile, true))
+        buf.append(text)
+        buf.newLine()
+        buf.close()
+    } catch (e: IOException) {
+    }
+}
+
+fun bringMarketPage(activity: Activity) = try {
+    activity.startActivity(
+        Intent(Intent.ACTION_VIEW, "market://details?id=${activity.packageName}".toUri())
+    )
+} catch (e: ActivityNotFoundException) {
+    e.printStackTrace()
+    activity.startActivity(
+        Intent(
+            Intent.ACTION_VIEW,
+            "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
+        )
+    )
 }

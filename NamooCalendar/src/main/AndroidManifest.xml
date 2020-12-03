@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="ir.namoo.religiousprayers">
-
+    <!-- remove the permission taken by work manager -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -11,10 +11,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <uses-permission android:name="android.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
+    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -32,7 +38,6 @@
         android:name="android.hardware.location.gps"
         android:required="false" />
 
-
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -45,6 +50,25 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="m">
+
+        <activity
+            android:name="ir.namoo.quran.ui.QuranActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            tools:targetApi="n" />
+        <activity
+            android:name="ir.namoo.quran.ui.SuraViewActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            tools:targetApi="n" />
+
+        <service
+            android:name="ir.namoo.quran.ui.QuranPlayer"
+            android:enabled="true" />
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
@@ -58,9 +82,11 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
         <activity
             android:name=".ui.MainActivity"
@@ -68,11 +94,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:resizeableActivity="true"
-            tools:targetApi="n">
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
-        </activity>
+            tools:targetApi="n" />
         <activity
             android:name=".ui.AthanActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
@@ -83,7 +105,8 @@
 
         <receiver
             android:name=".service.BroadcastReceivers"
-            android:exported="false">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.PHONE_STATE" />
@@ -108,7 +131,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider1x1" />
-
             <meta-data
                 android:name="android.appwidget.provider.semConfigureActivity"
                 android:value="ir.namoo.religiousprayers.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
@@ -141,7 +163,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider4x1" />
-
             <meta-data
                 android:name="android.appwidget.provider.semConfigureActivity"
                 android:value="ir.namoo.religiousprayers.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
@@ -158,7 +179,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider4x2" />
-
             <meta-data
                 android:name="android.appwidget.provider.semConfigureActivity"
                 android:value="ir.namoo.religiousprayers.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
@@ -175,7 +195,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider2x2" />
-
             <meta-data
                 android:name="android.appwidget.provider.semConfigureActivity"
                 android:value="ir.namoo.religiousprayers.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
@@ -222,6 +241,15 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/filepaths" />
+        </provider>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
         </provider>
     </application>
 

@@ -95,7 +95,6 @@ class AthanDownloadDialog(val fragment: NSettingFragment, var athanList: List<At
             @SuppressLint("StaticFieldLeak")
             inner class DownloadTask(val link: String) : AsyncTask<String, Int, String>() {
 
-                @SuppressLint("WrongThread")
                 override fun doInBackground(vararg params: String?): String {
                     return try {
                         val url = URL(link)

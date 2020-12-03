@@ -16,16 +16,16 @@ import android.view.animation.AnimationUtils
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import com.google.android.material.textview.MaterialTextView
 import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.appLink
 import ir.namoo.religiousprayers.databinding.FragmentAboutBinding
 import ir.namoo.religiousprayers.ui.MainActivity
-import ir.namoo.religiousprayers.utils.formatNumber
-import ir.namoo.religiousprayers.utils.getAppFont
-import ir.namoo.religiousprayers.utils.readRawResource
-import ir.namoo.religiousprayers.utils.snackMessage
+import ir.namoo.religiousprayers.utils.*
+import java.io.File
 
 
 class AboutFragment : Fragment() {
@@ -103,25 +103,63 @@ class AboutFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.deviceInformation)
-            (activity as MainActivity).navigateTo(R.id.deviceInformation)
-        else if (item.itemId == R.id.mnu_changes) {
-            AlertDialog.Builder(requireContext()).apply {
-                val txtView = MaterialTextView(requireContext()).apply {
-                    movementMethod = ScrollingMovementMethod()
-                    typeface = getAppFont(requireContext())
-                    setPadding(30, 15, 30, 15)
-                    textSize = 16f
-                    setTextIsSelectable(true)
-                    text = getString(R.string.changes)
-                }
-                setView(txtView)
-                setNegativeButton(R.string.close) { dialogInterface: DialogInterface, _: Int ->
-                    dialogInterface.dismiss()
-                }
-            }.create().show()
+        when (item.itemId) {
+            R.id.deviceInformation -> (activity as MainActivity).navigateTo(R.id.deviceInformation)
+            R.id.mnu_changes -> {
+                AlertDialog.Builder(requireContext()).apply {
+                    val txtView = MaterialTextView(requireContext()).apply {
+                        movementMethod = ScrollingMovementMethod()
+                        typeface = getAppFont(requireContext())
+                        setPadding(30, 15, 30, 15)
+                        textSize = 16f
+                        setTextIsSelectable(true)
+                        text = getString(R.string.changes)
+                    }
+                    setView(txtView)
+                    setNegativeButton(R.string.close) { dialogInterface: DialogInterface, _: Int ->
+                        dialogInterface.dismiss()
+                    }
+                }.create().show()
+            }
+            R.id.share -> shareApplication()
         }
         return true
+    }
+
+    private fun shareApplication() {
+        val activity = activity ?: return
+        try {
+            val app = activity.applicationContext?.applicationInfo ?: return
+            val cacheDir = requireContext().getExternalFilesDir("pic")?.absolutePath ?: return
+
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "*/*"
+                val uri = FileProvider.getUriForFile(
+                    activity.applicationContext, "ir.namoo.religiousprayers.fileprovider",
+                    File(app.sourceDir).copyTo(
+                        File(
+                            "$cacheDir/" +
+                                    getString(R.string.app_name).replace(" ", "_") +
+                                    "-" + formatNumber(programVersion(activity).split("-")[0]) + ".apk"
+                        ), true
+                    )
+                ).apply {
+                    activity.grantUriPermission(
+                        "com.android.providers.media.MediaProvider", this,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+                putExtra(Intent.EXTRA_STREAM, uri)
+                val text = "\n" + getString(R.string.app_name) +
+                        "\n$appLink"
+                putExtra(Intent.EXTRA_TEXT, text)
+                setDataAndType(uri, "*/*")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }, getString(R.string.share)))
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            bringMarketPage(activity)
+        }
     }
 
     private fun programVersion(context: Context): String = try {

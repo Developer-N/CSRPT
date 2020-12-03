@@ -1,6 +1,9 @@
 package ir.namoo.religiousprayers.service
 
-import android.app.*
+import android.app.IntentService
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -10,6 +13,7 @@ import android.media.MediaPlayer
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -56,7 +60,7 @@ class AthanNotification : IntentService("NotificactionService") {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationChannel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID, context.getString(R.string.app_name),
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
                 ).apply {
                     description = context.getString(R.string.app_name)
                     enableLights(true)
@@ -84,10 +88,12 @@ class AthanNotification : IntentService("NotificactionService") {
                 "ISHA" -> listOf(R.string.fajr)
                 else -> listOf(R.string.fajr)
             }.joinToString(" - ") {
-                " ${context.getString(it)}: ${getClockFromStringId(
-                    it,
-                    context
-                ).toFormattedString()}"
+                " ${context.getString(it)}: ${
+                    getClockFromStringId(
+                        it,
+                        context
+                    ).toFormattedString()
+                }"
             }
             val stopIntent =
                 Intent(context, AthanNotification::class.java).setAction(ACTION_STOP)
@@ -117,8 +123,8 @@ class AthanNotification : IntentService("NotificactionService") {
                 )
             notificationBuilder.setDeleteIntent(stop)
 
-//            notificationBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE)
-//            notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND)
+            notificationBuilder.setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+            notificationBuilder.setDefaults(NotificationCompat.DEFAULT_SOUND)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val cv = RemoteViews(
@@ -147,7 +153,7 @@ class AthanNotification : IntentService("NotificactionService") {
             notificationBuilder.priority = if (context.appPrefs.getBoolean(
                     PREF_NOTIFICATION_PLAY_ATHAN,
                     DEFAULT_NOTIFICATION_PLAY_ATHAN
-                )
+                ) && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
             ) NotificationCompat.PRIORITY_LOW
             else NotificationCompat.PRIORITY_HIGH
 
@@ -208,14 +214,14 @@ class AthanNotification : IntentService("NotificactionService") {
                         } catch (e: IOException) {
                             e.printStackTrace()
                         }
-                        start()
+                        Handler(Looper.getMainLooper()).postDelayed({ start() }, 1000L)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             if (context.isAscendingAthanVolumeEnabled) handler.post(ascendVolume)
 
-            Handler().postDelayed({
+            Handler(Looper.getMainLooper()).postDelayed({
                 notificationManager?.cancel(NOTIFICATION_ID)
                 stop(context)
             }, TimeUnit.MINUTES.toMillis(10))

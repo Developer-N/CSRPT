@@ -3,7 +3,8 @@
     <files-path
         name="mydatabases"
         path="../databases/" />
+
     <external-files-path
         name="pic"
-        path="pic/"/>
+        path="pic/" />
 </paths>

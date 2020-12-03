@@ -9,6 +9,7 @@ import android.content.res.Resources
 import android.location.*
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -17,12 +18,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.view.updatePadding
+import com.google.openlocationcode.OpenLocationCode
+import io.github.persiancalendar.praytimes.Coordinate
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.ui.MainActivity
-import ir.namoo.religiousprayers.utils.appPrefs
-import ir.namoo.religiousprayers.utils.askForLocationPermission
-import ir.namoo.religiousprayers.utils.formatCoordinate
-import io.github.persiancalendar.praytimes.Coordinate
+import ir.namoo.religiousprayers.utils.*
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -31,21 +31,28 @@ class GPSLocationDialog : AppCompatDialogFragment() {
 
     private var locationManager: LocationManager? = null
     private lateinit var textView: TextView
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private var latitude: String? = null
     private var longitude: String? = null
     private var cityName: String? = null
     private val checkGPSProviderCallback = Runnable { checkGPSProvider() }
     private var lacksPermission = false
     private var everRegisteredCallback = false
+    private var isLocationShown = false
+    private var isOneProviderEnabled = false
     private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location?) {
-            location?.let { showLocation(it) }
+        override fun onLocationChanged(location: Location) = showLocation(location)
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        override fun onProviderEnabled(provider: String) {
+            isOneProviderEnabled = true
+            if (!isLocationShown)
+                textView.setText(R.string.pleasewaitgps)
         }
 
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-        override fun onProviderEnabled(provider: String?) {}
-        override fun onProviderDisabled(provider: String?) {}
+        override fun onProviderDisabled(provider: String) {
+            if (!isLocationShown && !isOneProviderEnabled)
+                textView.setText(R.string.enable_location_services)
+        }
     }
 
     lateinit var mainActivity: MainActivity
@@ -144,14 +151,20 @@ class GPSLocationDialog : AppCompatDialogFragment() {
         var result = ""
         if (cityName?.isNotEmpty() == true) result = cityName + "\n\n"
         // this time, with native digits
+        val plusCodeLink = "https://plus.codes/" +
+                OpenLocationCode.encode(location.latitude, location.longitude)
         result += formatCoordinate(
             mainActivity,
-            Coordinate(
-                location.latitude, location.longitude,
-                location.altitude
-            ), "\n"
-        )
+            Coordinate(location.latitude, location.longitude, location.altitude), "\n"
+        ) + "\n\n" + formatCoordinateISO6709(
+            location.latitude, location.longitude, location.altitude
+        ) + "\n\n" + plusCodeLink
         textView.text = result
+        textView.setOnClickListener {
+            copyToClipboard(textView, "coords", plusCodeLink)
+        }
+
+        isLocationShown = true
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -159,8 +172,8 @@ class GPSLocationDialog : AppCompatDialogFragment() {
             mainActivity.appPrefs.edit {
                 putString(PREF_LATITUDE, latitude)
                 putString(PREF_LONGITUDE, longitude)
-//                putString(PREF_GEOCODED_CITYNAME, cityName ?: "")
-//                putString(PREF_SELECTED_LOCATION, DEFAULT_CITY)
+                putString(PREF_GEOCODED_CITYNAME, cityName ?: "")
+                putString(PREF_SELECTED_LOCATION, DEFAULT_CITY)
             }
         }
 
@@ -186,8 +199,8 @@ class GPSLocationDialog : AppCompatDialogFragment() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             getLocation()
-            if (lacksPermission)
             // request for permission is rejected
+            if (lacksPermission)
                 dismiss()
         }
     }

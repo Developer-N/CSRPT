@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.PowerManager
 import androidx.core.net.toUri
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.service.AthanNotification
@@ -49,7 +50,17 @@ val Context.isAscendingAthanVolumeEnabled: Boolean
 fun getCustomAthanUri(context: Context): Uri? =
     context.appPrefs.getString(PREF_ATHAN_URI, null)?.takeUnless { it.isEmpty() }?.toUri()
 
-fun startAthan(context: Context, prayTimeKey: String, prayTime: String): Any? =
+fun startAthan(context: Context, prayTimeKey: String, prayTime: String) {
+    try {
+        (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SRPT::MyWakelockTag").apply {
+                acquire(1 * 60 * 1000L /*1 minutes*/)
+            }
+        }
+    } catch (e: Exception) {
+        appendLog(context, "error: " + e.message)
+    }
+    appendLog(context, "startAthan................")
     when {
         prayTimeKey == context.resources.getString(R.string.alarm_before_fajr_name) -> {
             context.startActivity(
@@ -63,7 +74,6 @@ fun startAthan(context: Context, prayTimeKey: String, prayTime: String): Any? =
             val intent = Intent(context, AthanNotification::class.java)
                 .putExtra(KEY_EXTRA_PRAYER_KEY, prayTimeKey)
                 .putExtra(KEY_EXTRA_PRAYER_TIME, prayTime)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startService(intent)
             AthanNotification.notify(context, intent)
         }
@@ -76,6 +86,7 @@ fun startAthan(context: Context, prayTimeKey: String, prayTime: String): Any? =
             )
         }
     }
+}
 
 fun getAthanUri(context: Context): Uri {
     return if ((context.appPrefs.getString(

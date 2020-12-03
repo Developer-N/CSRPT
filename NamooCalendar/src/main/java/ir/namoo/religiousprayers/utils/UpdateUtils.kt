@@ -38,9 +38,17 @@ fun setDeviceCalendarEvents(context: Context) = try {
     e.printStackTrace()
 }
 
+var latestFiredUpdate = 0L
+
 fun update(context: Context, updateDate: Boolean) {
+    val now = System.currentTimeMillis()
+    if (!updateDate && now - latestFiredUpdate < HALF_SECOND_IN_MILLIS) {
+        Log.d("UpdateUtils", "skip update")
+        return
+    }
+    latestFiredUpdate = now
+
     Log.d("UpdateUtils", "update")
-    if (getCoordinate(context) == null) return
     applyAppLanguage(context)
     val calendar = makeCalendarFromDate(Date())
     val date = getTodayOfCalendar(mainCalendar)
@@ -113,18 +121,23 @@ fun update(context: Context, updateDate: Boolean) {
 
     var dateHasChanged = false
     if (pastDate == null || pastDate != date || updateDate) {
-//        Log.d("UpdateUtils", "date has changed")
+        Log.d("UpdateUtils", "date has changed")
         loadAlarms(context)
         pastDate = date
         dateHasChanged = true
         setDeviceCalendarEvents(context)
     }
 
+    val showOtherCalendars = "other_calendars" in whatToShowOnWidgets
+
     val weekDayName = getWeekDayName(date)
     var title = context.getString(R.string.today) + " " + dayTitleSummary(date)
+    var widgetTitle = dayTitleSummary(date, calendarNameInLinear = showOtherCalendars)
     val shiftWorkTitle = getShiftWorkTitle(jdn, false)
-    if (shiftWorkTitle.isNotEmpty())
+    if (shiftWorkTitle.isNotEmpty()) {
         title += " ($shiftWorkTitle)"
+        widgetTitle += " ($shiftWorkTitle)"
+    }
     var subtitle = dateStringOfOtherCalendars(jdn, spacedComma)
 
     val currentClock = Clock(calendar)
@@ -209,7 +222,7 @@ fun update(context: Context, updateDate: Boolean) {
             )
         }
 
-        val mainDateString = formatDate(date)
+        val mainDateString = formatDate(date, calendarNameInLinear = showOtherCalendars)
 
         remoteViews4.run {
             // Widget 4x1
@@ -222,14 +235,14 @@ fun update(context: Context, updateDate: Boolean) {
             var text3 = ""
 
             if (enableClock) {
-                text2 = title
+                text2 = widgetTitle
                 if (isForcedIranTimeEnabled) text3 =
                     "(" + context.getString(R.string.iran_time) + ")"
             } else {
                 remoteViews4.setTextViewText(R.id.textPlaceholder1_4x1, weekDayName)
                 text2 = mainDateString
             }
-            if ("other_calendars" in whatToShowOnWidgets) {
+            if (showOtherCalendars) {
                 text2 += spacedComma + subtitle
             }
 
@@ -249,7 +262,7 @@ fun update(context: Context, updateDate: Boolean) {
             setTextColor(R.id.owghat_2x2, color)
 
             text2 = if (enableClock) {
-                title
+                widgetTitle
             } else {
                 setTextViewText(R.id.time_2x2, weekDayName)
                 mainDateString
@@ -296,7 +309,7 @@ fun update(context: Context, updateDate: Boolean) {
                 setViewVisibility(R.id.owghat_2x2, View.GONE)
             }
 
-            if ("other_calendars" in whatToShowOnWidgets) {
+            if (showOtherCalendars) {
                 text2 = text2 + "\n" + subtitle + "\n" + getZodiacInfo(context, jdn, true)
             }
             setTextViewText(R.id.date_2x2, text2)
@@ -329,13 +342,13 @@ fun update(context: Context, updateDate: Boolean) {
             setTextColor(R.id.textPlaceholder4owghat_5_4x2, color)
             setTextColor(R.id.textPlaceholder4owghat_6_4x2, color)
 
-            var text2 = formatDate(date)
+            var text2 = formatDate(date, calendarNameInLinear = showOtherCalendars)
             if (enableClock)
                 text2 = getWeekDayName(date) + "\n" + text2
             else
                 setTextViewText(R.id.textPlaceholder0_4x2, weekDayName)
 
-            if ("other_calendars" in whatToShowOnWidgets)
+            if (showOtherCalendars)
                 text2 = text2 + "\n" + dateStringOfOtherCalendars(jdn, "\n")
 
             setTextViewText(R.id.textPlaceholder1_4x2, text2)
@@ -362,10 +375,12 @@ fun update(context: Context, updateDate: Boolean) {
                 ) { textHolderViewId, owghatStringId ->
                     setTextViewText(
                         textHolderViewId,
-                        "${context.getString(owghatStringId)}\n${getClockFromStringId(
-                            owghatStringId,
-                            context
-                        ).toFormattedString()}"
+                        "${context.getString(owghatStringId)}\n${
+                            getClockFromStringId(
+                                owghatStringId,
+                                context
+                            ).toFormattedString()
+                        }"
                     )
                     setTextColor(
                         textHolderViewId,
@@ -475,8 +490,8 @@ fun update(context: Context, updateDate: Boolean) {
             .setContentText(subtitle)
 
         // Night mode doesn't like our custom notification in Samsung and HTC One UI
-        val shouldDisableCustomNotification =
-            (Build.BRAND in listOf("samsung", "htc")) && isNightModeEnabled(context)
+        val shouldDisableCustomNotification = false
+//            (Build.BRAND in listOf("samsung", "htc")) && isNightModeEnabled(context)
 
         if (!isTalkBackEnabled && !shouldDisableCustomNotification) {
             val holidays = getEventsTitle(

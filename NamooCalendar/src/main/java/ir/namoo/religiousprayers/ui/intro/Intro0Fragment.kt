@@ -25,6 +25,10 @@ import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.FragmentIntro0Binding
 import ir.namoo.religiousprayers.databinding.ItemAvailableCityBinding
+import ir.namoo.religiousprayers.praytimes.DPTDB
+import ir.namoo.religiousprayers.praytimes.PrayTimesDB
+import ir.namoo.religiousprayers.praytimes.getCity
+import ir.namoo.religiousprayers.praytimes.getPrayTimes
 import ir.namoo.religiousprayers.ui.IntroActivity
 import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.ui.downup.CityList
@@ -279,20 +283,23 @@ class Intro0Fragment : Fragment() {
                             outStream.write(serverResponse.toByteArray(charset = Charset.forName("UTF-8")))
                             outStream.flush()
                             outStream.close()
-                            requireContext().appPrefs.edit {
-                                putString(
-                                    PREF_GEOCODED_CITYNAME,
-                                    getCity(serverResponse)?.name ?: DEFAULT_CITY
-                                )
-                                putString(
-                                    PREF_LATITUDE,
-                                    getCity(serverResponse)?.lat.toString()
-                                )
-                                putString(
-                                    PREF_LONGITUDE,
-                                    getCity(serverResponse)?.lng.toString()
-                                )
-                                putBoolean(PREF_FIRST_START, false)
+                            val city = getCity(serverResponse)
+                            if (city != null) {
+                                requireContext().appPrefs.edit {
+                                    putString(PREF_GEOCODED_CITYNAME, city.name)
+                                    putString(PREF_LATITUDE, city.lat.toString())
+                                    putString(PREF_LONGITUDE, city.lng.toString())
+                                    putBoolean(PREF_FIRST_START, false)
+                                }
+                                val times = getPrayTimes(serverResponse)
+                                if (times != null) {
+                                    val db =
+                                        DPTDB.getInstance(requireContext().applicationContext)
+                                            .downloadedPrayTimes()
+                                    if (db.getDownloadFor(city.name!!) != null)
+                                        db.clearDownloadFor(city.name!!)
+                                    db.insertToDownload(getPrayTimes(serverResponse)!!)
+                                }
                             }
                             "OK"
                         } else

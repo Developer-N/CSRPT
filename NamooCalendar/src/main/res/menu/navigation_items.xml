@@ -6,6 +6,10 @@
         android:icon="@drawable/ic_date_range"
         android:title="@string/calendar" />
     <item
+        android:id="@+id/quran"
+        android:icon="@drawable/ic_baseline_menu_book"
+        android:title="@string/quran" />
+    <item
         android:id="@+id/azkar"
         android:icon="@drawable/ic_azkar"
         android:title="@string/azkar" />
