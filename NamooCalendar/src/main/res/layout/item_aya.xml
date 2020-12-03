@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ir.namoo.religiousprayers.ui.shared.MaskedCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginEnd="4dp"
+    android:layout_marginBottom="2dp"
+    app:cardBackgroundColor="?attr/colorCard"
+    app:cardElevation="4dp"
+    app:cardPreventCornerOverlap="false"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        app:flexWrap="wrap">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/aya_item_arabic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:padding="3dp"
+            android:textColor="?attr/colorTextNormal"
+            android:textIsSelectable="true" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/aya_item_en_transilation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:padding="3dp"
+            android:textColor="?attr/colorTextSecond"
+            android:textIsSelectable="true" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/aya_item_english"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:padding="3dp"
+            android:textColor="?attr/colorTextSecond"
+            android:textIsSelectable="true" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/aya_item_kurdish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:padding="3dp"
+            android:textColor="?attr/colorTextSecond"
+            android:textIsSelectable="true" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/aya_item_farsi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:padding="3dp"
+            android:textColor="?attr/colorTextSecond"
+            android:textIsSelectable="true" />
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/aya_item_ayaNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorTextNormal"
+                android:textSize="20sp" />
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_aya_play"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:padding="2dp"
+                    android:tint="?attr/colorIcon"
+                    app:srcCompat="@drawable/ic_baseline_play_circle_filled" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_aya_bookmark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:padding="2dp"
+                    android:tint="?attr/colorIcon"
+                    app:srcCompat="@drawable/ic_bookmark0" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_aya_note"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:padding="2dp"
+                    android:tint="?attr/colorIcon"
+                    app:srcCompat="@drawable/ic_note_add" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_aya_share"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:padding="2dp"
+                    android:tint="?attr/colorIcon"
+                    app:srcCompat="@drawable/ic_share" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_aya_copy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:padding="2dp"
+                    android:tint="?attr/colorIcon"
+                    app:srcCompat="@drawable/ic_copy" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/txt_aya_note_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/your_note"
+            app:endIconDrawable="@drawable/ic_cancel"
+            app:endIconMode="custom"
+            app:endIconTint="?attr/colorWarning"
+            app:startIconDrawable="@drawable/ic_note"
+            app:startIconTint="?attr/colorIcon">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/txt_aya_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorTextNormal" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </com.google.android.flexbox.FlexboxLayout>
+
+
+</ir.namoo.religiousprayers.ui.shared.MaskedCardView>

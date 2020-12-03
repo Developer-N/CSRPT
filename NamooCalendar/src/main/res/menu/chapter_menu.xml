@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item
+        android:id="@+id/mnu_chapter_fav"
+        android:icon="@drawable/ic_favorite_border"
+        android:title="@string/favorite"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/mnu_chapter_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:id="@+id/mnu_chapter_sortOrder"
+        android:icon="@drawable/ic_filter"
+        android:title="@string/sort_order"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/mnu_chapter_go_to_page"
+        android:title="@string/go_to_page" />
+
+    <item
+        android:id="@+id/mnu_chapter_go_to_joz"
+        android:title="@string/go_to_juz" />
+
+    <item
+        android:id="@+id/mnu_chapter_go_to_hizb"
+        android:title="@string/go_to_hizb" />
+</menu>

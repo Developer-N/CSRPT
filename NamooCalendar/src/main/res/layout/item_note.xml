@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ir.namoo.religiousprayers.ui.shared.MaskedCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="2dp"
+    android:background="?attr/colorCard"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    app:cardElevation="4dp"
+    app:cardPreventCornerOverlap="false"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.Sunflower.Card">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:flexWrap="wrap"
+            app:justifyContent="center">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/note_txt_head"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:layout_margin="3dp"
+                android:padding="3dp"
+                android:textColor="?attr/colorTextNormal" />
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/note_btn_delete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_margin="2dp"
+                    android:text="@string/delete"
+                    android:textColor="?attr/colorTextNormal"
+                    android:theme="@style/Widget.MaterialComponents.Chip.Action"
+                    app:chipIcon="@drawable/ic_delete"
+                    app:chipIconTint="?attr/colorDanger" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/note_btn_save"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_margin="2dp"
+                    android:text="@string/save"
+                    android:textColor="?attr/colorTextNormal"
+                    android:theme="@style/Widget.MaterialComponents.Chip.Action"
+                    app:chipIcon="@drawable/ic_save"
+                    app:chipIconTint="?attr/colorIcon" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/note_btn_go_to_aya"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_margin="2dp"
+                    android:text="@string/go_to_aya"
+                    android:textColor="?attr/colorTextNormal"
+                    android:theme="@style/Widget.MaterialComponents.Chip.Action"
+                    app:chipIcon="@drawable/ic_keyboard_arrow_right"
+                    app:chipIconTint="?attr/colorIcon" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </com.google.android.flexbox.FlexboxLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/your_note"
+            app:startIconDrawable="@drawable/ic_note"
+            app:startIconTint="?attr/colorIcon">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/note_txt_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:padding="3dp"
+                android:textColor="?attr/colorTextNormal" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</ir.namoo.religiousprayers.ui.shared.MaskedCardView>

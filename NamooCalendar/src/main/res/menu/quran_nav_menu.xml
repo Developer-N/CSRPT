@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/quran_chapter"
+        android:icon="@drawable/ic_list"
+        android:title="@string/chapter" />
+
+    <item
+        android:id="@+id/quran_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/search_the_whole_quran" />
+
+    <item
+        android:id="@+id/quran_notes"
+        android:icon="@drawable/ic_note"
+        android:title="@string/notes" />
+
+    <item
+        android:id="@+id/quran_bookmarks"
+        android:icon="@drawable/ic_bookmark1"
+        android:title="@string/bookmarks" />
+
+    <item
+        android:id="@+id/quran_download_manager"
+        android:icon="@drawable/ic_download"
+        android:title="@string/download_audios" />
+
+    <item
+        android:id="@+id/quran_setting"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/settings" />
+
+    <item
+        android:id="@+id/quran_create_shortcut"
+        android:icon="@drawable/ic_shortcut"
+        android:title="@string/create_shortcut" />
+
+</menu>
