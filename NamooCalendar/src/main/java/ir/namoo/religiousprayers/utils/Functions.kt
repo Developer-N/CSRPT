@@ -414,16 +414,16 @@ fun getPrayTimeText(athanKey: String?): Int = when (athanKey) {
     else -> R.string.isha
 }
 
-@DrawableRes
-fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
-    "FAJR" -> R.drawable.fajr
-    "DHUHR" -> R.drawable.dhuhr
-    "ASR" -> R.drawable.asr
-    "MAGHRIB" -> R.drawable.maghrib
-    "ISHA" -> R.drawable.isha
-    "SUNRISE" -> R.drawable.fajr
-    else -> R.drawable.isha
-}
+//@DrawableRes
+//fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
+//    "FAJR" -> R.drawable.fajr
+//    "DHUHR" -> R.drawable.dhuhr
+//    "ASR" -> R.drawable.asr
+//    "MAGHRIB" -> R.drawable.maghrib
+//    "ISHA" -> R.drawable.isha
+//    "SUNRISE" -> R.drawable.fajr
+//    else -> R.drawable.isha
+//}
 
 fun getDateFromJdnOfCalendar(calendar: CalendarType, jdn: Long): AbstractDate = when (calendar) {
     CalendarType.ISLAMIC -> IslamicDate(jdn)
@@ -915,10 +915,6 @@ fun fixTime(time: String, min: Int): String {
 //    return "$h:$m"
 //}
 
-@SuppressLint("HardwareIds")
-fun getUniqueID(context: Context): String =
-    Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-
 fun snackMessage(view: View?, msg: String) {
     if (view != null) {
         val snack = Snackbar.make(view, msg, Snackbar.LENGTH_SHORT)
@@ -929,36 +925,6 @@ fun snackMessage(view: View?, msg: String) {
         snack.show()
     }
 }
-
-//fun toastMessage(context:Context, msg:String){
-//    Toast.makeText(context,msg,Toast.LENGTH_SHORT).apply {
-//        show()
-//    }
-//}
-
-//fun makeByteArrayFromEditedTimes(context: Context): ByteArray? {
-//    val editedPrayTimesEntity =
-//        PrayTimesDB.getInstance(context.applicationContext).prayTimes().getAllEdited()
-//    if (editedPrayTimesEntity.isNullOrEmpty()) return null
-//    val city = JSONCity()
-//    city.name = context.appPrefs.getString(PREF_GEOCODED_CITYNAME, "")
-//    city.lat = context.appPrefs.getString(PREF_LATITUDE, "")?.toDouble() ?: 0.0
-//    city.lng = context.appPrefs.getString(PREF_LONGITUDE, "")?.toDouble() ?: 0.0
-//    val prayList = arrayListOf<JSONPrayTime>()
-//    for (p in editedPrayTimesEntity) {
-//        val t = JSONPrayTime()
-//        t.dayNum = p.dayNumber
-//        t.asr = p.asr
-//        t.dhuhr = p.dhuhr
-//        t.fajr = p.fajr
-//        t.isha = p.isha
-//        t.maghrib = p.maghrib
-//        t.sunrise = p.sunrise
-//        prayList.add(t)
-//    }
-//    val res = toJson(city, prayList).toString()
-//    return res.toByteArray(Charset.forName("UTF-8"))
-//}
 
 fun getTimesDirectoryPath(context: Context): String =
     context.getExternalFilesDir("times")?.absolutePath ?: ""

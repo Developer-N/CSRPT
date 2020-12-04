@@ -46,7 +46,7 @@ class AzkarFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentAzkarBinding.inflate(inflater, container, false)
         (activity as MainActivity).setTitleAndSubtitle(
             getString(R.string.azkar),

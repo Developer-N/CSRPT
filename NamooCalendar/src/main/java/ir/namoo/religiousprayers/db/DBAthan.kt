@@ -45,7 +45,7 @@ abstract class AthanDB : RoomDatabase() {
 
     companion object {
         private var instance: AthanDB? = null
-        public fun getInstance(applicationContext: Context): AthanDB {
+        fun getInstance(applicationContext: Context): AthanDB {
             if (instance == null) {
                 synchronized(AthanDB::class) {
                     instance = Room.databaseBuilder(
