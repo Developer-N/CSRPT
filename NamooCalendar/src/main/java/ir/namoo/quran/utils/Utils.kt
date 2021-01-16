@@ -2,7 +2,11 @@ package ir.namoo.quran.utils
 
 import android.content.Context
 import android.graphics.Typeface
+import android.os.Build
+import android.os.Environment
 import ir.namoo.religiousprayers.utils.appPrefsLite
+import java.io.File
+import java.util.*
 
 lateinit var arabicFont: Typeface
 var arabicFontSize: Float = 0.0f
@@ -46,7 +50,20 @@ fun isDigit(string: String): Boolean {
     return true
 }
 
-fun getQuranDirectoryPath(context: Context): String =
+fun getSelectedQuranDirectoryPath(context: Context): String {
+    val inPref = context.appPrefsLite.getString(PREF_STORAGE_PATH, "-") ?: "-"
+    return if (inPref.contains("emulated") || inPref == "-")
+        context.getExternalFilesDir("quran")?.absolutePath ?: ""
+    else "${inPref}/Android/data/${context.packageName}/files/quran"
+}
+
+fun getQuranDirectoryInSD(context: Context): String {
+    val res = getRootDirs(context).filter { it != null && !it.absolutePath.contains("emulated") }
+    return if (res.isNotEmpty() && res[0] != null) res[0]?.absolutePath + "/Android/data/${context.packageName}/files/quran"
+    else "-"
+}
+
+fun getQuranDirectoryInInternal(context: Context): String =
     context.getExternalFilesDir("quran")?.absolutePath ?: ""
 
 fun getSuraFileName(sura: Int) = when {
@@ -77,6 +94,34 @@ fun getAyaFileName(sura: Int, aya: Int) =
 fun kyFarsiToArabicCharacters(text: String?): String {
     return text?.replace("ک", "ك")?.replace("ی", "ي") ?: ""
 }
+
 fun kKurdishToArabicCharacters(text: String?): String {
     return text?.replace("ک", "ك") ?: ""
+}
+
+fun getRootDirs(context: Context): ArrayList<File?> {
+    var result: ArrayList<File?>? = null
+    if (Build.VERSION.SDK_INT >= 19) {
+        val dirs: Array<File?> = context.applicationContext.getExternalFilesDirs(null)
+        for (a in dirs.indices) {
+            if (dirs[a] == null) {
+                continue
+            }
+            val path = dirs[a]!!.absolutePath
+            val idx = path.indexOf("/Android")
+            if (idx >= 0) {
+                if (result == null) {
+                    result = ArrayList()
+                }
+                result.add(File(path.substring(0, idx)))
+            }
+        }
+    }
+    if (result == null) {
+        result = ArrayList()
+    }
+    if (result.isEmpty()) {
+        result.add(Environment.getExternalStorageDirectory())
+    }
+    return result
 }

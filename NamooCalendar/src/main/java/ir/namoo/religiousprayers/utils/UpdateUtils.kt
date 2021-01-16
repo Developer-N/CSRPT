@@ -181,7 +181,7 @@ fun update(context: Context, updateDate: Boolean) {
 
     val events = getEvents(jdn, deviceCalendarEvents)
 
-    val enableClock = isWidgetClock && Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1
+    val enableClock = isWidgetClock && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
     val isCenterAligned = isCenterAlignWidgets
 
     //region Widget 4x1 and 2x2
@@ -568,14 +568,14 @@ fun update(context: Context, updateDate: Boolean) {
                     .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             }
         }
+
         if (BuildConfig.DEBUG) builder.setWhen(Calendar.getInstance().timeInMillis)
 
         if (goForWorker())
             notificationManager?.notify(NOTIFICATION_ID, builder.build())
         else
             try {
-                ApplicationService.getInstance()
-                    ?.startForeground(NOTIFICATION_ID, builder.build())
+                ApplicationService.getInstance()?.startForeground(NOTIFICATION_ID, builder.build())
             } catch (e: Exception) {
                 Log.e("UpdateUtils", "failed to start service with the notification", e)
             }

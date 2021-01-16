@@ -7,6 +7,13 @@
         <item>Dark</item>
         <item>Modern</item>
         <item>Blue</item>
+        <item>Purple</item>
+        <item>Deep Purple</item>
+        <item>Indigo</item>
+        <item>Pink</item>
+        <item>Green</item>
+        <item>Brown</item>
+        <item>Blue</item>
     </string-array>
 
     <array name="sort_order">
@@ -24,26 +31,13 @@
         <item>DarkTheme</item>
         <item>ClassicTheme</item> <!-- its name is Modern however -->
         <item>BlueTheme</item>
-    </string-array>
-
-    <string-array name="prayMethodsNames">
-        <item>Shia Ithna-Ashari, Leva Institute, Qum</item>
-        <item>Muslim World League</item>
-        <item>Islamic Society of North America</item>
-        <item>Egyptian General Authority of Survey</item>
-        <item>Umm Al-Qura University, Makkah</item>
-        <item>University of Islamic Sciences, Karachi</item>
-        <item>Institute of Geophysics, University of Tehran</item>
-    </string-array>
-
-    <string-array name="prayMethodsKeys" translatable="false">
-        <item>Jafari</item>
-        <item>MWL</item>
-        <item>ISNA</item>
-        <item>Egypt</item>
-        <item>Makkah</item>
-        <item>Karachi</item>
-        <item>Tehran</item>
+        <item>PurpleTheme</item>
+        <item>DeepPurpleTheme</item>
+        <item>IndigoTheme</item>
+        <item>PinkTheme</item>
+        <item>GreenTheme</item>
+        <item>BrownTheme</item>
+        <item>NewBlueTheme</item>
     </string-array>
 
     <string-array name="languageNames" translatable="false">
@@ -276,7 +270,7 @@
     </string-array>
     <!--##############################################end English-->
 
-    <string-array name="quran_names" >
+    <string-array name="quran_names">
         <item>Farsi Khorramdel</item>
         <item>Kurdish Asan</item>
         <item>Quran Alafasi</item>
@@ -296,7 +290,7 @@
         <item>Quran Abdullaah 3awwaad Al Juhaynee</item>
     </string-array>
 
-    <string-array name="quran_folders" >
+    <string-array name="quran_folders">
         <item>Khorramdel</item>
         <item>Asan</item>
         <item>Alafasi</item>
@@ -316,7 +310,7 @@
         <item>AlJuhaynee</item>
     </string-array>
 
-    <string-array name="quran_links" >
+    <string-array name="quran_links">
         <item>https://archive.org/download/khorramdelmp3/</item>
         <item>https://archive.org/download/asan_kurdi/</item>
         <item>https://everyayah.com/data/Alafasy_64kbps/zips/</item>

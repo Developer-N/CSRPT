@@ -28,6 +28,7 @@ class QuranPlayer : Service() {
     private var chapter: ChapterEntity? = null
     private lateinit var folderName: String
     private lateinit var translateFolderName: String
+    private var playType = 1
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
             if (p1 != null) {
@@ -59,21 +60,11 @@ class QuranPlayer : Service() {
                     NOTIFY_QURAN_RESUME -> {//pause and notify notification and send broadcast to sura view
                         mediaPlayer?.apply {
                             seekTo(length)
-                            setOnCompletionListener {
-                                if (appPrefsLite.getBoolean(PREF_PLAY_TRANSLATION, false))
-                                    playTranslate(sura, aya)
-                                else
-                                    chapter?.let {
-                                        if (it.ayaCount!! > aya)
-                                            play(sura, aya + 1)
-                                        else
-                                            sendBroadcast(Intent(QURAN_VIEW_PLAYER_ACTION).apply {
-                                                putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_STOP)
-                                            })
-                                    }
-                            }
                             start()
                         }
+                        sendBroadcast(Intent(QURAN_VIEW_PLAYER_ACTION).apply {
+                            putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_RESUME)
+                        })
                     }
                     NOTIFY_QURAN_STOP -> {// stop and remove notification and broadcast to sura view
 //                        clearNotification()
@@ -93,6 +84,8 @@ class QuranPlayer : Service() {
                     it.stop()
                 it.release()
             }
+            if (!File((folderName + "/" + getAyaFileName(sura, aya))).exists())
+                loadFolders(getAyaFileName(sura, aya))
             mediaPlayer = MediaPlayer().apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     setAudioAttributes(
@@ -106,25 +99,28 @@ class QuranPlayer : Service() {
                     setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
             }
-            if (aya > chapter?.ayaCount!!)
-                return
+            if (aya > chapter?.ayaCount!!) return
 //            showNotification(sura, aya)
             sendBroadcast(Intent(QURAN_VIEW_PLAYER_ACTION).apply {
                 putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_PLAY)
                 putExtra("sura", sura)
                 putExtra("aya", aya)
             })
-            if ((sura != 1 && sura != 9) && aya == 1) {//first Play Bismillah
+            if (playType == 3)
+                playTranslate(sura, aya)
+            else if ((sura != 1 && sura != 9) && aya == 1) {//first Play Bismillah
                 mediaPlayer?.apply {
                     when {
-                        File(folderName + "/" + getAyaFileName(sura, 0)).exists() -> setDataSource(
-                            this@QuranPlayer,
-                            (folderName + "/" + getAyaFileName(sura, 0)).toUri()
-                        )
-                        File(folderName + "/" + getAyaFileName(1, 1)).exists() -> setDataSource(
-                            this@QuranPlayer,
-                            (folderName + "/" + getAyaFileName(1, 1)).toUri()
-                        )
+                        File(folderName + "/" + getAyaFileName(sura, 0)).exists() ->
+                            setDataSource(
+                                this@QuranPlayer,
+                                (folderName + "/" + getAyaFileName(sura, 0)).toUri()
+                            )
+                        File(folderName + "/" + getAyaFileName(1, 1)).exists() ->
+                            setDataSource(
+                                this@QuranPlayer,
+                                (folderName + "/" + getAyaFileName(1, 1)).toUri()
+                            )
                         else -> setDataSource(
                             this@QuranPlayer,
                             (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
@@ -151,7 +147,7 @@ class QuranPlayer : Service() {
                                 (folderName + "/" + getAyaFileName(sura, aya)).toUri()
                             )
                             setOnCompletionListener {
-                                if (appPrefsLite.getBoolean(PREF_PLAY_TRANSLATION, false))
+                                if (playType != 2)
                                     playTranslate(sura, aya)
                                 else
                                     chapter?.let {
@@ -159,7 +155,10 @@ class QuranPlayer : Service() {
                                             play(sura, aya + 1)
                                         else
                                             sendBroadcast(Intent(QURAN_VIEW_PLAYER_ACTION).apply {
-                                                putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_STOP)
+                                                putExtra(
+                                                    "action",
+                                                    QURAN_NOTIFY_VIEW_PLAYER_STOP
+                                                )
                                             })
                                     }
                             }
@@ -182,7 +181,7 @@ class QuranPlayer : Service() {
                         (folderName + "/" + getAyaFileName(sura, aya)).toUri()
                     )
                     setOnCompletionListener {
-                        if (appPrefsLite.getBoolean(PREF_PLAY_TRANSLATION, false))
+                        if (playType != 2)
                             playTranslate(sura, aya)
                         else
                             chapter?.let {
@@ -199,9 +198,14 @@ class QuranPlayer : Service() {
                         start()
                     }
                 }
+
         }
 
         private fun playTranslate(sura: Int, aya: Int) {
+            if (playType == 2) return
+            if (!File((translateFolderName + "/" + getAyaFileName(sura, aya))).exists()) loadFolders(
+                getAyaFileName(sura, aya)
+            )
             mediaPlayer = MediaPlayer().apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     setAudioAttributes(
@@ -287,15 +291,45 @@ class QuranPlayer : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        folderName = getQuranDirectoryPath(this) + "/" + appPrefsLite.getString(
-            PREF_SELECTED_QARI,
-            DEFAULT_SELECTED_QARI
-        )
-        translateFolderName = getQuranDirectoryPath(this) + "/" + appPrefsLite.getString(
-            PREF_TRANSLATE_TO_PLAY,
-            DEFAULT_TRANSLATE_TO_PLAY
-        )
+        loadFolders(getAyaFileName(sura, aya))
+        playType = appPrefsLite.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE)
         registerReceiver(receiver, IntentFilter(QURAN_PLAYER_ACTION))
+    }
+
+    private fun loadFolders(fileName: String) {
+        folderName = if (File(
+                getQuranDirectoryInInternal(this) + "/" + appPrefsLite.getString(
+                    PREF_SELECTED_QARI,
+                    DEFAULT_SELECTED_QARI
+                ) + if (fileName.isNotEmpty()) "/$fileName" else ""
+            ).exists()
+        )
+            getQuranDirectoryInInternal(this) + "/" + appPrefsLite.getString(
+                PREF_SELECTED_QARI,
+                DEFAULT_SELECTED_QARI
+            )
+        else
+            getQuranDirectoryInSD(this) + "/" + appPrefsLite.getString(
+                PREF_SELECTED_QARI,
+                DEFAULT_SELECTED_QARI
+            )
+
+        translateFolderName = if (File(
+                getQuranDirectoryInInternal(this) + "/" + appPrefsLite.getString(
+                    PREF_TRANSLATE_TO_PLAY,
+                    DEFAULT_TRANSLATE_TO_PLAY
+                ) + if (fileName.isNotEmpty()) "/$fileName" else ""
+            ).exists()
+        )
+            getQuranDirectoryInInternal(this) + "/" + appPrefsLite.getString(
+                PREF_TRANSLATE_TO_PLAY,
+                DEFAULT_TRANSLATE_TO_PLAY
+            )
+        else
+            getQuranDirectoryInSD(this) + "/" + appPrefsLite.getString(
+                PREF_TRANSLATE_TO_PLAY,
+                DEFAULT_TRANSLATE_TO_PLAY
+            )
     }
 
     override fun onDestroy() {

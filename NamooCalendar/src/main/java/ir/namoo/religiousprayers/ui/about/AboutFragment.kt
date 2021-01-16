@@ -20,6 +20,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import com.google.android.material.textview.MaterialTextView
+import ir.namoo.religiousprayers.BuildConfig
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.appLink
 import ir.namoo.religiousprayers.databinding.FragmentAboutBinding
@@ -34,7 +35,7 @@ class AboutFragment : Fragment() {
     @SuppressLint("PrivateResource")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val mainActivity = activity as MainActivity
         mainActivity.setTitleAndSubtitle(getString(R.string.about), "")
         setHasOptionsMenu(true)
@@ -135,7 +136,7 @@ class AboutFragment : Fragment() {
             startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                 type = "*/*"
                 val uri = FileProvider.getUriForFile(
-                    activity.applicationContext, "ir.namoo.religiousprayers.fileprovider",
+                    activity.applicationContext, "${BuildConfig.APPLICATION_ID}.provider",
                     File(app.sourceDir).copyTo(
                         File(
                             "$cacheDir/" +

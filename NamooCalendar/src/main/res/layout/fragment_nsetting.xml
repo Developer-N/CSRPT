@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -113,6 +114,15 @@
 
         </com.google.android.material.card.MaterialCardView>
         <!--########################### end location        -->
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_athans"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+             tools:itemCount="6"
+            tools:listitem="@layout/item_athan_setting" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -130,161 +140,6 @@
                 app:divider="?attr/appDivider"
                 app:dividerPadding="@dimen/divider_margin"
                 app:showDividers="middle">
-                <!--########################### start athans   -->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_fajr"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/fajr" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_sunrise"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/sunrise" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_dhuhr"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/dhuhr" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_asr"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/asr" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_maghrib"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:layout_marginBottom="5dp"
-                        android:text="@string/maghrib" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_isha"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/isha" />
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--########################### end athans    -->
-
-                <!--########################### start doa     -->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_doa"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/broadcast_prayer_after_adhan" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_summer_time"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/summer_time" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_play_athan_as_notification"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/enable_notification_athan" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_play_athan_in_notification"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/enable_notification_play_athan"
-                        android:visibility="gone" />
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--########################### end doa      -->
-
-                <!--########################### start before fajr -->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/txt_before_fajr"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp"
-                        android:layout_marginBottom="2dp"
-                        android:text="@string/alarm_before_fajr"
-                        android:textColor="?attr/colorTextSecond" />
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switch_alarm_before_fajr"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="5dp"
-                            android:layout_marginTop="2dp"
-                            android:layout_marginEnd="5dp"
-                            android:layout_weight="7"
-                            android:text="@string/enable_alarm_before_fajr" />
-
-                        <NumberPicker
-                            android:id="@+id/number_picker_alarm_before_fajr"
-                            android:layout_width="0dp"
-                            android:layout_height="100dp"
-                            android:layout_margin="2dp"
-                            android:layout_weight="3"
-                            android:textSize="@dimen/text_size_description" />
-
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--########################### end before fajr -->
 
                 <!--########################### start feqh -->
                 <androidx.appcompat.widget.LinearLayoutCompat
@@ -309,292 +164,227 @@
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
                 <!--########################### start feqh -->
-
-                <!--########################### start athan volume -->
+                <!--########################### Start Add Athans -->
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch_AscendingAthanVolume"
+                    <!--################## start normal athan-->
+                    <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="2dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/ascending_athan_volume" />
+                        android:orientation="vertical"
+                        android:padding="4dp">
 
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/txt_AscendingAthanVolume"
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:text="@string/add_normal_athans"
+                            android:textColor="?attr/colorTextSecond" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_online_normal_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_online_athan"
+                                app:chipIcon="@drawable/ic_download"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_local_normal_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_local_athan"
+                                app:chipIcon="@drawable/ic_add"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <!--################## end normal athan-->
+
+                    <!--################## start fajr athan-->
+                    <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp"
-                        android:layout_marginBottom="2dp"
-                        android:text="@string/enable_ascending_athan_volume"
-                        android:textColor="?attr/colorTextSecond" />
+                        android:orientation="vertical"
+                        android:padding="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:text="@string/add_fajr_athan"
+                            android:textColor="?attr/colorTextSecond" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_online_fajr_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_online_athan"
+                                app:chipIcon="@drawable/ic_download"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_local_fajr_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_local_athan"
+                                app:chipIcon="@drawable/ic_add"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <!--################## end fajr athan-->
+
+                    <!--################## start alarm-->
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:text="@string/add_alarm"
+                            android:textColor="?attr/colorTextSecond" />
+
+                        <androidx.appcompat.widget.LinearLayoutCompat
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_online_before_fajr_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_online_alarm"
+                                app:chipIcon="@drawable/ic_download"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/btn_add_local_before_fajr_athan"
+                                style="@style/Widget.MaterialComponents.Chip.Action"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="4dp"
+                                android:text="@string/add_local_alarm"
+                                app:chipIcon="@drawable/ic_add"
+                                app:chipIconTint="?attr/colorIcon" />
+
+                        </androidx.appcompat.widget.LinearLayoutCompat>
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <!--################## end alarm-->
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
+                <!--########################### End Add Athans -->
 
+                <!--########################### Start athan method -->
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/txt_AthanVolume"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginEnd="5dp"
-                        android:text="@string/athan_volume_summary"
+                        android:layout_margin="2dp"
+                        android:text="@string/play_athan_problem"
                         android:textColor="?attr/colorTextSecond" />
-
-                    <androidx.appcompat.widget.AppCompatSeekBar
-                        android:id="@+id/seekBar_athan_volume"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp" />
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_athan_play"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_margin="4dp"
-                            android:text="@string/play_athan"
-                            app:chipIcon="@drawable/ic_play"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_athan_rest"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_margin="4dp"
-                            android:text="@string/reset_athan"
-                            app:chipIcon="@drawable/ic_refresh"
-                            app:chipIconTint="?attr/colorIcon" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-
-
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--########################### end athan volume -->
-
-                <!--################## start select normal athan-->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="4dp">
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_margin="2dp"
-                        android:text="@string/select_athan_for_day"
+                        android:text="@string/notification"
                         android:textColor="?attr/colorTextSecond" />
 
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
+                    <RadioGroup
+                        android:id="@+id/radio_notification_method"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
+                        android:checkedButton="@id/radio_notification_method1"
                         android:orientation="horizontal">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/txt_selected_athan"
-                            android:layout_width="0dp"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_notification_method1"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_margin="2dp"
-                            android:layout_weight="5"
-                            android:text="@string/default_athan_name"
-                            android:textColor="?attr/colorTextPrimary" />
+                            android:text="@string/first_method" />
 
-                        <androidx.appcompat.widget.AppCompatSpinner
-                            android:id="@+id/spinner_normal_athan"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:layout_weight="5" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_online_normal_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_notification_method2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_online_athan"
-                            app:chipIcon="@drawable/ic_download"
-                            app:chipIconTint="?attr/colorIcon" />
+                            android:layout_margin="2dp"
+                            android:text="@string/second_method" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_local_normal_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_local_athan"
-                            app:chipIcon="@drawable/ic_add"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--################## end select normal athan-->
-
-                <!--################## start select fajr athan-->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="4dp">
+                    </RadioGroup>
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_margin="2dp"
-                        android:text="@string/select_athan_for_fajr"
+                        android:text="@string/full_screen"
                         android:textColor="?attr/colorTextSecond" />
 
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
+                    <RadioGroup
+                        android:id="@+id/radio_fullscreen_method"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center"
+                        android:checkedButton="@id/radio_fullscreen_method2"
                         android:orientation="horizontal">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/txt_selected_fajr_athan"
-                            android:layout_width="0dp"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_fullscreen_method1"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_margin="2dp"
-                            android:layout_weight="5"
-                            android:text="@string/default_fajr_athan_name"
-                            android:textColor="?attr/colorTextPrimary" />
+                            android:text="@string/first_method" />
 
-                        <androidx.appcompat.widget.AppCompatSpinner
-                            android:id="@+id/spinner_fajr_athan"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:layout_weight="5" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_online_fajr_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_fullscreen_method2"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_online_athan"
-                            app:chipIcon="@drawable/ic_download"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_local_fajr_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_local_athan"
-                            app:chipIcon="@drawable/ic_add"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--################## end select fajr athan-->
-
-                <!--################## start select before fajr-->
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="4dp">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="2dp"
-                        android:text="@string/select_athan_for_before_fajr"
-                        android:textColor="?attr/colorTextSecond" />
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/txt_selected_before_fajr"
-                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_margin="2dp"
-                            android:layout_weight="5"
-                            android:text="@string/default_before_fajr_name"
-                            android:textColor="?attr/colorTextPrimary" />
+                            android:text="@string/second_method" />
 
-                        <androidx.appcompat.widget.AppCompatSpinner
-                            android:id="@+id/spinner_before_fajr_athan"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:layout_weight="5" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    </RadioGroup>
 
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="horizontal">
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_online_before_fajr_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_online_alarm"
-                            app:chipIcon="@drawable/ic_download"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/btn_add_local_before_fajr_athan"
-                            style="@style/Widget.MaterialComponents.Chip.Action"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="4dp"
-                            android:text="@string/add_local_alarm"
-                            app:chipIcon="@drawable/ic_add"
-                            app:chipIconTint="?attr/colorIcon" />
-
-                    </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.appcompat.widget.LinearLayoutCompat>
-                <!--################## end select before fajr-->
+                <!--########################### End athan method -->
 
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.material.card.MaterialCardView>
+
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </ScrollView>

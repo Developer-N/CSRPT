@@ -20,7 +20,7 @@
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
 
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -69,6 +69,7 @@
         <service
             android:name="ir.namoo.quran.ui.QuranPlayer"
             android:enabled="true" />
+
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />
@@ -233,15 +234,6 @@
             </intent-filter>
         </service>
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="ir.namoo.religiousprayers.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths" />
-        </provider>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

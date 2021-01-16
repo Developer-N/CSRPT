@@ -21,9 +21,10 @@ import androidx.core.os.postDelayed
 import androidx.recyclerview.widget.RecyclerView
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.religiousprayers.PREF_ATHAN_ALARM
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.TimeItemBinding
+import ir.namoo.religiousprayers.db.AthanSetting
+import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.utils.*
 import java.util.*
 
@@ -69,11 +70,14 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: TimeItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-//        private val emptyLayout = FlexboxLayoutManager.LayoutParams(0, 0)
+        //        private val emptyLayout = FlexboxLayoutManager.LayoutParams(0, 0)
 //        private val wrapContent = FlexboxLayoutManager.LayoutParams(
 //            FlexboxLayoutManager.LayoutParams.WRAP_CONTENT,
 //            FlexboxLayoutManager.LayoutParams.WRAP_CONTENT
 //        )
+        private var settings: List<AthanSetting>? =
+            AthanSettingsDB.getInstance(binding.root.context.applicationContext).athanSettingsDAO()
+                .getAllAthanSettings()
 
         @SuppressLint("SetTextI18n", "PrivateResource")
         fun bind(position: Int) {
@@ -144,69 +148,11 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                 }.toFormattedString()
             } ?: ""
 
-            val alarms = binding.root.context.appPrefs.getString(PREF_ATHAN_ALARM, "")
-            if (alarms != null) {
-                val existAlarms = alarms.splitIgnoreEmpty(",")
-                if (notificationAthan)
-                    binding.btnAthanState.setImageResource(
-                        when (timeName) {
-                            R.string.imsak, R.string.fajr -> if (existAlarms.contains("FAJR"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            R.string.sunrise -> if (existAlarms.contains("SUNRISE"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            R.string.dhuhr -> if (existAlarms.contains("DHUHR"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            R.string.asr -> if (existAlarms.contains("ASR"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            R.string.sunset, R.string.maghrib -> if (existAlarms.contains("MAGHRIB"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            R.string.isha -> if (existAlarms.contains("ISHA"))
-                                R.drawable.ic_notifications
-                            else
-                                R.drawable.ic_notifications_off
-                            else -> R.drawable.ic_notifications_off
-                        }
-                    )
+            settings?.apply {
+                if (get(position).state)
+                    binding.btnAthanState.setImageResource(R.drawable.ic_speaker)
                 else
-                    binding.btnAthanState.setImageResource(
-                        when (timeName) {
-                            R.string.imsak, R.string.fajr -> if (existAlarms.contains("FAJR"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            R.string.sunrise -> if (existAlarms.contains("SUNRISE"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            R.string.dhuhr -> if (existAlarms.contains("DHUHR"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            R.string.asr -> if (existAlarms.contains("ASR"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            R.string.sunset, R.string.maghrib -> if (existAlarms.contains("MAGHRIB"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            R.string.isha -> if (existAlarms.contains("ISHA"))
-                                R.drawable.ic_speaker
-                            else
-                                R.drawable.ic_silent
-                            else -> R.drawable.ic_silent
-                        }
-                    )
+                    binding.btnAthanState.setImageResource(R.drawable.ic_silent)
                 binding.btnAthanState.setOnClickListener {
                     it as AppCompatImageView
                     it.startAnimation(
@@ -215,15 +161,9 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                             androidx.appcompat.R.anim.abc_fade_in
                         )
                     )
-                    val name = when (timeName) {
-                        R.string.imsak, R.string.fajr -> "FAJR"
-                        R.string.sunrise -> "SUNRISE"
-                        R.string.dhuhr -> "DHUHR"
-                        R.string.asr -> "ASR"
-                        R.string.sunset, R.string.maghrib -> "MAGHRIB"
-                        R.string.isha -> "ISHA"
-                        else -> ""
-                    }
+                    get(position).state = !get(position).state
+                    AthanSettingsDB.getInstance(binding.root.context.applicationContext)
+                        .athanSettingsDAO().update(get(position))
                     try {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                             !Settings.canDrawOverlays(binding.root.context)
@@ -249,8 +189,8 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                     } catch (ex: Exception) {
                         Log.e(TAG, "getPermission: ", ex)
                     }
-                    updateAthanInPref(binding.root.context, name)
-                    notifyItemChanged(position)
+                    notifyDataSetChanged()
+                    loadAlarms(binding.root.context)
                 }
             }
 

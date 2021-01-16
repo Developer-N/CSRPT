@@ -36,7 +36,7 @@ class NoteFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentNoteBinding.inflate(inflater)
         setHasOptionsMenu(true)
         binding.noteRecycler.visibility = View.GONE

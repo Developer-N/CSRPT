@@ -26,7 +26,6 @@ import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
 import android.widget.ArrayAdapter
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.SearchAutoComplete
@@ -81,14 +80,25 @@ private const val OWGHAT_TAB = 2
 class CalendarFragment : Fragment() {
 
     private var coordinate: Coordinate? = null
-    private lateinit var mainBinding: FragmentCalendarBinding
-    private lateinit var calendarsView: CalendarsView
+    private var mainBinding: FragmentCalendarBinding? = null
+    private var calendarsView: CalendarsView? = null
     private var owghatBinding: OwghatTabContentBinding? = null
-    private lateinit var eventsBinding: EventsTabContentBinding
+    private var eventsBinding: EventsTabContentBinding? = null
     private var searchView: SearchView? = null
     private var todayButton: MenuItem? = null
-    lateinit var mainActivity: MainActivity
-    val initialDate = getTodayOfCalendar(mainCalendar)
+    private lateinit var mainActivity: MainActivity
+    private val initialDate = getTodayOfCalendar(mainCalendar)
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        coordinate = null
+        mainBinding = null
+        calendarsView = null
+        owghatBinding = null
+        eventsBinding = null
+        searchView = null
+        todayButton = null
+    }
 
     @SuppressLint("PrivateResource")
     override fun onCreateView(
@@ -147,7 +157,7 @@ class CalendarFragment : Fragment() {
                             when (PrayTimeProvider.ptFrom) {
                                 2 -> getColorFromAttr(requireContext(), R.attr.colorWarning)
                                 0 -> getColorFromAttr(requireContext(), R.attr.colorTextHoliday)
-                                else -> getColorFromAttr(requireContext(), R.attr.colorAccent)
+                                else -> getColorFromAttr(requireContext(), R.attr.colorTextPrimary)
                             }
                         )
 
@@ -214,7 +224,7 @@ class CalendarFragment : Fragment() {
                                 putExtra(
                                     Intent.EXTRA_STREAM, FileProvider.getUriForFile(
                                         requireContext(),
-                                        "ir.namoo.religiousprayers.fileprovider",
+                                        "${BuildConfig.APPLICATION_ID}.provider",
                                         file
                                     )
                                 )
@@ -415,7 +425,7 @@ class CalendarFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 Snackbar.make(
-                    mainBinding.root,
+                    mainBinding?.root ?: return,
                     R.string.device_calendar_does_not_support,
                     Snackbar.LENGTH_SHORT
                 ).show()
@@ -426,7 +436,7 @@ class CalendarFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE) {
             if (isShowDeviceCalendarEvents)
-                mainBinding.calendarPager.refresh(isEventsModified = true)
+                mainBinding?.calendarPager?.refresh(isEventsModified = true)
             else {
                 if (ActivityCompat.checkSelfPermission(
                         mainActivity, Manifest.permission.READ_CALENDAR
@@ -488,7 +498,7 @@ class CalendarFragment : Fragment() {
     private fun bringDate(jdn: Long, highlight: Boolean = true, monthChange: Boolean = true) {
         selectedJdn = jdn
 
-        mainBinding.calendarPager.setSelectedDay(jdn, highlight, monthChange)
+        mainBinding?.calendarPager?.setSelectedDay(jdn, highlight, monthChange)
 
         val isToday = getTodayJdn() == jdn
         try {
@@ -500,13 +510,13 @@ class CalendarFragment : Fragment() {
         todayButton?.isVisible = !isToday
 
         // Update tabs
-        calendarsView.showCalendars(jdn, mainCalendar, getEnabledCalendarTypes())
+        calendarsView?.showCalendars(jdn, mainCalendar, getEnabledCalendarTypes())
         showEvent(jdn)
         setOwghat(jdn, isToday)
 
         // a11y
         if (isTalkBackEnabled && !isToday && monthChange) Snackbar.make(
-            mainBinding.root,
+            mainBinding?.root ?: return,
             getA11yDaySummary(
                 mainActivity, jdn, false, emptyEventsStore(),
                 withZodiac = true, withOtherCalendars = true, withTitle = true
@@ -516,7 +526,7 @@ class CalendarFragment : Fragment() {
     }
 
     private fun showEvent(jdn: Long) {
-        eventsBinding.run {
+        eventsBinding?.run {
             shiftWorkTitle.text = getShiftWorkTitle(jdn, false)
             val events = getEvents(
                 jdn,
@@ -644,7 +654,7 @@ class CalendarFragment : Fragment() {
                 1.0
             })
             visibility = if (isToday) View.VISIBLE else View.GONE
-            if (isToday && mainBinding.viewPager.currentItem == OWGHAT_TAB) startAnimate()
+            if (isToday && mainBinding?.viewPager?.currentItem == OWGHAT_TAB) startAnimate()
         }
     }
 
@@ -725,7 +735,7 @@ class CalendarFragment : Fragment() {
                 ShiftWorkDialog::class.java.name
             )
             R.id.month_overview -> MonthOverviewDialog
-                .newInstance(mainBinding.calendarPager.selectedMonth.toJdn())
+                .newInstance(mainBinding?.calendarPager?.selectedMonth?.toJdn() ?: getTodayJdn())
                 .show(childFragmentManager, MonthOverviewDialog::class.java.name)
 
             R.id.support -> {
@@ -786,7 +796,7 @@ class CalendarFragment : Fragment() {
                 if (city != null) {
                     val snackBar =
                         Snackbar.make(
-                            mainBinding.root,
+                            mainBinding?.root ?: return,
                             R.string.exact_time_is_available,
                             Snackbar.LENGTH_INDEFINITE
                         ).apply {

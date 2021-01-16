@@ -53,7 +53,7 @@ class ChapterFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentChapterBinding.inflate(inflater)
         (requireActivity() as QuranActivity).setTitleAndSubtitle(
             getString(R.string.chapter),

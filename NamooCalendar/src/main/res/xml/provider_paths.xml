@@ -3,4 +3,20 @@
     <external-path
         name="external_files"
         path="." />
+
+    <files-path
+        name="mydatabases"
+        path="../databases/" />
+
+    <external-files-path
+        name="pic"
+        path="pic/" />
+
+    <external-path
+        name="media"
+        path="." />
+
+    <root-path
+        name="external_files"
+        path="/storage/" />
 </paths>

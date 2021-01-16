@@ -1,13 +1,12 @@
 package ir.namoo.religiousprayers
 
-const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
+//const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
 //const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
 //const val appLink="\r\n https://bit.ly/2juUc1y"//myket
-//const val appLink = "\r\n https://bit.ly/3fUiP3L"//charkhoneh
+const val appLink = "\r\n https://bit.ly/3fUiP3L"//charkhoneh
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 23
 const val STORAGE_PERMISSION_REQUEST_CODE = 24
-const val ATHAN_RINGTONE_REQUEST_CODE = 19
 const val CALENDAR_READ_PERMISSION_REQUEST_CODE = 55
 const val CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE = 63
 
@@ -31,9 +30,10 @@ const val LAST_CHOSEN_TAB_KEY = "LastChosenTab"
 
 const val PREF_MAIN_CALENDAR_KEY = "mainCalendarType"
 const val PREF_OTHER_CALENDARS_KEY = "otherCalendarTypes"
-const val PREF_KEY_ATHAN = "Athan"
 const val PREF_PRAY_TIME_METHOD = "SelectedPrayTimeMethod"
 const val PREF_ASR_JURISTICS = "asrJuristics"
+const val PREF_NOTIFICATION_METHOD = "notification_method"
+const val PREF_FULL_SCREEN_METHOD = "full_screen_method"
 const val PREF_ISLAMIC_OFFSET = "islamic_offset"
 const val PREF_LATITUDE = "Latitude"
 const val PREF_LONGITUDE = "Longitude"
@@ -44,24 +44,15 @@ const val PREF_WIDGET_IN_24 = "WidgetIn24"
 const val PREF_IRAN_TIME = "IranTime"
 const val PREF_PERSIAN_DIGITS = "PersianDigits"
 const val PREF_ATHAN_URI = "AthanURI"
-const val PREF_NORMAL_ATHAN_URI = "NormalAthanURI"
-const val PREF_FAJR_ATHAN_URI = "FajrAthanURI"
-const val PREF_BEFORE_FAJR_URI = "BEFOREFajrURI"
-const val PREF_SUNRISE_URI = "SunriseAthanURI"
-const val PREF_ATHAN_NAME = "AthanName"
 const val PREF_SHOW_DEVICE_CALENDAR_EVENTS = "showDeviceCalendarEvents"
 const val PREF_WIDGET_CLOCK = "WidgetClock"
 const val PREF_NOTIFY_DATE = "NotifyDate"
-const val PREF_NOTIFICATION_ATHAN = "NotificationAthan"
-const val PREF_NOTIFICATION_PLAY_ATHAN = "NotificationPlayAthan"
 const val PREF_NOTIFY_DATE_LOCK_SCREEN = "NotifyDateLockScreen"
-const val PREF_ATHAN_VOLUME = "AthanVolume"
 const val PREF_ASCENDING_ATHAN_VOLUME = "AscendingAthanVolume"
 const val PREF_APP_LANGUAGE = "AppLanguage"
 const val PREF_SELECTED_WIDGET_TEXT_COLOR = "SelectedWidgetTextColor"
 const val PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR = "SelectedWidgetNextAthanTextColor"
 const val PREF_SELECTED_WIDGET_BACKGROUND_COLOR = "SelectedWidgetBackgroundColor"
-const val PREF_ATHAN_ALARM = "AthanAlarm"
 const val PREF_ATHAN_GAP = "AthanGap"
 const val PREF_THEME = "Theme"
 const val PREF_HOLIDAY_TYPES = "holiday_types"
@@ -72,12 +63,9 @@ const val PREF_SHIFT_WORK_SETTING = "ShiftWorkSetting"
 const val PREF_SHIFT_WORK_RECURS = "ShiftWorkRecurs"
 const val PREF_APP_FONT = "app_font"
 const val PREF_FIRST_START = "first_start"
-const val PREF_PLAY_DOA = "play_doa"
 const val PREF_SUMMER_TIME = "summer_time"
 const val PREF_ENABLE_EDIT = "enable_edit"
 const val PREF_LAST_UPDATE_CHECK = "last_update_check"
-const val PREF_ALARM_BEFORE_FAJR_MIN = "alarm_before_fajr_min"
-const val PREF_ALARM_BEFORE_FAJR_ENABLE = "alarm_before_fajr_enable"
 
 
 const val NAVIGATE_TO_UD = "ir.namoo.srp.ud"
@@ -88,6 +76,8 @@ const val NAVIGATE_TO_UD = "ir.namoo.srp.ud"
 const val DEFAULT_CITY = "CUSTOM"
 const val DEFAULT_PRAY_TIME_METHOD = "Tehran"
 const val DEFAULT_ASR_JURISTICS = "Standard"
+const val DEFAULT_NOTIFICATION_METHOD = 2
+const val DEFAULT_FULL_SCREEN_METHOD = 1
 const val DEFAULT_APP_LANGUAGE = "fa"
 const val DEFAULT_SELECTED_WIDGET_TEXT_COLOR = "#ffffffff"
 const val DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR = "#FF9800"
@@ -97,12 +87,8 @@ const val DEFAULT_IRAN_TIME = false
 const val DEFAULT_PERSIAN_DIGITS = true
 const val DEFAULT_WIDGET_CLOCK = true
 const val DEFAULT_NOTIFY_DATE = true
-const val DEFAULT_NOTIFICATION_ATHAN = false
-const val DEFAULT_NOTIFICATION_PLAY_ATHAN = false
 const val DEFAULT_NOTIFY_DATE_LOCK_SCREEN = true
-const val DEFAULT_ATHAN_VOLUME = 1
 const val DEFAULT_WEEK_START = "0"
-const val DEFAULT_ALARM_BEFORE_FAJR = 15
 
 // WeekEnds, 6 means Friday
 val DEFAULT_WEEK_ENDS: Set<String> = setOf("6")
@@ -110,6 +96,13 @@ val DEFAULT_WEEK_ENDS: Set<String> = setOf("6")
 const val LIGHT_THEME = "LightTheme"
 const val DARK_THEME = "DarkTheme"
 const val CYAN_THEME = "CyanTheme"
+const val PURPLE_THEME = "PurpleTheme"
+const val DEEP_PURPLE_THEME = "DeepPurpleTheme"
+const val INDIGO_THEME = "IndigoTheme"
+const val PINK_THEME = "PinkTheme"
+const val GREEN_THEME = "GreenTheme"
+const val BROWN_THEME = "BrownTheme"
+const val NEW_BLUE_THEME = "NewBlueTheme"
 const val BLUE_THEME = "BlueTheme"
 const val MODERN_THEME = "ClassicTheme" // don't change it, for legacy reasons
 

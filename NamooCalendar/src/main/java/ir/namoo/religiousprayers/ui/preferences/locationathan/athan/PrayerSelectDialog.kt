@@ -6,7 +6,7 @@ import ir.namoo.religiousprayers.R
 
 class PrayerSelectDialog : PreferenceDialogFragmentCompat() {
 
-    private var prayers: Set<String> = emptySet()
+    private var prayers = emptySet<String>()
 
     override fun onPrepareDialogBuilder(builder: AlertDialog.Builder?) {
         super.onPrepareDialogBuilder(builder)

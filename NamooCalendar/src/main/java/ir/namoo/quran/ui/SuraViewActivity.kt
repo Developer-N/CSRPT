@@ -96,6 +96,10 @@ class SuraViewActivity : AppCompatActivity() {
                             isPlaying = false
                             binding.btnQuranPause.setImageResource(R.drawable.ic_baseline_play_circle_filled)
                         }
+                        QURAN_NOTIFY_VIEW_PLAYER_RESUME -> {
+                            isPlaying = true
+                            binding.btnQuranPause.setImageResource(R.drawable.ic_baseline_pause_circle_filled)
+                        }
                         QURAN_NOTIFY_VIEW_PLAYER_STOP -> {
                             isPlaying = false
                             if (binding.cardQuranPalayer.isVisible) {
@@ -215,13 +219,13 @@ class SuraViewActivity : AppCompatActivity() {
                 )
             )
             if (isPlaying) {
-                it.setImageResource(R.drawable.ic_baseline_play_circle_filled)
+//                it.setImageResource(R.drawable.ic_baseline_play_circle_filled)
                 sendBroadcast(Intent().apply {
                     action = QURAN_PLAYER_ACTION
                     putExtra("action", NOTIFY_QURAN_PAUSE)
                 })
             } else {
-                it.setImageResource(R.drawable.ic_baseline_pause_circle_filled)
+//                it.setImageResource(R.drawable.ic_baseline_pause_circle_filled)
                 sendBroadcast(Intent().apply {
                     action = QURAN_PLAYER_ACTION
                     putExtra("action", NOTIFY_QURAN_RESUME)
@@ -359,7 +363,7 @@ class SuraViewActivity : AppCompatActivity() {
                             quranEntity.en_transilation!!.contains(charString) ||
                             quranEntity.en_pickthall!!.contains(charString) ||
                             quranEntity.fa_khorramdel!!.contains(charString) ||
-                            quranEntity.ku_asan!!.contains(kKurdishToArabicCharacters(charString))||
+                            quranEntity.ku_asan!!.contains(kKurdishToArabicCharacters(charString)) ||
                             quranEntity.ku_asan!!.contains(charString)
                         )
                             f1.add(quranEntity)
@@ -587,14 +591,41 @@ class SuraViewActivity : AppCompatActivity() {
                     if (!isHaveStoragePermission(this@SuraViewActivity)) {
                         askForStoragePermission(this@SuraViewActivity)
                     } else {
-                        if (!File(
-                                getQuranDirectoryPath(this@SuraViewActivity) + "/" + appPrefsLite.getString(
+                        if ((appPrefsLite.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) != 3 && !File(
+                                getQuranDirectoryInInternal(this@SuraViewActivity) + "/" + appPrefsLite.getString(
                                     PREF_SELECTED_QARI,
                                     DEFAULT_SELECTED_QARI
                                 ) + "/" + getAyaFileName(
                                     aya.sura!!, aya.aya!!
                                 )
                             ).exists()
+                                    &&
+                                    !File(
+                                        getQuranDirectoryInSD(this@SuraViewActivity) + "/" + appPrefsLite.getString(
+                                            PREF_SELECTED_QARI,
+                                            DEFAULT_SELECTED_QARI
+                                        ) + "/" + getAyaFileName(
+                                            aya.sura!!, aya.aya!!
+                                        )
+                                    ).exists())
+                            ||
+                            (appPrefsLite.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) == 3 && !File(
+                                getQuranDirectoryInInternal(this@SuraViewActivity) + "/" + appPrefsLite.getString(
+                                    PREF_TRANSLATE_TO_PLAY,
+                                    DEFAULT_TRANSLATE_TO_PLAY
+                                ) + "/" + getAyaFileName(
+                                    aya.sura!!, aya.aya!!
+                                )
+                            ).exists()
+                                    &&
+                                    !File(
+                                        getQuranDirectoryInSD(this@SuraViewActivity) + "/" + appPrefsLite.getString(
+                                            PREF_TRANSLATE_TO_PLAY,
+                                            DEFAULT_TRANSLATE_TO_PLAY
+                                        ) + "/" + getAyaFileName(
+                                            aya.sura!!, aya.aya!!
+                                        )
+                                    ).exists())
                         ) {
                             AlertDialog.Builder(this@SuraViewActivity).apply {
                                 setTitle(getString(R.string.error))
@@ -618,8 +649,11 @@ class SuraViewActivity : AppCompatActivity() {
                                 create()
                                 show()
                             }
-                        } else if (appPrefsLite.getBoolean(PREF_PLAY_TRANSLATION, false) && !File(
-                                getQuranDirectoryPath(this@SuraViewActivity) + "/" + appPrefsLite.getString(
+                        } else if (appPrefsLite.getInt(
+                                PREF_PLAY_TYPE,
+                                DEFAULT_PLAY_TYPE
+                            ) != 2 && !File(
+                                getSelectedQuranDirectoryPath(this@SuraViewActivity) + "/" + appPrefsLite.getString(
                                     PREF_TRANSLATE_TO_PLAY,
                                     DEFAULT_TRANSLATE_TO_PLAY
                                 ) + "/" + getAyaFileName(
@@ -659,7 +693,7 @@ class SuraViewActivity : AppCompatActivity() {
                         }
                     }
                 }
-                appPrefsLite.edit { putInt(PREF_LAST_VISITED_VERSE,aya.index) }
+                appPrefsLite.edit { putInt(PREF_LAST_VISITED_VERSE, aya.index) }
             }//end of bind
 
             private fun getFarsi(text: String): String {

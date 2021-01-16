@@ -17,7 +17,6 @@ package ir.namoo.religiousprayers.ui.preferences.interfacecalendar.calendarsorde
  */
 
 import android.animation.ValueAnimator
-import android.content.Context
 import android.graphics.Color
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -27,26 +26,16 @@ import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.databinding.CalendarTypeItemBinding
 import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.layoutInflater
-import java.util.*
 
 class RecyclerListAdapter(
     private val calendarPreferenceDialog: CalendarPreferenceDialog,
-    private val context: Context,
-    titles: List<String>, values: List<String>, enabled: List<Boolean>
+    private var items: List<Item>
 ) : RecyclerView.Adapter<RecyclerListAdapter.ItemViewHolder>() {
 
-    private val titles: MutableList<String>
-    private val values: MutableList<String>
-    private val enabled: MutableList<Boolean>
+    data class Item(val title: String, val key: String, val enabled: Boolean)
 
     val result: List<String>
-        get() = values.filterIndexed { i, _ -> enabled[i] }
-
-    init {
-        this.titles = ArrayList(titles)
-        this.values = ArrayList(values)
-        this.enabled = ArrayList(enabled)
-    }
+        get() = items.filter { it.enabled }.map { it.key }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ItemViewHolder(
         CalendarTypeItemBinding.inflate(parent.context.layoutInflater, parent, false)
@@ -65,45 +54,49 @@ class RecyclerListAdapter(
     }
 
     fun onItemMoved(fromPosition: Int, toPosition: Int) {
-        Collections.swap(titles, fromPosition, toPosition)
-        Collections.swap(values, fromPosition, toPosition)
-        Collections.swap(enabled, fromPosition, toPosition)
+        items = items.mapIndexed { i, x ->
+            // swap from and to in the new object
+            when (i) {
+                fromPosition -> items[toPosition]
+                toPosition -> items[fromPosition]
+                else -> x
+            }
+        }
         notifyItemMoved(fromPosition, toPosition)
     }
 
     fun onItemDismissed(position: Int) {
-        titles.removeAt(position)
-        values.removeAt(position)
-        enabled.removeAt(position)
+        items = items.filterIndexed { i, _ -> i != position }
         notifyItemRemoved(position)
 
         // Easter egg when all are swiped
-        if (titles.size == 0) {
+        if (items.isEmpty()) {
             try {
-                val view = (context as? MainActivity)?.coordinator ?: return
+                val view =
+                    (calendarPreferenceDialog.activity as? MainActivity)?.coordinator ?: return
                 ValueAnimator.ofFloat(0f, 360f).apply {
                     duration = 3000L
                     interpolator = AccelerateDecelerateInterpolator()
                     addUpdateListener { value -> view.rotation = value.animatedValue as Float }
                 }.start()
-                //                Context context = calendarPreferenceDialog.getContext();
-                //                MediaPlayer mediaPlayer = MediaPlayer.create(context,
-                //                        R.raw.bach_invention_01);
-                //                if (!mediaPlayer.isPlaying()) {
-                //                    mediaPlayer.start();
-                //                }
-                //                AppCompatImageButton imageButton = new AppCompatImageButton(context);
-                //                imageButton.setImageResource(R.drawable.ic_stop);
-                //                AlertDialog alertDialog = new AlertDialog.Builder(context)
-                //                        .setView(imageButton).create();
-                //                imageButton.setOnClickListener(v -> {
-                //                    try {
-                //                        mediaPlayer.stop();
-                //                    } catch (Exception ignore) {
-                //                    }
-                //                    alertDialog.dismiss();
-                //                });
-                //                alertDialog.show();
+                // Context context = calendarPreferenceDialog.getContext();
+                // MediaPlayer mediaPlayer = MediaPlayer.create(context,
+                //         R.raw.bach_invention_01);
+                // if (!mediaPlayer.isPlaying()) {
+                //     mediaPlayer.start();
+                // }
+                // AppCompatImageButton imageButton = new AppCompatImageButton(context);
+                // imageButton.setImageResource(R.drawable.ic_stop);
+                // AlertDialog alertDialog = new AlertDialog.Builder(context)
+                //         .setView(imageButton).create();
+                // imageButton.setOnClickListener(v -> {
+                //     try {
+                //         mediaPlayer.stop();
+                //     } catch (Exception ignore) {
+                //     }
+                //     alertDialog.dismiss();
+                // });
+                // alertDialog.show();
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -112,7 +105,7 @@ class RecyclerListAdapter(
         }
     }
 
-    override fun getItemCount(): Int = titles.size
+    override fun getItemCount(): Int = items.size
 
     inner class ItemViewHolder(private val binding: CalendarTypeItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -121,13 +114,15 @@ class RecyclerListAdapter(
             binding.checkTextView.setOnClickListener {
                 val newState = !binding.checkTextView.isChecked
                 binding.checkTextView.isChecked = newState
-                enabled[layoutPosition] = newState
+                items = items.mapIndexed { i, x ->
+                    if (i == layoutPosition) Item(x.title, x.key, newState) else x
+                }
             }
         }
 
         fun bind(position: Int) = binding.apply {
-            checkTextView.text = titles[position]
-            checkTextView.isChecked = enabled[position]
+            checkTextView.text = items[position].title
+            checkTextView.isChecked = items[position].enabled
         }
 
         fun onItemSelected() = binding.root.setBackgroundColor(Color.LTGRAY)

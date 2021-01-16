@@ -19,9 +19,7 @@ import androidx.transition.TransitionManager
 import ir.namoo.quran.db.ChapterEntity
 import ir.namoo.quran.db.QuranDB
 import ir.namoo.quran.ui.QuranActivity
-import ir.namoo.quran.utils.getAyaFileName
-import ir.namoo.quran.utils.getQuranDirectoryPath
-import ir.namoo.quran.utils.getSuraFileName
+import ir.namoo.quran.utils.*
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentDownloadBinding
 import ir.namoo.religiousprayers.databinding.ItemQuranDownloadBinding
@@ -46,7 +44,7 @@ class DownloadFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         (requireActivity() as QuranActivity).setTitleAndSubtitle(
             resources.getString(R.string.download_audios),
             ""
@@ -67,11 +65,8 @@ class DownloadFragment : Fragment() {
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
 
-                override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) =
                     updateRecycler()
-                    if(selectedItemPosition==1)
-                        snackMessage(this@apply,context.getString(R.string.kurdish_file_not_available))
-                }
             }
             setSelection(if (folder == "-") 0 else folders.indexOf(folder))
         }
@@ -128,7 +123,10 @@ class DownloadFragment : Fragment() {
                         when {
 //                            allFileAreExists -> R.drawable.ic_files_ok
                             File(
-                                getQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
+                                getQuranDirectoryInInternal(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
+                                        getAyaFileName(chapter.sura, 1)
+                            ).exists() || File(
+                                getQuranDirectoryInSD(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
                                         getAyaFileName(chapter.sura, 1)
                             ).exists() -> R.drawable.ic_files_ok
                             else -> R.drawable.ic_files_download
@@ -167,10 +165,11 @@ class DownloadFragment : Fragment() {
                 private var length = 0
                 private var isDownloading = true
                 val folderPath =
-                    getQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition]
+                    getSelectedQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition]
 
                 override fun onPreExecute() {
                     super.onPreExecute()
+                    Log.e(TAG, "folder path : $folderPath ")
                     if (!File(folderPath).exists())
                         File(folderPath).mkdirs()
                     binding.spinnerQuranDownloadType.isEnabled = false
@@ -201,7 +200,7 @@ class DownloadFragment : Fragment() {
                             "Error Downloading! try again"
                         } else {
                             val file = File(
-                                getQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
+                                getSelectedQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
                                         getSuraFileName(chapter.sura)
                             )
                             length = connection.contentLength
@@ -243,13 +242,17 @@ class DownloadFragment : Fragment() {
                             v?.let {
                                 itemBinding.progressItemQuranDownload.progress = it
                                 itemBinding.txtDownloadInfo.text =
-                                    "${String.format(
-                                        "%.2f",
-                                        (it.toDouble() / 1024) / 1024
-                                    )} mb => ${String.format(
-                                        "%.2f",
-                                        (length.toDouble() / 1024) / 1024
-                                    )} mb"
+                                    "${
+                                        String.format(
+                                            "%.2f",
+                                            (it.toDouble() / 1024) / 1024
+                                        )
+                                    } mb => ${
+                                        String.format(
+                                            "%.2f",
+                                            (length.toDouble() / 1024) / 1024
+                                        )
+                                    } mb"
                             }
                     } else {
                         itemBinding.progressItemQuranDownload.isIndeterminate = true
@@ -273,9 +276,12 @@ class DownloadFragment : Fragment() {
                     )
                     notifyItemChanged(position)
                     if (!result.isNullOrEmpty() && result == "Success!")
-                        snackMessage(itemBinding.root,getString(R.string.downloaded))
+                        snackMessage(itemBinding.root, getString(R.string.downloaded))
                     else
-                        snackMessage(itemBinding.root,getString(R.string.download_failed_tray_again))
+                        snackMessage(
+                            itemBinding.root,
+                            getString(R.string.download_failed_tray_again)
+                        )
                 }
             }//end of class DownloadTask
 

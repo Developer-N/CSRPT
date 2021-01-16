@@ -6,8 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="3dp"
-    tools:context=".Widget2x2"
-    tools:targetApi="JELLY_BEAN_MR1">
+    tools:context=".Widget2x2">
 
     <TextClock
         android:id="@+id/time_2x2"

@@ -185,9 +185,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 //            !appPrefs.getBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)
 //        ) {
 //            Snackbar.make(coordinator, "✖  Change app language?", 7000).apply {
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
 //                    view.layoutDirection = View.LAYOUT_DIRECTION_LTR
-//                }
 //                view.setOnClickListener { dismiss() }
 //                setAction("Settings") {
 //                    appPrefs.edit {
@@ -416,10 +414,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         initUtils(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            binding.drawer.layoutDirection =
-                if (isRTL(this)) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
-        }
+        binding.drawer.layoutDirection =
+            if (isRTL(this)) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
     }
 
     override fun onResume() {

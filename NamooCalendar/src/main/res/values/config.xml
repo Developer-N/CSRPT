@@ -4,6 +4,5 @@
     <!-- Effets sonores -->
 
     <!-- Rates -->
-    <integer name="frame_rate">60</integer>
 
 </resources>

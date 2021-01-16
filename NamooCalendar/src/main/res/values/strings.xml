@@ -12,7 +12,6 @@
     <string name="accept">OK</string>
     <string name="add">Add</string>
     <string name="help">Help</string>
-    <string name="more">More</string>
     <string name="cancel">Cancel</string>
     <string name="continue_button">Continue</string>
 
@@ -20,53 +19,6 @@
     <string name="update">Update</string>
 
     <!-- No need for translation, remove the section from your translation -->
-    <string name="about_developers_list" translatable="false">"ebraminio: Ebrahim Byagowi
-hamidsafdari: Hamid Safdari
-behdad222: Behdad Abedi
-HrBDev: Hamidreza Bayat
-alirezaafkar: Alireza Afkar
-MEHDIMYADI: Mehdi Dimyadi
-runo280: Ruhollah Nosrati
-FtADev: Fatemeh Akhlaghi
-MasoodFallahpoor: Masood Fallahpoor"</string>
-    <string name="about_designers_list" translatable="false">"MEHDIMYADI: Mehdi Dimyadi
-MehraraAbedi: Mehrara Abedi
-behdude: Behdad Pournader
-ImanSoltanian: Iman Soltanian"</string>
-    <string name="about_translators_list" translatable="false">"yethrosh: Muhammad Shuaib
-LordArma: Alireza Moayed Ahmadi
-Matjafari: Mahdieh Jafari
-raminjavadi: Ramin Javadi"</string>
-    <string name="about_contributors_list" translatable="false">"La-Volpe: Javad Arjmandi
-mehdisadeghi: Mehdi Sadeghi
-abbas-oveissi: Abbas Oveissi
-aysha319: Aysha Aminnejad
-Tenkei: Keivan Esbati
-mohamadhadibi: Mohammad Hadi
-alirezaivaz: Alireza Ivaz
-AminBakhtiyari: Amin Bakhtiyari"</string>
-    <string name="about_help_subtitle" translatable="false">این نسخهٔ سال %s-%s است.</string>
-    <string name="about_help_sum" translatable="false">"برای اطمینان از صحت مناسبت‌های قمری سال‌های بعد نیاز است چند ماه پیش از تحویل سال، اگر توسعهٔ برنامه هنوز ادامه داشت، برنامه را به‌روز کنید چرا که آن مناسبت‌های قمری تا زمان انتشار نسخهٔ جدید به صورت رسمی در تقویم کشور مشخص نشده‌اند. در صورتی که توسعهٔ برنامه در سالی که از برنامه استفاده می‌کنید ادامه نداشت، پیشنهاد می‌شود مراقب صحت تعطیلی‌ها به کمک منابع دیگر باشید. مناسبت‌های خورشیدی رسمی برای همه سال‌ها اعمال شده است ولی ممکن است در سالی که آن مناسبت را در تقویم مشاهده می‌کنید، آن مناسبت تعطیل رسمی نبوده یا دیگر نباشد.
-
-مناسبت‌های این برنامه با تقویم ایران و افغانستان تنظیم شده‌است. ممکن است در کشورهای دیگر این مناسبت‌ها کاربرد نداشته باشند ولی در امکانات مختلف برنامه سعی شده جامعیت برنامه حفظ شود. به همین منظور می‌توانید با تنظیم مناسبت‌ها آن را به حالت دلخواه خود درآورید.
-
-دسترسی مکان به منظور امکان تنظیم اوقات شرعی در تنظیمات گرفته شده است، اگر مکانتان مثلاً از شهری به شهری دیگر تغییر می‌کند نیاز است با هر تغییر، آن را تنظیم کنید.
-
-تقویم قمری ممکن است دارای اشکال باشد به همین دلیل ممکن است نیاز باشد به صورت دستی در تنظیمات آن را اصلاح کنید. راه‌حل‌هایی از جمله به‌روزرسانی اختلاف از طریق اینترنت مطلوب توسعهٔ این برنامه نبوده به این دلیل که نیازمند دسترسی اینترنت است و هدف توسعهٔ این برنامه عدم اخذ دسترسی تا جای ممکن بوده است.
-
-تضمینی در صحت کارکرد برنامه وجود ندارد، فقط سعی شده برنامه‌ای مفید ارائه شود. مشهور است که هیچ برنامه، نرم‌افزار و الگوریتمی بی‌نقص نیست و ممکن است نیاز باشد خروجی برنامه را با منابع دیگر بررسی کنید. ممکن است به دلیل حجم کم حافظهٔ دستگاه، برنامه قادر به به‌روزرسانی شمارهٔ روز ماه در نوار اعلان نباشد و روز عقب‌تری را نشان دهد. پیشنهاد می‌شود سایر برنامه‌های دستگاه را که حافظهٔ اضافی گرفته‌اند حذف کنید یا گزینهٔ نوار اعلان برنامه را غیرفعال کنید یا برنامهٔ دیگری را بیازمایید.
-
-انتخاب طراحی برنامه این بوده که اذان فقط شامل چهار الله اکبر اول باشد ولی به راحتی می‌توانید صدای اذان مورد نظر خود را در تنظیمات از بین صداهای موجود در دستگاه‌تان انتخاب کنید.
-
-این تقویم به صورت شخصی، بدون هیچ منفعت مالی و با کمک افراد و کتابخانه‌های نرم‌افزاری‌ای که در زیر ذکر شده است، به امید اینکه مفید باشد، طراحی شده‌است و با مجوز جی‌پی‌ال نسخهٔ ۳ انتشار یافته است.
-
-مجوز جی‌پی‌ال به معنی آن است که استفاده از کدهای این برنامه فقط در صورتی امکان‌پذیر است که کدهای تغییر داده‌شده و به پروژه اضافه‌شده (به اصطلاح لینک‌شده) تحت همین مجوز به صورت آزاد منتشر شوند. انتخاب این مجوز به دلیل استفاده از کدهایی با همین مجوز بوده است و استفاده از کدهای این برنامه در برنامه‌های غیر متن‌باز از نظر مجوز استفاده‌شده در این پروژه و خصوصاً کتابخانه‌های جی‌پی‌ال استفاده شده نادرست است و در صورت استفاده از کدها و کتابخانه‌های جی‌پی‌ال نیاز است منبع و مجوز آن را به دقت در چنین صفحه‌ای در برنامه بیاورید.
-
-خط کردی در صداوسیمای کردستان ایران http://kurdistan.irib.ir، خط آذری در «سفینهٔ تبریز» کتیبهٔ نگهداری شده در مجلس ایران http://mtif.org/news/65117 و خط گیلکی در نشریهٔ گیلان اؤجا http://v6rg.com، دارای مجوز از وزارت فرهنگ جمهوری اسلامی ایران https://gilan.farhang.gov.ir/ershad_content/media/image/2017/08/527661_orig.pdf و کتاب «فرهنگ گیل و دیلم» انتشارات امیرکبیر به کار گرفته شده است. زبان فارسی در افغانستان به نام دری شناخته می‌شود و در کنار زبان پشتو دو زبان رسمی افغانستان هستند که هر دو در این برنامه پشتیبانی می‌شود. این نرم‌افزار مشارکت‌کنندگانی از افغانستان نیز داشته است، جهت گسترش کاربرد این تقویم به جای‌های دیگر، به انگلیسی و ژاپنی ترجمه شده است. تا جای ممکن سعی شده است که دستور خط زبان فارسی به کار رفته در این برنامه مطابق با دستور خط فرهنگستان زبان فارسی و کتاب دستور خط این فرهنگستان باشد.
-
-در اندروید ۹ به بالا، خصوصاً هنگام فعال بودن Power mode ممکن است نیاز باشد در تنظیمات، در قسمت Optimize Battery Apps تقویم را استثنا کنید.
-
-مانند قسمت‌های دیگر این برنامه، تضمینی در درستی عملکرد قطب‌نما نیست خصوصاً اینکه این قابلیت به وجود و درست تنظیم بودن سنسور قطب‌نمای دستگاه وابسته است. پیشنهاد می‌شود شمال را همیشه از طرق دیگر بدست آورید تا بتوانید از سایر اطلاعاتی که آن قسمت در اختیار قرار می‌دهد استفاده کنید ولی معمولاً این قسمت در صورتی که دستگاه را قبل از ورود به این بخش تخت و صاف قرار داده باشید درست عمل می‌کند."</string>
     <string name="capricorn_emoji" translatable="false">♑</string>
     <string name="aquarius_emoji" translatable="false">♒</string>
     <string name="pisces_emoji" translatable="false">♓</string>
@@ -155,7 +107,6 @@ AminBakhtiyari: Amin Bakhtiyari"</string>
     <string name="spring_equinox">Spring equinox time of year %1$s: %2$s</string>
 
     <!--Date Converter-->
-    <string name="select_type_date">Select date type</string>
     <string name="year">Year</string>
     <string name="select_year">Select year</string>
     <string name="month">Month</string>
@@ -181,7 +132,6 @@ AminBakhtiyari: Amin Bakhtiyari"</string>
     <!-- Settings -->
     <string name="pref_header_interface_calendar">Interface and Calendar</string>
     <string name="pref_header_widget_location">Widget and Notification</string>
-    <string name="pref_header_location_athan">Location and Athan</string>
 
     <!--Interface and Calendar Settings-->
     <string name="pref_interface">Interface</string>
@@ -226,8 +176,6 @@ AminBakhtiyari: Amin Bakhtiyari"</string>
     <string name="notify_date_lock_screen_summary">Only when a lock screen security method is set.</string>
 
     <!--Location and Athan-->
-    <string name="gps_location">Get location from GPS or network</string>
-    <string name="gps_location_help">Other options are not needed if this is possible</string>
     <string name="gps_internet_desc">"Enable device's GPS and Internet connection to find your location, please.
 
 The app needs this only once, however, if you move to a new location, accessing to GPS and Internet is needed again."</string>
@@ -236,32 +184,13 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="location_help">If none of them, specify it below</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
-    <string name="altitude">Altitude</string>
-    <string name="altitude_praytime">in meter (optional)</string>
 
-    <string name="athan">Athan</string>
     <string name="in_city_time">in</string>
-    <string name="pray_methods">Calculation methods</string>
-    <string name="pray_methods_calculation">Calculation methods for pray times and Qibla compass</string>
-    <string name="athan_gap">Athan Gap</string>
-    <string name="athan_gap_summary">How long ahead of the Athan should the alarm be triggered (in minutes)</string>
-    <string name="athan_alarm">Athan Alarm</string>
-    <string name="athan_alarm_summary">Prayers to trigger the alarm for</string>
-    <string name="notification_athan">Athan Notification</string>
-    <string name="enable_notification_athan">Show Athan as a notification and device vibration</string>
     <string name="ascending_athan_volume">Ascending athan volume</string>
     <string name="enable_ascending_athan_volume">Athan volume reaches to maximum value in one minute</string>
-    <string name="custom_athan">Select Athan</string>
     <string name="default_athan_name">Nasser Al Qatami</string>
-    <string name="custom_notification_is_set">Custom notification is just set</string>
 
-    <string name="default_athan">Default Athan</string>
-    <string name="default_athan_summary">Return to default Athan</string>
-    <string name="returned_to_default">Returned to default</string>
-    <string name="athan_volume">Athan Volume</string>
     <string name="athan_volume_summary">Set the volume for the alarm</string>
-
-    <string name="athan_disabled_summary">To set the Athan alarm, choose a location or enter the coordinates above</string>
 
     <!--Permissions-->
     <string name="location_access">Location Access</string>
@@ -277,14 +206,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="about_license_sum">Check GPL3 License and other license terms used on Calendar + Sunnah Pray Times.</string>
     <string name="about_license_dialog_close">Close</string>
 
-    <string name="about_support_developers">Developer Support</string>
-    <string name="about_report_bug">Report bug on GitHub</string>
-    <string name="about_report_bug_sum">Preferred bug reporting or requesting for new feature, needs a GitHub account</string>
-    <string name="about_sendMail">E-Mail</string>
-    <string name="about_email_sum">Send personal email to the author of the app</string>
-    <string name="about_noClient">No email client is installed</string>
-    <string name="about_developers">Developers</string>
-
     <!--TalkBack, a11y-->
     <string name="previous_month">Previous Month</string>
     <string name="next_month">Next Month</string>
@@ -294,7 +215,7 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="nth_week_of_year">%1$s week of year</string>
 
     <!-- New additions, to be categorized, keep the section on your translation -->
-    <string name="empty" />
+    <string name="empty" translatable="false" />
     <string name="shift_work_settings">Shift work settings</string>
     <string name="remove">Remove</string>
     <string name="shift_work_starting_date">%1$s, selected on the calendar, is shift work starting day.</string>
@@ -318,11 +239,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="map">Map</string>
     <string name="widget_background_color">Widget Background Color</string>
     <string name="select_widgets_background_color">Select custom color for widgets background</string>
-    <string name="change_theme">Change Theme</string>
-    <string name="service_not_available">Service not available</string>
-    <string name="invalid_lat_long_used">invalid lat long used</string>
-    <string name="no_address_found">No address found</string>
-    <string name="address_found">Address found</string>
     <string name="calculated_time">calculated times</string>
     <string name="exact_time">exact times</string>
     <string name="edited_time">edited times</string>
@@ -375,7 +291,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="error_gedit_data">Entered data not correct!</string>
     <string name="namoo_developer_group">Namoo Developer Group</string>
     <string name="srt_info2">about info</string>
-    <string name="version_code">Version %s</string>
     <string name="str_info_msg">string info message</string>
     <string name="telegram_developer">\@Developer_N</string>
     <string name="telegram">\@namoo_ir</string>
@@ -416,14 +331,11 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="ok">OK</string>
     <string name="close">Close</string>
     <string name="select_athan_file_title">Select Athan</string>
-    <string name="alarm_before_fajr">Alarm before fajr</string>
-    <string name="enable_alarm_before_fajr">Enable or Disable</string>
-    <string name="alarm_before_fajr_name">BFAJR</string>
-    <string name="select_athan_for_day">Select athan</string>
-    <string name="select_athan_for_fajr">Select fajr athan</string>
+    <string name="alarm_before">Alarm before</string>
+    <string name="enable_alarm_before">Enable or Disable</string>
+    <string name="select_athan_name">Select athan</string>
     <string name="default_fajr_athan_name">Mishary AlAfasy Fajr</string>
-    <string name="default_before_fajr_name">Beep</string>
-    <string name="select_athan_for_before_fajr">Select alarm for before fajr</string>
+    <string name="default_alert_before_name">Beep</string>
     <string name="add_online_alarm">Add online alarm</string>
     <string name="add_local_alarm">Add local alarm</string>
     <string name="old_edited_file_found">Old edited file found for send it click icon</string>
@@ -431,13 +343,11 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="error_sending_times">Error sending files try again!</string>
     <string name="str_changes_title">Changes</string>
     <string name="changes">"App Changes "</string>
-    <string name="summer_time">Summer time</string>
     <string name="monthly_times">Monthly pray times</string>
     <string name="support">Support</string>
     <string name="widget_next_athan_text_color">Widget Next Athan Text Color</string>
     <string name="select_widgets_next_athan_text_color">Select custom color for widgets next athan texts</string>
     <string name="select_asr_juristics">Asr Juristics</string>
-    <string name="enable_notification_play_athan">Enable playing athan in notification</string>
     <string name="remaning_to_next">%1$sh %2$sm</string>
     <string name="quran">Quran</string>
     <string name="chapter">Chapter</string>
@@ -445,7 +355,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="notes">Notes</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="download_audios">Download audio files</string>
-    <string name="back_to_calendar">Back to Calendar</string>
     <string name="create_shortcut">Create Shortcut</string>
     <string name="shortcut_created">Shortcut created!</string>
     <string name="pin_not_supported">Your device doesn\'t support pin shortcuts!</string>
@@ -501,7 +410,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="select_file_for_download">Select file for download</string>
     <string name="download_completed_unzip">Download Completed! -> Unzip …</string>
     <string name="select_qari_translate">Select qari and translate to play</string>
-    <string name="play_translate">Play translate</string>
     <string name="playing_verse">playing verse %s</string>
     <string name="error">Error!</string>
     <string name="audio_files_error">Audio files for this sura and selected qari not exist!</string>
@@ -511,8 +419,30 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="latest_visited">Latest visited : chapter %s verse %s</string>
     <string name="enable_location_services">Location Services is disabled, please turn it on to use the feature.</string>
     <string name="result_found">%s result dound.</string>
-    <string name="kurdish_file_not_available">All Kurdish file not available yet, they will be soon!</string>
     <string name="requset_permision">Request Permission</string>
     <string name="need_full_screen_permision">For show full screen athan notification need grant permission.</string>
+    <string name="enable">Enable alarm</string>
+    <string name="alert_type">Alert Type</string>
+    <string name="full_screen">Alert Type</string>
+    <string name="notification">Notification</string>
+    <string name="just_notification">Just Notification</string>
+    <string name="select_alarm">Select Alarm</string>
+    <string name="play_alert">Play Alert</string>
+    <string name="add_normal_athans">Add normal athan</string>
+    <string name="add_fajr_athan">اضافه کردن اذان صبح</string>
+    <string name="add_alarm">Add Alarm</string>
+    <string name="play_athan_problem">If you have problem with play athan change below methods</string>
+    <string name="first_method">First Method</string>
+    <string name="second_method">Second Method</string>
+    <string name="bfajr">Alert before fajr</string>
+    <string name="bdhuhr">Alert before dhuhr</string>
+    <string name="basr">Alert before asr</string>
+    <string name="bmaghrib">Alert before maghrib</string>
+    <string name="bisha">Alert Before isha</string>
+    <string name="select_storage">Select storage path</string>
+    <string name="arabic_translate">Play arabic and translate</string>
+    <string name="just_arabic">Just arabic</string>
+    <string name="just_translate">Just translate</string>
+    <string name="play_type">Play type</string>
 
 </resources>

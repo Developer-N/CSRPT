@@ -22,6 +22,7 @@ import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.PrayTimes
+import ir.namoo.religiousprayers.BuildConfig
 import ir.namoo.religiousprayers.PREF_GEOCODED_CITYNAME
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.appLink
@@ -124,7 +125,7 @@ class MonthlyFragment : Fragment() {
                     putExtra(
                         Intent.EXTRA_STREAM, FileProvider.getUriForFile(
                             requireContext(),
-                            "ir.namoo.religiousprayers.fileprovider",
+                            "${BuildConfig.APPLICATION_ID}.provider",
                             file
                         )
                     )

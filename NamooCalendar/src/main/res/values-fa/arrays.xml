@@ -3,20 +3,17 @@
     <string-array name="themeNames">
         <item>پیش‌فرض سیستم</item>
         <item>فیروزه ای</item>
-        <item>سبز</item>
+        <item>سبز تیره</item>
         <item>تاریک</item>
         <item>مدرن</item>
         <item>رودبار</item>
-    </string-array>
-
-    <string-array name="prayMethodsNames">
-        <item>شیعهٔ دوازده امامی، انجمن لوا، قم</item>
-        <item>اتّحادیهٔ جهانی اسلام، عربستان سعودی</item>
-        <item>جامعهٔ اسلامی آمریکای شمالی</item>
-        <item>مرجع عمومی تحقیقات مصر</item>
-        <item>دانشگاه امّ‌القریٰ، مکه</item>
-        <item>دانشگاه علوم اسلامی، کراچی</item>
-        <item>انجمن ژئوفیزیک، دانشگاه تهران</item>
+        <item>بنفش</item>
+        <item>بنفش تیره</item>
+        <item>نیلی</item>
+        <item>صورتی</item>
+        <item>سبز</item>
+        <item>قهوه ای</item>
+        <item>آبی</item>
     </string-array>
 
     <string-array name="prayerTimeNames">

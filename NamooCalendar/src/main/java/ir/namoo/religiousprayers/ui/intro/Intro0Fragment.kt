@@ -108,8 +108,7 @@ class Intro0Fragment : Fragment() {
         override fun doInBackground(vararg params: String?): String {
             try {
                 val httpclient: HttpClient = DefaultHttpClient()
-                val httpGet =
-                    HttpGet("http://www.namoo.ir/Home/GetAddedCities")
+                val httpGet = HttpGet("http://www.namoo.ir/Home/GetAddedCities")
                 val response: HttpResponse = httpclient.execute(httpGet)
                 if (response.statusLine.statusCode == 200) {
                     val serverResponse = EntityUtils.toString(response.entity)
@@ -273,9 +272,11 @@ class Intro0Fragment : Fragment() {
                         if (response.statusLine.statusCode == 200) {
                             val serverResponse = EntityUtils.toString(response.entity)
                             val outFile = File(
-                                "${getTimesDirectoryPath(requireContext())}/${getCity(
-                                    serverResponse
-                                )?.name ?: "_"}"
+                                "${getTimesDirectoryPath(requireContext())}/${
+                                    getCity(
+                                        serverResponse
+                                    )?.name ?: "_"
+                                }"
                             )
                             val outStream = FileOutputStream(outFile)
                             if (!outFile.exists())

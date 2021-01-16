@@ -183,6 +183,7 @@
     </style>
 
     <!-- Base application theme. -->
+    <!-- ########################################### Cyan   -->
     <style name="CyanTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorMonthsBackground">@color/cyan_primary</item>
         <item name="colorPrimary">@color/cyan_primary</item>
@@ -250,6 +251,496 @@
         <item name="colorWarning">@color/cyan_warning</item>
         <item name="colorSnack">@color/cyan_primary_dark</item>
         <item name="colorSettingTab">@color/cyan_primary</item>
+    </style>
+
+    <!-- ########################################### Purple   -->
+    <style name="PurpleTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/purple_primary</item>
+        <item name="colorPrimary">@color/purple_primary</item>
+        <item name="colorPrimaryDark">@color/purple_primary_dark</item>
+        <item name="colorAccent">@color/purple_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/purple_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/purple_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/purple_card_background</item>
+        <item name="colorBackground">@color/purple_background</item>
+        <item name="colorTextPrimary">@color/purple_text_primary</item>
+        <item name="colorIcon">@color/purple_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/purple_text_normal</item>
+        <item name="colorTextSecond">@color/purple_text_second</item>
+        <item name="colorTextHoliday">@color/purple_text_holiday</item>
+        <item name="colorHoliday">@color/purple_holiday</item>
+        <item name="colorHolidaySelected">@color/purple_holiday</item>
+        <item name="colorTextDrawer">@color/purple_text_drawer</item>
+        <item name="colorTextDay">@color/purple_text_day</item>
+        <item name="colorTextToday">@color/purple_text_today</item>
+        <item name="colorTextDayName">@color/purple_text_day_name</item>
+        <item name="colorTextAthan">@color/purple_text_athan</item>
+        <item name="colorDivider">@color/purple_divider</item>
+        <item name="colorCurrentDay">@color/purple_current_day</item>
+        <item name="colorSelectDay">@color/purple_select_day</item>
+        <item name="colorEventLine">@color/purple_event_line</item>
+        <item name="colorDrawerBackground">@color/purple_drawer_background</item>
+        <item name="colorDrawerSelect">@color/purple_drawer_select</item>
+        <item name="colorDrawerIcon">@color/purple_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/purple_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/purple_text_normal</item>
+
+        <item name="coloredTabBackground">@color/purple_accent</item>
+        <item name="coloredTabTextColor">@color/purple_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/purple_menu_icon_color</item>
+        <item name="dragIconColor">@color/purple_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/purple_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/purple_primary_dark</item>
+
+        <item name="colorWarning">@color/purple_warning</item>
+        <item name="colorSnack">@color/purple_primary_dark</item>
+        <item name="colorSettingTab">@color/purple_primary</item>
+    </style>
+
+    <!-- ########################################### Deep Purple   -->
+    <style name="DeepPurpleTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/deep_purple_primary</item>
+        <item name="colorPrimary">@color/deep_purple_primary</item>
+        <item name="colorPrimaryDark">@color/deep_purple_primary_dark</item>
+        <item name="colorAccent">@color/deep_purple_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/deep_purple_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/deep_purple_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/deep_purple_card_background</item>
+        <item name="colorBackground">@color/deep_purple_background</item>
+        <item name="colorTextPrimary">@color/deep_purple_text_primary</item>
+        <item name="colorIcon">@color/deep_purple_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/deep_purple_text_normal</item>
+        <item name="colorTextSecond">@color/deep_purple_text_second</item>
+        <item name="colorTextHoliday">@color/deep_purple_text_holiday</item>
+        <item name="colorHoliday">@color/deep_purple_holiday</item>
+        <item name="colorHolidaySelected">@color/deep_purple_holiday</item>
+        <item name="colorTextDrawer">@color/deep_purple_text_drawer</item>
+        <item name="colorTextDay">@color/deep_purple_text_day</item>
+        <item name="colorTextToday">@color/deep_purple_text_today</item>
+        <item name="colorTextDayName">@color/deep_purple_text_day_name</item>
+        <item name="colorTextAthan">@color/deep_purple_text_athan</item>
+        <item name="colorDivider">@color/deep_purple_divider</item>
+        <item name="colorCurrentDay">@color/deep_purple_current_day</item>
+        <item name="colorSelectDay">@color/deep_purple_select_day</item>
+        <item name="colorEventLine">@color/deep_purple_event_line</item>
+        <item name="colorDrawerBackground">@color/deep_purple_drawer_background</item>
+        <item name="colorDrawerSelect">@color/deep_purple_drawer_select</item>
+        <item name="colorDrawerIcon">@color/deep_purple_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/deep_purple_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/deep_purple_text_normal</item>
+
+        <item name="coloredTabBackground">@color/deep_purple_accent</item>
+        <item name="coloredTabTextColor">@color/deep_purple_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/deep_purple_menu_icon_color</item>
+        <item name="dragIconColor">@color/deep_purple_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/deep_purple_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/deep_purple_primary_dark</item>
+
+        <item name="colorWarning">@color/deep_purple_warning</item>
+        <item name="colorSnack">@color/deep_purple_primary_dark</item>
+        <item name="colorSettingTab">@color/deep_purple_primary</item>
+    </style>
+
+    <!-- ########################################### Indigo   -->
+    <style name="IndigoTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/indigo_primary</item>
+        <item name="colorPrimary">@color/indigo_primary</item>
+        <item name="colorPrimaryDark">@color/indigo_primary_dark</item>
+        <item name="colorAccent">@color/indigo_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/indigo_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/indigo_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/indigo_card_background</item>
+        <item name="colorBackground">@color/indigo_background</item>
+        <item name="colorTextPrimary">@color/indigo_text_primary</item>
+        <item name="colorIcon">@color/indigo_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/indigo_text_normal</item>
+        <item name="colorTextSecond">@color/indigo_text_second</item>
+        <item name="colorTextHoliday">@color/indigo_text_holiday</item>
+        <item name="colorHoliday">@color/indigo_holiday</item>
+        <item name="colorHolidaySelected">@color/indigo_holiday</item>
+        <item name="colorTextDrawer">@color/indigo_text_drawer</item>
+        <item name="colorTextDay">@color/indigo_text_day</item>
+        <item name="colorTextToday">@color/indigo_text_today</item>
+        <item name="colorTextDayName">@color/indigo_text_day_name</item>
+        <item name="colorTextAthan">@color/indigo_text_athan</item>
+        <item name="colorDivider">@color/indigo_divider</item>
+        <item name="colorCurrentDay">@color/indigo_current_day</item>
+        <item name="colorSelectDay">@color/indigo_select_day</item>
+        <item name="colorEventLine">@color/indigo_event_line</item>
+        <item name="colorDrawerBackground">@color/indigo_drawer_background</item>
+        <item name="colorDrawerSelect">@color/indigo_drawer_select</item>
+        <item name="colorDrawerIcon">@color/indigo_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/indigo_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/indigo_text_normal</item>
+
+        <item name="coloredTabBackground">@color/indigo_accent</item>
+        <item name="coloredTabTextColor">@color/indigo_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/indigo_menu_icon_color</item>
+        <item name="dragIconColor">@color/indigo_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/indigo_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/indigo_primary_dark</item>
+
+        <item name="colorWarning">@color/indigo_warning</item>
+        <item name="colorSnack">@color/indigo_primary_dark</item>
+        <item name="colorSettingTab">@color/indigo_primary</item>
+    </style>
+
+    <!-- ########################################### Pink   -->
+    <style name="PinkTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/pink_primary</item>
+        <item name="colorPrimary">@color/pink_primary</item>
+        <item name="colorPrimaryDark">@color/pink_primary_dark</item>
+        <item name="colorAccent">@color/pink_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/pink_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/pink_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/pink_card_background</item>
+        <item name="colorBackground">@color/pink_background</item>
+        <item name="colorTextPrimary">@color/pink_text_primary</item>
+        <item name="colorIcon">@color/pink_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/pink_text_normal</item>
+        <item name="colorTextSecond">@color/pink_text_second</item>
+        <item name="colorTextHoliday">@color/pink_text_holiday</item>
+        <item name="colorHoliday">@color/pink_holiday</item>
+        <item name="colorHolidaySelected">@color/pink_holiday</item>
+        <item name="colorTextDrawer">@color/pink_text_drawer</item>
+        <item name="colorTextDay">@color/pink_text_day</item>
+        <item name="colorTextToday">@color/pink_text_today</item>
+        <item name="colorTextDayName">@color/pink_text_day_name</item>
+        <item name="colorTextAthan">@color/pink_text_athan</item>
+        <item name="colorDivider">@color/pink_divider</item>
+        <item name="colorCurrentDay">@color/pink_current_day</item>
+        <item name="colorSelectDay">@color/pink_select_day</item>
+        <item name="colorEventLine">@color/pink_event_line</item>
+        <item name="colorDrawerBackground">@color/pink_drawer_background</item>
+        <item name="colorDrawerSelect">@color/pink_drawer_select</item>
+        <item name="colorDrawerIcon">@color/pink_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/pink_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/pink_text_normal</item>
+
+        <item name="coloredTabBackground">@color/pink_accent</item>
+        <item name="coloredTabTextColor">@color/pink_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/pink_menu_icon_color</item>
+        <item name="dragIconColor">@color/pink_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/pink_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/pink_primary_dark</item>
+
+        <item name="colorWarning">@color/pink_warning</item>
+        <item name="colorSnack">@color/pink_primary_dark</item>
+        <item name="colorSettingTab">@color/pink_primary</item>
+    </style>
+
+    <!-- ########################################### Green   -->
+    <style name="GreenTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/green_primary</item>
+        <item name="colorPrimary">@color/green_primary</item>
+        <item name="colorPrimaryDark">@color/green_primary_dark</item>
+        <item name="colorAccent">@color/green_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/green_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/green_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/green_card_background</item>
+        <item name="colorBackground">@color/green_background</item>
+        <item name="colorTextPrimary">@color/green_text_primary</item>
+        <item name="colorIcon">@color/green_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/green_text_normal</item>
+        <item name="colorTextSecond">@color/green_text_second</item>
+        <item name="colorTextHoliday">@color/green_text_holiday</item>
+        <item name="colorHoliday">@color/green_holiday</item>
+        <item name="colorHolidaySelected">@color/green_holiday</item>
+        <item name="colorTextDrawer">@color/green_text_drawer</item>
+        <item name="colorTextDay">@color/green_text_day</item>
+        <item name="colorTextToday">@color/green_text_today</item>
+        <item name="colorTextDayName">@color/green_text_day_name</item>
+        <item name="colorTextAthan">@color/green_text_athan</item>
+        <item name="colorDivider">@color/green_divider</item>
+        <item name="colorCurrentDay">@color/green_current_day</item>
+        <item name="colorSelectDay">@color/green_select_day</item>
+        <item name="colorEventLine">@color/green_event_line</item>
+        <item name="colorDrawerBackground">@color/green_drawer_background</item>
+        <item name="colorDrawerSelect">@color/green_drawer_select</item>
+        <item name="colorDrawerIcon">@color/green_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/green_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/green_text_normal</item>
+
+        <item name="coloredTabBackground">@color/green_accent</item>
+        <item name="coloredTabTextColor">@color/green_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/green_menu_icon_color</item>
+        <item name="dragIconColor">@color/green_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/green_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/green_primary_dark</item>
+
+        <item name="colorWarning">@color/green_warning</item>
+        <item name="colorSnack">@color/green_primary_dark</item>
+        <item name="colorSettingTab">@color/green_primary</item>
+    </style>
+
+    <!-- ########################################### Brown   -->
+    <style name="BrownTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/brown_primary</item>
+        <item name="colorPrimary">@color/brown_primary</item>
+        <item name="colorPrimaryDark">@color/brown_primary_dark</item>
+        <item name="colorAccent">@color/brown_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/brown_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/brown_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/brown_card_background</item>
+        <item name="colorBackground">@color/brown_background</item>
+        <item name="colorTextPrimary">@color/brown_text_primary</item>
+        <item name="colorIcon">@color/brown_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/brown_text_normal</item>
+        <item name="colorTextSecond">@color/brown_text_second</item>
+        <item name="colorTextHoliday">@color/brown_text_holiday</item>
+        <item name="colorHoliday">@color/brown_holiday</item>
+        <item name="colorHolidaySelected">@color/brown_holiday</item>
+        <item name="colorTextDrawer">@color/brown_text_drawer</item>
+        <item name="colorTextDay">@color/brown_text_day</item>
+        <item name="colorTextToday">@color/brown_text_today</item>
+        <item name="colorTextDayName">@color/brown_text_day_name</item>
+        <item name="colorTextAthan">@color/brown_text_athan</item>
+        <item name="colorDivider">@color/brown_divider</item>
+        <item name="colorCurrentDay">@color/brown_current_day</item>
+        <item name="colorSelectDay">@color/brown_select_day</item>
+        <item name="colorEventLine">@color/brown_event_line</item>
+        <item name="colorDrawerBackground">@color/brown_drawer_background</item>
+        <item name="colorDrawerSelect">@color/brown_drawer_select</item>
+        <item name="colorDrawerIcon">@color/brown_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/brown_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/brown_text_normal</item>
+
+        <item name="coloredTabBackground">@color/brown_accent</item>
+        <item name="coloredTabTextColor">@color/brown_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/brown_menu_icon_color</item>
+        <item name="dragIconColor">@color/brown_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/brown_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/brown_primary_dark</item>
+
+        <item name="colorWarning">@color/brown_warning</item>
+        <item name="colorSnack">@color/brown_primary_dark</item>
+        <item name="colorSettingTab">@color/brown_primary</item>
+    </style>
+
+    <!-- ########################################### New Blue   -->
+    <style name="NewBlueTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorMonthsBackground">@color/new_blue_primary</item>
+        <item name="colorPrimary">@color/new_blue_primary</item>
+        <item name="colorPrimaryDark">@color/new_blue_primary_dark</item>
+        <item name="colorAccent">@color/new_blue_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/new_blue_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/new_blue_primary</item>
+        <!-- Customize your theme here. -->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+
+        <item name="colorCard">@color/new_blue_card_background</item>
+        <item name="colorBackground">@color/new_blue_background</item>
+        <item name="colorTextPrimary">@color/new_blue_text_primary</item>
+        <item name="colorIcon">@color/new_blue_icon</item>
+        <item name="colorDanger">@color/red</item>
+        <item name="colorTextNormal">@color/new_blue_text_normal</item>
+        <item name="colorTextSecond">@color/new_blue_text_second</item>
+        <item name="colorTextHoliday">@color/new_blue_text_holiday</item>
+        <item name="colorHoliday">@color/new_blue_holiday</item>
+        <item name="colorHolidaySelected">@color/new_blue_holiday</item>
+        <item name="colorTextDrawer">@color/new_blue_text_drawer</item>
+        <item name="colorTextDay">@color/new_blue_text_day</item>
+        <item name="colorTextToday">@color/new_blue_text_today</item>
+        <item name="colorTextDayName">@color/new_blue_text_day_name</item>
+        <item name="colorTextAthan">@color/new_blue_text_athan</item>
+        <item name="colorDivider">@color/new_blue_divider</item>
+        <item name="colorCurrentDay">@color/new_blue_current_day</item>
+        <item name="colorSelectDay">@color/new_blue_select_day</item>
+        <item name="colorEventLine">@color/new_blue_event_line</item>
+        <item name="colorDrawerBackground">@color/new_blue_drawer_background</item>
+        <item name="colorDrawerSelect">@color/new_blue_drawer_select</item>
+        <item name="colorDrawerIcon">@color/new_blue_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/new_blue_month_switch</item>
+
+        <item name="appDivider">@drawable/app_divider_light</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+
+        <item name="android:textColor">@color/new_blue_text_normal</item>
+
+        <item name="coloredTabBackground">@color/new_blue_accent</item>
+        <item name="coloredTabTextColor">@color/new_blue_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="toolbarTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+
+        <item name="menuIconColor">@color/new_blue_menu_icon_color</item>
+        <item name="dragIconColor">@color/new_blue_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/new_blue_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorHighlight">@color/colorHighlight</item>
+
+        <item name="colorNWidgetText">@color/white</item>
+        <item name="colorNWidgetBackground">@color/new_blue_primary_dark</item>
+
+        <item name="colorWarning">@color/new_blue_warning</item>
+        <item name="colorSnack">@color/new_blue_primary_dark</item>
+        <item name="colorSettingTab">@color/new_blue_primary</item>
     </style>
 
     <style name="BlueTheme" parent="Theme.MaterialComponents.Light.NoActionBar">

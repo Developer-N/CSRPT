@@ -8,6 +8,8 @@ import android.os.Looper
 import android.text.Html
 import android.view.*
 import android.view.animation.AnimationUtils
+import android.view.animation.AnticipateInterpolator
+import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.Toast
@@ -40,7 +42,7 @@ class SearchFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentSearchBinding.inflate(inflater)
         setHasOptionsMenu(true)
         binding.searchRecycler.visibility = View.GONE
@@ -102,6 +104,8 @@ class SearchFragment : Fragment() {
         private var filteredVerses: MutableList<QuranEntity>? = null
         private var allVerses: MutableList<QuranEntity>? = null
         private var filter = ""
+        private var lastExpend: ItemSearchBinding? = null
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder =
             SearchViewHolder(ItemSearchBinding.inflate(layoutInflater, parent, false))
 
@@ -115,7 +119,7 @@ class SearchFragment : Fragment() {
 
         override fun onBindViewHolder(holder: SearchViewHolder, position: Int) {
             filteredVerses?.let {
-                holder.bind(it[position])
+                holder.bind(it[position],position)
             }
         }
 
@@ -184,6 +188,7 @@ class SearchFragment : Fragment() {
         //#######################################################33
         inner class SearchViewHolder(private val itemBinding: ItemSearchBinding) :
             RecyclerView.ViewHolder(itemBinding.root) {
+            private var mPosition = 0
 
             init {
                 itemBinding.searchTxtItemArabic.typeface = arabicFont
@@ -196,10 +201,24 @@ class SearchFragment : Fragment() {
                 itemBinding.searchTxtItemKurdish.visibility = View.GONE
                 itemBinding.searchTxtItemFarsi.visibility = View.GONE
                 itemBinding.searchTxtItemArabic.maxLines = 2
+
+                itemBinding.btnSearchExpand.setOnClickListener {
+                    it.startAnimation(
+                        AnimationUtils.loadAnimation(
+                            requireContext(),
+                            com.google.android.material.R.anim.abc_fade_in
+                        )
+                    )
+                    expand()
+                }
+                itemBinding.root.setOnClickListener {
+                    expand()
+                }
             }
 
             @SuppressLint("PrivateResource")
-            fun bind(aya: QuranEntity) {
+            fun bind(aya: QuranEntity, position: Int) {
+                mPosition = position
                 itemBinding.searchTxtItemArabic.text = aya.simple_clean
                 itemBinding.searchTxtItemEnglish.text = aya.en_pickthall
                 itemBinding.searchTxtItemKurdish.text = aya.ku_asan
@@ -226,18 +245,7 @@ class SearchFragment : Fragment() {
                         it.context!!.sendBroadcast(this)
                     }
                 }
-                itemBinding.btnSearchExpand.setOnClickListener {
-                    it.startAnimation(
-                        AnimationUtils.loadAnimation(
-                            requireContext(),
-                            com.google.android.material.R.anim.abc_fade_in
-                        )
-                    )
-                    expand()
-                }
-                itemBinding.root.setOnClickListener {
-                    expand()
-                }
+
                 if (filter.isNotEmpty()) {
                     val strReplace = "<font color='#F44336'>$filter</font>"
                     itemBinding.searchTxtItemArabic.text = Html.fromHtml(
@@ -259,8 +267,7 @@ class SearchFragment : Fragment() {
             fun expand() {
                 val arrowRotationAnimationDuration =
                     resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-                val transition = ChangeBounds()
-                transition.duration = 300
+
                 if (itemBinding.searchTxtItemEnglish.visibility == View.VISIBLE) {
                     itemBinding.btnSearchExpand.animate()
                         .rotation(0f)
@@ -270,7 +277,20 @@ class SearchFragment : Fragment() {
                     itemBinding.searchTxtItemKurdish.visibility = View.GONE
                     itemBinding.searchTxtItemFarsi.visibility = View.GONE
                     itemBinding.searchTxtItemArabic.maxLines = 2
+                    lastExpend = null
                 } else {
+                    if (lastExpend != null && lastExpend != itemBinding) {
+                        lastExpend?.let {
+                            it.btnSearchExpand.animate()
+                                .rotation(0f)
+                                .setDuration(arrowRotationAnimationDuration)
+                                .start()
+                            it.searchTxtItemEnglish.visibility = View.GONE
+                            it.searchTxtItemKurdish.visibility = View.GONE
+                            it.searchTxtItemFarsi.visibility = View.GONE
+                            it.searchTxtItemArabic.maxLines = 2
+                        }
+                    }
                     itemBinding.btnSearchExpand.animate()
                         .rotation(180f)
                         .setDuration(arrowRotationAnimationDuration)
@@ -279,7 +299,14 @@ class SearchFragment : Fragment() {
                     itemBinding.searchTxtItemKurdish.visibility = View.VISIBLE
                     itemBinding.searchTxtItemFarsi.visibility = View.VISIBLE
                     itemBinding.searchTxtItemArabic.maxLines = 10
+                    lastExpend = itemBinding
+                    (binding.searchRecycler.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
+                        mPosition,
+                        0
+                    )
                 }
+                val transition = ChangeBounds()
+                transition.interpolator = AnticipateOvershootInterpolator()
                 TransitionManager.beginDelayedTransition(binding.searchRecycler, transition)
             }
 

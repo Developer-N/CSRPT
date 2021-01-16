@@ -25,10 +25,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.google.android.material.textview.MaterialTextView
-import ir.namoo.religiousprayers.PREF_GEOCODED_CITYNAME
-import ir.namoo.religiousprayers.PREF_LATITUDE
-import ir.namoo.religiousprayers.PREF_LONGITUDE
-import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.FragmentDownupBinding
 import ir.namoo.religiousprayers.databinding.ItemAvailableCityBinding
 import ir.namoo.religiousprayers.praytimes.*
@@ -210,7 +207,7 @@ class DownloadUploadFragment : Fragment() {
                                     Intent.EXTRA_STREAM,
                                     FileProvider.getUriForFile(
                                         requireContext(),
-                                        "ir.namoo.religiousprayers.fileprovider",
+                                        "${BuildConfig.APPLICATION_ID}.provider",
                                         file
                                     )
                                 )
@@ -267,7 +264,7 @@ class DownloadUploadFragment : Fragment() {
                         Intent.EXTRA_STREAM,
                         FileProvider.getUriForFile(
                             requireContext(),
-                            "ir.namoo.religiousprayers.fileprovider",
+                            "${BuildConfig.APPLICATION_ID}.provider",
                             oldDB
                         )
                     )

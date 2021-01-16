@@ -28,12 +28,6 @@
     <string name="enable_notify">اعلان همیشگی برای تاریخ‌ها</string>
     <string name="select_skin">انتخاب پوسته</string>
     <string name="skin">پوسته</string>
-    <string name="pray_methods">شیوه‌های محاسبه</string>
-    <string name="pray_methods_calculation">شیوه‌های محاسبهٔ اوقات شرعی</string>
-    <string name="altitude">ارتفاع</string>
-    <string name="altitude_praytime">به متر (دلخواه)</string>
-    <string name="gps_location">دریافت مختصات از جی‌پی‌اس</string>
-    <string name="gps_location_help">اگر از این طریق ممکن باشد، نیازی به سایر تنظیمات این بخش نیست</string>
     <string name="location">موقعیت</string>
     <string name="location_help">اگر در فهرست نبود، مختصات را وارد کنید</string>
     <string name="showing_iran_time">نمایش ویجت، نوار اعلان و برنامه به وقت ایران در همه جا، مناسب ایرانیان خارج</string>
@@ -42,14 +36,7 @@
     <string name="compass_not_found">حسگر قطب‌نما پیدا نشد</string>
     <string name="language">زبان</string>
     <string name="version">نگارش: %1$s</string>
-    <string name="athan">اذان</string>
-    <string name="athan_alarm_summary">برای این نمازها اذان گفته شود</string>
-    <string name="athan_alarm">اذان‌ها</string>
     <string name="athan_volume_summary">تنظیم حجم صدای اذان</string>
-    <string name="athan_volume">حجم صدا</string>
-    <string name="athan_disabled_summary">برای فعال کردن تنظیمات اذان، مکانی را از فهرست برگزیده، یا مشخصات موقعیتتان را وارد کنید</string>
-    <string name="athan_gap">فاصلهٔ بین اذان واقعی و اذان برنامه</string>
-    <string name="athan_gap_summary">چند دقیقه پیش از اذان، هشدار به صدا در آورده شود</string>
     <string name="closeDrawer">بستن</string>
     <string name="openDrawer">گشودن</string>
     <string name="imsak">امساک</string>
@@ -66,7 +53,6 @@
     <string name="events_summary">چه نوع مناسبت‌هایی در تقویم نمایش داده شود</string>
     <string name="today">امروز</string>
     <string name="return_to_today">بازگشت به امروز</string>
-    <string name="select_type_date">انتخاب گونهٔ تاریخ</string>
     <string name="year">سال</string>
     <string name="month">ماه</string>
     <string name="day">روز</string>
@@ -103,26 +89,12 @@
     <string name="customize_widget">شخصی‌سازی ویجت‌ها و اعلان</string>
     <string name="add">افزودن</string>
     <string name="which_one_to_show">کدام یک نمایش داده شود</string>
-    <string name="notification_athan">اذان به صورت اعلان</string>
-    <string name="enable_notification_athan">نمایش اذان به‌عنوان یک اعلان و لرزش دستگاه</string>
-    <string name="returned_to_default">به پیش‌فرض برگردانده شد</string>
-    <string name="custom_notification_is_set">صدای درخواستی تنظیم شد</string>
-    <string name="custom_athan">انتخاب اذان</string>
-    <string name="default_athan_summary">بازگردانی به اذان پیش‌فرض</string>
-    <string name="default_athan">اذان پیش‌فرض</string>
     <string name="default_athan_name">ناصر القطامی</string>
     <string name="about_license">مجوز</string>
     <string name="about_license_title">مجوزهای برنامه</string>
     <string name="about_license_sum">مجوز GPL3، شرایط مجوزهای استفاده شده در تقویم + اوقات شرعی اهل سنت و کتابخانه‌های استفاده شده را بررسی کنید.</string>
     <string name="about_license_dialog_close">بستن</string>
     <string name="help">راهنما</string>
-    <string name="about_report_bug">گزارش اشکال</string>
-    <string name="about_report_bug_sum">"راه ترجیحی برای گزارش باگ و درخواست قابلیت‌های جدید، نیازمند حسابی در گیت‌هاب "</string>
-    <string name="about_sendMail">رایانامه</string>
-    <string name="about_noClient">برنامه‌ای جهت ارسال رایانامه نصب نیست!</string>
-    <string name="about_developers">توسعه‌دهندگان (ترتیب تصادفی)</string>
-    <string name="about_support_developers">پشتیبانی از توسعه‌دهنده</string>
-    <string name="about_email_sum">ارسال رایانامهٔ شخصی برای نویسنده‌های برنامه</string>
     <string name="gps_internet_desc">"لطفاً موقعیت‌یاب (GPS) و اینترنت را برای یافتن جهت قبله یا جهت جغرافیایی روشن نمایید.
 برنامه تنها یک‌بار برای یک مکان نیاز به این دسترسی‌ها دارد، اما در صورتی که مکان شما تغییر کند دوباره نیازمند تنظیم است."</string>
     <string name="start_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) از ابتدای سال</string>
@@ -135,7 +107,6 @@
     <string name="length_of_day">طول روز: %1$sس %2$sد</string>
     <string name="remaining_daylight">باقی‌مانده: %1$sس %2$sد</string>
     <string name="remaning_to_next">%1$sس %2$sد</string>
-    <string name="more">بیشتر</string>
     <string name="zodiac">برج فلکی</string>
     <string name="capricorn">جَدْی (بزغاله)</string>
     <string name="aquarius">دلو (آبریز)</string>
@@ -172,7 +143,6 @@
     <string name="islamic_offset_summary">بازگشت برای اصلاح تقویم</string>
     <string name="pref_header_interface_calendar">رابط و تقویم</string>
     <string name="pref_header_widget_location">ویجت و اعلان</string>
-    <string name="pref_header_location_athan">موقعیت و اذان</string>
     <string name="pref_interface">رابط</string>
     <string name="resume">ادامه</string>
     <string name="continue_button">ادامه</string>
@@ -192,7 +162,6 @@
     <string name="nth_week_of_year">هفتهٔ %1$s سال</string>
 
     <!-- New additions, to be categorized, keep the section on your translation -->
-    <string name="empty" />
     <string name="north">شمال</string>
     <string name="east">شرق</string>
     <string name="south">جنوب</string>
@@ -229,11 +198,6 @@
     <string name="enable_ascending_athan_volume">صدای اذان طی یک دقیقه به حداکثر خود می‌رسد</string>
     <string name="widget_background_color">رنگ پس‌زمینه ویجت</string>
     <string name="select_widgets_background_color">انتخاب رنگ دلخواه برای پس‌زمینه ویجت</string>
-    <string name="change_theme">عوض کردن پوسته</string>
-    <string name="service_not_available">Service not available</string>
-    <string name="invalid_lat_long_used">invalid lat long used</string>
-    <string name="no_address_found">No address found</string>
-    <string name="address_found">Address found</string>
     <string name="calculated_time">اوقات محاسبه شده</string>
     <string name="exact_time">اوقات دقیق محلی</string>
     <string name="edited_time">اوقات ویرایش شده</string>
@@ -292,7 +256,6 @@
     <string name="error_gedit_data">در وارد کردن اطلاعات دقت کنید!</string>
     <string name="namoo_developer_group">گروه توسعه دهنده نامۆ</string>
     <string name="srt_info2">با حمایت کانون فرهنگی هنری حضرت محمدﷺ، مسجد حضرت ابوبکر صدیق (رضی الله عنه)، شهرستان سردشت.</string>
-    <string name="version_code">version : %s</string>
     <string name="str_info_msg">با ارسال اشکالات و پیشنهادات ما را در راستای ارتقای خدماتمان یاری کنید.
         \n
         کپی حلال و تبلیغ و نشر برنامه صدقه جاریه است.
@@ -338,14 +301,11 @@
     <string name="ok">خیلی خب</string>
     <string name="close">بستن</string>
     <string name="select_athan_file_title">اذان را انتخاب کنید</string>
-    <string name="alarm_before_fajr">هشدار قبل از اذان صبح</string>
-    <string name="enable_alarm_before_fajr">فعال یا غیر فعال کردن</string>
-    <string name="alarm_before_fajr_name">BFAJR</string>
-    <string name="select_athan_for_day">انتخاب اذان</string>
-    <string name="select_athan_for_fajr">انتخاب اذان صبح</string>
+    <string name="alarm_before">هشدار قبل از اذان</string>
+    <string name="enable_alarm_before">فعال یا غیر فعال کردن</string>
+    <string name="select_athan_name">انتخاب اذان</string>
     <string name="default_fajr_athan_name">العفاسی - صبح</string>
-    <string name="default_before_fajr_name">زنگ</string>
-    <string name="select_athan_for_before_fajr">انتخاب هشدار قبل از اذان صبح</string>
+    <string name="default_alert_before_name">زنگ</string>
     <string name="add_online_alarm">دانلود هشدار</string>
     <string name="add_local_alarm">اضافه کردن هشدار دلخواه</string>
     <string name="old_edited_file_found">اوقات ویرایش شده ی قدیمی یافت شد برای ارسال آن ها روی آیکن کلیک کنید.</string>
@@ -355,6 +315,13 @@
 
 
     <string name="changes">
+        \n----تغییرات نسخه : 9.1.2021----\n
+1.	تنظیمات بیشتر برای اذان ها(برای هر اذان جداگانه حالت پخش، اذان، هشدار قبل از اذان، میزان صدا و … انتخاب کنید.)\n
+2.	اضافه شدن پوسته های جدید(بنفش، بنفش تیره، نیلی، صورتی، سبز، قهوه ای و آبی)\n
+3.	از این به بعد می توانید فایل های صوتی قرآن را روی کارت حافظه ذخیره کنید.\n
+4.	سه حالت پخش برای قرآن(قرآن و ترجمه، فقط قرآن، فقط ترجمه)\n
+5.	رفع مشکل و باگ های گزارش شده\n
+
         \n----تغییرات نسخه : 9.0.2020----\n
 1.	اضافه شدن قرآن با امکانات پخش با صدای سیزده قاری و ترجمه فارسی و کوردی، جستجو، شخصی سازی نوع فونت و اندازه متن و …\n
 2.	اضافه شدن رویدادهای سال 1400 به تقویم\n
@@ -460,11 +427,9 @@
  6. رفع مشکلات و…\n
     </string>
 
-    <string name="summer_time">اوقات تابستانی</string>
     <string name="monthly_times">اوقات ماهانه</string>
     <string name="support">پشتیبانی</string>
     <string name="select_asr_juristics">انتخاب فقه</string>
-    <string name="enable_notification_play_athan">پخش اذان در حالت اعلان</string>
 
     <!--    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Quran -->
     <string name="quran">قرآن</string>
@@ -473,7 +438,6 @@
     <string name="notes">یادداشت ها</string>
     <string name="bookmarks">آیه های علامت گذاری شده</string>
     <string name="download_audios">دانلود فایل های صوتی</string>
-    <string name="back_to_calendar">برگشت به تقویم</string>
     <string name="create_shortcut">اضافه کردن میانبر</string>
     <string name="shortcut_created">میانبر اضافه شد!</string>
     <string name="pin_not_supported">دستگاه شما از میانبرهای داخل برنامه ای پشتیبانی نمی کند!</string>
@@ -529,7 +493,6 @@
     <string name="select_file_for_download">نوع فایل ها برای دانلود را انتخاب کنید:</string>
     <string name="download_completed_unzip">دانلود تمام شد! -> در حال استخراج فایل ها …</string>
     <string name="select_qari_translate">انتخاب قاری و ترجمه برای پخش</string>
-    <string name="play_translate">پخش ترجمه</string>
     <string name="playing_verse">در حال پخش آیه %s</string>
     <string name="error">خطا!</string>
     <string name="audio_files_error">فایل های صوتی برای قاری انتخابی و این سوره هنوز دانلود نشده اند!</string>
@@ -539,8 +502,30 @@
     <string name="latest_visited">آخرین بازدید : سوره %s آیه %s</string>
     <string name="enable_location_services">خدمات موقعیت غیرفعال است، برای استفاده از این ویژگی لطفاً آن را فعال سازید.</string>
     <string name="result_found">تعداد %s نتیجه پیدا شد.</string>
-    <string name="kurdish_file_not_available">هنوز تمام فایل های ترجمه کوردی آماده نشده اند و ان شاءالله به مرور در دسترس قرار خواهند گرفت!</string>
     <string name="requset_permision">درخواست مجوز</string>
     <string name="need_full_screen_permision">برای نمایش اذان در حالت تمام صفحه هنگام استفاده از گوشی باید مجوز لازم را فعال کنید</string>
+    <string name="enable">فعال کردن</string>
+    <string name="alert_type">حالت پخش</string>
+    <string name="full_screen">تمام صفحه</string>
+    <string name="notification">پخش در نوار اعلان</string>
+    <string name="just_notification">فقط اعلان</string>
+    <string name="select_alarm">انتخاب هشدار</string>
+    <string name="play_alert">پخش هشدار</string>
+    <string name="add_normal_athans">اضافه کردن اذان</string>
+    <string name="add_fajr_athan">اضافه کردن اذان صبح</string>
+    <string name="add_alarm">اضافه کردن صدای هشدار</string>
+    <string name="play_athan_problem">اگر تنظیمات گوشی را از طریق راهنما انجام داده اید و هنوز در پخش اذان مشکل دارید، متدهای زیر را عوض کنید</string>
+    <string name="first_method">متد اول</string>
+    <string name="second_method">متد دوم</string>
+    <string name="bfajr">هشدار قبل از اذان صبح</string>
+    <string name="bdhuhr">هشدار قبل از اذان ظهر</string>
+    <string name="basr">هشدار قبل از اذان عصر</string>
+    <string name="bmaghrib">هشدار قبل از اذان مغرب</string>
+    <string name="bisha">هشدار قبل از اذان عشا</string>
+    <string name="select_storage">انتخاب محل ذخیره فایل های صوتی</string>
+    <string name="arabic_translate">قرآن و ترجمه</string>
+    <string name="just_arabic">فقط قرآن</string>
+    <string name="just_translate">فقط ترجمه</string>
+    <string name="play_type">حالت پخش</string>
 
 </resources>

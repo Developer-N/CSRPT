@@ -14,8 +14,11 @@ import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.ActivityAthanBinding
+import ir.namoo.religiousprayers.db.AthanSetting
+import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.utils.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -65,52 +68,49 @@ class AthanActivity : AppCompatActivity() {
         }
     }
 
+    lateinit var setting: AthanSetting
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        setTheme(getThemeFromName(getThemeFromPreference(this, appPrefs)))
         // Workaround AlarmManager (or the way we use it) that calls it multiple times,
         // don't run if it is ran less than 10 seconds ago
         val currentMillis = System.currentTimeMillis()
         if (currentMillis - lastStart < TimeUnit.SECONDS.toMillis(10)) return finish()
         lastStart = currentMillis
         //
+        val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER_KEY) ?: return
+        setting =
+            AthanSettingsDB.getInstance(applicationContext).athanSettingsDAO().getAllAthanSettings()
+                ?.filter { prayerKey.contains(it.athanKey) }?.get(0)
+                ?: return
         audioManager = getSystemService()
-        audioManager?.let { am ->
-            am.setStreamVolume(
-                AudioManager.STREAM_ALARM,
-                athanVolume.takeUnless { it == DEFAULT_ATHAN_VOLUME } ?: am.getStreamVolume(
-                    AudioManager.STREAM_ALARM
-                ),
-                0
-            )
-        }
-        val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER_KEY)
+        audioManager?.setStreamVolume(
+            AudioManager.STREAM_ALARM,
+            setting.athanVolume,
+            0
+        )
         val prayerTime = intent.getStringExtra(KEY_EXTRA_PRAYER_TIME)
-        val isFajr = "FAJR" == prayerKey
-        val isSunRise = "SUNRISE" == prayerKey
-        val isBeforeFajr = "BFAJR" == prayerKey
-        if (isSunRise) isDoaPlayed = true
+        if (prayerKey[0] == 'B') isDoaPlayed = true
 
         try {
             mediaPlayer = MediaPlayer().apply {
                 try {
-                    when {
-                        isBeforeFajr -> setDataSource(
-                            this@AthanActivity,
-                            getBeforeFajrUri(this@AthanActivity)
+                    if (prayerKey[0] == 'B') {
+                        setDataSource(
+                            this@AthanActivity, if (setting.alertURI == "")
+                                getDefaultBeforeAlertUri(this@AthanActivity) else setting.alertURI.toUri()
                         )
-                        isFajr -> setDataSource(
-                            this@AthanActivity,
-                            getFajrAthanUri(this@AthanActivity)
-                        )
-                        isSunRise -> setDataSource(
-                            this@AthanActivity,
-                            getSunriseUri(this@AthanActivity)
-                        )
-                        else -> setDataSource(
-                            this@AthanActivity,
-                            getAthanUri(this@AthanActivity)
-                        )
+
+                    } else {
+                        if (setting.athanURI == "")
+                            setDataSource(
+                                this@AthanActivity,
+                                if (setting.athanKey == "FAJR") getDefaultFajrAthanUri(this@AthanActivity) else
+                                    getDefaultAthanUri(this@AthanActivity)
+                            )
+                        else
+                            setDataSource(this@AthanActivity, setting.athanURI.toUri())
                     }
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         setAudioAttributes(
@@ -124,7 +124,7 @@ class AthanActivity : AppCompatActivity() {
                         setAudioStreamType(AudioManager.STREAM_ALARM)
                     }
                     volumeControlStream = AudioManager.STREAM_ALARM
-                    if (isBeforeFajr)
+                    if (prayerKey[0] == 'B')
                         isLooping = true
                     prepare()
                 } catch (e: IOException) {
@@ -170,7 +170,7 @@ class AthanActivity : AppCompatActivity() {
 
         handler.postDelayed(stopTask, TimeUnit.SECONDS.toMillis(30))
 
-        if (isAscendingAthanVolumeEnabled) handler.post(ascendVolume)
+        if (setting.isAscending) handler.post(ascendVolume)
 
         try {
             getSystemService<TelephonyManager>()?.listen(
@@ -184,7 +184,7 @@ class AthanActivity : AppCompatActivity() {
 
     fun playDoa() {
         isDoaPlayed = true
-        if (appPrefs.getBoolean(PREF_PLAY_DOA, false))//play doa
+        if (setting.playDoa)//play doa
             doaPlayer = MediaPlayer().apply {
                 try {
                     setDataSource(

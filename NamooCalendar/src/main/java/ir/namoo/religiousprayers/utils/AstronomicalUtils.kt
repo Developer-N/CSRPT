@@ -1,7 +1,6 @@
 package ir.namoo.religiousprayers.utils
 
 import android.content.Context
-import android.util.Log
 import androidx.annotation.StringRes
 import ir.namoo.religiousprayers.R
 import io.github.persiancalendar.calendar.IslamicDate
@@ -32,20 +31,18 @@ private val ZODIAC_MONTHS_EMOJI = listOf(
     R.string.pisces_emoji
 )
 
-fun isMoonInScorpio(persianDate: PersianDate, islamicDate: IslamicDate): Boolean {
-    var res =
-        (((islamicDate.dayOfMonth + 1).toFloat() * 12.2f + (persianDate.dayOfMonth + 1)) / 30f + persianDate.month).toInt()
-    if (res > 12) res -= 12
-    return res == 8
-}
+fun isMoonInScorpio(persianDate: PersianDate, islamicDate: IslamicDate) =
+    (((islamicDate.dayOfMonth + 1) * 12.2f + (persianDate.dayOfMonth + 1)) / 30f +
+            persianDate.month).toInt() % 12 == 8
 
-fun getZodiacInfo(context: Context, jdn: Long, withEmoji: Boolean): String = try {
+fun getZodiacInfo(context: Context, jdn: Long, withEmoji: Boolean) =
     if (isAstronomicalFeaturesEnabled) {
         val persianDate = PersianDate(jdn)
         val islamicDate = IslamicDate(jdn)
         "%s: %s\n%s: %s %s\n%s".format(
             context.getString(R.string.year_name),
-            context.getString(YEARS_NAME[persianDate.year % 12]),
+            // TODO: Check how a negative year can be passed here
+            context.getString(YEARS_NAME.getOrNull(persianDate.year % 12) ?: R.string.empty),
             context.getString(R.string.zodiac),
             if (withEmoji) context.getString(
                 ZODIAC_MONTHS_EMOJI.getOrNull(persianDate.month) ?: R.string.empty
@@ -56,8 +53,3 @@ fun getZodiacInfo(context: Context, jdn: Long, withEmoji: Boolean): String = try
             else ""
         ).trim()
     } else ""
-} catch (e: Exception) {
-    // This shouldn't raise out-of-bound in any sense, I am really tired of any exceptions this raises
-    Log.e("Utils", "getZodiacInfo", e)
-    ""
-}

@@ -33,15 +33,18 @@ const val PREF_KURDISH_TRANSLATE = "key_kurdish_enable"
 const val PREF_FARSI_TRANSLATE = "key_farsi_enable"
 const val PREF_FARSI_FULL_TRANSLATE = "key_farsi_translate_full"
 
-const val PREF_LAST_VISITED_VERSE="last_visited_verse"
+const val PREF_PLAY_TYPE = "play_type"
+const val DEFAULT_PLAY_TYPE = 1 // 1:Quran and Translate 2:Quran 3:Translate
+
+const val PREF_STORAGE_PATH = "storage_path"
+
+const val PREF_LAST_VISITED_VERSE = "last_visited_verse"
 
 const val PREF_SELECTED_QARI = "key_selected_qari"
 const val DEFAULT_SELECTED_QARI = "Alafasi"
 
-const val PREF_TRANSLATE_TO_PLAY="key_translate_to_play"
-const val DEFAULT_TRANSLATE_TO_PLAY="Khorramdel"
-
-const val PREF_PLAY_TRANSLATION = "key_play_translate"
+const val PREF_TRANSLATE_TO_PLAY = "key_translate_to_play"
+const val DEFAULT_TRANSLATE_TO_PLAY = "Khorramdel"
 
 const val QURAN_PLAYER_ACTION = "ir.namoo.quran.playerAction"
 const val QURAN_VIEW_PLAYER_ACTION = "ir.namoo.quran.playerViewAction"
@@ -55,6 +58,7 @@ const val NOTIFY_QURAN_PREVIOUS = "ir.namoo.quran.quranplayer.previous"
 
 const val QURAN_NOTIFY_VIEW_PLAYER_PLAY = "notify.view.play"
 const val QURAN_NOTIFY_VIEW_PLAYER_PAUSE = "notify.view.pause"
+const val QURAN_NOTIFY_VIEW_PLAYER_RESUME = "notify.view.resume"
 const val QURAN_NOTIFY_VIEW_PLAYER_STOP = "notify.view.stop"
 
 const val ACTION_GO_TO_DOWNLOAD_PAGE = "ir.namoo.quran.go.to.download"

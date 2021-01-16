@@ -25,7 +25,7 @@ import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class AthanDownloadDialog(val fragment: NSettingFragment, var athanList: List<Athan>) :
+class AthanDownloadDialog(val adapter: NSettingFragment.AthansAdapter, var athanList: List<Athan>) :
     AppCompatDialogFragment() {
     private lateinit var binding: AthanDownloadDialogBinding
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -161,7 +161,7 @@ class AthanDownloadDialog(val fragment: NSettingFragment, var athanList: List<At
                     binding.btnAthanDownload.isEnabled = true
                     binding.btnAthanDownload.setImageResource(R.drawable.ic_check)
                     binding.progressAthanDownload.visibility = View.GONE
-                    fragment.initAthanSpinner()
+                    adapter.notifyDataSetChanged()
                     val transition = ChangeBounds().apply {
                         interpolator = LinearOutSlowInInterpolator()
                     }
@@ -205,11 +205,13 @@ class AthanDownloadDialog(val fragment: NSettingFragment, var athanList: List<At
                     binding.btnAthanDownload.isEnabled = true
                     if (!result.isNullOrEmpty() && result != "Error") {
                         binding.txtItemAthanSize.text =
-                            "${formatNumber(
-                                String.format(
-                                    "%.2f", (result.toDouble() / 1024) / 1024
+                            "${
+                                formatNumber(
+                                    String.format(
+                                        "%.2f", (result.toDouble() / 1024) / 1024
+                                    )
                                 )
-                            )} mb"
+                            } mb"
                         DownloadTask(athanList[position].link).execute()
                     }
                 }

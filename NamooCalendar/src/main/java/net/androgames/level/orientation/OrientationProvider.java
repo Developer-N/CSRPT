@@ -42,8 +42,10 @@ public final class OrientationProvider implements SensorEventListener {
     private final float[] R = new float[16];
     private final float[] outR = new float[16];
     private final float[] LOC = new float[3];
+    private final SensorManager sensorManager;
+    private final int displayOrientation;
+    private final LevelView view;
     private Sensor sensor;
-    private SensorManager sensorManager;
     /**
      * indicates whether or not Accelerometer Sensor is running
      */
@@ -56,8 +58,6 @@ public final class OrientationProvider implements SensorEventListener {
     private float balance;
     private float minStep = 360;
     private float refValues = 0;
-    private int displayOrientation;
-    private LevelView view;
 
     public OrientationProvider(Activity activity, LevelView view) {
         this.view = view;
@@ -98,6 +98,7 @@ public final class OrientationProvider implements SensorEventListener {
         // register listener and start listening
         if (sensorManager == null || sensor == null) return;
         running = sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+        view.invalidate();
     }
 
     @Override

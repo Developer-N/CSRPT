@@ -5,7 +5,6 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     id("kotlin-android")
-    id("kotlin-android-extensions")
 }
 fun String.runCommand(
     workingDir: File = File("."),
@@ -25,7 +24,7 @@ fun String.runCommand(
 
 android {
     compileSdkVersion(30)
-    buildToolsVersion("30.0.2")
+    buildToolsVersion("30.0.3")
 
     buildFeatures {
         viewBinding = true
@@ -35,8 +34,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdkVersion(17)
         targetSdkVersion(30)
-        versionCode = 9002
-        versionName = "9.0.2020"
+        versionCode = 9098
+        versionName = "9.1.2021"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
@@ -68,7 +67,6 @@ dependencies {
     implementation("com.github.persian-calendar:equinox:1.0.0")
     implementation("com.github.persian-calendar:calendar:1.0.1")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.20")
     implementation("androidx.multidex:multidex:2.0.1")
 
     implementation("androidx.appcompat:appcompat:1.2.0")
@@ -76,7 +74,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation("com.google.android.material:material:1.3.0-alpha04")
+    implementation("com.google.android.material:material:1.3.0-beta01")
     implementation("com.google.android:flexbox:2.0.1")
     implementation("com.google.android.apps.dashclock:dashclock-api:2.0.0")
     implementation("com.google.openlocationcode:openlocationcode:1.0.4")
@@ -98,7 +96,7 @@ dependencies {
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.0-alpha-2")
     // debugImplementation("com.github.pedrovgs:lynx:1.1.0")
 
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.1")
 
     androidTestImplementation("androidx.test:runner:1.3.0")
     androidTestImplementation("androidx.test:rules:1.3.0")
@@ -107,8 +105,8 @@ dependencies {
 
     implementation("com.googlecode.json-simple:json-simple:1.1")
 
-    implementation("androidx.room:room-runtime:2.2.5")
-    kapt("androidx.room:room-compiler:2.2.5")
+    implementation("androidx.room:room-runtime:2.2.6")
+    kapt("androidx.room:room-compiler:2.2.6")
     kapt("android.arch.persistence.room:compiler:1.1.1")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.2.0")

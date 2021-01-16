@@ -45,7 +45,7 @@ class DeviceInformationFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? = FragmentDeviceInfoBinding.inflate(inflater, container, false).apply {
+    ): View = FragmentDeviceInfoBinding.inflate(inflater, container, false).apply {
         val mainActivity = activity as MainActivity
 
         mainActivity.setTitleAndSubtitle(getString(R.string.device_info), "")
@@ -101,27 +101,43 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
 
     data class Item(val title: String, val content: CharSequence?, val version: String)
 
-    val deviceInformationItems: List<Item> = listOf(
+    // https://stackoverflow.com/a/59234917
+    // instead android.text.format.Formatter.formatShortFileSize() to control its locale
+    private fun humanReadableByteCountBin(bytes: Long) = when {
+        bytes == Long.MIN_VALUE || bytes < 0 -> "N/A"
+        bytes < 1024L -> "$bytes B"
+        bytes <= 0xfffccccccccccccL shr 40 -> "%.1f KiB".format(
+            Locale.ENGLISH,
+            bytes.toDouble() / (0x1 shl 10)
+        )
+        bytes <= 0xfffccccccccccccL shr 30 -> "%.1f MiB".format(
+            Locale.ENGLISH,
+            bytes.toDouble() / (0x1 shl 20)
+        )
+        bytes <= 0xfffccccccccccccL shr 20 -> "%.1f GiB".format(
+            Locale.ENGLISH,
+            bytes.toDouble() / (0x1 shl 30)
+        )
+        bytes <= 0xfffccccccccccccL shr 10 -> "%.1f TiB".format(
+            Locale.ENGLISH,
+            bytes.toDouble() / (0x1 shl 40)
+        )
+        bytes <= 0xfffccccccccccccL -> "%.1f PiB".format(
+            Locale.ENGLISH,
+            (bytes shr 10).toDouble() / (0x1 shl 40)
+        )
+        else -> "%.1f EiB".format(Locale.ENGLISH, (bytes shr 20).toDouble() / (0x1 shl 40))
+    }
+
+    val deviceInformationItems = listOf(
         Item("Screen Resolution", activity.windowManager.run {
             "%d*%d pixels".format(Locale.ENGLISH, defaultDisplay.width, defaultDisplay.height)
-        }, ""),
+        }, "%.1fHz".format(Locale.ENGLISH, activity.windowManager.defaultDisplay.refreshRate)),
         Item("DPI", activity.resources.displayMetrics.densityDpi.toString(), ""),
         Item(
             "Android Version", Build.VERSION.CODENAME + " " + Build.VERSION.RELEASE,
             Build.VERSION.SDK_INT.toString()
         ),
-        Item("Manufacturer", Build.MANUFACTURER, ""),
-        Item("Brand", Build.BRAND, ""),
-        Item("Model", Build.MODEL, ""),
-        Item("Product", Build.PRODUCT, ""),
-        Item("Instruction Architecture", Build.DEVICE, ""),
-        Item("Android Id", Build.ID, ""),
-        Item("Board", Build.BOARD, ""),
-        Item("Radio Firmware Version", Build.getRadioVersion(), ""),
-        Item("Build User", Build.USER, ""),
-        Item("Host", Build.HOST, ""),
-        Item("Display", Build.DISPLAY, ""),
-        Item("Device Fingerprints", Build.FINGERPRINT, ""),
         Item(
             "CPU Instructions Sets",
             (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
@@ -129,14 +145,29 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
             else arrayOf(Build.CPU_ABI, Build.CPU_ABI2)).joinToString(", "),
             ""
         ),
+        Item("Available Processors", Runtime.getRuntime().availableProcessors().toString(), ""),
+        Item("Instruction Architecture", Build.DEVICE, ""),
+        Item("Manufacturer", Build.MANUFACTURER, ""),
+        Item("Brand", Build.BRAND, ""),
+        Item("Model", Build.MODEL, ""),
+        Item("Product", Build.PRODUCT, ""),
+        Item("Android Id", Build.ID, ""),
+        Item("Board", Build.BOARD, ""),
+        Item("Radio Firmware Version", Build.getRadioVersion(), ""),
+        Item("Build User", Build.USER, ""),
+        Item("Host", Build.HOST, ""),
+        Item("Boot Loader", Build.BOOTLOADER, ""),
+        Item("Device", Build.DEVICE, ""),
+        Item("Tags", Build.TAGS, ""),
+        Item("Hardware", Build.HARDWARE, ""),
+        Item("Type", Build.TYPE, ""),
+        Item("Display", Build.DISPLAY, ""),
+        Item("Device Fingerprints", Build.FINGERPRINT, ""),
         Item(
             "RAM",
-            android.text.format.Formatter.formatShortFileSize(
-                activity,
-                ActivityManager.MemoryInfo().apply {
-                    activity.getSystemService<ActivityManager>()?.getMemoryInfo(this)
-                }.totalMem
-            ),
+            humanReadableByteCountBin(ActivityManager.MemoryInfo().apply {
+                activity.getSystemService<ActivityManager>()?.getMemoryInfo(this)
+            }.totalMem),
             ""
         ),
         Item(
@@ -154,37 +185,40 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
             else "",
             ""
         ),
+        Item("Display Metrics", activity.resources.displayMetrics.toString(), ""),
         Item(
             "Sensors",
             (activity.getSystemService<SensorManager>())
                 ?.getSensorList(Sensor.TYPE_ALL)?.joinToString("\n"), ""
+        ),
+        Item(
+            "System Features",
+            activity.packageManager.systemAvailableFeatures.joinToString("\n"), ""
         )
     ) + (try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            // Quick Kung-fu to create gl context, https://stackoverflow.com/a/27092070
-            val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-            val versions = IntArray(2)
-            EGL14.eglInitialize(display, versions, 0, versions, 1)
-            val configAttr = intArrayOf(
-                EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER,
-                EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
-                EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE
+        // Quick Kung-fu to create gl context, https://stackoverflow.com/a/27092070
+        val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
+        val versions = IntArray(2)
+        EGL14.eglInitialize(display, versions, 0, versions, 1)
+        val configAttr = intArrayOf(
+            EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER,
+            EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+            EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE
+        )
+        val configs = Array<EGLConfig?>(1) { null }
+        val configsCount = IntArray(1)
+        EGL14.eglChooseConfig(display, configAttr, 0, configs, 0, 1, configsCount, 0)
+        if (configsCount[0] != 0) {
+            val surf = EGL14.eglCreatePbufferSurface(
+                display, configs[0],
+                intArrayOf(EGL14.EGL_WIDTH, 64, EGL14.EGL_HEIGHT, 64, EGL14.EGL_NONE), 0
             )
-            val configs = Array<EGLConfig?>(1) { null }
-            val configsCount = IntArray(1)
-            EGL14.eglChooseConfig(display, configAttr, 0, configs, 0, 1, configsCount, 0)
-            if (configsCount[0] != 0) {
-                val surf = EGL14.eglCreatePbufferSurface(
-                    display, configs[0],
-                    intArrayOf(EGL14.EGL_WIDTH, 64, EGL14.EGL_HEIGHT, 64, EGL14.EGL_NONE), 0
+            EGL14.eglMakeCurrent(
+                display, surf, surf, EGL14.eglCreateContext(
+                    display, configs[0], EGL14.EGL_NO_CONTEXT,
+                    intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE), 0
                 )
-                EGL14.eglMakeCurrent(
-                    display, surf, surf, EGL14.eglCreateContext(
-                        display, configs[0], EGL14.EGL_NO_CONTEXT,
-                        intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE), 0
-                    )
-                )
-            }
+            )
         }
         listOf(
             Item(

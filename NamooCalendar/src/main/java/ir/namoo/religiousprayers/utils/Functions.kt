@@ -51,6 +51,8 @@ import io.github.persiancalendar.praytimes.Coordinate
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.db.AthanSetting
+import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.entities.CalendarTypeItem
 import ir.namoo.religiousprayers.entities.CityItem
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
@@ -69,6 +71,7 @@ import kotlin.math.sqrt
 // This should be called before any use of Utils on the activity and services
 fun initUtils(context: Context) {
     updateStoredPreference(context)
+    createAthansSettingDB(context)
     applyAppLanguage(context)
     loadLanguageResource(context)
     loadAlarms(context)
@@ -96,13 +99,12 @@ fun formatDate(
     date: AbstractDate,
     calendarNameInLinear: Boolean = true,
     forceNonNumerical: Boolean = false
-): String =
-    if (numericalDatePreferred && !forceNonNumerical)
-        (toLinearDate(date) + if (calendarNameInLinear) (" " + getCalendarNameAbbr(date)) else "").trim()
-    else when (language) {
-        LANG_CKB -> "%sی %sی %s"
-        else -> "%s %s %s"
-    }.format(formatNumber(date.dayOfMonth), getMonthName(date), formatNumber(date.year))
+): String = if (numericalDatePreferred && !forceNonNumerical)
+    (toLinearDate(date) + if (calendarNameInLinear) (" " + getCalendarNameAbbr(date)) else "").trim()
+else when (language) {
+    LANG_CKB -> "%sی %sی %s"
+    else -> "%s %s %s"
+}.format(formatNumber(date.dayOfMonth), getMonthName(date), formatNumber(date.year))
 
 fun isNonArabicScriptSelected() = when (language) {
     LANG_EN_US, LANG_JA -> true
@@ -175,7 +177,7 @@ fun getThemeFromPreference(context: Context, prefs: SharedPreferences): String =
     prefs.getString(PREF_THEME, null)?.takeIf { it != "SystemDefault" }
         ?: if (isNightModeEnabled(context)) DARK_THEME else CYAN_THEME
 
-fun getEnabledCalendarTypes(): List<CalendarType> = listOf(mainCalendar) + otherCalendars
+fun getEnabledCalendarTypes() = listOf(mainCalendar) + otherCalendars
 
 fun loadApp(context: Context) {
     if (goForWorker()) return
@@ -223,10 +225,11 @@ fun getOrderedCalendarTypes(): List<CalendarType> = getEnabledCalendarTypes().le
 }
 
 fun loadAlarms(context: Context) {
-    val prefString = context.appPrefs.getString(PREF_ATHAN_ALARM, null)?.trim() ?: ""
-    Log.d(TAG, "reading and loading all alarms from prefs: $prefString")
+    val athans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+        .getAllAthanSettings()
+    Log.e(TAG, "reading and loading all alarms")
 
-    if (coordinate != null && prefString.isNotEmpty()) {
+    if (coordinate != null && !athans.isNullOrEmpty()) {
         val athanGap =
             ((context.appPrefs.getString(PREF_ATHAN_GAP, null)?.toDoubleOrNull() ?: .0)
                     * 60.0 * 1000.0).toLong()
@@ -236,8 +239,8 @@ fun loadAlarms(context: Context) {
             Date(), coordinate!!, context
         )
         // convert spacedComma separated string to a set
-        prefString.split(",").toSet().forEachIndexed { i, name ->
-            val alarmTime: Clock = when (name) {
+        athans.filter { it.state }.forEach {
+            val alarmTime: Clock = when (it.athanKey) {
                 "DHUHR" -> prayTimes.dhuhrClock
                 "ASR" -> prayTimes.asrClock
                 "MAGHRIB" -> prayTimes.maghribClock
@@ -247,33 +250,83 @@ fun loadAlarms(context: Context) {
                 // a better to have default
                 else -> prayTimes.fajrClock
             }
-
-            setAlarm(context, name, Calendar.getInstance().apply {
+            val time = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, alarmTime.hour)
                 set(Calendar.MINUTE, alarmTime.minute)
                 set(Calendar.SECOND, 0)
-            }.timeInMillis, i, athanGap, alarmTime.toFormattedString())
-        }
-        if (context.appPrefs.getBoolean(PREF_ALARM_BEFORE_FAJR_ENABLE, false)) {
-            val alarmTime: Clock = Clock.fromInt(
-                prayTimes.fajrClock.toInt() - context.appPrefs.getInt(
-                    PREF_ALARM_BEFORE_FAJR_MIN, DEFAULT_ALARM_BEFORE_FAJR
-                )
-            )
+            }.timeInMillis
 
-            setAlarm(
-                context,
-                context.resources.getString(R.string.alarm_before_fajr_name),
-                Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, alarmTime.hour)
-                    set(Calendar.MINUTE, alarmTime.minute)
+            set(it, context, time, it.athanKey, it.id, athanGap, alarmTime)
+            if (it.isBeforeEnabled) {
+                val at: Clock = Clock.fromInt(
+                    alarmTime.toInt() - it.beforeAlertMinute
+                )
+                set(it, context, Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, at.hour)
+                    set(Calendar.MINUTE, at.minute)
                     set(Calendar.SECOND, 0)
-                }.timeInMillis,
-                7,
-                athanGap, alarmTime.toFormattedString()
-            )
+                }.timeInMillis, "B${it.athanKey}", it.id + 6, athanGap, at)
+            }
         }
     }
+}
+
+private fun set(
+    athanSetting: AthanSetting,
+    context: Context,
+    time: Long,
+    athanKey: String,
+    id: Int,
+    athanGap: Long,
+    alarmTime: Clock
+) {
+//    Log.e(TAG, "set for key= $athanKey time=${alarmTime.toFormattedString()}")
+    if (athanSetting.playType == 0)// full screen
+        if (context.appPrefsLite.getInt(
+                PREF_FULL_SCREEN_METHOD,
+                DEFAULT_FULL_SCREEN_METHOD
+            ) == 1
+        )//method 1
+            setAlarm(
+                context,
+                athanKey,
+                time,
+                id,
+                athanGap,
+                alarmTime.toFormattedString()
+            )
+        else// method 2
+            setAlarm2(
+                context,
+                athanKey,
+                time,
+                id,
+                athanGap,
+                alarmTime.toFormattedString()
+            )
+    else//notification
+        if (context.appPrefsLite.getInt(
+                PREF_NOTIFICATION_METHOD,
+                DEFAULT_NOTIFICATION_METHOD
+            ) == 1
+        ) // method 1
+            setAlarm(
+                context,
+                athanKey,
+                time,
+                id,
+                athanGap,
+                alarmTime.toFormattedString()
+            )
+        else// method 2
+            setAlarm2(
+                context,
+                athanKey,
+                time,
+                id,
+                athanGap,
+                alarmTime.toFormattedString()
+            )
 }
 
 private fun setAlarm(
@@ -290,7 +343,7 @@ private fun setAlarm(
 
     // don't set an alarm in the past
     if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
-        Log.e(TAG, "setting alarm for: " + triggerTime.time)
+//        Log.e(TAG, "setting alarm1 for $alarmTimeName in -> " + triggerTime.time)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             ALARMS_BASE_ID + ord,
@@ -327,6 +380,52 @@ private fun setAlarm(
                 )
 //                appendLog(context, "set alarm for: " + triggerTime.time)
             }
+        }
+    }
+}
+
+private fun setAlarm2(
+    context: Context,
+    alarmTimeName: String,
+    timeInMillis: Long,
+    ord: Int,
+    athanGap: Long,
+    alarmTime: String
+) {
+    val triggerTime = Calendar.getInstance()
+    triggerTime.timeInMillis = timeInMillis - athanGap
+    val alarmManager = context.getSystemService<AlarmManager>()
+
+    // don't set an alarm in the past
+    if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
+//        Log.e(TAG, "setting alarm2 for $alarmTimeName in -> " + triggerTime.time)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            ALARMS_BASE_ID + ord,
+            Intent(context, BroadcastReceivers::class.java)
+                .putExtra(KEY_EXTRA_PRAYER_KEY, alarmTimeName)
+                .putExtra(KEY_EXTRA_PRAYER_TIME, alarmTime)
+                .setAction(BROADCAST_ALARM),
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        when {
+            Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 -> alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime.timeInMillis,
+                pendingIntent
+            )
+            Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 -> alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime.timeInMillis,
+                pendingIntent
+            )
+            else -> alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime.timeInMillis,
+                pendingIntent
+            )
         }
     }
 }
@@ -405,25 +504,29 @@ fun getSpringEquinox(jdn: Long) =
 @StringRes
 fun getPrayTimeText(athanKey: String?): Int = when (athanKey) {
     "FAJR" -> R.string.fajr
+    "BFAJR" -> R.string.bfajr
     "DHUHR" -> R.string.dhuhr
+    "BDHUHR" -> R.string.bdhuhr
     "ASR" -> R.string.asr
+    "BASR" -> R.string.basr
     "MAGHRIB" -> R.string.maghrib
+    "BMAGHRIB" -> R.string.bmaghrib
     "ISHA" -> R.string.isha
+    "BISHA" -> R.string.bisha
     "SUNRISE" -> R.string.sunrise
-    "BFAJR" -> R.string.alarm_before_fajr
     else -> R.string.isha
 }
 
-//@DrawableRes
-//fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
-//    "FAJR" -> R.drawable.fajr
-//    "DHUHR" -> R.drawable.dhuhr
-//    "ASR" -> R.drawable.asr
-//    "MAGHRIB" -> R.drawable.maghrib
-//    "ISHA" -> R.drawable.isha
-//    "SUNRISE" -> R.drawable.fajr
-//    else -> R.drawable.isha
-//}
+@DrawableRes
+fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
+    "FAJR" -> R.drawable.fajr
+    "DHUHR" -> R.drawable.dhuhr
+    "ASR" -> R.drawable.asr
+    "MAGHRIB" -> R.drawable.maghrib
+    "ISHA" -> R.drawable.isha
+    "SUNRISE" -> R.drawable.fajr
+    else -> R.drawable.isha
+}
 
 fun getDateFromJdnOfCalendar(calendar: CalendarType, jdn: Long): AbstractDate = when (calendar) {
     CalendarType.ISLAMIC -> IslamicDate(jdn)
@@ -434,6 +537,13 @@ fun getDateFromJdnOfCalendar(calendar: CalendarType, jdn: Long): AbstractDate = 
 @StyleRes
 fun getThemeFromName(name: String): Int = when (name) {
     CYAN_THEME -> R.style.CyanTheme
+    PURPLE_THEME -> R.style.PurpleTheme
+    DEEP_PURPLE_THEME -> R.style.DeepPurpleTheme
+    INDIGO_THEME -> R.style.IndigoTheme
+    PINK_THEME -> R.style.PinkTheme
+    GREEN_THEME -> R.style.GreenTheme
+    BROWN_THEME -> R.style.BrownTheme
+    NEW_BLUE_THEME -> R.style.NewBlueTheme
     DARK_THEME -> R.style.DarkTheme
     MODERN_THEME -> R.style.ModernTheme
     BLUE_THEME -> R.style.BlueTheme
@@ -442,9 +552,7 @@ fun getThemeFromName(name: String): Int = when (name) {
 }
 
 fun isRTL(context: Context): Boolean =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-        context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
-    else false
+    context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
 fun toggleShowDeviceCalendarOnPreference(context: Context, enable: Boolean) =
     context.appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, enable) }
@@ -587,10 +695,9 @@ fun getShiftWorkTitle(jdn: Long, abbreviated: Boolean): String {
     if (shiftWorkRecurs && abbreviated && (type == "r" || type == shiftWorkTitles["r"])) return ""
 
     val title = shiftWorkTitles[type] ?: type
-    return if (abbreviated && title.isNotEmpty()) title.substring(0, 1) + when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && language != LANG_AR -> ZWJ
-        else -> ""
-    } else title
+    return if (abbreviated && title.isNotEmpty()) title.substring(0, 1) +
+            (if (language != LANG_AR) ZWJ else "")
+    else title
 }
 
 fun getAllCities(context: Context, needsSort: Boolean): List<CityItem> {
@@ -642,21 +749,20 @@ fun getAllCities(context: Context, needsSort: Boolean): List<CityItem> {
             else -> irCodeOrder.indexOf(countryCode)
         }
 
-    fun prepareForArabicSort(text: String): String =
-        text
-            .replace("ی", "ي")
-            .replace("ک", "ك")
-            .replace("گ", "كی")
-            .replace("ژ", "زی")
-            .replace("چ", "جی")
-            .replace("پ", "بی")
-            .replace("ڕ", "ری")
-            .replace("ڵ", "لی")
-            .replace("ڤ", "فی")
-            .replace("ۆ", "وی")
-            .replace("ێ", "یی")
-            .replace("ھ", "نی")
-            .replace("ە", "هی")
+    fun prepareForArabicSort(text: String) = text
+        .replace("ی", "ي")
+        .replace("ک", "ك")
+        .replace("گ", "كی")
+        .replace("ژ", "زی")
+        .replace("چ", "جی")
+        .replace("پ", "بی")
+        .replace("ڕ", "ری")
+        .replace("ڵ", "لی")
+        .replace("ڤ", "فی")
+        .replace("ۆ", "وی")
+        .replace("ێ", "یی")
+        .replace("ھ", "نی")
+        .replace("ە", "هی")
 
     return result.sortedWith(kotlin.Comparator { l, r ->
         if (l.key == "") return@Comparator -1
@@ -964,38 +1070,6 @@ fun isHaveStoragePermission(activity: Activity?): Boolean {
     }
 }
 
-fun updateAthanInPref(context: Context, name: String) {
-    var alarms = context.appPrefs.getString(PREF_ATHAN_ALARM, "")
-    val existAlarms = alarms!!.splitIgnoreEmpty(",")
-
-    if (existAlarms.contains(name)) {//delete name
-        alarms = ""
-        var temp = ""
-        for (s in existAlarms)
-            if (s != name)
-                temp += "$s,"
-        for (i in 0 until temp.length - 1)
-            alarms += temp[i]
-    } else {// add name
-        alarms += if (alarms.isNotEmpty())
-            ",$name"
-        else {
-            name
-        }
-    }
-    context.appPrefs.edit {
-        putString(PREF_ATHAN_ALARM, alarms)
-        apply()
-    }
-}
-
-fun isExistAthanInPrefs(context: Context, name: String): Boolean {
-    return when {
-        context.appPrefs.getString(PREF_ATHAN_ALARM, "") == null -> false
-        else -> context.appPrefs.getString(PREF_ATHAN_ALARM, "")!!.contains(name)
-    }
-}
-
 fun getFileNameFromLink(link: String): String =
     link.substring(link.lastIndexOf('/') + 1, link.length)
 
@@ -1111,4 +1185,94 @@ fun bringMarketPage(activity: Activity) = try {
             "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
         )
     )
+}
+
+fun createAthansSettingDB(context: Context) {
+    val athanSettingDB = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+    if (athanSettingDB.getAllAthanSettings().isNullOrEmpty()) {
+        athanSettingDB.insert(
+            AthanSetting(
+                "FAJR",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+        athanSettingDB.insert(
+            AthanSetting(
+                "SUNRISE",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+        athanSettingDB.insert(
+            AthanSetting(
+                "DHUHR",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+        athanSettingDB.insert(
+            AthanSetting(
+                "ASR",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+        athanSettingDB.insert(
+            AthanSetting(
+                "MAGHRIB",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+        athanSettingDB.insert(
+            AthanSetting(
+                "ISHA",
+                state = false,
+                playDoa = false,
+                playType = 0,
+                isBeforeEnabled = false,
+                beforeAlertMinute = 10,
+                isAscending = false,
+                athanVolume = 1,
+                athanURI = "",
+                alertURI = ""
+            )
+        )
+    }
 }

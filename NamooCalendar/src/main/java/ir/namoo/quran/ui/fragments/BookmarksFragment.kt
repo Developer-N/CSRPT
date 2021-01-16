@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.view.animation.AnticipateOvershootInterpolator
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -34,7 +35,7 @@ class BookmarksFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentBookmarksBinding.inflate(inflater)
         setHasOptionsMenu(true)
         binding.bookmarkRecycler.visibility = View.GONE
@@ -75,7 +76,7 @@ class BookmarksFragment : Fragment() {
         RecyclerView.Adapter<BookmarkAdapter.BookmarkViewHolder>() {
 
         private var bookmarks: MutableList<QuranEntity>? = null
-
+        private var lastExpend: ItemBookmarkBinding? = null
         fun setBookmarks(bookmarks: MutableList<QuranEntity>) {
             this.bookmarks = bookmarks
         }
@@ -100,6 +101,7 @@ class BookmarksFragment : Fragment() {
         //#######################
         inner class BookmarkViewHolder(private val itemBinding: ItemBookmarkBinding) :
             RecyclerView.ViewHolder(itemBinding.root) {
+            private var mPosition = 0
 
             init {
                 itemBinding.bookmarkTxtItemArabic.typeface = arabicFont
@@ -117,6 +119,7 @@ class BookmarksFragment : Fragment() {
 
             @SuppressLint("PrivateResource")
             fun bind(bookmark: QuranEntity, position: Int) {
+                mPosition = position
                 itemBinding.bookmarkTxtItemArabic.text = bookmark.simple
                 itemBinding.bookmarkTxtItemEnglish.text = bookmark.en_pickthall
                 itemBinding.bookmarkTxtItemKurdish.text = bookmark.ku_asan
@@ -174,16 +177,13 @@ class BookmarksFragment : Fragment() {
                     if (bookmarks!!.size < 1)
                         animateVisibility(binding.txtNoBookmarkFound, true)
                 }
-
-
             }//end of bind
 
             @SuppressLint("PrivateResource")
             fun expand() {
                 val arrowRotationAnimationDuration =
                     resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-                val transition = ChangeBounds()
-                transition.duration = 300
+
                 if (itemBinding.bookmarkTxtItemEnglish.visibility == View.VISIBLE) {
                     itemBinding.btnBookmarkExpand.animate()
                         .rotation(0f)
@@ -193,7 +193,20 @@ class BookmarksFragment : Fragment() {
                     itemBinding.bookmarkTxtItemKurdish.visibility = View.GONE
                     itemBinding.bookmarkTxtItemFarsi.visibility = View.GONE
                     itemBinding.bookmarkTxtItemArabic.maxLines = 2
+                    lastExpend = null
                 } else {
+                    if (lastExpend != null && lastExpend != itemBinding) {
+                        lastExpend?.let {
+                            it.btnBookmarkExpand.animate()
+                                .rotation(0f)
+                                .setDuration(arrowRotationAnimationDuration)
+                                .start()
+                            it.bookmarkTxtItemEnglish.visibility = View.GONE
+                            it.bookmarkTxtItemKurdish.visibility = View.GONE
+                            it.bookmarkTxtItemFarsi.visibility = View.GONE
+                            it.bookmarkTxtItemArabic.maxLines = 2
+                        }
+                    }
                     itemBinding.btnBookmarkExpand.animate()
                         .rotation(180f)
                         .setDuration(arrowRotationAnimationDuration)
@@ -202,7 +215,14 @@ class BookmarksFragment : Fragment() {
                     itemBinding.bookmarkTxtItemKurdish.visibility = View.VISIBLE
                     itemBinding.bookmarkTxtItemFarsi.visibility = View.VISIBLE
                     itemBinding.bookmarkTxtItemArabic.maxLines = 10
+                    lastExpend = itemBinding
+                    (binding.bookmarkRecycler.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
+                        mPosition,
+                        0
+                    )
                 }
+                val transition = ChangeBounds()
+                transition.interpolator = AnticipateOvershootInterpolator()
                 TransitionManager.beginDelayedTransition(binding.bookmarkRecycler, transition)
             }
         }

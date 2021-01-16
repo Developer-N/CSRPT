@@ -18,7 +18,12 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
-import ir.namoo.religiousprayers.*
+import androidx.core.net.toUri
+import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_KEY
+import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_TIME
+import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.db.AthanSetting
+import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.utils.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -42,9 +47,10 @@ class AthanNotification : IntentService("NotificactionService") {
         private var mediaPlayer: MediaPlayer? = null
         private var isDoaPlayed = false
         private var doaPlayer: MediaPlayer? = null
-        private val ascendingVolumeStep = 6
+        private const val ascendingVolumeStep = 6
         private var currentVolumeSteps = 1
         private val handler = Handler()
+        lateinit var setting: AthanSetting
         private val ascendVolume = object : Runnable {
             override fun run() {
                 currentVolumeSteps++
@@ -71,15 +77,18 @@ class AthanNotification : IntentService("NotificactionService") {
                 notificationManager?.createNotificationChannel(notificationChannel)
             }
 
-            val athanKey = intent.getStringExtra(KEY_EXTRA_PRAYER_KEY)
+            val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER_KEY) ?: return
+            setting = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+                .getAllAthanSettings()?.filter { prayerKey.contains(it.athanKey) }?.get(0)
+                ?: return
             val athanTime = intent.getStringExtra(KEY_EXTRA_PRAYER_TIME)
             val cityName = getCityName(context, false)
             var title =
-                if (cityName.isNotEmpty()) context.getString(getPrayTimeText(athanKey))
-                else "${context.getString(getPrayTimeText(athanKey))} - ${context.getString(R.string.in_city_time)} $cityName"
+                if (cityName.isNotEmpty()) context.getString(getPrayTimeText(prayerKey))
+                else "${context.getString(getPrayTimeText(prayerKey))} - ${context.getString(R.string.in_city_time)} $cityName"
             title += " $athanTime"
 
-            val subtitle = when (athanKey) {
+            val subtitle = when (prayerKey) {
                 "FAJR" -> listOf(R.string.sunrise)
                 "SUNRISE" -> listOf(R.string.dhuhr)
                 "DHUHR" -> listOf(R.string.asr)
@@ -144,57 +153,43 @@ class AthanNotification : IntentService("NotificactionService") {
                     .setCustomContentView(cv)
                     .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             }
-            val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER_KEY)
-            val isFajr = "FAJR" == prayerKey
-            val isSunRise = "SUNRISE" == prayerKey
-            val isBeforeFajr = "BFAJR" == prayerKey
-            if (isSunRise) isDoaPlayed = true
 
-            notificationBuilder.priority = if (context.appPrefs.getBoolean(
-                    PREF_NOTIFICATION_PLAY_ATHAN,
-                    DEFAULT_NOTIFICATION_PLAY_ATHAN
-                ) && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-            ) NotificationCompat.PRIORITY_LOW
-            else NotificationCompat.PRIORITY_HIGH
+            if (prayerKey[0] == 'B') isDoaPlayed = true
+
+            notificationBuilder.priority =
+                if (setting.playType == 1 && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                ) NotificationCompat.PRIORITY_LOW
+                else NotificationCompat.PRIORITY_HIGH
 
             notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
 
-            if (context.appPrefs.getBoolean(
-                    PREF_NOTIFICATION_PLAY_ATHAN,
-                    DEFAULT_NOTIFICATION_PLAY_ATHAN
-                )
-            )
+            if (setting.playType == 1)
                 try {
                     audioManager = context.getSystemService()
-                    audioManager?.let { am ->
-                        am.setStreamVolume(
-                            AudioManager.STREAM_ALARM,
-                            context.athanVolume.takeUnless { it == DEFAULT_ATHAN_VOLUME }
-                                ?: am.getStreamVolume(
-                                    AudioManager.STREAM_ALARM
-                                ),
-                            0
-                        )
-                    }
+                    audioManager?.setStreamVolume(
+                        AudioManager.STREAM_ALARM,
+                        setting.athanVolume,
+                        0
+                    )
                     mediaPlayer = MediaPlayer().apply {
                         try {
-                            when {
-                                isBeforeFajr -> setDataSource(
-                                    context,
-                                    getBeforeFajrUri(context)
+                            if (prayerKey[0] == 'B') {
+                                setDataSource(
+                                    context, if (setting.alertURI == "")
+                                        getDefaultBeforeAlertUri(context) else setting.alertURI.toUri()
                                 )
-                                isFajr -> setDataSource(
-                                    context,
-                                    getFajrAthanUri(context)
-                                )
-                                isSunRise -> setDataSource(
-                                    context,
-                                    getSunriseUri(context)
-                                )
-                                else -> setDataSource(
-                                    context,
-                                    getAthanUri(context)
-                                )
+
+                            } else {
+                                if (setting.athanURI == "")
+                                    setDataSource(
+                                        context,
+                                        if (setting.athanKey == "FAJR") getDefaultFajrAthanUri(
+                                            context
+                                        ) else
+                                            getDefaultAthanUri(context)
+                                    )
+                                else
+                                    setDataSource(context, setting.athanURI.toUri())
                             }
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 setAudioAttributes(
@@ -208,7 +203,7 @@ class AthanNotification : IntentService("NotificactionService") {
                                 setAudioStreamType(AudioManager.STREAM_ALARM)
                             }
                             setOnCompletionListener { if (!isDoaPlayed) playDoa(context) }
-                            if (isBeforeFajr)
+                            if (prayerKey[0] == 'B')
                                 isLooping = true
                             prepare()
                         } catch (e: IOException) {
@@ -219,7 +214,7 @@ class AthanNotification : IntentService("NotificactionService") {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-            if (context.isAscendingAthanVolumeEnabled) handler.post(ascendVolume)
+            if (setting.isAscending) handler.post(ascendVolume)
 
             Handler(Looper.getMainLooper()).postDelayed({
                 notificationManager?.cancel(NOTIFICATION_ID)
@@ -229,7 +224,7 @@ class AthanNotification : IntentService("NotificactionService") {
 
         private fun playDoa(context: Context) {
             isDoaPlayed = true
-            if (context.appPrefs.getBoolean(PREF_PLAY_DOA, false))//play doa
+            if (setting.playDoa)//play doa
                 doaPlayer = MediaPlayer().apply {
                     try {
                         setDataSource(

@@ -9,15 +9,11 @@ import android.widget.AdapterView
 import android.widget.SeekBar
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
-import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import androidx.transition.ChangeBounds
-import androidx.transition.TransitionManager
 import ir.namoo.quran.ui.QuranActivity
 import ir.namoo.quran.utils.*
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentQuranSettingBinding
 import ir.namoo.religiousprayers.ui.edit.ShapedAdapter
-import ir.namoo.religiousprayers.utils.animateVisibility
 import ir.namoo.religiousprayers.utils.appPrefsLite
 
 
@@ -29,7 +25,7 @@ class SettingFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         setHasOptionsMenu(true)
         (requireActivity() as QuranActivity).setTitleAndSubtitle(
@@ -46,6 +42,39 @@ class SettingFragment : Fragment() {
         initKurdish()
         initFarsi()
 
+
+        binding.spinnerStorage.apply {
+            val dirs = getRootDirs(requireContext())
+            val names = arrayListOf<String>()
+            for (d in dirs)
+                names.add(d?.absolutePath ?: "-")
+            adapter = ShapedAdapter(
+                requireContext(),
+                R.layout.select_dialog_item,
+                names.toTypedArray()
+            )
+            val storage = requireContext().appPrefsLite.getString(
+                PREF_STORAGE_PATH,
+                getSelectedQuranDirectoryPath(requireContext())
+            )
+            setSelection(if (names.contains(storage)) names.indexOf(storage) else 0)
+
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    requireContext().appPrefsLite.edit {
+                        putString(PREF_STORAGE_PATH, selectedItem.toString())
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+
+            }
+        }
         return binding.root
     }//end of onCreateView
 
@@ -119,29 +148,6 @@ class SettingFragment : Fragment() {
             }
         }
 
-        binding.checkboxPlayTranslate.apply {
-            isChecked = requireContext().appPrefsLite.getBoolean(PREF_PLAY_TRANSLATION, false)
-            setOnClickListener {
-                requireContext().appPrefsLite.edit {
-                    putBoolean(PREF_PLAY_TRANSLATION, isChecked)
-                }
-                animateVisibility(
-                    binding.spinnerSelectTranslateToPlay,
-                    binding.checkboxPlayTranslate.isChecked
-                )
-                val transition = ChangeBounds().apply {
-                    interpolator = LinearOutSlowInInterpolator()
-                }
-                TransitionManager.beginDelayedTransition(
-                    binding.cardTranslates as ViewGroup,
-                    transition
-                )
-            }
-        }
-
-        binding.spinnerSelectTranslateToPlay.visibility =
-            if (binding.checkboxPlayTranslate.isChecked) View.VISIBLE else View.GONE
-
         val tNames = resources.getStringArray(R.array.quran_names).filter {
             it == resources.getStringArray(R.array.quran_names)[0] || it == resources.getStringArray(
                 R.array.quran_names
@@ -173,6 +179,27 @@ class SettingFragment : Fragment() {
                             tValues[tNames.indexOf(binding.spinnerSelectTranslateToPlay.selectedItem.toString())]
                         )
                     }
+                }
+            }
+        }
+
+        binding.playType.apply {
+            check(
+                when (requireContext().appPrefsLite.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE)) {
+                    1 -> R.id.radio_arabic_translate
+                    2 -> R.id.radio_arabic
+                    else -> R.id.radio_translate
+                }
+            )
+            setOnCheckedChangeListener { group, checkedId ->
+                requireContext().appPrefsLite.edit {
+                    putInt(
+                        PREF_PLAY_TYPE, when (checkedId) {
+                            R.id.radio_arabic_translate -> 1
+                            R.id.radio_arabic -> 2
+                            else -> 3
+                        }
+                    )
                 }
             }
         }

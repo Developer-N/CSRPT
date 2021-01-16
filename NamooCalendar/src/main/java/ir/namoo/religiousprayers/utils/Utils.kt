@@ -2,11 +2,9 @@ package ir.namoo.religiousprayers.utils
 
 import android.content.Context
 import android.media.AudioManager
-import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.accessibility.AccessibilityManager
-import androidx.annotation.RawRes
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.core.content.getSystemService
@@ -14,7 +12,10 @@ import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.PersianDate
-import io.github.persiancalendar.praytimes.*
+import io.github.persiancalendar.praytimes.CalculationMethod
+import io.github.persiancalendar.praytimes.Clock
+import io.github.persiancalendar.praytimes.Coordinate
+import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.entities.*
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
@@ -27,11 +28,10 @@ import java.util.*
 const val TAG = "NAMOO"
 const val CHANGE_DATE_TAG = "changeDate"
 const val UPDATE_TAG = "update"
-const val TWO_SECONDS_IN_MILLIS: Long = 2000
-const val HALF_SECOND_IN_MILLIS: Long = 500
-const val SECOND_IN_MILLIS: Long = 1000
-const val DAY_IN_SECOND: Long = 86400
-const val DAY_IN_MILLIS: Long = 86400000
+const val TWO_SECONDS_IN_MILLIS = 2000L
+const val HALF_SECOND_IN_MILLIS = 500L
+const val DAY_IN_SECOND = 86400L
+const val DAY_IN_MILLIS = 86400000L
 val monthNameEmptyList = (1..12).map { "" }.toList()
 var persianMonths = monthNameEmptyList
     private set
@@ -56,18 +56,16 @@ var isWidgetClock = DEFAULT_WIDGET_CLOCK
     private set
 var isNotifyDate = DEFAULT_NOTIFY_DATE
     private set
-var notificationAthan = DEFAULT_NOTIFICATION_ATHAN
+var selectedWidgetTextColor = DEFAULT_SELECTED_WIDGET_TEXT_COLOR
     private set
-var selectedWidgetTextColor: String = DEFAULT_SELECTED_WIDGET_TEXT_COLOR
+var selectedWidgetNextAthanTextColor = DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
     private set
-var selectedWidgetNextAthanTextColor: String = DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
-    private set
-var selectedWidgetBackgroundColor: String = DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
+var selectedWidgetBackgroundColor = DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
     private set
 var calculationMethod = CalculationMethod.valueOf(DEFAULT_PRAY_TIME_METHOD)
     private set
 var asrMethod = CalculationMethod.AsrJuristics.Standard
-var language: String = DEFAULT_APP_LANGUAGE
+var language = DEFAULT_APP_LANGUAGE
     private set
     get() = if (field.isEmpty()) DEFAULT_APP_LANGUAGE else field
 var coordinate: Coordinate? = null
@@ -78,19 +76,19 @@ var otherCalendars = listOf(CalendarType.GREGORIAN, CalendarType.ISLAMIC)
     private set
 var spacedComma = "، "
     private set
-var isShowWeekOfYearEnabled: Boolean = false
+var isShowWeekOfYearEnabled = false
     private set
-var isCenterAlignWidgets: Boolean = false
+var isCenterAlignWidgets = false
     private set
-var weekStartOffset: Int = 0
+var weekStartOffset = 0
     private set
 var weekEnds = BooleanArray(7)
     private set
-var isShowDeviceCalendarEvents: Boolean = false
+var isShowDeviceCalendarEvents = false
     private set
-var whatToShowOnWidgets: Set<String> = emptySet()
+var whatToShowOnWidgets = emptySet<String>()
     private set
-var isAstronomicalFeaturesEnabled: Boolean = false
+var isAstronomicalFeaturesEnabled = false
     private set
 
 @StyleRes
@@ -106,13 +104,13 @@ var cachedCityKey = ""
     private set
 var cachedCity: CityItem? = null
     private set
-var shiftWorkTitles: Map<String, String> = emptyMap()
+var shiftWorkTitles = emptyMap<String, String>()
     private set
-var shiftWorkStartingJdn: Long = -1
+var shiftWorkStartingJdn = -1L
     private set
 var shiftWorkRecurs = true
     private set
-var shiftWorks: List<ShiftWorkRecord> = emptyList()
+var shiftWorks = emptyList<ShiftWorkRecord>()
     private set
 var shiftWorkPeriod = 0
     private set
@@ -270,47 +268,42 @@ fun loadEvents(context: Context) {
     }
 }
 
-fun loadLanguageResource(context: Context) {
-    @RawRes val messagesFile: Int = when (language) {
-        LANG_FA_AF -> R.raw.messages_fa_af
-        LANG_PS -> R.raw.messages_ps
-        LANG_GLK -> R.raw.messages_glk
-        LANG_AR -> R.raw.messages_ar
-        LANG_CKB -> R.raw.messages_ckb
-        LANG_UR -> R.raw.messages_ur
-        LANG_EN_US -> R.raw.messages_en
-        LANG_JA -> R.raw.messages_ja
-        LANG_AZB -> R.raw.messages_azb
-        LANG_EN_IR, LANG_FA -> R.raw.messages_fa
-        else -> R.raw.messages_fa
-    }
-
-    try {
-        val messages = JSONObject(readRawResource(context, messagesFile))
-
-        fun JSONArray.toStringList() = (0 until length()).map { getString(it) }
-
-        persianMonths = messages.getJSONArray("PersianCalendarMonths").toStringList()
-        islamicMonths = messages.getJSONArray("IslamicCalendarMonths").toStringList()
-        gregorianMonths = messages.getJSONArray("GregorianCalendarMonths").toStringList()
-        messages.getJSONArray("WeekDays").toStringList().run {
-            weekDays = this
-            weekDaysInitials = this.map {
-                when (language) {
-                    LANG_AR -> it.substring(2, 4)
-                    LANG_AZB -> it.substring(0, 2)
-                    else -> it.substring(0, 1)
-                }
+fun loadLanguageResource(context: Context) = try {
+    val messages = JSONObject(
+        readRawResource(
+            context, when (language) {
+                LANG_FA_AF -> R.raw.faaf
+                LANG_PS -> R.raw.ps
+                LANG_GLK -> R.raw.glk
+                LANG_AR -> R.raw.ar
+                LANG_CKB -> R.raw.ckb
+                LANG_UR -> R.raw.ur
+                LANG_EN_US -> R.raw.en
+                LANG_JA -> R.raw.ja
+                LANG_AZB -> R.raw.azb
+                LANG_EN_IR, LANG_FA -> R.raw.fa
+                else -> R.raw.fa
             }
-        }
-    } catch (e: JSONException) {
-        e.printStackTrace()
-        persianMonths = monthNameEmptyList
-        islamicMonths = monthNameEmptyList
-        gregorianMonths = monthNameEmptyList
-        weekDays = weekDaysEmptyList
-        weekDaysInitials = weekDaysEmptyList
+        )
+    )
+
+    fun JSONArray.toStringList() = (0 until length()).map { getString(it) }
+
+    persianMonths = messages.getJSONArray("PersianCalendarMonths").toStringList()
+    islamicMonths = messages.getJSONArray("IslamicCalendarMonths").toStringList()
+    gregorianMonths = messages.getJSONArray("GregorianCalendarMonths").toStringList()
+    weekDays = messages.getJSONArray("WeekDays").toStringList()
+    weekDaysInitials = when (language) {
+        LANG_AR, LANG_AZB -> messages.getJSONArray("WeekDaysInitials").toStringList()
+        else -> weekDays.map { it.substring(0, 1) }
     }
+} catch (e: JSONException) {
+    e.printStackTrace()
+    persianMonths = monthNameEmptyList
+    islamicMonths = monthNameEmptyList
+    gregorianMonths = monthNameEmptyList
+    weekDays = weekDaysEmptyList
+    weekDaysInitials = weekDaysEmptyList
 }
 
 @StringRes
@@ -413,11 +406,11 @@ fun updateStoredPreference(context: Context) {
     )
     isWidgetClock = prefs.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
     isNotifyDate = prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
-    notificationAthan = prefs.getBoolean(PREF_NOTIFICATION_ATHAN, DEFAULT_NOTIFICATION_ATHAN)
     isCenterAlignWidgets = prefs.getBoolean("CenterAlignWidgets", false)
 
     selectedWidgetTextColor =
-        prefs.getString(PREF_SELECTED_WIDGET_TEXT_COLOR, null) ?: DEFAULT_SELECTED_WIDGET_TEXT_COLOR
+        prefs.getString(PREF_SELECTED_WIDGET_TEXT_COLOR, null)
+            ?: DEFAULT_SELECTED_WIDGET_TEXT_COLOR
 
     selectedWidgetNextAthanTextColor =
         prefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
@@ -520,20 +513,28 @@ fun updateStoredPreference(context: Context) {
 // Context preferably should be activity context not application
 fun applyAppLanguage(context: Context) {
     val localeCode = getOnlyLanguage(language)
-    // To resolve this issue, https://issuetracker.google.com/issues/128908783 (marked as fixed now)
-    // if ((language.equals(LANG_GLK) || language.equals(LANG_AZB)) && Build.VERSION.SDK_INT == Build.VERSION_CODES.P) {
-    //    localeCode = LANG_FA;
-    // }
-    var locale = Locale(localeCode)
+    val locale = Locale(localeCode)
     Locale.setDefault(locale)
     val resources = context.resources
     val config = resources.configuration
-    config.locale = locale
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-        if (language == LANG_AZB) {
-            locale = Locale(LANG_FA)
+    config.setLocale(locale)
+    config.setLayoutDirection(
+        when (localeCode) {
+            LANG_AZB, LANG_GLK -> Locale(LANG_FA)
+            else -> locale
         }
-        config.setLayoutDirection(locale)
-    }
+    )
     resources.updateConfiguration(config, resources.displayMetrics)
 }
+
+//fun Context.withLocale(): Context {
+//    val config = resources.configuration
+//    val locale = Locale(getOnlyLanguage(language))
+//    Locale.setDefault(locale)
+//    config.setLocale(locale)
+//    config.setLayoutDirection(when (language) {
+//        LANG_AZB, LANG_GLK -> Locale(LANG_FA)
+//        else -> locale
+//    })
+//    return createConfigurationContext(config)
+//}
