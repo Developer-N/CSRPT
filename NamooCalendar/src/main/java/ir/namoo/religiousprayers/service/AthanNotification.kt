@@ -42,6 +42,7 @@ class AthanNotification : IntentService("NotificactionService") {
     }
 
     companion object {
+        private var lastStart = 0L
         private const val ACTION_STOP = "ir.namoo.owghateshareisardasht.ACTION_STOP"
         private var audioManager: AudioManager? = null
         private var mediaPlayer: MediaPlayer? = null
@@ -63,6 +64,12 @@ class AthanNotification : IntentService("NotificactionService") {
         fun notify(context: Context, intent: Intent) {
             val notificationManager = context.getSystemService<NotificationManager>()
 
+            // don't run if it is ran less than 10 seconds ago
+            val currentMillis = System.currentTimeMillis()
+            if (currentMillis - lastStart < TimeUnit.SECONDS.toMillis(10)) {
+                stop(context)
+                return
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationChannel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID, context.getString(R.string.app_name),
