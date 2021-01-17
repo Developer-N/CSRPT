@@ -4,7 +4,7 @@
 
 ## تقویم + اوقات شرعی اهل سنت
 
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png" width="250" align="center" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
 <br>
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg" width="200" />
