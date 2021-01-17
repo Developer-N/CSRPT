@@ -5,10 +5,11 @@
 ## تقویم + اوقات شرعی اهل سنت
 
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web-small.png)
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg)
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg)
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/3.jpg)
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/4.jpg)
+<br>
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg | width=100)
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg | width=100)
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/3.jpg | width=100)
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/4.jpg | width=100)
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>
