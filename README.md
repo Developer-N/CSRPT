@@ -4,12 +4,20 @@
 
 ## تقویم + اوقات شرعی اهل سنت
 
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png" width="250" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png" width="250" align="center" />
 <br>
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/3.jpg" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/4.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/5.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/6.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/7.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/8.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/9.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/10.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/11.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/12.jpg" width="200" />
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>
