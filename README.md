@@ -6,7 +6,7 @@
 
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web-small.png)
 <br>
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg | width=100)
+<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg" width="100" />
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg | width=100)
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/3.jpg | width=100)
 ![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/4.jpg | width=100)
