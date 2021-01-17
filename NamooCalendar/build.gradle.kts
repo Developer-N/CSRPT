@@ -74,7 +74,7 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
-    implementation("com.google.android.material:material:1.3.0-beta01")
+    implementation("com.google.android.material:material:1.3.0-rc01")
     implementation("com.google.android:flexbox:2.0.1")
     implementation("com.google.android.apps.dashclock:dashclock-api:2.0.0")
     implementation("com.google.openlocationcode:openlocationcode:1.0.4")

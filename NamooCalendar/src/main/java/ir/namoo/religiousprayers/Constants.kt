@@ -1,9 +1,9 @@
 package ir.namoo.religiousprayers
 
-//const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
+const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
 //const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
 //const val appLink="\r\n https://bit.ly/2juUc1y"//myket
-const val appLink = "\r\n https://bit.ly/3fUiP3L"//charkhoneh
+//const val appLink = "\r\n https://bit.ly/3fUiP3L"//charkhoneh
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 23
 const val STORAGE_PERMISSION_REQUEST_CODE = 24

@@ -4,13 +4,15 @@
 
 ## تقویم + اوقات شرعی اهل سنت
 
-![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png)
+![image](https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web-small.png)
 
-یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز.
+یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز. اطلاعات بیشتر را در آدرس زیر ببینید.
+<br>
+- [صفحه ی اختصاصی تقویم + اوقات شرعی اهل سنت](http://www.namoo.ir/pt)
 <br>
 آدرس تقویم فارسی
 <br>
-https://github.com/persian-calendar/DroidPersianCalendar
+- [Persian Calendar](https://github.com/persian-calendar/DroidPersianCalendar)
 
 </div>
 
@@ -24,7 +26,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 
 ## License
 
-Copyright (C) 2019-2020  Android Persian Calendar Developers
+Copyright (C) 2019-2021  Namoo Developer Group 
 
 This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by 
