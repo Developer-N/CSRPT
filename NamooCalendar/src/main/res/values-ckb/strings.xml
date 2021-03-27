@@ -395,4 +395,14 @@
     <string name="just_translate">Just translate</string>
     <string name="play_type">Play type</string>
 
+    <string name="widget_age_name">ڕۆژژمێر + کاتەکانی بانگ</string>
+    <string name="age_widget_title">عنوان ویجت</string>
+    <string name="select_date">انتخاب تاریخ</string>
+    <string name="age_widget_placeholder">%1$s ڕۆژ (~%2$s ساڵ، %3$s مانگ، %4$s ڕۆژ)</string>
+    <string name="clear_added_athans">Clear added alert and athans</string>
+    <string name="warning">Warning</string>
+    <string name="all_added_athans_will_cleared">Are you sure want to clear all athans and alerts?</string>
+    <string name="done">Done</string>
+    <string name="summer_time">Summer Time</string>
+
 </resources>

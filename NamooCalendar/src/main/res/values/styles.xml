@@ -43,7 +43,18 @@
     <attr name="colorNWidgetText" format="reference" />
     <attr name="colorNWidgetBackground" format="reference" />
 
+    <style name="ShapeAppearanceOverlay.Nav">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="AppTheme.AlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="dialogCornerRadius">@dimen/common_radius</item>
+    </style>
+
     <style name="DarkTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/dark_primary</item>
         <item name="colorPrimary">@color/dark_accent</item>
         <item name="colorPrimaryDark">@color/dark_primary_dark</item>
@@ -114,6 +125,8 @@
 
 
     <style name="LightTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/light_primary</item>
         <item name="colorPrimary">@color/light_primary</item>
         <item name="colorPrimaryDark">@color/light_primary_dark</item>
@@ -185,6 +198,8 @@
     <!-- Base application theme. -->
     <!-- ########################################### Cyan   -->
     <style name="CyanTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/cyan_primary</item>
         <item name="colorPrimary">@color/cyan_primary</item>
         <item name="colorPrimaryDark">@color/cyan_primary_dark</item>
@@ -255,6 +270,8 @@
 
     <!-- ########################################### Purple   -->
     <style name="PurpleTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/purple_primary</item>
         <item name="colorPrimary">@color/purple_primary</item>
         <item name="colorPrimaryDark">@color/purple_primary_dark</item>
@@ -325,6 +342,8 @@
 
     <!-- ########################################### Deep Purple   -->
     <style name="DeepPurpleTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/deep_purple_primary</item>
         <item name="colorPrimary">@color/deep_purple_primary</item>
         <item name="colorPrimaryDark">@color/deep_purple_primary_dark</item>
@@ -395,6 +414,8 @@
 
     <!-- ########################################### Indigo   -->
     <style name="IndigoTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/indigo_primary</item>
         <item name="colorPrimary">@color/indigo_primary</item>
         <item name="colorPrimaryDark">@color/indigo_primary_dark</item>
@@ -465,6 +486,8 @@
 
     <!-- ########################################### Pink   -->
     <style name="PinkTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/pink_primary</item>
         <item name="colorPrimary">@color/pink_primary</item>
         <item name="colorPrimaryDark">@color/pink_primary_dark</item>
@@ -535,6 +558,8 @@
 
     <!-- ########################################### Green   -->
     <style name="GreenTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/green_primary</item>
         <item name="colorPrimary">@color/green_primary</item>
         <item name="colorPrimaryDark">@color/green_primary_dark</item>
@@ -605,6 +630,8 @@
 
     <!-- ########################################### Brown   -->
     <style name="BrownTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/brown_primary</item>
         <item name="colorPrimary">@color/brown_primary</item>
         <item name="colorPrimaryDark">@color/brown_primary_dark</item>
@@ -675,6 +702,8 @@
 
     <!-- ########################################### New Blue   -->
     <style name="NewBlueTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/new_blue_primary</item>
         <item name="colorPrimary">@color/new_blue_primary</item>
         <item name="colorPrimaryDark">@color/new_blue_primary_dark</item>
@@ -744,6 +773,8 @@
     </style>
 
     <style name="BlueTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@drawable/blue_shade_background</item>
         <item name="colorPrimary">@color/blue_primary</item>
         <item name="colorPrimaryDark">@color/blue_primary</item>
@@ -815,6 +846,8 @@
     </style>
 
     <style name="ModernTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="alertDialogTheme">@style/AppTheme.AlertDialogTheme</item>
+
         <item name="colorMonthsBackground">@color/modern_primary</item>
         <item name="colorPrimary">@color/modern_accent</item>
         <item name="colorPrimaryDark">@color/modern_primary</item>

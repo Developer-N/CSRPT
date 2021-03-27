@@ -106,8 +106,11 @@ class AthanActivity : AppCompatActivity() {
                         if (setting.athanURI == "")
                             setDataSource(
                                 this@AthanActivity,
-                                if (setting.athanKey == "FAJR") getDefaultFajrAthanUri(this@AthanActivity) else
-                                    getDefaultAthanUri(this@AthanActivity)
+                                when (setting.athanKey) {
+                                    "FAJR" -> getDefaultFajrAthanUri(this@AthanActivity)
+                                    "SUNRISE" -> getDefaultBeforeAlertUri(this@AthanActivity)
+                                    else -> getDefaultAthanUri(this@AthanActivity)
+                                }
                             )
                         else
                             setDataSource(this@AthanActivity, setting.athanURI.toUri())
@@ -134,8 +137,8 @@ class AthanActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        }
 
+        }
 
         applyAppLanguage(this)
 

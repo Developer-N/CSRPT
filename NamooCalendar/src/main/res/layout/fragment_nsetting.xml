@@ -120,7 +120,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
-             tools:itemCount="6"
+            tools:itemCount="6"
             tools:listitem="@layout/item_athan_setting" />
 
         <com.google.android.material.card.MaterialCardView
@@ -140,6 +140,15 @@
                 app:divider="?attr/appDivider"
                 app:dividerPadding="@dimen/divider_margin"
                 app:showDividers="middle">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch_summer_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="@string/summer_time" />
 
                 <!--########################### start feqh -->
                 <androidx.appcompat.widget.LinearLayoutCompat
@@ -168,6 +177,7 @@
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <!--################## start normal athan-->
@@ -301,6 +311,15 @@
                         </androidx.appcompat.widget.LinearLayoutCompat>
                     </androidx.appcompat.widget.LinearLayoutCompat>
                     <!--################## end alarm-->
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/btn_clear_added_athans"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        app:chipIcon="@drawable/ic_delete"
+                        android:text="@string/clear_added_athans"
+                        app:chipIconTint="?attr/colorDanger"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
                 <!--########################### End Add Athans -->

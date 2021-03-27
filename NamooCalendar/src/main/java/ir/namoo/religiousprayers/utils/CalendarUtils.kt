@@ -18,6 +18,7 @@ import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.Clock
 import java.util.*
+import kotlin.math.abs
 import kotlin.math.ceil
 
 fun isWeekEnd(dayOfWeek: Int) = weekEnds[dayOfWeek]
@@ -141,7 +142,7 @@ fun getA11yDaySummary(
     }
 
     if (withZodiac) {
-        val zodiac = getZodiacInfo(context, jdn, false)
+        val zodiac = getZodiacInfo(context, jdn, withEmoji = false, short = false)
         if (zodiac.isNotEmpty()) {
             result.append("\n\n").append(zodiac)
         }
@@ -176,11 +177,12 @@ fun calendarToCivilDate(calendar: Calendar) = CivilDate(
     calendar[Calendar.YEAR], calendar[Calendar.MONTH] + 1, calendar[Calendar.DAY_OF_MONTH]
 )
 
-fun makeCalendarFromDate(date: Date): Calendar = Calendar.getInstance().apply {
-    if (isForcedIranTimeEnabled)
-        timeZone = TimeZone.getTimeZone("Asia/Tehran")
-    time = date
-}
+fun makeCalendarFromDate(date: Date, forceLocalTime: Boolean = false): Calendar =
+    Calendar.getInstance().apply {
+        if (!forceLocalTime && isForcedIranTimeEnabled)
+            timeZone = TimeZone.getTimeZone("Asia/Tehran")
+        time = date
+    }
 
 private fun readDeviceEvents(
     context: Context,
@@ -301,3 +303,20 @@ fun getMonthLength(calendar: CalendarType, year: Int, month: Int): Int = (getDat
 ).toJdn() - getDateOfCalendar(
     calendar, year, month, 1
 ).toJdn()).toInt()
+
+fun calculateDaysDifference(jdn: Long, messageToFormat: String): String {
+    val selectedDayAbsoluteDistance = abs(getTodayJdn() - jdn)
+    val civilBase = CivilDate(2000, 1, 1)
+    val civilOffset = CivilDate(civilBase.toJdn() + selectedDayAbsoluteDistance)
+    val yearDiff = civilOffset.year - 2000
+    val monthDiff = civilOffset.month - 1
+    val dayOfMonthDiff = civilOffset.dayOfMonth - 1
+
+    val result = messageToFormat.format(
+        formatNumber(selectedDayAbsoluteDistance.toInt()),
+        formatNumber(yearDiff),
+        formatNumber(monthDiff),
+        formatNumber(dayOfMonthDiff)
+    )
+    return if (selectedDayAbsoluteDistance <= 31) result.split(" (")[0] else result
+}

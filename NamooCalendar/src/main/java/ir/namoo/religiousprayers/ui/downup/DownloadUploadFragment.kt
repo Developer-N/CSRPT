@@ -1,7 +1,6 @@
 package ir.namoo.religiousprayers.ui.downup
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.AsyncTask
@@ -15,6 +14,7 @@ import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.widget.addTextChangedListener
@@ -105,7 +105,7 @@ class DownloadUploadFragment : Fragment() {
     private fun updateView() {
         if (!isNetworkConnected(requireContext())) {
             onPause()
-            val alert: AlertDialog.Builder = AlertDialog.Builder(context)
+            val alert = AlertDialog.Builder(requireContext())
             alert.setTitle(resources.getString(R.string.network_error_title))
             alert.setMessage(resources.getString(R.string.network_error_message))
             alert.setPositiveButton(resources.getString(R.string.str_retray)) { dialog, _ ->
@@ -159,7 +159,7 @@ class DownloadUploadFragment : Fragment() {
 //                        )
 //                    if (ik == "OK") {
                     val alert =
-                        AlertDialog.Builder(context)
+                        AlertDialog.Builder(requireContext())
                     //                        alert.setTitle(R.string.)
                     alert.setMessage(getString(R.string.are_sure_send_times))
                     alert.setPositiveButton(

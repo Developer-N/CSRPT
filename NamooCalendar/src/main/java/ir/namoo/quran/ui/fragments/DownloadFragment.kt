@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.AdapterView
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -145,8 +146,7 @@ class DownloadFragment : Fragment() {
                     if (!isHaveStoragePermission(requireActivity())) {
                         askForStoragePermission(requireActivity())
                     } else if (!isNetworkConnected(requireContext())) {
-                        val alert: android.app.AlertDialog.Builder =
-                            android.app.AlertDialog.Builder(context)
+                        val alert = AlertDialog.Builder(requireContext())
                         alert.setTitle(resources.getString(R.string.network_error_title))
                         alert.setMessage(resources.getString(R.string.network_error_message))
                         alert.setPositiveButton(resources.getString(R.string.ok)) { dialog, _ ->

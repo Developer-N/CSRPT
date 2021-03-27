@@ -120,8 +120,10 @@ class CalendarFragment : Fragment() {
                 eventsBinding = this
 
                 // Apply some animation, don't do the same for others tabs, it is problematic
-                eventsContent.layoutTransition =
-                    LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
+                eventsContent.layoutTransition = LayoutTransition().apply {
+                    enableTransitionType(LayoutTransition.CHANGING)
+                    setAnimateParentHierarchy(false)
+                }
             }.root
 
         ) + (getCoordinate(mainActivity)?.run {
@@ -140,7 +142,7 @@ class CalendarFragment : Fragment() {
                         setOnClickListener { onOwghatClick() }
                         // Easter egg to test AthanActivity
                         setOnLongClickListener {
-                            startAthan(context, "FAJR", "00:00")
+                            startAthan(context, "ASR", "00:00")
                             true
                         }
                         var cityName = getCityName(context, false)
@@ -186,87 +188,91 @@ class CalendarFragment : Fragment() {
                             }.start()
                         } catch (ex: Exception) {
                         }
-                        owghatBinding?.let {
+                        try {
+                            owghatBinding?.let {
 
-                            btnOwghatTackPhoto.visibility = View.GONE
-                            btnOwghatShare.visibility = View.GONE
-                            val prevBack = root.background
-                            root.setBackgroundColor(
-                                getColorFromAttr(
-                                    requireContext(),
-                                    R.attr.colorBackground
-                                )
-                            )
-
-                            val photo = createBitmapFromView2(root)
-
-                            btnOwghatTackPhoto.visibility = View.VISIBLE
-                            btnOwghatShare.visibility = View.VISIBLE
-                            root.background = prevBack
-
-                            val path = requireContext().getExternalFilesDir("pic")?.absolutePath
-                                ?: ""
-                            val f = File(path)
-                            if (!f.exists()) f.mkdirs()
-
-                            val file = File("$path/share.png")
-                            try {
-                                val out = FileOutputStream(file)
-                                photo.compress(Bitmap.CompressFormat.PNG, 100, out)
-                                out.flush()
-                                out.close()
-                            } catch (ex: Exception) {
-                                Log.e(TAG, "on share error ", ex)
-                            }
-                            val shareIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                putExtra(
-                                    Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+                                btnOwghatTackPhoto.visibility = View.GONE
+                                btnOwghatShare.visibility = View.GONE
+                                val prevBack = root.background
+                                root.setBackgroundColor(
+                                    getColorFromAttr(
                                         requireContext(),
-                                        "${BuildConfig.APPLICATION_ID}.provider",
-                                        file
+                                        R.attr.colorBackground
                                     )
                                 )
-                                var text = "\uD83D\uDDD3 "
-                                text += formatNumber(
-                                    dayTitleSummary(
-                                        getDateFromJdnOfCalendar(
-                                            mainCalendar,
-                                            selectedJdn
+
+                                val photo = createBitmapFromView2(root)
+
+                                btnOwghatTackPhoto.visibility = View.VISIBLE
+                                btnOwghatShare.visibility = View.VISIBLE
+                                root.background = prevBack
+
+                                val path = requireContext().getExternalFilesDir("pic")?.absolutePath
+                                    ?: ""
+                                val f = File(path)
+                                if (!f.exists()) f.mkdirs()
+
+                                val file = File("$path/share.png")
+                                try {
+                                    val out = FileOutputStream(file)
+                                    photo.compress(Bitmap.CompressFormat.PNG, 100, out)
+                                    out.flush()
+                                    out.close()
+                                } catch (ex: Exception) {
+                                    Log.e(TAG, "on share error ", ex)
+                                }
+                                val shareIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    putExtra(
+                                        Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+                                            requireContext(),
+                                            "${BuildConfig.APPLICATION_ID}.provider",
+                                            file
                                         )
                                     )
-                                )
-                                if (selectedJdn != getTodayJdn()) {
-                                    val times = PrayTimeProvider.calculate(
-                                        calculationMethod,
-                                        CivilDate(selectedJdn).toCalendar().time,
-                                        coordinate!!,
-                                        requireContext()
-                                    )
-                                    val length =
-                                        Clock.fromInt(times.maghribClock.toInt() - times.fajrClock.toInt())
-                                    text += "\n${
-                                        formatNumber(
-                                            String.format(
-                                                getString(R.string.length_of_day),
-                                                length.hour, length.minute
+                                    var text = "\uD83D\uDDD3 "
+                                    text += formatNumber(
+                                        dayTitleSummary(
+                                            getDateFromJdnOfCalendar(
+                                                mainCalendar,
+                                                selectedJdn
                                             )
                                         )
-                                    }"
-                                }
+                                    )
+                                    if (selectedJdn != getTodayJdn()) {
+                                        val times = PrayTimeProvider.calculate(
+                                            calculationMethod,
+                                            CivilDate(selectedJdn).toCalendar().time,
+                                            coordinate!!,
+                                            requireContext()
+                                        )
+                                        val length =
+                                            Clock.fromInt(times.maghribClock.toInt() - times.fajrClock.toInt())
+                                        text += "\n${
+                                            formatNumber(
+                                                String.format(
+                                                    getString(R.string.length_of_day),
+                                                    length.hour, length.minute
+                                                )
+                                            )
+                                        }"
+                                    }
 
-                                text += "\n\n${getString(R.string.app_name)}\n$appLink"
-                                putExtra(Intent.EXTRA_TEXT, text)
-                                type = "image/png"
-                            }
-                            startActivity(
-                                Intent.createChooser(
-                                    shareIntent,
-                                    getString(R.string.share)
+                                    text += "\n\n${getString(R.string.app_name)}\n$appLink"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                    type = "image/png"
+                                }
+                                startActivity(
+                                    Intent.createChooser(
+                                        shareIntent,
+                                        getString(R.string.share)
+                                    )
                                 )
-                            )
+                            }
+                        } catch (e: Exception) {
                         }
+
                     }
                     timesRecyclerView.run {
                         layoutManager = LinearLayoutManager(requireContext())

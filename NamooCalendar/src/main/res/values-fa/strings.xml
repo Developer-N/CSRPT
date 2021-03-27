@@ -528,4 +528,14 @@
     <string name="just_translate">فقط ترجمه</string>
     <string name="play_type">حالت پخش</string>
 
+    <string name="widget_age_name">تقویم +اوقات شرعی اهل سنت (سن)</string>
+    <string name="select_date">انتخاب تاریخ</string>
+    <string name="age_widget_title">عنوان ویجت</string>
+    <string name="age_widget_placeholder">%1$s روز (~%2$s سال، %3$s ماه، %4$s روز)</string>
+    <string name="clear_added_athans">پاک کردن اذان و هشدارهای اضافه شده</string>
+    <string name="warning">هشدار</string>
+    <string name="all_added_athans_will_cleared">آیا مطمئن هستید می خواهید همه ی اذان ها و هشدارهای اضافه شده را حذف کنید؟</string>
+    <string name="done">انجام شد</string>
+    <string name="summer_time">اوقات تابستانه</string>
+
 </resources>

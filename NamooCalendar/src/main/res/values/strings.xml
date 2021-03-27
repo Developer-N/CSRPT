@@ -7,6 +7,7 @@
     <string name="app_name">Calendar + Sunnah Prayer Times</string>
     <string name="widget_name">Calendar + Sunnah Prayer Times</string>
     <string name="widget_mini_name">Calendar + Sunnah Prayer Times (mini)</string>
+    <string name="widget_age_name">Calendar + Sunnah Prayer Times (age)</string>
     <string name="closeDrawer">Close</string>
     <string name="openDrawer">Open</string>
     <string name="accept">OK</string>
@@ -444,5 +445,13 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="just_arabic">Just arabic</string>
     <string name="just_translate">Just translate</string>
     <string name="play_type">Play type</string>
+    <string name="select_date">Select date</string>
+    <string name="age_widget_title">Widget title</string>
+    <string name="age_widget_placeholder">%1$s days (~%2$s years, %3$s months, %4$s days)</string>
+    <string name="clear_added_athans">Clear added alert and athans</string>
+    <string name="warning">Warning</string>
+    <string name="all_added_athans_will_cleared">Are you sure want to clear all athans and alerts?</string>
+    <string name="done">Done</string>
+    <string name="summer_time">Summer Time</string>
 
 </resources>

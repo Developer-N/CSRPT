@@ -1,7 +1,10 @@
 package ir.namoo.religiousprayers.ui.about
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.ActivityManager
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.opengl.EGL14
@@ -19,6 +22,9 @@ import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -33,6 +39,7 @@ import ir.namoo.religiousprayers.utils.copyToClipboard
 import ir.namoo.religiousprayers.utils.layoutInflater
 import com.google.android.material.bottomnavigation.LabelVisibilityMode
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import java.util.*
 
 /**
@@ -41,11 +48,11 @@ import java.util.*
  */
 class DeviceInformationFragment : Fragment() {
 
-    private var clickCount: Int = 0
+    private var clickCount = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View = FragmentDeviceInfoBinding.inflate(inflater, container, false).apply {
+    ) = FragmentDeviceInfoBinding.inflate(inflater, container, false).apply {
         val mainActivity = activity as MainActivity
 
         mainActivity.setTitleAndSubtitle(getString(R.string.device_info), "")
@@ -82,9 +89,59 @@ class DeviceInformationFragment : Fragment() {
                 // Easter egg
                 if (++clickCount % 10 == 0) {
                     BottomSheetDialog(mainActivity).apply {
-                        setContentView(IndeterminateProgressBar(mainActivity).apply {
-                            layoutParams =
-                                ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 700)
+                        setContentView(LinearLayout(mainActivity).apply {
+                            orientation = LinearLayout.VERTICAL
+                            // Add one with CircularProgressIndicator also
+                            addView(LinearProgressIndicator(mainActivity).apply {
+                                isIndeterminate = true
+                                setIndicatorColor(Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE)
+                                layoutParams =
+                                    ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.WRAP_CONTENT
+                                    )
+                            })
+                            addView(ProgressBar(mainActivity).apply {
+                                isIndeterminate = true
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                                    ValueAnimator.ofArgb(
+                                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
+                                    ).apply {
+                                        duration = 3000
+                                        interpolator = LinearInterpolator()
+                                        repeatMode = ValueAnimator.REVERSE
+                                        repeatCount = ValueAnimator.INFINITE
+                                        addUpdateListener {
+                                            indeterminateDrawable?.setColorFilter(
+                                                it.animatedValue as Int,
+                                                PorterDuff.Mode.SRC_ATOP
+                                            )
+                                        }
+                                    }.start()
+                                layoutParams =
+                                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 700)
+                                // setOnLongClickListener {
+                                //     val player = MediaPlayer.create(mainActivity, R.raw.moonlight)
+                                //     try {
+                                //         if (!player.isPlaying) player.start()
+                                //     } catch (ignore: Exception) {
+                                //     }
+                                //     AlertDialog.Builder(mainActivity).create().apply {
+                                //         setView(AppCompatImageButton(context).apply {
+                                //             setImageResource(R.drawable.ic_stop)
+                                //             setOnClickListener { dismiss() }
+                                //         })
+                                //         setOnDismissListener {
+                                //             try {
+                                //                 player.stop()
+                                //             } catch (ignore: Exception) {
+                                //             }
+                                //         }
+                                //         show()
+                                //     }
+                                //     true
+                                // }
+                            })
                         })
                     }.show()
                 }
@@ -96,7 +153,10 @@ class DeviceInformationFragment : Fragment() {
 
 class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
     ListAdapter<DeviceInformationAdapter.Item, DeviceInformationAdapter.ViewHolder>(
-        DeviceInformationDiffCallback()
+        object : DiffUtil.ItemCallback<Item>() {
+            override fun areItemsTheSame(old: Item, new: Item) = old.title == new.title
+            override fun areContentsTheSame(old: Item, new: Item) = old == new
+        }
     ) {
 
     data class Item(val title: String, val content: CharSequence?, val version: String)
@@ -280,21 +340,13 @@ class DeviceInformationAdapter(activity: Activity, private val rootView: View) :
         emptyList()
     })
 
-    class DeviceInformationDiffCallback : DiffUtil.ItemCallback<Item>() {
-        override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean =
-            oldItem == newItem
-
-        override fun areContentsTheSame(oldItem: Item, newItem: Item): Boolean =
-            oldItem == newItem
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
         DeviceInformationRowBinding.inflate(parent.context.layoutInflater, parent, false)
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
 
-    override fun getItemCount(): Int = deviceInformationItems.size
+    override fun getItemCount() = deviceInformationItems.size
 
     inner class ViewHolder(private val binding: DeviceInformationRowBinding) :
         RecyclerView.ViewHolder(binding.root), View.OnClickListener {

@@ -17,10 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.animation.*
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -60,6 +57,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
+
 
 class NSettingFragment : Fragment() {
     private lateinit var binding: FragmentNsettingBinding
@@ -382,6 +380,63 @@ class NSettingFragment : Fragment() {
         athansAdapter = AthansAdapter()
         binding.recyclerAthans.adapter = athansAdapter
         binding.recyclerAthans.layoutManager = LinearLayoutManager(requireContext())
+        //#####################################
+        binding.btnClearAddedAthans.setOnClickListener {
+            it.startAnimation(
+                AnimationUtils.loadAnimation(
+                    requireContext(),
+                    com.google.android.material.R.anim.abc_fade_in
+                )
+            )
+            if (!isHaveStoragePermission(requireActivity()))
+                askForStoragePermission(requireActivity())
+            else {
+                AlertDialog.Builder(requireContext()).apply {
+                    setTitle(R.string.warning)
+                    setMessage(R.string.all_added_athans_will_cleared)
+                    setPositiveButton(R.string.go) { _, _ ->
+                        try {
+                            val db =
+                                AthanDB.getInstance(requireContext().applicationContext).athanDAO()
+                            db.clearDB()
+
+                            val dir = File(getAthansDirectoryPath(requireContext())).listFiles()
+                            if (dir != null && dir.isNotEmpty())
+                                for (f in dir)
+                                    f.delete()
+                            snackMessage(it, getString(R.string.done))
+                            val aDB =
+                                AthanSettingsDB.getInstance(requireContext().applicationContext)
+                                    .athanSettingsDAO()
+                            val athanSettings = aDB.getAllAthanSettings()
+                            if (athanSettings != null && athanSettings.isNotEmpty())
+                                for (s in athanSettings) {
+                                    s.athanURI = ""
+                                    s.alertURI = ""
+                                    aDB.update(s)
+                                }
+                            athansAdapter.notifyDataSetChanged()
+                        } catch (ex: Exception) {
+                            Log.e(TAG, "error - >", ex)
+                        }
+                    }
+                    setNegativeButton(R.string.cancel) { dialog, _ ->
+                        dialog.cancel()
+                    }
+                    create().show()
+                }
+            }
+        }
+
+        binding.switchSummerTime.isChecked =
+            requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, true)
+        binding.switchSummerTime.setOnClickListener {
+            requireContext().appPrefs.edit {
+                putBoolean(PREF_SUMMER_TIME, binding.switchSummerTime.isChecked)
+            }
+            update(requireContext(), updateDate = true)
+        }
+
         return binding.root
     }//end of onCreateView
 
@@ -399,8 +454,7 @@ class NSettingFragment : Fragment() {
             )
         )
         if (!isNetworkConnected(requireContext())) {
-            val alert: android.app.AlertDialog.Builder =
-                android.app.AlertDialog.Builder(context)
+            val alert = AlertDialog.Builder(requireContext())
             alert.setTitle(resources.getString(R.string.network_error_title))
             alert.setMessage(resources.getString(R.string.network_error_message))
             alert.setPositiveButton(resources.getString(R.string.ok)) { dialog, _ ->
@@ -494,11 +548,14 @@ class NSettingFragment : Fragment() {
                     val athanFileUri = data.data ?: return
                     val inputFile =
                         requireContext().contentResolver.openInputStream(athanFileUri) ?: return
-                    val outputFile = File(
-                        getAthansDirectoryPath(requireContext()) + "/" + getFileNameFromLink(
-                            athanFileUri.path!!
-                        )
-                    )
+                    val extension = getFileNameFromLink(athanFileUri.path!!).split(".")[1]
+                    var outputFile =
+                        File(getAthansDirectoryPath(requireContext()) + "/1." + extension)
+                    var index = 2
+                    while (outputFile.exists()) {
+                        outputFile =
+                            File(getAthansDirectoryPath(requireContext()) + "/${index++}." + extension)
+                    }
                     val outputStream = FileOutputStream(outputFile)
                     inputFile.copyTo(outputStream, DEFAULT_BUFFER_SIZE)
                     outputStream.close()
@@ -514,6 +571,7 @@ class NSettingFragment : Fragment() {
                         }
                     )
                     db.insert(athan)
+                    athansAdapter.notifyDataSetChanged()
                 }
             } catch (ex: Exception) {
                 Log.e(TAG, "onActivityResult: ", ex)
@@ -547,16 +605,16 @@ class NSettingFragment : Fragment() {
                         )
                     }
                     if (athansList.size > 0) {
-                        val db = AthanDB.getInstance(requireContext().applicationContext)
+                        val db = AthanDB.getInstance(requireContext().applicationContext).athanDAO()
                         for (a in athansList) {
-                            val ad = db.athanDAO().getAthan(a.name)
+                            val ad = db.getAthan(a.name)
                             if (ad == null)
-                                db.athanDAO().insert(a)
+                                db.insert(a)
                             else {
                                 ad.name = a.name
                                 ad.link = a.link
                                 ad.type = a.type
-                                db.athanDAO().update(ad)
+                                db.update(ad)
                             }
                         }
                     }
@@ -581,7 +639,7 @@ class NSettingFragment : Fragment() {
                 val dialog = AthanDownloadDialog(athansAdapter,
                     AthanDB.getInstance(requireContext().applicationContext).athanDAO()
                         .getAllAthans().filter {
-                            it.type == type && it.link.contains("archive.org")
+                            it.type == type && it.link.startsWith("http")
                         }
                 )
                 dialog.show(childFragmentManager, AthanDownloadDialog::class.java.name)
@@ -779,7 +837,7 @@ class NSettingFragment : Fragment() {
                             else
                                 getString(R.string.default_athan_name)
                             else -> {
-                                val name = getFileNameFromLink(athanSetting.alertURI)
+                                val name = getFileNameFromLink(athanSetting.athanURI)
                                 val all =
                                     AthanDB.getInstance(requireContext()).athanDAO().getAllAthans()
                                 var n = ""

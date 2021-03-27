@@ -22,6 +22,9 @@ interface AthanDAO {
     @Query("select * from athans")
     fun getAllAthans(): List<Athan>
 
+    @Query("delete from athans")
+    fun clearDB()
+
     @Query("select * from athans where id=:id")
     fun getAthan(id: Int): Athan?
 
@@ -45,7 +48,7 @@ abstract class AthanDB : RoomDatabase() {
 
     companion object {
         private var instance: AthanDB? = null
-        public fun getInstance(applicationContext: Context): AthanDB {
+        fun getInstance(applicationContext: Context): AthanDB {
             if (instance == null) {
                 synchronized(AthanDB::class) {
                     instance = Room.databaseBuilder(

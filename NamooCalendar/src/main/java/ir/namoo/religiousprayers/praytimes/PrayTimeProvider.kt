@@ -123,7 +123,7 @@ class PrayTimeProvider {
             times: PrayTimes?,
             dayOfYear: Int,
             context: Context
-        ): PrayTimes? {
+        ): PrayTimes {
             val res: PrayTimes?
             val t = PrayTimesDB.getInstance(context).prayTimes().getEdited(dayOfYear)
 

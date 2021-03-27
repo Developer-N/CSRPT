@@ -27,6 +27,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.LinearLayoutCompat
@@ -280,7 +281,7 @@ private fun set(
     athanGap: Long,
     alarmTime: Clock
 ) {
-//    Log.e(TAG, "set for key= $athanKey time=${alarmTime.toFormattedString()}")
+    Log.e(TAG, "set for key= $athanKey time=${alarmTime.toFormattedString()}")
     if (athanSetting.playType == 0)// full screen
         if (context.appPrefsLite.getInt(
                 PREF_FULL_SCREEN_METHOD,
@@ -343,7 +344,7 @@ private fun setAlarm(
 
     // don't set an alarm in the past
     if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
-//        Log.e(TAG, "setting alarm1 for $alarmTimeName in -> " + triggerTime.time)
+        Log.e(TAG, "setting alarm1 for $alarmTimeName in -> " + triggerTime.time)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             ALARMS_BASE_ID + ord,
@@ -398,7 +399,7 @@ private fun setAlarm2(
 
     // don't set an alarm in the past
     if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
-//        Log.e(TAG, "setting alarm2 for $alarmTimeName in -> " + triggerTime.time)
+        Log.e(TAG, "setting alarm2 for $alarmTimeName in -> " + triggerTime.time)
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -590,17 +591,20 @@ fun askForCalendarPermission(activity: Activity?) {
         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }.show()
 }
 
-fun copyToClipboard(view: View?, label: CharSequence?, text: CharSequence?) {
+fun copyToClipboard(
+    view: View?, label: CharSequence?, text: CharSequence?, showToastInstead: Boolean = false
+) {
     view ?: return
     val clipboardService = view.context.getSystemService<ClipboardManager>()
 
     if (clipboardService == null || label == null || text == null) return
 
     clipboardService.setPrimaryClip(ClipData.newPlainText(label, text))
-    Snackbar.make(
-        view, view.context.getString(R.string.date_copied_clipboard).format(text),
-        Snackbar.LENGTH_SHORT
-    ).show()
+    val textToShow = view.context.getString(R.string.date_copied_clipboard).format(text)
+    if (showToastInstead)
+        Toast.makeText(view.context, textToShow, Toast.LENGTH_SHORT).show()
+    else
+        Snackbar.make(view, textToShow, Snackbar.LENGTH_SHORT).show()
 }
 
 fun dateStringOfOtherCalendars(jdn: Long, separator: String) =
@@ -1022,13 +1026,15 @@ fun fixTime(time: String, min: Int): String {
 //}
 
 fun snackMessage(view: View?, msg: String) {
-    if (view != null) {
+    view ?: return
+    try {
         val snack = Snackbar.make(view, msg, Snackbar.LENGTH_SHORT)
-        (snack.view
-            .findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView).typeface =
+        (snack.view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView).typeface =
             getAppFont(view.context)
         snack.view.setBackgroundColor(getColorFromAttr(view.context, R.attr.colorSnack))
         snack.show()
+    } catch (ex: Exception) {
+        Log.e(TAG, "snackMessage: ", ex)
     }
 }
 
@@ -1276,3 +1282,6 @@ fun createAthansSettingDB(context: Context) {
         )
     }
 }
+
+val Number.dp: Int
+    get() = (toFloat() * Resources.getSystem().displayMetrics.density).toInt()

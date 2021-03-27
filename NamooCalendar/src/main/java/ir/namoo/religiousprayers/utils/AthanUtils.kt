@@ -6,38 +6,42 @@ import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
 import androidx.core.net.toUri
-import ir.namoo.religiousprayers.*
+import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_KEY
+import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_TIME
+import ir.namoo.religiousprayers.PREF_ATHAN_URI
+import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.service.AthanNotification
 import ir.namoo.religiousprayers.ui.AthanActivity
 
 // https://stackoverflow.com/a/27788209
-fun getDefaultAthanUri(context: Context): Uri =
-    (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-            context.resources.getResourcePackageName(R.raw.adhan_nasser_al_qatami) + "/" +
-            context.resources.getResourceTypeName(R.raw.adhan_nasser_al_qatami) + "/" +
-            context.resources.getResourceEntryName(R.raw.adhan_nasser_al_qatami)).toUri()
+fun getDefaultAthanUri(context: Context): Uri = "%s://%s/%s/%s".format(
+    ContentResolver.SCHEME_ANDROID_RESOURCE,
+    context.resources.getResourcePackageName(R.raw.adhan_nasser_al_qatami),
+    context.resources.getResourceTypeName(R.raw.adhan_nasser_al_qatami),
+    context.resources.getResourceEntryName(R.raw.adhan_nasser_al_qatami)
+).toUri()
 
-fun getDefaultFajrAthanUri(context: Context): Uri =
-    (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-            context.resources.getResourcePackageName(R.raw.adhan_morning_mishari) + "/" +
-            context.resources.getResourceTypeName(R.raw.adhan_morning_mishari) + "/" +
-            context.resources.getResourceEntryName(R.raw.adhan_morning_mishari)).toUri()
+fun getDefaultFajrAthanUri(context: Context): Uri = "%s://%s/%s/%s".format(
+    ContentResolver.SCHEME_ANDROID_RESOURCE,
+    context.resources.getResourcePackageName(R.raw.adhan_morning_mishari),
+    context.resources.getResourceTypeName(R.raw.adhan_morning_mishari),
+    context.resources.getResourceEntryName(R.raw.adhan_morning_mishari)
+).toUri()
 
-fun getDefaultBeforeAlertUri(context: Context): Uri =
-    (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-            context.resources.getResourcePackageName(R.raw.beep) + "/" +
-            context.resources.getResourceTypeName(R.raw.beep) + "/" +
-            context.resources.getResourceEntryName(R.raw.beep)).toUri()
+fun getDefaultBeforeAlertUri(context: Context): Uri = "%s://%s/%s/%s".format(
+    ContentResolver.SCHEME_ANDROID_RESOURCE,
+    context.resources.getResourcePackageName(R.raw.beep),
+    context.resources.getResourceTypeName(R.raw.beep),
+    context.resources.getResourceEntryName(R.raw.beep)
+).toUri()
 
-fun getDefaultDOAUri(context: Context): Uri =
-    (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-            context.resources.getResourcePackageName(R.raw.doa) + "/" +
-            context.resources.getResourceTypeName(R.raw.doa) + "/" +
-            context.resources.getResourceEntryName(R.raw.doa)).toUri()
-
-val Context.isAscendingAthanVolumeEnabled: Boolean
-    get() = appPrefs.getBoolean(PREF_ASCENDING_ATHAN_VOLUME, false)
+fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
+    ContentResolver.SCHEME_ANDROID_RESOURCE,
+    context.resources.getResourcePackageName(R.raw.doa),
+    context.resources.getResourceTypeName(R.raw.doa),
+    context.resources.getResourceEntryName(R.raw.doa)
+).toUri()
 
 fun getCustomAthanUri(context: Context): Uri? =
     context.appPrefs.getString(PREF_ATHAN_URI, null)?.takeUnless { it.isEmpty() }?.toUri()

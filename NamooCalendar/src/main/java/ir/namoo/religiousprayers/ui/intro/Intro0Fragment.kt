@@ -1,7 +1,6 @@
 package ir.namoo.religiousprayers.ui.intro
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
@@ -17,6 +16,7 @@ import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -26,7 +26,6 @@ import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.FragmentIntro0Binding
 import ir.namoo.religiousprayers.databinding.ItemAvailableCityBinding
 import ir.namoo.religiousprayers.praytimes.DPTDB
-import ir.namoo.religiousprayers.praytimes.PrayTimesDB
 import ir.namoo.religiousprayers.praytimes.getCity
 import ir.namoo.religiousprayers.praytimes.getPrayTimes
 import ir.namoo.religiousprayers.ui.IntroActivity
@@ -86,7 +85,7 @@ class Intro0Fragment : Fragment() {
         binding.txtIntro0CitySearch.text?.clear()
         if (!isNetworkConnected(requireContext())) {
             onPause()
-            val alert: AlertDialog.Builder = AlertDialog.Builder(context)
+            val alert = AlertDialog.Builder(requireContext())
             alert.setTitle(resources.getString(R.string.network_error_title))
             alert.setMessage(resources.getString(R.string.network_error_message))
             alert.setPositiveButton(resources.getString(R.string.str_retray)) { dialog, _ ->

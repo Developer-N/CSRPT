@@ -50,7 +50,6 @@ fun update(context: Context, updateDate: Boolean) {
 
     Log.d("UpdateUtils", "update")
     applyAppLanguage(context)
-    val calendar = makeCalendarFromDate(Date())
     val date = getTodayOfCalendar(mainCalendar)
     val jdn = date.toJdn()
 
@@ -140,11 +139,11 @@ fun update(context: Context, updateDate: Boolean) {
     }
     var subtitle = dateStringOfOtherCalendars(jdn, spacedComma)
 
-    val currentClock = Clock(calendar)
+    val owghatClock = Clock(makeCalendarFromDate(Date(), forceLocalTime = true))
     var owghat: String
 
 //    @StringRes
-    val nextOwghatId = getNextOwghatTimeId(currentClock, dateHasChanged, context)
+    val nextOwghatId = getNextOwghatTimeId(owghatClock, dateHasChanged, context)
     var prayTimes = PrayTimeProvider.calculate(
         calculationMethod,
         CivilDate(getTodayJdn()).toCalendar().time,
@@ -310,7 +309,12 @@ fun update(context: Context, updateDate: Boolean) {
             }
 
             if (showOtherCalendars) {
-                text2 = text2 + "\n" + subtitle + "\n" + getZodiacInfo(context, jdn, true)
+                text2 = text2 + "\n" + subtitle + "\n" + getZodiacInfo(
+                    context,
+                    jdn,
+                    withEmoji = true,
+                    short = false
+                )
             }
             setTextViewText(R.id.date_2x2, text2)
 
@@ -395,7 +399,7 @@ fun update(context: Context, updateDate: Boolean) {
                     getClockFromStringId(
                         getClockStringFromId(nextOwghatId),
                         context
-                    ).toInt() - currentClock.toInt()
+                    ).toInt() - owghatClock.toInt()
                 if (difference < 0) difference += 60 * 24
 
                 val hrs = (MINUTES.toHours(difference.toLong()) % 24).toInt()
@@ -431,7 +435,7 @@ fun update(context: Context, updateDate: Boolean) {
 
 
     //
-    // Permanent Notification Bar and DashClock Data Extension Update
+    // Permanent Notification Bar Update
     //
     //
 

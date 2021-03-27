@@ -70,6 +70,7 @@ class AthanNotification : IntentService("NotificactionService") {
                 stop(context)
                 return
             }
+            lastStart = currentMillis
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationChannel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID, context.getString(R.string.app_name),
@@ -190,10 +191,11 @@ class AthanNotification : IntentService("NotificactionService") {
                                 if (setting.athanURI == "")
                                     setDataSource(
                                         context,
-                                        if (setting.athanKey == "FAJR") getDefaultFajrAthanUri(
-                                            context
-                                        ) else
-                                            getDefaultAthanUri(context)
+                                        when (setting.athanKey) {
+                                            "FAJR" -> getDefaultFajrAthanUri(context)
+                                            "SUNRISE" -> getDefaultBeforeAlertUri(context)
+                                            else -> getDefaultAthanUri(context)
+                                        }
                                     )
                                 else
                                     setDataSource(context, setting.athanURI.toUri())

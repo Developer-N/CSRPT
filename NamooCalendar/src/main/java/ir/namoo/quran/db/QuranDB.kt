@@ -22,7 +22,7 @@ abstract class QuranDB : RoomDatabase() {
             if (instance == null) {
                 synchronized(QuranDB::class.java) {
                     if (instance == null) {
-                        instance = Room.databaseBuilder<QuranDB>(
+                        instance = Room.databaseBuilder(
                             context.applicationContext,
                             QuranDB::class.java,
                             "quran.db"

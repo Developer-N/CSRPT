@@ -25,7 +25,7 @@ class ShapedAdapter<T>(context: Context, resource: Int, objects: Array<T>) :
         return view
     }
 
-    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View? {
+    override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view: View = super.getDropDownView(position, convertView, parent)
         if (view is TextView) setFontShapeAndGravity(view as TextView)
         view.setPadding(padding, 0, padding, 0)
