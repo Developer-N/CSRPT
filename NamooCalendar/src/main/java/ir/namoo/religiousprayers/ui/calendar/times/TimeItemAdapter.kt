@@ -9,15 +9,15 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
-import android.view.animation.DecelerateInterpolator
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.postDelayed
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.PrayTimes
@@ -25,16 +25,13 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.TimeItemBinding
 import ir.namoo.religiousprayers.db.AthanSetting
 import ir.namoo.religiousprayers.db.AthanSettingsDB
+import ir.namoo.religiousprayers.ui.preferences.AthanSettingDialog
 import ir.namoo.religiousprayers.utils.*
 import java.util.*
 
-class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
+class TimeItemAdapter(val childFragmentManager: FragmentManager) :
+    RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
 
-    //    @StringRes
-//    private val timeNames = listOf(
-//        R.string.imsak, R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr,
-//        R.string.sunset, R.string.maghrib, R.string.isha, R.string.midnight
-//    )
     @StringRes
     private val timeNames = listOf(
         R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr,
@@ -70,11 +67,7 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
 
     inner class ViewHolder(val binding: TimeItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        //        private val emptyLayout = FlexboxLayoutManager.LayoutParams(0, 0)
-//        private val wrapContent = FlexboxLayoutManager.LayoutParams(
-//            FlexboxLayoutManager.LayoutParams.WRAP_CONTENT,
-//            FlexboxLayoutManager.LayoutParams.WRAP_CONTENT
-//        )
+
         private var settings: List<AthanSetting>? =
             AthanSettingsDB.getInstance(binding.root.context.applicationContext).athanSettingsDAO()
                 .getAllAthanSettings()
@@ -83,12 +76,8 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
         fun bind(position: Int) {
             val timeName = timeNames[position]
 
-//            binding.root.layoutParams = if (!isExpanded && timeName !in listOf(
-//                    R.string.fajr, R.string.dhuhr, R.string.maghrib
-//                )
-//            ) emptyLayout else wrapContent
             binding.root.setOnClickListener { isExpanded = true }
-            val now = Clock(makeCalendarFromDate(Date())).toInt()
+            val now = Clock(Calendar.getInstance(Locale.getDefault())).toInt()
             when (timeName) {
                 R.string.imsak, R.string.fajr -> {
                     if (now < prayTimes!!.fajrClock.toInt())
@@ -148,8 +137,8 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                 }.toFormattedString()
             } ?: ""
 
-            settings?.apply {
-                if (get(position).state)
+            settings?.get(position)?.also { setting ->
+                if (setting.state)
                     binding.btnAthanState.setImageResource(R.drawable.ic_speaker)
                 else
                     binding.btnAthanState.setImageResource(R.drawable.ic_silent)
@@ -161,10 +150,11 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                             androidx.appcompat.R.anim.abc_fade_in
                         )
                     )
-                    get(position).state = !get(position).state
+                    setting.state = !setting.state
                     AthanSettingsDB.getInstance(binding.root.context.applicationContext)
-                        .athanSettingsDAO().update(get(position))
-                    try {
+                        .athanSettingsDAO().update(setting)
+                    // request overly permission
+                    runCatching {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
                             !Settings.canDrawOverlays(binding.root.context)
                         ) {
@@ -186,12 +176,19 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                                 show()
                             }
                         }
-                    } catch (ex: Exception) {
-                        Log.e(TAG, "getPermission: ", ex)
-                    }
+                    }.onFailure(logException)
                     notifyDataSetChanged()
-                    loadAlarms(binding.root.context)
+                    update(binding.root.context, true)
                 }
+
+                binding.btnAthanState.setOnLongClickListener {
+                    AthanSettingDialog(setting).show(
+                        childFragmentManager,
+                        AthanSettingDialog::class.java.name
+                    )
+                    true
+                }
+
             }
 
         }//end of bind
@@ -202,14 +199,6 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                 binding.remainToNext.visibility = View.INVISIBLE
                 return
             }
-            val anim = AnimationUtils.loadAnimation(
-                binding.root.context,
-                com.google.android.material.R.anim.abc_fade_in
-            )
-            anim.duration = 1000
-            anim.interpolator = DecelerateInterpolator()
-            anim.repeatCount = ValueAnimator.INFINITE
-            binding.remainToNext.startAnimation(anim)
             val cal = Calendar.getInstance()
             val current = Clock(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
             val rem = Clock.fromInt(clock.toInt() - current.toInt())
@@ -221,6 +210,15 @@ class TimeItemAdapter : RecyclerView.Adapter<TimeItemAdapter.ViewHolder>() {
                         rem.minute
                     )
                 )
+            val anim = AnimationUtils.loadAnimation(
+                binding.root.context,
+                com.google.android.material.R.anim.abc_fade_in
+            )
+            anim.duration = 1000
+            anim.interpolator = AccelerateDecelerateInterpolator()
+            anim.repeatCount = ValueAnimator.INFINITE
+            binding.remainToNext.clearAnimation()
+            binding.remainToNext.startAnimation(anim)
             Handler(Looper.getMainLooper()).postDelayed((60 - cal.get(Calendar.SECOND)) * 1000L) {
                 animateDrawable(clock)
             }

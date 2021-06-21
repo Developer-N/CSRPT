@@ -38,7 +38,7 @@
     <attr name="colorTextDaySelected" format="reference" />
     <attr name="colorWarning" format="reference" />
     <attr name="colorSnack" format="reference" />
-    <attr name="colorSettingTab" format="reference" />
+
 
     <attr name="colorNWidgetText" format="reference" />
     <attr name="colorNWidgetBackground" format="reference" />
@@ -117,7 +117,7 @@
         <item name="colorHighlight">@color/colorHighlight</item>
         <item name="colorWarning">@color/dark_warning</item>
         <item name="colorSnack">@color/dark_icon_drawer</item>
-        <item name="colorSettingTab">@color/dark_primary</item>
+
 
         <item name="colorNWidgetText">@color/dark_text_second</item>
         <item name="colorNWidgetBackground">@color/dark_card_background</item>
@@ -192,7 +192,7 @@
 
         <item name="colorWarning">@color/light_warning</item>
         <item name="colorSnack">@color/light_primary_dark</item>
-        <item name="colorSettingTab">@color/light_primary</item>
+
     </style>
 
     <!-- Base application theme. -->
@@ -265,7 +265,7 @@
 
         <item name="colorWarning">@color/cyan_warning</item>
         <item name="colorSnack">@color/cyan_primary_dark</item>
-        <item name="colorSettingTab">@color/cyan_primary</item>
+
     </style>
 
     <!-- ########################################### Purple   -->
@@ -337,7 +337,7 @@
 
         <item name="colorWarning">@color/purple_warning</item>
         <item name="colorSnack">@color/purple_primary_dark</item>
-        <item name="colorSettingTab">@color/purple_primary</item>
+
     </style>
 
     <!-- ########################################### Deep Purple   -->
@@ -409,7 +409,7 @@
 
         <item name="colorWarning">@color/deep_purple_warning</item>
         <item name="colorSnack">@color/deep_purple_primary_dark</item>
-        <item name="colorSettingTab">@color/deep_purple_primary</item>
+
     </style>
 
     <!-- ########################################### Indigo   -->
@@ -481,7 +481,7 @@
 
         <item name="colorWarning">@color/indigo_warning</item>
         <item name="colorSnack">@color/indigo_primary_dark</item>
-        <item name="colorSettingTab">@color/indigo_primary</item>
+
     </style>
 
     <!-- ########################################### Pink   -->
@@ -553,7 +553,7 @@
 
         <item name="colorWarning">@color/pink_warning</item>
         <item name="colorSnack">@color/pink_primary_dark</item>
-        <item name="colorSettingTab">@color/pink_primary</item>
+
     </style>
 
     <!-- ########################################### Green   -->
@@ -625,7 +625,6 @@
 
         <item name="colorWarning">@color/green_warning</item>
         <item name="colorSnack">@color/green_primary_dark</item>
-        <item name="colorSettingTab">@color/green_primary</item>
     </style>
 
     <!-- ########################################### Brown   -->
@@ -697,7 +696,7 @@
 
         <item name="colorWarning">@color/brown_warning</item>
         <item name="colorSnack">@color/brown_primary_dark</item>
-        <item name="colorSettingTab">@color/brown_primary</item>
+
     </style>
 
     <!-- ########################################### New Blue   -->
@@ -769,7 +768,7 @@
 
         <item name="colorWarning">@color/new_blue_warning</item>
         <item name="colorSnack">@color/new_blue_primary_dark</item>
-        <item name="colorSettingTab">@color/new_blue_primary</item>
+
     </style>
 
     <style name="BlueTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
@@ -842,7 +841,7 @@
 
         <item name="colorWarning">@color/blue_warning</item>
         <item name="colorSnack">@color/blue_primary</item>
-        <item name="colorSettingTab">@color/blue_primary</item>
+
     </style>
 
     <style name="ModernTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
@@ -918,7 +917,7 @@
 
         <item name="colorWarning">@color/modern_warning</item>
         <item name="colorSnack">@color/modern_text_primary</item>
-        <item name="colorSettingTab">@color/modern_primary</item>
+
     </style>
 
     <style name="FullscreenTheme" parent="LightTheme">

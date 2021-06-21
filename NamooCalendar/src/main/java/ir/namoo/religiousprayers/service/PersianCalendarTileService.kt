@@ -6,7 +6,7 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import ir.namoo.religiousprayers.ui.MainActivity
+import ir.namoo.religiousprayers.ui.SplashActivity
 import ir.namoo.religiousprayers.utils.*
 
 /**
@@ -15,27 +15,24 @@ import ir.namoo.religiousprayers.utils.*
 @TargetApi(Build.VERSION_CODES.N)
 class PersianCalendarTileService : TileService() {
 
-    override fun onClick() = try {
+    override fun onClick() = runCatching {
         startActivityAndCollapse(
-            Intent(this, MainActivity::class.java)
+            Intent(this, SplashActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
+    }.getOrElse(logException)
 
-    override fun onStartListening() = try {
-        val today = getTodayOfCalendar(mainCalendar)
+    override fun onStartListening() = runCatching {
+        val jdn = Jdn.today
+        val today = jdn.toCalendar(mainCalendar)
         qsTile?.apply {
             icon = Icon.createWithResource(
                 this@PersianCalendarTileService, getDayIconResource(today.dayOfMonth)
             )
-            label = getWeekDayName(today)
-            contentDescription = getMonthName(today)
+            label = jdn.dayOfWeekName
+            contentDescription = today.monthName
             // explicitly set Tile state to Active, fixes tile not being lit on some Samsung devices
             state = Tile.STATE_ACTIVE
         }?.updateTile() ?: Unit
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
+    }.getOrElse(logException)
 }

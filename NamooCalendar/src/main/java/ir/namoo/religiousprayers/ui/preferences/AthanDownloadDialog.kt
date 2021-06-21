@@ -2,10 +2,9 @@ package ir.namoo.religiousprayers.ui.preferences
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
@@ -15,6 +14,7 @@ import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.AthanDownloadDialogBinding
 import ir.namoo.religiousprayers.databinding.ItemAthanBinding
@@ -31,14 +31,21 @@ class AthanDownloadDialog(val adapter: NSettingFragment.AthansAdapter, var athan
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         binding = AthanDownloadDialogBinding.inflate(requireActivity().layoutInflater)
         binding.recyclerAthanDownload.adapter = AthanAdapter()
-        return AlertDialog.Builder(requireContext()).apply {
+        val dialog = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            BottomSheetDialog(requireContext()).apply {
+                setContentView(binding.root)
+                isCancelable = false
+                create()
+            }
+        else AlertDialog.Builder(requireContext()).apply {
             setView(binding.root)
             setCustomTitle(null)
             isCancelable = false
-            setNegativeButton(R.string.close) { dialog: DialogInterface, _: Int ->
-                dialog.dismiss()
-            }
         }.create()
+
+        binding.btnAthanDwonloadClose.setOnClickListener { dialog.dismiss() }
+
+        return dialog
     }
 
     private inner class AthanAdapter : RecyclerView.Adapter<AthanAdapter.AViewHolder>() {
@@ -94,48 +101,44 @@ class AthanDownloadDialog(val adapter: NSettingFragment.AthansAdapter, var athan
             @SuppressLint("StaticFieldLeak")
             inner class DownloadTask(val link: String) : AsyncTask<String, Int, String>() {
 
-                override fun doInBackground(vararg params: String?): String {
-                    return try {
-                        val url = URL(link)
-                        val connection = url.openConnection() as HttpURLConnection
-                        connection.connect()
-                        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                            "Error"
-                        } else {
-                            binding.progressAthanDownload.max = connection.contentLength
-                            val f = File(getAthansDirectoryPath(requireContext()))
-                            if (!f.exists())
-                                f.mkdirs()
-                            val file = File(
-                                getAthansDirectoryPath(requireContext()) + "/" + getFileNameFromLink(
-                                    link
-                                )
-                            )
-                            val input = connection.inputStream
-                            val output = FileOutputStream(file)
-                            val data = ByteArray(4096)
-                            var total = 0
-                            var count: Int
-                            while (input.read(data).also { count = it } != -1) {
-                                if (isCancelled) {
-                                    input.close()
-                                    return "Error"
-                                }
-                                total += count
-                                if (connection.contentLength > 0)
-                                    publishProgress(total)
-                                output.write(data, 0, count)
-                            }
-                            output.close()
-                            input.close()
-                            connection.disconnect()
-                            "OK"
-                        }
-                    } catch (ex: Exception) {
-                        Log.e(TAG, "download error : $ex")
+                override fun doInBackground(vararg params: String?): String = runCatching {
+                    val url = URL(link)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.connect()
+                    if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                         "Error"
+                    } else {
+                        binding.progressAthanDownload.max = connection.contentLength
+                        val f = File(getAthansDirectoryPath(requireContext()))
+                        if (!f.exists())
+                            f.mkdirs()
+                        val file = File(
+                            getAthansDirectoryPath(requireContext()) + "/" + getFileNameFromLink(
+                                link
+                            )
+                        )
+                        val input = connection.inputStream
+                        val output = FileOutputStream(file)
+                        val data = ByteArray(4096)
+                        var total = 0
+                        var count: Int
+                        while (input.read(data).also { count = it } != -1) {
+                            if (isCancelled) {
+                                input.close()
+                                return "Error"
+                            }
+                            total += count
+                            if (connection.contentLength > 0)
+                                publishProgress(total)
+                            output.write(data, 0, count)
+                        }
+                        output.close()
+                        input.close()
+                        connection.disconnect()
+                        "OK"
                     }
-                }//end of doInBackground
+                }.onFailure(logException).getOrDefault("Error")
+                //end of doInBackground
 
                 override fun onPreExecute() {
                     super.onPreExecute()
@@ -171,22 +174,17 @@ class AthanDownloadDialog(val adapter: NSettingFragment.AthansAdapter, var athan
 
             @SuppressLint("StaticFieldLeak")
             inner class GetSize(val position: Int) : AsyncTask<String, Int, String>() {
-                override fun doInBackground(vararg params: String?): String {
-                    return try {
-                        val url = URL(athanList[position].link)
-                        val connection = url.openConnection() as HttpURLConnection
-                        connection.connect()
-                        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                            val res = connection.contentLength.toString()
-                            connection.disconnect()
-                            res
-                        } else
-                            "Error"
-                    } catch (ex: Exception) {
-                        Log.e(TAG, "bind error: $ex")
+                override fun doInBackground(vararg params: String?): String = runCatching {
+                    val url = URL(athanList[position].link)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.connect()
+                    if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                        val res = connection.contentLength.toString()
+                        connection.disconnect()
+                        res
+                    } else
                         "Error"
-                    }
-                }
+                }.onFailure(logException).getOrDefault("Error")
 
                 override fun onPreExecute() {
                     super.onPreExecute()

@@ -16,6 +16,7 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.utils.TAG
 import ir.namoo.religiousprayers.utils.appPrefsLite
 import ir.namoo.religiousprayers.utils.applyAppLanguage
+import ir.namoo.religiousprayers.utils.logException
 import java.io.File
 
 //private const val NOTIFICATION_ID = 63
@@ -336,15 +337,14 @@ class QuranPlayer : Service() {
         super.onDestroy()
         unregisterReceiver(receiver)
 //        clearNotification()
-        try {
+        runCatching {
             mediaPlayer?.let {
                 if (it.isPlaying) {
                     it.release()
                     it.stop()
                 }
             }
-        } catch (ex: Exception) {
-        }
+        }.onFailure(logException)
     }
 
 }//end of class

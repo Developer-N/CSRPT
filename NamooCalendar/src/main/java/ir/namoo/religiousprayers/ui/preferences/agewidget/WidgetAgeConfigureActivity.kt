@@ -5,21 +5,30 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
+import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
+import ir.namoo.religiousprayers.PREF_SELECTED_DATE_AGE_WIDGET
 import ir.namoo.religiousprayers.PREF_TITLE_AGE_WIDGET
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.ActivityAgeWidgetConfigureBinding
 import ir.namoo.religiousprayers.updateAgeWidget
-import ir.namoo.religiousprayers.utils.appPrefs
-import ir.namoo.religiousprayers.utils.applyAppLanguage
-import ir.namoo.religiousprayers.utils.getThemeFromName
-import ir.namoo.religiousprayers.utils.getThemeFromPreference
+import ir.namoo.religiousprayers.utils.*
 
 class AgeWidgetConfigureActivity : AppCompatActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
-    private fun confirm() {
+    private fun confirm(title: String) {
         val context = this@AgeWidgetConfigureActivity
+
+        val selectedJdn = appPrefs.getJdnOrNull(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId)
+        appPrefs.edit {
+            if (selectedJdn == null) {
+                // Put today's jdn if nothing was set
+                putJdn(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId, Jdn.today)
+            }
+            putString(PREF_TITLE_AGE_WIDGET + appWidgetId, title)
+        }
 
         // It is the responsibility of the configuration activity to update the app widget
         val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -60,27 +69,17 @@ class AgeWidgetConfigureActivity : AppCompatActivity() {
             return
         }
 
-        val args = Bundle().apply {
-            putInt(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-        }
         supportFragmentManager.commit {
             add(
-                R.id.preference_fragment_holder,
-                WidgetAgeConfigureFragment::class.java,
-                args,
-                "TAG"
+                R.id.preference_fragment_holder, WidgetAgeConfigureFragment::class.java,
+                bundleOf(AppWidgetManager.EXTRA_APPWIDGET_ID to appWidgetId), "TAG"
             )
         }
 
-        binding.editWidgetTitle.visibility
         val title = appPrefs.getString(PREF_TITLE_AGE_WIDGET + appWidgetId, "")
         binding.editWidgetTitle.text = SpannableStringBuilder(title)
         binding.addWidgetButton.setOnClickListener {
-            appPrefs.edit().putString(
-                PREF_TITLE_AGE_WIDGET + appWidgetId,
-                binding.editWidgetTitle.text.toString()
-            ).apply()
-            confirm()
+            confirm(binding.editWidgetTitle.text.toString())
         }
     }
 }

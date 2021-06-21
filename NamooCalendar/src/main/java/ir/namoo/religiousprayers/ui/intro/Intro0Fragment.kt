@@ -105,7 +105,7 @@ class Intro0Fragment : Fragment() {
     @SuppressLint("StaticFieldLeak")
     inner class GetListTask : AsyncTask<String, Int, String>() {
         override fun doInBackground(vararg params: String?): String {
-            try {
+            runCatching {
                 val httpclient: HttpClient = DefaultHttpClient()
                 val httpGet = HttpGet("http://www.namoo.ir/Home/GetAddedCities")
                 val response: HttpResponse = httpclient.execute(httpGet)
@@ -127,9 +127,7 @@ class Intro0Fragment : Fragment() {
                     filteredList.clear()
                     filteredList.addAll(list)
                 } else return "error"
-            } catch (ex: Exception) {
-                Log.d(TAG, "Error get available cities!$ex")
-            }
+            }.onFailure(logException)
             return "OK"
         }
 
@@ -211,10 +209,7 @@ class Intro0Fragment : Fragment() {
                 ItemBinding.btnDownload.setImageResource(R.drawable.ic_check)
                 ItemBinding.txtAvailableCityName.text = city.name
                 ItemBinding.txtAvailableCityUpdateDate.text = formatDate(
-                    getDateFromJdnOfCalendar(
-                        mainCalendar,
-                        calendarToCivilDate(makeCalendarFromDate(Date(city.insertDate.toLong()))).toJdn()
-                    )
+                    Jdn(city.insertDate.toLong()).toCalendar(mainCalendar)
                 )
                 ItemBinding.btnDownload.setOnClickListener {
                     it.startAnimation(
@@ -235,12 +230,9 @@ class Intro0Fragment : Fragment() {
                     download(city.id)
                 }
                 if (filter.isNotEmpty()) {
-                    try {
+                    runCatching {
                         val fColorSpan = ForegroundColorSpan(
-                            getColorFromAttr(
-                                itemView.context,
-                                R.attr.colorHighlight
-                            )
+                            requireContext().resolveColor(R.attr.colorHighlight)
                         )
                         val spannableStringBuilder =
                             SpannableStringBuilder(ItemBinding.txtAvailableCityName.text)
@@ -251,9 +243,7 @@ class Intro0Fragment : Fragment() {
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                         ItemBinding.txtAvailableCityName.text = spannableStringBuilder
-                    } catch (ex: Exception) {
-
-                    }
+                    }.onFailure(logException)
 
                 }
             }
@@ -263,51 +253,47 @@ class Intro0Fragment : Fragment() {
                 AsyncTask<String, Int, String>() {
                 private val url = "http://www.namoo.ir/Home/GetPTime/"
 
-                override fun doInBackground(vararg params: String?): String {
-                    return try {
-                        val httpclient: HttpClient = DefaultHttpClient()
-                        val httpGet = HttpGet("$url$id")
-                        val response = httpclient.execute(httpGet)
-                        if (response.statusLine.statusCode == 200) {
-                            val serverResponse = EntityUtils.toString(response.entity)
-                            val outFile = File(
-                                "${getTimesDirectoryPath(requireContext())}/${
-                                    getCity(
-                                        serverResponse
-                                    )?.name ?: "_"
-                                }"
-                            )
-                            val outStream = FileOutputStream(outFile)
-                            if (!outFile.exists())
-                                outFile.createNewFile()
-                            outStream.write(serverResponse.toByteArray(charset = Charset.forName("UTF-8")))
-                            outStream.flush()
-                            outStream.close()
-                            val city = getCity(serverResponse)
-                            if (city != null) {
-                                requireContext().appPrefs.edit {
-                                    putString(PREF_GEOCODED_CITYNAME, city.name)
-                                    putString(PREF_LATITUDE, city.lat.toString())
-                                    putString(PREF_LONGITUDE, city.lng.toString())
-                                    putBoolean(PREF_FIRST_START, false)
-                                }
-                                val times = getPrayTimes(serverResponse)
-                                if (times != null) {
-                                    val db =
-                                        DPTDB.getInstance(requireContext().applicationContext)
-                                            .downloadedPrayTimes()
-                                    if (db.getDownloadFor(city.name!!) != null)
-                                        db.clearDownloadFor(city.name!!)
-                                    db.insertToDownload(getPrayTimes(serverResponse)!!)
-                                }
+                override fun doInBackground(vararg params: String?): String = runCatching {
+                    val httpclient: HttpClient = DefaultHttpClient()
+                    val httpGet = HttpGet("$url$id")
+                    val response = httpclient.execute(httpGet)
+                    if (response.statusLine.statusCode == 200) {
+                        val serverResponse = EntityUtils.toString(response.entity)
+                        val outFile = File(
+                            "${getTimesDirectoryPath(requireContext())}/${
+                                getCity(
+                                    serverResponse
+                                )?.name ?: "_"
+                            }"
+                        )
+                        val outStream = FileOutputStream(outFile)
+                        if (!outFile.exists())
+                            outFile.createNewFile()
+                        outStream.write(serverResponse.toByteArray(charset = Charset.forName("UTF-8")))
+                        outStream.flush()
+                        outStream.close()
+                        val city = getCity(serverResponse)
+                        if (city != null) {
+                            requireContext().appPrefs.edit {
+                                putString(PREF_GEOCODED_CITYNAME, city.name)
+                                putString(PREF_LATITUDE, city.lat.toString())
+                                putString(PREF_LONGITUDE, city.lng.toString())
+                                putBoolean(PREF_FIRST_START, false)
                             }
-                            "OK"
-                        } else
-                            "Error"
-                    } catch (ex: Exception) {
-                        "Error get time : ${ex.message}"
-                    }
-                }
+                            val times = getPrayTimes(serverResponse)
+                            if (times != null) {
+                                val db =
+                                    DPTDB.getInstance(requireContext().applicationContext)
+                                        .downloadedPrayTimes()
+                                if (db.getDownloadFor(city.name!!) != null)
+                                    db.clearDownloadFor(city.name!!)
+                                db.insertToDownload(getPrayTimes(serverResponse)!!)
+                            }
+                        }
+                        "OK"
+                    } else
+                        "Error"
+                }.onFailure(logException).getOrDefault("Error get time")
 
                 override fun onPreExecute() {
                     super.onPreExecute()

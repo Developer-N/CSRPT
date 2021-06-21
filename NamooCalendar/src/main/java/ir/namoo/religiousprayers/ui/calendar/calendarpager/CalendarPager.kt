@@ -21,20 +21,20 @@ class CalendarPager @JvmOverloads constructor(
 ) : FrameLayout(context, attrs) {
 
     // Public API
-    var onDayClicked = fun(jdn: Long) {}
-    var onDayLongClicked = fun(jdn: Long) {}
+    var onDayClicked = fun(_: Jdn) {}
+    var onDayLongClicked = fun(_: Jdn) {}
 
     // Selected month is visible current month of the pager, maybe a day is not selected on it yet
     var onMonthSelected = fun() {}
     val selectedMonth: AbstractDate
         get() = getDateFromOffset(mainCalendar, applyOffset(viewPager.currentItem))
 
-    fun setSelectedDay(jdn: Long, highlight: Boolean = true, monthChange: Boolean = true) {
-        selectedJdn = if (highlight) jdn else -1
+    fun setSelectedDay(jdn: Jdn, highlight: Boolean = true, monthChange: Boolean = true) {
+        selectedJdn = if (highlight) jdn else null
 
         if (monthChange) {
-            val today = getTodayOfCalendar(mainCalendar)
-            val date = getDateFromJdnOfCalendar(mainCalendar, jdn)
+            val today = Jdn.today.toCalendar(mainCalendar)
+            val date = jdn.toCalendar(mainCalendar)
             viewPager.setCurrentItem(
                 applyOffset((today.year - date.year) * 12 + today.month - date.month), true
             )
@@ -56,7 +56,7 @@ class CalendarPager @JvmOverloads constructor(
     private val monthsLimit = 5000 // this should be an even number
 
     private fun getDateFromOffset(calendar: CalendarType, offset: Int): AbstractDate {
-        val date = getTodayOfCalendar(calendar)
+        val date = Jdn.today.toCalendar(calendar)
         var month = date.month - offset
         month -= 1
         var year = date.year
@@ -68,13 +68,13 @@ class CalendarPager @JvmOverloads constructor(
             month += 12
         }
         month += 1
-        return getDateOfCalendar(calendar, year, month, 1)
+        return Jdn(calendar, year, month, 1).toCalendar(calendar)
     }
 
     private fun applyOffset(position: Int) = monthsLimit / 2 - position
 
     private val viewPager = ViewPager2(context)
-    private var selectedJdn: Long = -1
+    private var selectedJdn: Jdn? = null
 
     init {
         viewPager.adapter = PagerAdapter()
@@ -111,7 +111,7 @@ class CalendarPager @JvmOverloads constructor(
                 binding.root.context, this@CalendarPager, selectableItemBackground
             )
 
-            var refresh = fun(_: Boolean, _: Long) {}
+            var refresh = fun(_: Boolean, _: Jdn?) {}
 
             init {
                 val isRTL = isRTL(binding.root.context)
@@ -157,33 +157,34 @@ class CalendarPager @JvmOverloads constructor(
             fun bind(position: Int) {
                 val offset = applyOffset(position)
                 val date = getDateFromOffset(mainCalendar, offset)
-                val baseJdn = date.toJdn()
-                val monthLength = getMonthLength(mainCalendar, date.year, date.month)
-                val startOfYearJdn = getDateOfCalendar(mainCalendar, date.year, 1, 1).toJdn()
+                val baseJdn = Jdn(date)
+                val monthLength = mainCalendar.getMonthLength(date.year, date.month)
+                val startOfYearJdn = Jdn(mainCalendar, date.year, 1, 1)
 
                 daysAdapter.apply {
-                    startingDayOfWeek = getDayOfWeekFromJdn(baseJdn)
-                    weekOfYearStart = calculateWeekOfYear(baseJdn, startOfYearJdn)
-                    weeksCount = calculateWeekOfYear(baseJdn + monthLength - 1, startOfYearJdn) -
+                    startingDayOfWeek = baseJdn.dayOfWeek
+                    weekOfYearStart = baseJdn.getWeekOfYear(startOfYearJdn)
+                    weeksCount = (baseJdn + monthLength - 1).getWeekOfYear(startOfYearJdn) -
                             weekOfYearStart + 1
-                    days = (baseJdn until baseJdn + monthLength).toList()
+                    days = baseJdn.createMonthDaysList(monthLength)
                     initializeMonthEvents()
                     notifyItemRangeChanged(0, daysAdapter.itemCount)
                 }
 
-                refresh = fun(isEventsModification: Boolean, jdn: Long) {
+                refresh = fun(isEventsModification: Boolean, jdn: Jdn?) {
                     if (viewPager.currentItem == position) {
-                        if (isEventsModification) {
+                        if (isEventsModification && jdn != null) {
                             daysAdapter.initializeMonthEvents()
                             onDayClicked(jdn)
                         } else {
                             onMonthSelected()
                         }
 
-                        val selectedDay = 1 + jdn - baseJdn
-                        if (jdn != -1L && jdn >= baseJdn && selectedDay <= monthLength)
-                            daysAdapter.selectDay(selectedDay.toInt())
-                        else daysAdapter.selectDay(-1)
+                        daysAdapter.selectDay(
+                            if (jdn != null && jdn >= baseJdn && jdn - baseJdn + 1 <= monthLength)
+                                jdn - baseJdn + 1
+                            else -1
+                        )
                     } else daysAdapter.selectDay(-1)
                 }
 

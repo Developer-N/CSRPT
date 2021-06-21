@@ -292,17 +292,14 @@ class SuraViewActivity : AppCompatActivity() {
 
     private fun startPlayerService() {
         val isRunning = getSystemService<ActivityManager>()?.let { am ->
-            try {
+            runCatching {
                 am.getRunningServices(Integer.MAX_VALUE).any {
                     QuranPlayer::class.java.name == it.service.className
                 }
-            } catch (ex: Exception) {
-                Log.e(TAG, "start quran player error : ", ex)
-                false
-            }
+            }.onFailure(logException).getOrDefault(false)
         } ?: false
         if (!isRunning) {
-            try {
+            runCatching {
                 val qIntent = Intent(this, QuranPlayer::class.java).apply {
                     putExtra("sura", sura)
                     putExtra("aya", 1)
@@ -310,9 +307,7 @@ class SuraViewActivity : AppCompatActivity() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     ContextCompat.startForegroundService(this, qIntent)
                 startService(qIntent)
-            } catch (ex: Exception) {
-                Log.e(TAG, "start quran player error : ", ex)
-            }
+            }.onFailure(logException)
         }
     }
 

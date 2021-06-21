@@ -1,19 +1,17 @@
 package ir.namoo.religiousprayers.ui.calendar.dialogs
 
-import android.app.Dialog
-import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
-import android.text.Spanned
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.edit
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.PREF_SHIFT_WORK_RECURS
@@ -23,236 +21,212 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.ShiftWorkItemBinding
 import ir.namoo.religiousprayers.databinding.ShiftWorkSettingsBinding
 import ir.namoo.religiousprayers.entities.ShiftWorkRecord
-import ir.namoo.religiousprayers.ui.MainActivity
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.ui.calendar.CalendarFragmentDirections
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.applyAppLanguage
+import ir.namoo.religiousprayers.utils.formatDate
+import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.layoutInflater
+import ir.namoo.religiousprayers.utils.mainCalendar
+import ir.namoo.religiousprayers.utils.putJdn
+import ir.namoo.religiousprayers.utils.shiftWorkRecurs
+import ir.namoo.religiousprayers.utils.shiftWorkStartingJdn
+import ir.namoo.religiousprayers.utils.shiftWorkTitles
+import ir.namoo.religiousprayers.utils.shiftWorks
+import ir.namoo.religiousprayers.utils.spacedComma
+import ir.namoo.religiousprayers.utils.updateStoredPreference
 
-class ShiftWorkDialog : AppCompatDialogFragment() {
+fun Fragment.showShiftWorkDialog(selectedJdn: Jdn) {
+    val context = context ?: return
 
-    private var jdn: Long = -1L
-    private var selectedJdn: Long = -1L
+    applyAppLanguage(context)
+    updateStoredPreference(context)
 
-    var onSuccess = fun() {}
+    var isFirstSetup = false
+    var jdn = shiftWorkStartingJdn ?: run {
+        isFirstSetup = true
+        selectedJdn
+    }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val mainActivity = activity as MainActivity
+    val binding = ShiftWorkSettingsBinding.inflate(context.layoutInflater, null, false)
+    binding.recyclerView.layoutManager = LinearLayoutManager(context)
+    val shiftWorkItemAdapter = ShiftWorkItemsAdapter(
+        if (shiftWorks.isEmpty()) listOf(ShiftWorkRecord("d", 0)) else shiftWorks,
+        binding
+    )
+    binding.recyclerView.adapter = shiftWorkItemAdapter
 
-        applyAppLanguage(mainActivity)
-        updateStoredPreference(mainActivity)
+    binding.description.text = getString(
+        if (isFirstSetup) R.string.shift_work_starting_date
+        else R.string.shift_work_starting_date_edit
+    ).format(formatDate(jdn.toCalendar(mainCalendar)))
 
-        selectedJdn = arguments?.getLong(BUNDLE_KEY, -1L) ?: -1L
-        if (selectedJdn == -1L) selectedJdn = getTodayJdn()
+    binding.resetLink.setOnClickListener {
+        jdn = selectedJdn
+        binding.description.text = getString(R.string.shift_work_starting_date)
+            .format(formatDate(jdn.toCalendar(mainCalendar)))
+        shiftWorkItemAdapter.reset()
+    }
+    binding.recurs.isChecked = shiftWorkRecurs
+    binding.root.onCheckIsTextEditor()
 
-        jdn = shiftWorkStartingJdn
-        var isFirstSetup = false
-        if (jdn == -1L) {
-            isFirstSetup = true
-            jdn = selectedJdn
-        }
-
-        val binding = ShiftWorkSettingsBinding.inflate(mainActivity.layoutInflater, null, false)
-        binding.recyclerView.layoutManager = LinearLayoutManager(mainActivity)
-        val shiftWorkItemAdapter = ItemsAdapter(
-            if (shiftWorks.isEmpty()) listOf(ShiftWorkRecord("d", 0)) else shiftWorks,
-            binding
-        )
-        binding.recyclerView.adapter = shiftWorkItemAdapter
-
-        binding.description.text = getString(
-            if (isFirstSetup) R.string.shift_work_starting_date
-            else R.string.shift_work_starting_date_edit
-        ).format(formatDate(getDateFromJdnOfCalendar(mainCalendar, jdn)))
-
-        binding.resetLink.setOnClickListener {
-            jdn = selectedJdn
-            binding.description.text = getString(R.string.shift_work_starting_date)
-                .format(formatDate(getDateFromJdnOfCalendar(mainCalendar, jdn)))
-            shiftWorkItemAdapter.reset()
-        }
-        binding.recurs.isChecked = shiftWorkRecurs
-
-        return AlertDialog.Builder(mainActivity)
-            .setView(binding.root)
-            .setTitle(null)
-            .setPositiveButton(R.string.accept) { _, _ ->
-                val result = shiftWorkItemAdapter.rows.filter { it.length != 0 }.joinToString(",") {
-                    "${it.type.replace("=", "").replace(",", "")}=${it.length}"
-                }
-
-                mainActivity.appPrefs.edit {
-                    putLong(PREF_SHIFT_WORK_STARTING_JDN, if (result.isEmpty()) -1 else jdn)
-                    putString(PREF_SHIFT_WORK_SETTING, result)
-                    putBoolean(PREF_SHIFT_WORK_RECURS, binding.recurs.isChecked)
-                }
-
-                onSuccess()
+    AlertDialog.Builder(context)
+        .setView(binding.root)
+        .setTitle(null)
+        .setPositiveButton(R.string.accept) { _, _ ->
+            val result = shiftWorkItemAdapter.rows.filter { it.length != 0 }.joinToString(",") {
+                "${it.type.replace("=", "").replace(",", "")}=${it.length}"
             }
-            .setCancelable(true)
-            .setNegativeButton(R.string.cancel, null)
-            .create()
-    }
 
-    override fun onResume() {
-        super.onResume()
+            this.context?.appPrefs?.edit {
+                putJdn(PREF_SHIFT_WORK_STARTING_JDN, if (result.isEmpty()) null else jdn)
+                putString(PREF_SHIFT_WORK_SETTING, result)
+                putBoolean(PREF_SHIFT_WORK_RECURS, binding.recurs.isChecked)
+            }
 
-        // https://stackoverflow.com/a/46248107
-        dialog?.window?.run {
-            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            updateStoredPreference(this.context ?: return@setPositiveButton)
+            findNavController().navigate(CalendarFragmentDirections.navigateToSelf())
         }
+        .setCancelable(true)
+        .setNegativeButton(R.string.cancel, null)
+        .show()
+}
+
+private class ShiftWorkItemsAdapter(
+    var rows: List<ShiftWorkRecord>, private val binding: ShiftWorkSettingsBinding
+) : RecyclerView.Adapter<ShiftWorkItemsAdapter.ViewHolder>() {
+
+    init {
+        updateShiftWorkResult()
     }
 
-    private inner class ItemsAdapter(
-        var rows: List<ShiftWorkRecord> = emptyList(),
-        private val binding: ShiftWorkSettingsBinding
-    ) : RecyclerView.Adapter<ItemsAdapter.ViewHolder>() {
+    private fun shiftWorkKeyToString(type: String): String = shiftWorkTitles[type] ?: type
+
+    private fun updateShiftWorkResult() =
+        rows.filter { it.length != 0 }.joinToString(spacedComma) {
+            binding.root.context.getString(R.string.shift_work_record_title)
+                .format(formatNumber(it.length), shiftWorkKeyToString(it.type))
+        }.also {
+            binding.result.text = it
+            binding.result.isVisible = it.isNotEmpty()
+        }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
+        ShiftWorkItemBinding.inflate(parent.context.layoutInflater, parent, false)
+    )
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
+
+    override fun getItemCount(): Int = rows.size + 1
+
+    fun reset() {
+        rows = listOf(ShiftWorkRecord("d", 0))
+        notifyDataSetChanged()
+        updateShiftWorkResult()
+    }
+
+    private inner class ViewHolder(private val binding: ShiftWorkItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         init {
-            updateShiftWorkResult()
-        }
+            val context = binding.root.context
 
-        fun shiftWorkKeyToString(type: String): String = shiftWorkTitles[type] ?: type
+            binding.lengthSpinner.adapter = ArrayAdapter(
+                context,
+                android.R.layout.simple_spinner_dropdown_item,
+                (0..14).map {
+                    if (it == 0) binding.root.context.getString(R.string.shift_work_days_head)
+                    else formatNumber(it)
+                }
+            )
 
-        private fun updateShiftWorkResult() =
-            rows.filter { it.length != 0 }.joinToString(spacedComma) {
-                getString(R.string.shift_work_record_title)
-                    .format(formatNumber(it.length), shiftWorkKeyToString(it.type))
-            }.also {
-                binding.result.text = it
-                binding.result.visibility = if (it.isEmpty()) View.GONE else View.VISIBLE
+            binding.typeAutoCompleteTextView.also { editText ->
+                val adapter = ArrayAdapter(
+                    context, android.R.layout.simple_spinner_dropdown_item,
+                    editText.resources.getStringArray(R.array.shift_work)
+                )
+                editText.setAdapter(adapter)
+                editText.setOnClickListener {
+                    if (editText.text.toString().isNotEmpty()) adapter.filter.filter(null)
+                    editText.showDropDown()
+                }
+                editText.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>, view: View, position: Int, id: Long
+                    ) {
+                        rows = rows.mapIndexed { i, x ->
+                            if (i == bindingAdapterPosition)
+                                ShiftWorkRecord(editText.text.toString(), x.length)
+                            else x
+                        }
+                        updateShiftWorkResult()
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>) {}
+                }
+                editText.addTextChangedListener(object : TextWatcher {
+                    override fun afterTextChanged(s: Editable?) = Unit
+                    override fun beforeTextChanged(
+                        s: CharSequence?, start: Int, count: Int, after: Int
+                    ) = Unit
+
+                    override fun onTextChanged(
+                        s: CharSequence?, start: Int, before: Int, count: Int
+                    ) {
+                        rows = rows.mapIndexed { i, x ->
+                            if (i == bindingAdapterPosition)
+                                ShiftWorkRecord(editText.text.toString(), x.length)
+                            else x
+                        }
+                        updateShiftWorkResult()
+                    }
+                })
+                // Don't allow inserting '=' or ',' as they have special meaning
+                editText.filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
+                    if (Regex("[=,]") in (source ?: "")) "" else null
+                })
             }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-            ShiftWorkItemBinding.inflate(parent.context.layoutInflater, parent, false)
-        )
+            binding.remove.setOnClickListener { remove() }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
+            binding.lengthSpinner.onItemSelectedListener =
+                object : AdapterView.OnItemSelectedListener {
+                    override fun onNothingSelected(parent: AdapterView<*>) {}
+                    override fun onItemSelected(
+                        parent: AdapterView<*>, view: View, position: Int, id: Long
+                    ) {
+                        rows = rows.mapIndexed { i, x ->
+                            if (i == bindingAdapterPosition) ShiftWorkRecord(x.type, position)
+                            else x
+                        }
+                        updateShiftWorkResult()
+                    }
+                }
 
-        override fun getItemCount(): Int = rows.size + 1
+            binding.addButton.setOnClickListener {
+                rows = rows + ShiftWorkRecord("r", 0)
+                notifyDataSetChanged()
+                updateShiftWorkResult()
+            }
+        }
 
-        fun reset() {
-            rows = listOf(ShiftWorkRecord("d", 0))
+        fun remove() {
+            rows = rows.filterIndexed { i, _ -> i != bindingAdapterPosition }
             notifyDataSetChanged()
             updateShiftWorkResult()
         }
 
-        inner class ViewHolder(private val binding: ShiftWorkItemBinding) :
-            RecyclerView.ViewHolder(binding.root) {
-
-            init {
-                val context = binding.root.context
-
-                binding.lengthSpinner.adapter = ArrayAdapter(
-                    context,
-                    android.R.layout.simple_spinner_dropdown_item,
-                    (0..7).map {
-                        if (it == 0) getString(R.string.shift_work_days_head) else formatNumber(it)
-                    }
-                )
-
-                binding.typeAutoCompleteTextView.run {
-                    val adapter = ArrayAdapter(
-                        context,
-                        android.R.layout.simple_spinner_dropdown_item,
-                        resources.getStringArray(R.array.shift_work)
-                    )
-                    setAdapter(adapter)
-                    setOnClickListener {
-                        if (text.toString().isNotEmpty()) adapter.filter.filter(null)
-                        showDropDown()
-                    }
-                    onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                        override fun onItemSelected(
-                            parent: AdapterView<*>, view: View, position: Int, id: Long
-                        ) {
-                            rows = rows.mapIndexed { i, x ->
-                                if (i == adapterPosition) ShiftWorkRecord(
-                                    text.toString(), rows[adapterPosition].length
-                                )
-                                else x
-                            }
-                            updateShiftWorkResult()
-                        }
-
-                        override fun onNothingSelected(parent: AdapterView<*>) {}
-                    }
-                    addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {}
-
-                        override fun beforeTextChanged(
-                            s: CharSequence?, start: Int, count: Int, after: Int
-                        ) = Unit
-
-                        override fun onTextChanged(
-                            s: CharSequence?, start: Int, before: Int, count: Int
-                        ) {
-                            rows = rows.mapIndexed { i, x ->
-                                if (i == adapterPosition) ShiftWorkRecord(
-                                    text.toString(),
-                                    rows[adapterPosition].length
-                                )
-                                else x
-                            }
-                            updateShiftWorkResult()
-                        }
-                    })
-                    filters = arrayOf(object : InputFilter {
-                        override fun filter(
-                            source: CharSequence?, start: Int, end: Int,
-                            dest: Spanned?, dstart: Int, dend: Int
-                        ) = if ("[=,]".toRegex() in (source ?: "")) "" else null
-                    })
-                }
-
-                binding.remove.setOnClickListener { remove() }
-
-                binding.lengthSpinner.onItemSelectedListener =
-                    object : AdapterView.OnItemSelectedListener {
-                        override fun onNothingSelected(parent: AdapterView<*>) {}
-                        override fun onItemSelected(
-                            parent: AdapterView<*>, view: View, position: Int, id: Long
-                        ) {
-                            rows = rows.mapIndexed { i, x ->
-                                if (i == adapterPosition) ShiftWorkRecord(x.type, position)
-                                else x
-                            }
-                            updateShiftWorkResult()
-                        }
-                    }
-
-                binding.addButton.setOnClickListener {
-                    rows = rows + ShiftWorkRecord("r", 0)
-                    notifyDataSetChanged()
-                    updateShiftWorkResult()
-                }
-            }
-
-            fun remove() {
-                rows = rows.filterIndexed { i, _ -> i != adapterPosition }
-                notifyDataSetChanged()
-                updateShiftWorkResult()
-            }
-
-            fun bind(position: Int) = if (position < rows.size) {
-                val shiftWorkRecord = rows[position]
-                binding.rowNumber.text = "%s:".format(formatNumber(position + 1))
-                binding.lengthSpinner.setSelection(shiftWorkRecord.length)
-                binding.typeAutoCompleteTextView.setText(shiftWorkKeyToString(shiftWorkRecord.type))
-                binding.detail.visibility = View.VISIBLE
-                binding.addButton.visibility = View.GONE
-            } else {
-                binding.detail.visibility = View.GONE
-                binding.addButton.visibility = if (rows.size < 20) View.VISIBLE else View.GONE
-            }
-        }
-    }
-
-    companion object {
-        private const val BUNDLE_KEY = "jdn"
-
-        fun newInstance(jdn: Long) = ShiftWorkDialog().apply {
-            arguments = Bundle().apply {
-                putLong(BUNDLE_KEY, jdn)
-            }
+        fun bind(position: Int) = if (position < rows.size) {
+            val shiftWorkRecord = rows[position]
+            binding.rowNumber.text = "%s:".format(formatNumber(position + 1))
+            binding.lengthSpinner.setSelection(shiftWorkRecord.length)
+            binding.typeAutoCompleteTextView.setText(shiftWorkKeyToString(shiftWorkRecord.type))
+            binding.detail.isVisible = true
+            binding.addButton.isVisible = false
+        } else {
+            binding.detail.isVisible = false
+            binding.addButton.isVisible = rows.size < 20
         }
     }
 }

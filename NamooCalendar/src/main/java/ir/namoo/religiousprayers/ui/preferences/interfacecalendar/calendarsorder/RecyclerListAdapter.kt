@@ -16,38 +16,38 @@ package ir.namoo.religiousprayers.ui.preferences.interfacecalendar.calendarsorde
  * limitations under the License.
  */
 
-import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.MotionEvent
 import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.view.MotionEventCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.databinding.CalendarTypeItemBinding
-import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.layoutInflater
 
 class RecyclerListAdapter(
-    private val calendarPreferenceDialog: CalendarPreferenceDialog,
-    private var items: List<Item>
+    private var items: List<Item>, private val onAllItemsDismissed: () -> Unit
 ) : RecyclerView.Adapter<RecyclerListAdapter.ItemViewHolder>() {
 
     data class Item(val title: String, val key: String, val enabled: Boolean)
 
-    val result: List<String>
-        get() = items.filter { it.enabled }.map { it.key }
+    val result: List<String> get() = items.filter { it.enabled }.map { it.key }
+
+    val itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(this))
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ItemViewHolder(
         CalendarTypeItemBinding.inflate(parent.context.layoutInflater, parent, false)
     )
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         holder.bind(position)
 
         // Start a drag whenever the handle view it touched
         holder.itemView.setOnTouchListener { _, event ->
             if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
-                calendarPreferenceDialog.onStartDrag(holder)
+                itemTouchHelper.startDrag(holder)
             }
             false
         }
@@ -68,23 +68,7 @@ class RecyclerListAdapter(
     fun onItemDismissed(position: Int) {
         items = items.filterIndexed { i, _ -> i != position }
         notifyItemRemoved(position)
-
-        // Easter egg when all are swiped
-        if (items.isEmpty()) {
-            try {
-                val view =
-                    (calendarPreferenceDialog.activity as? MainActivity)?.coordinator ?: return
-                ValueAnimator.ofFloat(0f, 360f).apply {
-                    duration = 3000L
-                    interpolator = AccelerateDecelerateInterpolator()
-                    addUpdateListener { value -> view.rotation = value.animatedValue as Float }
-                }.start()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-
-            calendarPreferenceDialog.dismiss()
-        }
+        if (items.isEmpty()) onAllItemsDismissed()
     }
 
     override fun getItemCount(): Int = items.size

@@ -6,7 +6,9 @@ import android.annotation.SuppressLint
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -14,7 +16,6 @@ import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.religiousprayers.PREF_ENABLE_EDIT
@@ -24,8 +25,19 @@ import ir.namoo.religiousprayers.databinding.FragmentEditBinding
 import ir.namoo.religiousprayers.praytimes.EditedPrayTimesEntity
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import ir.namoo.religiousprayers.praytimes.PrayTimesDB
-import ir.namoo.religiousprayers.ui.MainActivity
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.addSummerTimes
+import ir.namoo.religiousprayers.utils.animateVisibility
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.calculationMethod
+import ir.namoo.religiousprayers.utils.fixTime
+import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.getCoordinate
+import ir.namoo.religiousprayers.utils.getDayMonthForDayOfYear
+import ir.namoo.religiousprayers.utils.getDayNum
+import ir.namoo.religiousprayers.utils.logException
+import ir.namoo.religiousprayers.utils.resolveColor
+import ir.namoo.religiousprayers.utils.setupUpNavigation
 
 class EditFragment : Fragment() {
 
@@ -37,13 +49,13 @@ class EditFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentEditBinding.inflate(inflater)
-        (activity as MainActivity).setTitleAndSubtitle(
-            getString(R.string.edit_times),
-            ""
-        )
-        setHasOptionsMenu(true)
+    ): View {
+        binding = FragmentEditBinding.inflate(inflater, container, false).apply {
+            appBar.toolbar.let {
+                it.setTitle(R.string.edit_times)
+                it.setupUpNavigation()
+            }
+        }
         binding.progressEdit.max = 366
         binding.progressEdit.progress = 0
         val enabled = requireActivity().appPrefs.getBoolean(PREF_ENABLE_EDIT, false)
@@ -64,6 +76,77 @@ class EditFragment : Fragment() {
             updateView()
         } else {
             enableDisableAllPickers(true)
+        }
+        binding.appBar.let {
+            it.toolbar.inflateMenu(R.menu.edit_menu)
+            it.toolbar.setOnMenuItemClickListener { clickedMenuItem ->
+                when (clickedMenuItem?.itemId) {
+                    R.id.mnu_edit_apply -> {
+                        if (!binding.switchEnableEdit.isChecked) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.edit_not_enabled),
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        } else {
+                            AlertDialog.Builder(requireContext()).apply {
+                                setTitle(getString(R.string.str_dialog_save))
+                                setMessage(getString(R.string.str_dialog_save_message))
+                                setPositiveButton(R.string.yes) { _, _ ->
+                                    updateDB()
+                                    Toast.makeText(
+                                        requireContext(),
+                                        getString(R.string.saved),
+                                        Toast.LENGTH_LONG
+                                    )
+                                        .show()
+                                }
+                                setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
+                                show()
+                            }
+                        }
+                    }
+                    R.id.mnu_edit_clear -> {
+                        if (!binding.switchEnableEdit.isChecked) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.edit_not_enabled),
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        } else {
+                            AlertDialog.Builder(requireContext()).apply {
+                                setTitle(getString(R.string.str_dialog_clear_edited_title))
+                                setMessage(getString(R.string.str_dialog_clear_edited_message))
+                                setPositiveButton(R.string.yes) { _, _ ->
+                                    PrayTimesDB.getInstance(requireContext().applicationContext)
+                                        .prayTimes()
+                                        .cleanEditedPrayTimes()
+                                    binding.switchEnableEdit.isChecked = false
+                                    requireActivity().onBackPressed()
+                                }
+                                setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
+                                show()
+                            }
+                        }
+                    }
+                    R.id.mnu_edit_group_change -> {
+                        if (!binding.switchEnableEdit.isChecked) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.edit_not_enabled),
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
+                        } else {
+                            val dialog = GEditDialog()
+                            dialog.show(childFragmentManager, GEditDialog::class.java.name)
+                        }
+                    }
+                }
+                true
+            }
         }
         return binding.root
     }// end of onCreateView
@@ -90,87 +173,6 @@ class EditFragment : Fragment() {
         DBCheckTask().execute()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        menu.clear()
-        inflater.inflate(R.menu.edit_menu, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.mnu_edit_apply -> {
-                if (!binding.switchEnableEdit.isChecked) {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.edit_not_enabled),
-                        Toast.LENGTH_LONG
-                    )
-                        .show()
-                    true
-                } else {
-                    AlertDialog.Builder(requireContext()).apply {
-                        setTitle(getString(R.string.str_dialog_save))
-                        setMessage(getString(R.string.str_dialog_save_message))
-                        setPositiveButton(R.string.yes) { _, _ ->
-                            updateDB()
-                            Toast.makeText(
-                                requireContext(),
-                                getString(R.string.saved),
-                                Toast.LENGTH_LONG
-                            )
-                                .show()
-                        }
-                        setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
-                        show()
-                    }
-                    true
-                }
-            }
-            R.id.mnu_edit_clear -> {
-                if (!binding.switchEnableEdit.isChecked) {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.edit_not_enabled),
-                        Toast.LENGTH_LONG
-                    )
-                        .show()
-                    true
-                } else {
-                    AlertDialog.Builder(requireContext()).apply {
-                        setTitle(getString(R.string.str_dialog_clear_edited_title))
-                        setMessage(getString(R.string.str_dialog_clear_edited_message))
-                        setPositiveButton(R.string.yes) { _, _ ->
-                            PrayTimesDB.getInstance(requireContext().applicationContext)
-                                .prayTimes()
-                                .cleanEditedPrayTimes()
-                            binding.switchEnableEdit.isChecked = false
-                            requireActivity().onBackPressed()
-                        }
-                        setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
-                        show()
-                    }
-                    true
-                }
-            }
-            R.id.mnu_edit_group_change -> {
-                if (!binding.switchEnableEdit.isChecked) {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.edit_not_enabled),
-                        Toast.LENGTH_LONG
-                    )
-                        .show()
-                    true
-                } else {
-                    val dialog = GEditDialog()
-                    dialog.show(childFragmentManager, GEditDialog::class.java.name)
-                    true
-                }
-            }
-            else -> false
-        }
-
-    }
 
     private fun initPickers() {
         binding.pickerDay.minValue = 1
@@ -239,7 +241,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardFajr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -251,7 +253,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardFajr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -267,7 +269,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardFajr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -279,7 +281,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardFajr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -297,7 +299,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardSunrise.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -309,7 +311,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardSunrise.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -326,7 +328,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardSunrise.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -338,7 +340,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardSunrise.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -355,7 +357,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -367,7 +369,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -383,7 +385,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -395,7 +397,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -412,7 +414,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardAsr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -424,7 +426,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardAsr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -440,7 +442,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardAsr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -452,7 +454,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardAsr.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -470,7 +472,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -482,7 +484,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -499,7 +501,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -511,7 +513,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -528,7 +530,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardIsha.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -540,7 +542,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardIsha.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -556,7 +558,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardIsha.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorWarning)
+                    requireContext().resolveColor(R.attr.colorWarning)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -568,7 +570,7 @@ class EditFragment : Fragment() {
                     "cardBackgroundColor",
                     ArgbEvaluator(),
                     binding.cardIsha.cardBackgroundColor.defaultColor,
-                    getColorFromAttr(requireContext(), R.attr.colorCard)
+                    requireContext().resolveColor(R.attr.colorCard)
                 ).apply {
                     duration = 300
                     interpolator = AccelerateDecelerateInterpolator()
@@ -675,7 +677,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardFajr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -687,7 +689,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardFajr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -699,7 +701,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardSunrise.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -711,7 +713,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardSunrise.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -723,7 +725,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -735,7 +737,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardDhuhr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -747,7 +749,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardAsr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -759,7 +761,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardAsr.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -771,7 +773,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -783,7 +785,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardMaghrib.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -795,7 +797,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardIsha.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorWarning)
+                                requireContext().resolveColor(R.attr.colorWarning)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -807,7 +809,7 @@ class EditFragment : Fragment() {
                                 "cardBackgroundColor",
                                 ArgbEvaluator(),
                                 binding.cardIsha.cardBackgroundColor.defaultColor,
-                                getColorFromAttr(requireContext(), R.attr.colorCard)
+                                requireContext().resolveColor(R.attr.colorCard)
                             ).apply {
                                 duration = 300
                                 interpolator = AccelerateDecelerateInterpolator()
@@ -833,7 +835,7 @@ class EditFragment : Fragment() {
 
         private fun firstDBCheck() {
             val db = PrayTimesDB.getInstance(requireContext().applicationContext)
-            try {
+            runCatching {
                 if (db.prayTimes().getAllEdited() == null || db.prayTimes().getAllEdited()!!
                         .isEmpty()
                 ) {
@@ -857,9 +859,7 @@ class EditFragment : Fragment() {
 
                     db.prayTimes().insertEdited(forEdits)
                 }
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
+            }.onFailure(logException)
             originalTimes = mutableListOf()
             db.prayTimes().getAllEdited()?.let {
                 originalTimes.addAll(it)
@@ -868,14 +868,14 @@ class EditFragment : Fragment() {
 
         private fun calAll(): List<PrayTimes> {
             val res = arrayListOf<PrayTimes>()
-            val temp = PersianDate(getTodayJdn())
+            val temp = PersianDate(Jdn.today.value)
             for (i in 1..366) {
                 val str = getDayMonthForDayOfYear(i)
                 val date =
                     PersianDate(temp.year, str.split("/")[0].toInt(), str.split("/")[1].toInt())
                 var time = PrayTimeProvider.calculate(
                     calculationMethod,
-                    CivilDate(date.toJdn()).toCalendar().time,
+                    Jdn(date.toJdn()),
                     getCoordinate(requireContext())!!,
                     requireContext()
                 )

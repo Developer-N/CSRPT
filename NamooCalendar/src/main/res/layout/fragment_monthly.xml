@@ -3,7 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground"
     android:orientation="vertical">
+
+    <include
+        android:id="@+id/app_bar"
+        layout="@layout/appbar" />
 
     <androidx.appcompat.widget.AppCompatSpinner
         android:id="@+id/spinner_monthly"

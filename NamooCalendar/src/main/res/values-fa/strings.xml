@@ -37,8 +37,8 @@
     <string name="language">زبان</string>
     <string name="version">نگارش: %1$s</string>
     <string name="athan_volume_summary">تنظیم حجم صدای اذان</string>
-    <string name="closeDrawer">بستن</string>
-    <string name="openDrawer">گشودن</string>
+    <string name="close">بستن</string>
+    <string name="open">گشودن</string>
     <string name="imsak">امساک</string>
     <string name="fajr">اذان صبح</string>
     <string name="dhuhr">اذان ظهر</string>
@@ -299,7 +299,6 @@
     <string name="play_athan">پخش اذان</string>
     <string name="reset_athan">اذان پیشفرض</string>
     <string name="ok">خیلی خب</string>
-    <string name="close">بستن</string>
     <string name="select_athan_file_title">اذان را انتخاب کنید</string>
     <string name="alarm_before">هشدار قبل از اذان</string>
     <string name="enable_alarm_before">فعال یا غیر فعال کردن</string>
@@ -315,6 +314,26 @@
 
 
     <string name="changes">
+        \n----تغییرات نسخه : 9.3.2021----\n
+1.	اضافه شدن امکان تغییر فونت برنامه\n
+2.	اضافه شدن امکان استفاده از صداهای زنگ گوشی برای هشدار قبل از اذان ها\n
+3.	بهبود تنظیمات اذان ها و امکان دسترسی با لمس طولانی آیکن بلندگوی هر اذان در صفحه ی اصلی\n
+4.	امکان تغییر دلخواه رنگ نوشته و پس زمینه ی ویجت اختصاصی مانند بقیه ویجت ها\n
+5.	رفع مشکل غیرفعال نشدن اذان و هشدار برای روز جاری\n
+6.	رفع مشکل و بهبودهای دیگر\n
+
+
+        \n----تغییرات نسخه : 9.2.1.2021----\n
+1.	رفع مشکل بسته شدن برنامه برای کاربرانی که از اوقات دقیق استفاده نمی کنند\n
+
+        \n----تغییرات نسخه : 9.2.2021----\n
+1.	اضافه شدن دوباره قابلیت فعال و غیر فعال کردن اوقات تابستانی\n
+2.	اضافه شدن ویجت سن\n
+3.	امکان حذف اذان های اضافه شده(اگر اذانی که قبلا اضافه کرده اید مشکل دارد آن را حذف و دوباره اضافه کنید)\n
+4.	بهبودهای ظاهری\n
+5.	رفع مشکل و باگ های گزارش شده\n
+
+
         \n----تغییرات نسخه : 9.1.2021----\n
 1.	تنظیمات بیشتر برای اذان ها(برای هر اذان جداگانه حالت پخش، اذان، هشدار قبل از اذان، میزان صدا و … انتخاب کنید.)\n
 2.	اضافه شدن پوسته های جدید(بنفش، بنفش تیره، نیلی، صورتی، سبز، قهوه ای و آبی)\n
@@ -537,5 +556,17 @@
     <string name="all_added_athans_will_cleared">آیا مطمئن هستید می خواهید همه ی اذان ها و هشدارهای اضافه شده را حذف کنید؟</string>
     <string name="done">انجام شد</string>
     <string name="summer_time">اوقات تابستانه</string>
+    <string name="fonts">فونت</string>
+    <string name="donate">پشتیبانی مالی</string>
+    <string name="donate_msg">
+        برای به روز آوری امکانات و توسعه حوزه کاری به همت و کمک مالی شما عزیزان نیاز داریم. با هر مقداری که می توانید ما را یاری دهید، قطعا نزد پروردگار خیلی ارزشمند است و ان شاءالله برای ما و شما صدقه جاریه خواهد بود.
+        \n
+        مبلغ جمع شده صرف ارائه ی خدمات دینی و کارهای مشابه خواهد شد.
+    </string>
+    <string name="custom_donate">مبلغ دلخواه</string>
+    <string name="_50">50 هزار</string>
+    <string name="_20">20 هزار</string>
+    <string name="_10">10 هزار</string>
+    <string name="_5">5 هزار </string>
 
 </resources>

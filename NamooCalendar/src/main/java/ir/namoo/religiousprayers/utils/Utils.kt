@@ -2,7 +2,6 @@ package ir.namoo.religiousprayers.utils
 
 import android.content.Context
 import android.media.AudioManager
-import android.util.Log
 import android.view.View
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.StringRes
@@ -16,12 +15,78 @@ import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.Coordinate
 import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.religiousprayers.*
-import ir.namoo.religiousprayers.entities.*
+import ir.namoo.religiousprayers.ARABIC_DIGITS
+import ir.namoo.religiousprayers.ARABIC_INDIC_DIGITS
+import ir.namoo.religiousprayers.AppLocalesData
+import ir.namoo.religiousprayers.DEFAULT_AM
+import ir.namoo.religiousprayers.DEFAULT_APP_LANGUAGE
+import ir.namoo.religiousprayers.DEFAULT_ASR_JURISTICS
+import ir.namoo.religiousprayers.DEFAULT_CITY
+import ir.namoo.religiousprayers.DEFAULT_IRAN_TIME
+import ir.namoo.religiousprayers.DEFAULT_NOTIFY_DATE
+import ir.namoo.religiousprayers.DEFAULT_NOTIFY_DATE_LOCK_SCREEN
+import ir.namoo.religiousprayers.DEFAULT_PERSIAN_DIGITS
+import ir.namoo.religiousprayers.DEFAULT_PM
+import ir.namoo.religiousprayers.DEFAULT_PRAY_TIME_METHOD
+import ir.namoo.religiousprayers.DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
+import ir.namoo.religiousprayers.DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+import ir.namoo.religiousprayers.DEFAULT_SELECTED_WIDGET_TEXT_COLOR
+import ir.namoo.religiousprayers.DEFAULT_WEEK_ENDS
+import ir.namoo.religiousprayers.DEFAULT_WEEK_START
+import ir.namoo.religiousprayers.DEFAULT_WIDGET_CLOCK
+import ir.namoo.religiousprayers.DEFAULT_WIDGET_IN_24
+import ir.namoo.religiousprayers.LANG_AR
+import ir.namoo.religiousprayers.LANG_AZB
+import ir.namoo.religiousprayers.LANG_CKB
+import ir.namoo.religiousprayers.LANG_EN_IR
+import ir.namoo.religiousprayers.LANG_EN_US
+import ir.namoo.religiousprayers.LANG_FA
+import ir.namoo.religiousprayers.LANG_FA_AF
+import ir.namoo.religiousprayers.LANG_GLK
+import ir.namoo.religiousprayers.LANG_JA
+import ir.namoo.religiousprayers.LANG_PS
+import ir.namoo.religiousprayers.LANG_UR
+import ir.namoo.religiousprayers.PERSIAN_DIGITS
+import ir.namoo.religiousprayers.PREF_APP_LANGUAGE
+import ir.namoo.religiousprayers.PREF_ASR_JURISTICS
+import ir.namoo.religiousprayers.PREF_ASTRONOMICAL_FEATURES
+import ir.namoo.religiousprayers.PREF_CENTER_ALIGN_WIDGETS
+import ir.namoo.religiousprayers.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
+import ir.namoo.religiousprayers.PREF_HOLIDAY_TYPES
+import ir.namoo.religiousprayers.PREF_IRAN_TIME
+import ir.namoo.religiousprayers.PREF_ISLAMIC_OFFSET
+import ir.namoo.religiousprayers.PREF_MAIN_CALENDAR_KEY
+import ir.namoo.religiousprayers.PREF_NOTIFY_DATE
+import ir.namoo.religiousprayers.PREF_NOTIFY_DATE_LOCK_SCREEN
+import ir.namoo.religiousprayers.PREF_NUMERICAL_DATE_PREFERRED
+import ir.namoo.religiousprayers.PREF_OTHER_CALENDARS_KEY
+import ir.namoo.religiousprayers.PREF_PERSIAN_DIGITS
+import ir.namoo.religiousprayers.PREF_PRAY_TIME_METHOD
+import ir.namoo.religiousprayers.PREF_SELECTED_LOCATION
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_BACKGROUND_COLOR
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_TEXT_COLOR
+import ir.namoo.religiousprayers.PREF_SHIFT_WORK_RECURS
+import ir.namoo.religiousprayers.PREF_SHIFT_WORK_SETTING
+import ir.namoo.religiousprayers.PREF_SHIFT_WORK_STARTING_JDN
+import ir.namoo.religiousprayers.PREF_SHOW_DEVICE_CALENDAR_EVENTS
+import ir.namoo.religiousprayers.PREF_SHOW_WEEK_OF_YEAR_NUMBER
+import ir.namoo.religiousprayers.PREF_WEEK_ENDS
+import ir.namoo.religiousprayers.PREF_WEEK_START
+import ir.namoo.religiousprayers.PREF_WHAT_TO_SHOW_WIDGETS
+import ir.namoo.religiousprayers.PREF_WIDGET_CLOCK
+import ir.namoo.religiousprayers.PREF_WIDGET_IN_24
+import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.entities.CalendarEvent
+import ir.namoo.religiousprayers.entities.CityItem
+import ir.namoo.religiousprayers.entities.ShiftWorkRecord
+import ir.namoo.religiousprayers.generated.EventType
+import ir.namoo.religiousprayers.generated.citiesStore
+import ir.namoo.religiousprayers.generated.gregorianEvents
+import ir.namoo.religiousprayers.generated.irregularRecurringEvents
+import ir.namoo.religiousprayers.generated.islamicEvents
+import ir.namoo.religiousprayers.generated.persianEvents
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 import java.util.*
 
 
@@ -32,14 +97,14 @@ const val TWO_SECONDS_IN_MILLIS = 2000L
 const val HALF_SECOND_IN_MILLIS = 500L
 const val DAY_IN_SECOND = 86400L
 const val DAY_IN_MILLIS = 86400000L
-val monthNameEmptyList = (1..12).map { "" }.toList()
+val monthNameEmptyList = List(12) { "" }
 var persianMonths = monthNameEmptyList
     private set
 var islamicMonths = monthNameEmptyList
     private set
 var gregorianMonths = monthNameEmptyList
     private set
-val weekDaysEmptyList = (1..7).map { "" }.toList()
+val weekDaysEmptyList = List(7) { "" }
 var weekDays = weekDaysEmptyList
     private set
 var weekDaysInitials = weekDaysEmptyList
@@ -68,6 +133,8 @@ var asrMethod = CalculationMethod.AsrJuristics.Standard
 var language = DEFAULT_APP_LANGUAGE
     private set
     get() = if (field.isEmpty()) DEFAULT_APP_LANGUAGE else field
+var easternGregorianArabicMonths = false
+    private set
 var coordinate: Coordinate? = null
     private set
 var mainCalendar = CalendarType.SHAMSI
@@ -106,7 +173,7 @@ var cachedCity: CityItem? = null
     private set
 var shiftWorkTitles = emptyMap<String, String>()
     private set
-var shiftWorkStartingJdn = -1L
+var shiftWorkStartingJdn: Jdn? = null
     private set
 var shiftWorkRecurs = true
     private set
@@ -120,13 +187,13 @@ var amString = DEFAULT_AM
     private set
 var pmString = DEFAULT_PM
     private set
-var latestToastShowTime: Long = -1
+var latestToastShowTime = -1L
     private set
 var numericalDatePreferred = false
     private set
 var calendarTypesTitleAbbr = emptyList<String>()
     private set
-var allEnabledEvents: List<CalendarEvent<*>> = emptyList()
+var allEnabledEvents = emptyList<CalendarEvent<*>>()
     private set
 var persianCalendarEvents: PersianCalendarEventsStore = emptyEventsStore()
     private set
@@ -165,180 +232,146 @@ fun loadEvents(context: Context) {
     IslamicDate.islamicOffset = context.appPrefs
         .getString(PREF_ISLAMIC_OFFSET, null)?.toIntOrNull() ?: 0
 
-    try {
-        val allEnabledEventsBuilder = ArrayList<CalendarEvent<*>>()
+    val allEnabledEventsBuilder = ArrayList<CalendarEvent<*>>()
 
-        val allTheEvents = JSONObject(readRawResource(context, R.raw.events))
+    persianCalendarEvents = persianEvents.mapNotNull {
+        var holiday = it.isHoliday
+        var addOrNot = false
 
-        // https://stackoverflow.com/a/36188796
-        fun JSONObject.getArray(key: String): Sequence<JSONObject> =
-            getJSONArray(key).run { (0 until length()).asSequence().map { get(it) as JSONObject } }
+        if (holiday && iranHolidays && it.type == EventType.Iran) addOrNot = true
 
-        persianCalendarEvents = allTheEvents.getArray("Persian Calendar").mapNotNull {
-            val month = it.getInt("month")
-            val day = it.getInt("day")
-            val year = if (it.has("year")) it.getInt("year") else -1
-            var title = it.getString("title")
-            var holiday = it.getBoolean("holiday")
+        if (!iranHolidays && it.type == EventType.Iran) holiday = false
+        if (iranAncient && it.type == EventType.AncientIran) addOrNot = true
+        if (iranOthers && it.type == EventType.Iran) addOrNot = true
+        if (afghanistanHolidays && it.type == EventType.Afghanistan && holiday) addOrNot = true
+        if (!afghanistanHolidays && it.type == EventType.Afghanistan) holiday = false
+        if (afghanistanOthers && it.type == EventType.Afghanistan) addOrNot = true
 
-            var addOrNot = false
-            val type = it.getString("type")
+        if (addOrNot) {
+            var title = it.title + " ("
+            if (holiday && afghanistanHolidays && iranHolidays) {
+                if (it.type == EventType.Iran)
+                    title += "ایران، "
+                else if (it.type == EventType.Afghanistan)
+                    title += "افغانستان، "
+            }
+            title += formatDayAndMonth(it.day, persianMonths[it.month - 1]) + ")"
+            CalendarEvent.PersianCalendarEvent(
+                date = PersianDate(-1, it.month, it.day), title = title, isHoliday = holiday
+            )
+        } else null
+    }.also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
 
-            if (holiday && iranHolidays &&
-                (type == "Islamic Iran" || type == "Iran" || type == "Ancient Iran")
-            ) addOrNot = true
+    islamicCalendarEvents = islamicEvents.mapNotNull {
+        var holiday = it.isHoliday
+        var addOrNot = false
 
-            if (!iranHolidays && type == "Islamic Iran") holiday = false
-            if (iranIslamic && type == "Islamic Iran") addOrNot = true
-            if (iranAncient && type == "Ancient Iran") addOrNot = true
-            if (iranOthers && type == "Iran") addOrNot = true
-            if (afghanistanHolidays && type == "Afghanistan" && holiday) addOrNot = true
-            if (!afghanistanHolidays && type == "Afghanistan") holiday = false
-            if (afghanistanOthers && type == "Afghanistan") addOrNot = true
+        if (afghanistanHolidays && holiday && it.type == EventType.Afghanistan) addOrNot = true
+        if (!afghanistanHolidays && it.type == EventType.Afghanistan) holiday = false
+        if (afghanistanOthers && it.type == EventType.Afghanistan) addOrNot = true
+        if (iranHolidays && holiday && it.type == EventType.Iran) addOrNot = true
+        if (!iranHolidays && it.type == EventType.Iran) holiday = false
+        if (iranIslamic && it.type == EventType.Iran) addOrNot = true
+        if (iranOthers && it.type == EventType.Iran) addOrNot = true
 
-            if (addOrNot) {
-                title += " ("
-                if (holiday && afghanistanHolidays && iranHolidays) {
-                    if (type == "Islamic Iran" || type == "Iran")
-                        title += "ایران، "
-                    else if (type == "Afghanistan")
-                        title += "افغانستان، "
-                }
-                title += formatDayAndMonth(day, persianMonths[month - 1]) + ")"
-                PersianCalendarEvent(PersianDate(year, month, day), title, holiday)
-            } else null
-        }.toList().also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
+        if (addOrNot) {
+            var title = it.title + " ("
+            if (holiday && afghanistanHolidays && iranHolidays) {
+                if (it.type == EventType.Iran)
+                    title += "ایران، "
+                else if (it.type == EventType.Afghanistan)
+                    title += "افغانستان، "
+            }
+            title += formatDayAndMonth(it.day, islamicMonths[it.month - 1]) + ")"
 
-        islamicCalendarEvents = allTheEvents.getArray("Hijri Calendar").mapNotNull {
-            val month = it.getInt("month")
-            val day = it.getInt("day")
-            var title = it.getString("title")
-            var holiday = it.getBoolean("holiday")
-
-            var addOrNot = false
-            val type = it.getString("type")
-
-            if (afghanistanHolidays && holiday && type == "Islamic Afghanistan") addOrNot = true
-            if (!afghanistanHolidays && type == "Islamic Afghanistan") holiday = false
-            if (afghanistanOthers && type == "Islamic Afghanistan") addOrNot = true
-            if (iranHolidays && holiday && type == "Islamic Iran") addOrNot = true
-            if (!iranHolidays && type == "Islamic Iran") holiday = false
-            if (iranIslamic && type == "Islamic Iran") addOrNot = true
-            if (iranOthers && type == "Islamic Iran") addOrNot = true
-
-            if (addOrNot) {
-                title += " ("
-                if (holiday && afghanistanHolidays && iranHolidays) {
-                    if (type == "Islamic Iran")
-                        title += "ایران، "
-                    else if (type == "Islamic Afghanistan")
-                        title += "افغانستان، "
-                }
-                title += formatDayAndMonth(day, islamicMonths[month - 1]) + ")"
-
-                IslamicCalendarEvent(IslamicDate(-1, month, day), title, holiday)
-            } else null
-        }.toList().also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
-
-        gregorianCalendarEvents = allTheEvents.getArray("Gregorian Calendar").mapNotNull {
-            val month = it.getInt("month")
-            val day = it.getInt("day")
-            val title = it.getString("title")
-
-            val isOfficialInIran = it.has("type") && it.getString("type") == "Iran"
-            val isOfficialInAfghanistan = it.has("type") && it.getString("type") == "Afghanistan"
-            val isOthers = !isOfficialInIran && !isOfficialInAfghanistan
-
-            if (
-                (isOthers && international) ||
-                (isOfficialInIran && (iranOthers || international)) ||
-                (isOfficialInAfghanistan && afghanistanOthers)
-            ) {
-                GregorianCalendarEvent(
-                    CivilDate(-1, month, day),
-                    title + " (" + formatDayAndMonth(day, gregorianMonths[month - 1]) + ")",
-                    false
+            CalendarEvent.IslamicCalendarEvent(
+                date = IslamicDate(-1, it.month, it.day), title = title, isHoliday = holiday
+            )
+        } else null
+    }.let { list ->
+        list + irregularRecurringEvents.filter { event ->
+            (iranIslamic || iranOthers) && event["calendar"] == "Hijri" && event["type"] == "Iran"
+        }.flatMap { event ->
+            // This adds only this, next and previous years' events, hacky but enough for now
+            if (event["rule"] != "last day of week") return@flatMap emptyList()
+            val dayOfWeek = event["day of week"]?.toIntOrNull() ?: return@flatMap emptyList()
+            val month = event["month"]?.toIntOrNull() ?: return@flatMap emptyList()
+            val title = event["title"] ?: return@flatMap emptyList()
+            val year = Jdn.today.toIslamicCalendar().year
+            (-1..1).map { offset ->
+                val day = CalendarType.ISLAMIC.getLastDayOfWeek(year + offset, month, dayOfWeek)
+                CalendarEvent.IslamicCalendarEvent(
+                    date = IslamicDate(year + offset, month, day), title = title, isHoliday = false
                 )
-            } else null
-        }.toList().also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
+            }
+        }
+    }.also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
 
-        allEnabledEvents = allEnabledEventsBuilder
-    } catch (e: JSONException) {
-        e.printStackTrace()
-    }
+    gregorianCalendarEvents = gregorianEvents.mapNotNull {
+        val isOfficialInIran = it.type == EventType.Iran
+        val isOfficialInAfghanistan = it.type == EventType.Afghanistan
+        val isOthers = !isOfficialInIran && !isOfficialInAfghanistan
+
+        if (
+            (isOthers && international) ||
+            (isOfficialInIran && (iranOthers || international)) ||
+            (isOfficialInAfghanistan && afghanistanOthers)
+        ) {
+            CalendarEvent.GregorianCalendarEvent(
+                date = CivilDate(-1, it.month, it.day),
+                title = "${it.title} (${formatDayAndMonth(it.day, gregorianMonths[it.month - 1])})",
+                isHoliday = false
+            )
+        } else null
+    }.also { allEnabledEventsBuilder.addAll(it) }.toEventsStore()
+
+    allEnabledEvents = allEnabledEventsBuilder
 }
 
-fun loadLanguageResource(context: Context) = try {
-    val messages = JSONObject(
-        readRawResource(
-            context, when (language) {
-                LANG_FA_AF -> R.raw.faaf
-                LANG_PS -> R.raw.ps
-                LANG_GLK -> R.raw.glk
-                LANG_AR -> R.raw.ar
-                LANG_CKB -> R.raw.ckb
-                LANG_UR -> R.raw.ur
-                LANG_EN_US -> R.raw.en
-                LANG_JA -> R.raw.ja
-                LANG_AZB -> R.raw.azb
-                LANG_EN_IR, LANG_FA -> R.raw.fa
-                else -> R.raw.fa
-            }
-        )
-    )
-
-    fun JSONArray.toStringList() = (0 until length()).map { getString(it) }
-
-    persianMonths = messages.getJSONArray("PersianCalendarMonths").toStringList()
-    islamicMonths = messages.getJSONArray("IslamicCalendarMonths").toStringList()
-    gregorianMonths = messages.getJSONArray("GregorianCalendarMonths").toStringList()
-    weekDays = messages.getJSONArray("WeekDays").toStringList()
-    weekDaysInitials = when (language) {
-        LANG_AR, LANG_AZB -> messages.getJSONArray("WeekDaysInitials").toStringList()
-        else -> weekDays.map { it.substring(0, 1) }
-    }
-} catch (e: JSONException) {
-    e.printStackTrace()
-    persianMonths = monthNameEmptyList
-    islamicMonths = monthNameEmptyList
-    gregorianMonths = monthNameEmptyList
-    weekDays = weekDaysEmptyList
-    weekDaysInitials = weekDaysEmptyList
+fun loadLanguageResource() {
+    val language = language
+    persianMonths = AppLocalesData.getPersianCalendarMonths(language)
+    islamicMonths = AppLocalesData.getIslamicCalendarMonths(language)
+    gregorianMonths =
+        AppLocalesData.getGregorianCalendarMonths(language, easternGregorianArabicMonths)
+    weekDays = AppLocalesData.getWeekDays(language)
+    weekDaysInitials = AppLocalesData.getWeekDaysInitials(language)
 }
 
 @StringRes
 fun getNextOwghatTimeId(current: Clock, dateHasChanged: Boolean, context: Context): Int {
     coordinate ?: return 0
+
     if (prayTimes == null || dateHasChanged)
-        prayTimes = PrayTimeProvider.calculate(calculationMethod, Date(), coordinate!!, context)
+        prayTimes = PrayTimeProvider.calculate(calculationMethod, Jdn.today, coordinate!!, context)
     val now = current.toInt()
-    return prayTimes?.run {
-        if (now < fajrClock.toInt()) 0
-        else if (now >= fajrClock.toInt() && now < sunriseClock.toInt()) 1
-        else if (now >= sunriseClock.toInt() && now < dhuhrClock.toInt()) 2
-        else if (now >= dhuhrClock.toInt() && now < asrClock.toInt()) 3
-        else if (now >= asrClock.toInt() && now < maghribClock.toInt()) 4
-        else if (now >= maghribClock.toInt() && now < ishaClock.toInt()) 5
+    return prayTimes?.let {
+        if (now < it.fajrClock.toInt()) 0
+        else if (now >= it.fajrClock.toInt() && now < it.sunriseClock.toInt()) 1
+        else if (now >= it.sunriseClock.toInt() && now < it.dhuhrClock.toInt()) 2
+        else if (now >= it.dhuhrClock.toInt() && now < it.asrClock.toInt()) 3
+        else if (now >= it.asrClock.toInt() && now < it.maghribClock.toInt()) 4
+        else if (now >= it.maghribClock.toInt() && now < it.ishaClock.toInt()) 5
         else 6
     } ?: 0
 }
 
 fun getClockFromStringId(@StringRes stringId: Int, context: Context): Clock {
     if (prayTimes == null && coordinate != null)
-        prayTimes = PrayTimeProvider.calculate(calculationMethod, Date(), coordinate!!, context)
+        prayTimes = PrayTimeProvider.calculate(calculationMethod, Jdn.today, coordinate!!, context)
 
-    return prayTimes?.run {
+    return prayTimes?.let {
         when (stringId) {
-            R.string.imsak -> imsakClock
-            R.string.fajr -> fajrClock
-            R.string.sunrise -> sunriseClock
-            R.string.dhuhr -> dhuhrClock
-            R.string.asr -> asrClock
-            R.string.sunset -> sunsetClock
-            R.string.maghrib -> maghribClock
-            R.string.isha -> ishaClock
-            R.string.midnight -> midnightClock
-            else -> Clock.fromInt(0)
+            R.string.imsak -> it.imsakClock
+            R.string.fajr -> it.fajrClock
+            R.string.sunrise -> it.sunriseClock
+            R.string.dhuhr -> it.dhuhrClock
+            R.string.asr -> it.asrClock
+            R.string.sunset -> it.sunsetClock
+            R.string.maghrib -> it.maghribClock
+            R.string.isha -> it.ishaClock
+            R.string.midnight -> it.midnightClock
+            else -> null
         }
     } ?: Clock.fromInt(0)
 }
@@ -357,7 +390,7 @@ fun getClockStringFromId(stringId: Int): Int =
 
 fun getCityFromPreference(context: Context): CityItem? {
     val key = context.appPrefs.getString(PREF_SELECTED_LOCATION, null)
-        ?.takeUnless { it.isEmpty() || it == DEFAULT_CITY } ?: return null
+        ?.takeIf { it.isNotEmpty() && it != DEFAULT_CITY } ?: return null
 
     if (key == cachedCityKey)
         return cachedCity
@@ -365,7 +398,7 @@ fun getCityFromPreference(context: Context): CityItem? {
     // cache last query even if no city available under the key, useful in case invalid
     // value is somehow inserted on the preference
     cachedCityKey = key
-    cachedCity = getAllCities(context, false).firstOrNull { it.key == key }
+    cachedCity = citiesStore[key]
     return cachedCity
 }
 
@@ -383,20 +416,24 @@ fun a11yAnnounceAndClick(view: View, @StringRes resId: Int) {
     }
 }
 
-private fun getOnlyLanguage(string: String): String = string.replace("-(IR|AF|US)".toRegex(), "")
+private fun getOnlyLanguage(string: String): String = string.replace(Regex("-(IR|AF|US)"), "")
 
 fun updateStoredPreference(context: Context) {
     val prefs = context.appPrefs
 
     language = prefs.getString(PREF_APP_LANGUAGE, null) ?: DEFAULT_APP_LANGUAGE
+    easternGregorianArabicMonths = prefs.getBoolean(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false)
 
-    preferredDigits =
-        if (prefs.getBoolean(PREF_PERSIAN_DIGITS, DEFAULT_PERSIAN_DIGITS)) when (language) {
-            LANG_AR, LANG_CKB -> ARABIC_INDIC_DIGITS
-            LANG_JA -> CJK_DIGITS
-            else -> PERSIAN_DIGITS
+    preferredDigits = when (language) {
+        LANG_EN_US, LANG_JA -> ARABIC_DIGITS
+        else -> when {
+            prefs.getBoolean(PREF_PERSIAN_DIGITS, DEFAULT_PERSIAN_DIGITS) -> when (language) {
+                LANG_AR, LANG_CKB -> ARABIC_INDIC_DIGITS
+                else -> PERSIAN_DIGITS
+            }
+            else -> ARABIC_DIGITS
         }
-        else ARABIC_DIGITS
+    }
 
     clockIn24 = prefs.getBoolean(PREF_WIDGET_IN_24, DEFAULT_WIDGET_IN_24)
     isForcedIranTimeEnabled = prefs.getBoolean(PREF_IRAN_TIME, DEFAULT_IRAN_TIME)
@@ -406,7 +443,7 @@ fun updateStoredPreference(context: Context) {
     )
     isWidgetClock = prefs.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
     isNotifyDate = prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
-    isCenterAlignWidgets = prefs.getBoolean("CenterAlignWidgets", false)
+    isCenterAlignWidgets = prefs.getBoolean(PREF_CENTER_ALIGN_WIDGETS, false)
 
     selectedWidgetTextColor =
         prefs.getString(PREF_SELECTED_WIDGET_TEXT_COLOR, null)
@@ -430,35 +467,33 @@ fun updateStoredPreference(context: Context) {
         ) == DEFAULT_ASR_JURISTICS
     ) CalculationMethod.AsrJuristics.Standard else CalculationMethod.AsrJuristics.Hanafi
     coordinate = getCoordinate(context)
-    try {
+    runCatching {
         mainCalendar =
             CalendarType.valueOf(prefs.getString(PREF_MAIN_CALENDAR_KEY, null) ?: "SHAMSI")
 
         otherCalendars = (prefs.getString(PREF_OTHER_CALENDARS_KEY, null) ?: "GREGORIAN,ISLAMIC")
-            .splitIgnoreEmpty(",").map(CalendarType::valueOf).toList()
-    } catch (e: Exception) {
-        Log.e(TAG, "Fail on parsing calendar preference", e)
+            .splitIgnoreEmpty(",").map(CalendarType::valueOf)
+    }.onFailure(logException).getOrElse {
         mainCalendar = CalendarType.SHAMSI
         otherCalendars = listOf(CalendarType.GREGORIAN, CalendarType.ISLAMIC)
     }
 
     spacedComma = if (isNonArabicScriptSelected()) ", " else "، "
-    isShowWeekOfYearEnabled = prefs.getBoolean("showWeekOfYearNumber", false)
+    isShowWeekOfYearEnabled = prefs.getBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, false)
     weekStartOffset =
         (prefs.getString(PREF_WEEK_START, null) ?: DEFAULT_WEEK_START).toIntOrNull() ?: 0
 
     weekEnds = BooleanArray(7)
     (prefs.getStringSet(PREF_WEEK_ENDS, null) ?: DEFAULT_WEEK_ENDS)
-        .mapNotNull(String::toIntOrNull)
-        .forEach { weekEnds[it] = true }
+        .mapNotNull(String::toIntOrNull).forEach { weekEnds[it] = true }
 
     isShowDeviceCalendarEvents = prefs.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false)
     val resources = context.resources
-    whatToShowOnWidgets = prefs.getStringSet("what_to_show", null)
+    whatToShowOnWidgets = prefs.getStringSet(PREF_WHAT_TO_SHOW_WIDGETS, null)
         ?: resources.getStringArray(R.array.what_to_show_default).toSet()
 
-    isAstronomicalFeaturesEnabled = prefs.getBoolean("astronomicalFeatures", false)
-    numericalDatePreferred = prefs.getBoolean("numericalDatePreferred", false)
+    isAstronomicalFeaturesEnabled = prefs.getBoolean(PREF_ASTRONOMICAL_FEATURES, false)
+    numericalDatePreferred = prefs.getBoolean(PREF_NUMERICAL_DATE_PREFERRED, false)
 
     if (getOnlyLanguage(language) != resources.getString(R.string.code))
         applyAppLanguage(context)
@@ -470,8 +505,8 @@ fun updateStoredPreference(context: Context) {
         .map { it.splitIgnoreEmpty("=") }
         .filter { it.size == 2 }
         .map { ShiftWorkRecord(it[0], it[1].toIntOrNull() ?: 1) }
-    shiftWorkPeriod = shiftWorks.map { it.length }.sum()
-    shiftWorkStartingJdn = prefs.getLong(PREF_SHIFT_WORK_STARTING_JDN, -1)
+    shiftWorkPeriod = shiftWorks.sumOf { it.length }
+    shiftWorkStartingJdn = prefs.getJdnOrNull(PREF_SHIFT_WORK_STARTING_JDN)
     shiftWorkRecurs = prefs.getBoolean(PREF_SHIFT_WORK_RECURS, true)
     shiftWorkTitles = resources.getStringArray(R.array.shift_work_keys)
         .zip(resources.getStringArray(R.array.shift_work))
@@ -488,26 +523,20 @@ fun updateStoredPreference(context: Context) {
         }
     }
 
-    appTheme = try {
+    appTheme = runCatching {
         getThemeFromName(getThemeFromPreference(context, prefs))
-    } catch (e: Exception) {
-        e.printStackTrace()
-        R.style.LightTheme
-    }
+    }.onFailure(logException).getOrDefault(R.style.LightTheme)
 
     isTalkBackEnabled = context.getSystemService<AccessibilityManager>()?.run {
         isEnabled && isTouchExplorationEnabled
     } ?: false
 
     // https://stackoverflow.com/a/61599809
-    isHighTextContrastEnabled = try {
+    isHighTextContrastEnabled = runCatching {
         context.getSystemService<AccessibilityManager>()?.run {
             (javaClass.getMethod("isHighTextContrastEnabled").invoke(this) as? Boolean)
-        } ?: false
-    } catch (e: Exception) {
-        e.printStackTrace()
-        false
-    }
+        }
+    }.onFailure(logException).getOrNull() ?: false
 }
 
 // Context preferably should be activity context not application

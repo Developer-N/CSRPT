@@ -8,7 +8,6 @@ import android.os.Looper
 import android.text.Html
 import android.view.*
 import android.view.animation.AnimationUtils
-import android.view.animation.AnticipateInterpolator
 import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Filter
 import android.widget.Filterable
@@ -29,6 +28,7 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentSearchBinding
 import ir.namoo.religiousprayers.databinding.ItemSearchBinding
 import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.logException
 
 class SearchFragment : Fragment() {
 
@@ -109,17 +109,15 @@ class SearchFragment : Fragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder =
             SearchViewHolder(ItemSearchBinding.inflate(layoutInflater, parent, false))
 
-        override fun getItemCount(): Int = try {
+        override fun getItemCount(): Int = runCatching {
             filteredVerses!!.size
-        } catch (ex: Exception) {
-            0
-        }
+        }.onFailure(logException).getOrDefault(0)
 
         override fun getItemViewType(position: Int): Int = position
 
         override fun onBindViewHolder(holder: SearchViewHolder, position: Int) {
             filteredVerses?.let {
-                holder.bind(it[position],position)
+                holder.bind(it[position], position)
             }
         }
 

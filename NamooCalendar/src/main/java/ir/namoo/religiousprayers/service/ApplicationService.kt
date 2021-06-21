@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import android.os.IBinder
 import android.util.Log
 import ir.namoo.religiousprayers.utils.loadApp
+import ir.namoo.religiousprayers.utils.logException
 import ir.namoo.religiousprayers.utils.update
 import ir.namoo.religiousprayers.utils.updateStoredPreference
 import java.lang.ref.WeakReference
@@ -41,13 +42,7 @@ class ApplicationService : Service() {
     }
 
     override fun onDestroy() {
-        try {
-            unregisterReceiver(receiver)
-        } catch (e: Exception) {
-            // Really can't do much here
-            e.printStackTrace()
-        }
-
+        runCatching { unregisterReceiver(receiver) }.onFailure(logException)
         super.onDestroy()
     }
 

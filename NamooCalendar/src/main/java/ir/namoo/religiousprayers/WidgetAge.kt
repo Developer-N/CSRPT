@@ -7,9 +7,11 @@ import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.content.edit
+import ir.namoo.religiousprayers.utils.Jdn
 import ir.namoo.religiousprayers.utils.appPrefs
 import ir.namoo.religiousprayers.utils.applyAppLanguage
 import ir.namoo.religiousprayers.utils.calculateDaysDifference
+import ir.namoo.religiousprayers.utils.getJdnOrNull
 
 class AgeWidget : AppWidgetProvider() {
     override fun onUpdate(
@@ -43,7 +45,8 @@ internal fun updateAgeWidget(
 
     val sharedPreferences = context.appPrefs
 
-    val jdn = sharedPreferences.getLong(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId, 0)
+    val jdn =
+        sharedPreferences.getJdnOrNull(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId) ?: Jdn.today
     val views = RemoteViews(context.packageName, R.layout.widget_age)
     views.setTextViewText(
         R.id.textview_age_widget,

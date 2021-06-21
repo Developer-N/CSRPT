@@ -7,16 +7,14 @@ import android.content.pm.PackageManager
 import android.provider.CalendarContract
 import android.text.Html
 import androidx.core.app.ActivityCompat
+import io.github.persiancalendar.calendar.AbstractDate
+import io.github.persiancalendar.calendar.CivilDate
+import io.github.persiancalendar.calendar.IslamicDate
+import io.github.persiancalendar.praytimes.Clock
 import ir.namoo.religiousprayers.LANG_CKB
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.RLM
 import ir.namoo.religiousprayers.entities.CalendarEvent
-import ir.namoo.religiousprayers.entities.DeviceCalendarEvent
-import io.github.persiancalendar.calendar.AbstractDate
-import io.github.persiancalendar.calendar.CivilDate
-import io.github.persiancalendar.calendar.IslamicDate
-import io.github.persiancalendar.calendar.PersianDate
-import io.github.persiancalendar.praytimes.Clock
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -29,41 +27,35 @@ fun revertWeekStartOffsetFromWeekDay(dayOfWeek: Int): Int = (dayOfWeek + weekSta
 
 fun getWeekDayName(position: Int) = weekDays[position % 7]
 
-// 0 means Saturday on it, see #test_day_of_week_from_jdn() in the test suit
-fun getDayOfWeekFromJdn(jdn: Long): Int = ((jdn + 2L) % 7L).toInt()
-
 fun formatDayAndMonth(day: Int, month: String): String = when (language) {
     LANG_CKB -> "%sی %s"
     else -> "%s %s"
 }.format(formatNumber(day), month)
 
-fun dayTitleSummary(date: AbstractDate, calendarNameInLinear: Boolean = true): String =
-    getWeekDayName(date) + spacedComma + formatDate(date, calendarNameInLinear)
-
-fun CivilDate.toCalendar(): Calendar =
-    Calendar.getInstance().apply { set(year, month - 1, dayOfMonth) }
+fun dayTitleSummary(jdn: Jdn, date: AbstractDate, calendarNameInLinear: Boolean = true): String =
+    jdn.dayOfWeekName + spacedComma + formatDate(date, calendarNameInLinear)
 
 fun getInitialOfWeekDay(position: Int) = weekDaysInitials[position % 7]
 
-fun getWeekDayName(date: AbstractDate) = weekDays[getDayOfWeekFromJdn(date.toJdn())]
-
-fun calculateWeekOfYear(jdn: Long, startOfYearJdn: Long): Int {
-    val dayOfYear = jdn - startOfYearJdn
-    return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(getDayOfWeekFromJdn(jdn))) / 7.0).toInt()
+// 1 means Saturday on it and 7 means Friday
+fun CalendarType.getLastDayOfWeek(year: Int, month: Int, dayOfWeek: Int): Int {
+    val monthLength = this.getMonthLength(year, month)
+    val endOfMonthJdn = Jdn(this, year, month, monthLength)
+    return monthLength - ((endOfMonthJdn.value - dayOfWeek + 3L) % 7).toInt()
 }
 
-fun getMonthName(date: AbstractDate) = monthsNamesOfCalendar(date).getOrNull(date.month - 1) ?: ""
+val AbstractDate.monthName get() = this.calendarType.monthsNames.getOrNull(month - 1) ?: ""
 
-fun monthsNamesOfCalendar(date: AbstractDate): List<String> = when (date) {
-    is PersianDate -> persianMonths
-    is IslamicDate -> islamicMonths
-    else -> gregorianMonths
-}
+val CalendarType.monthsNames: List<String>
+    get() = when (this) {
+        CalendarType.SHAMSI -> persianMonths
+        CalendarType.ISLAMIC -> islamicMonths
+        CalendarType.GREGORIAN -> gregorianMonths
+    }
 
 // Generating text used in TalkBack / Voice Assistant
 fun getA11yDaySummary(
-    context: Context, jdn: Long, isToday: Boolean,
-    deviceCalendarEvents: DeviceCalendarEventsStore,
+    context: Context, jdn: Jdn, isToday: Boolean, deviceCalendarEvents: DeviceCalendarEventsStore,
     withZodiac: Boolean, withOtherCalendars: Boolean, withTitle: Boolean
 ): String {
     // It has some expensive calculations, lets not do that when not needed
@@ -76,11 +68,11 @@ fun getA11yDaySummary(
             .append("\n")
     }
 
-    val mainDate = getDateFromJdnOfCalendar(mainCalendar, jdn)
+    val mainDate = jdn.toCalendar(mainCalendar)
 
     if (withTitle) {
         result.append("\n")
-            .append(dayTitleSummary(mainDate))
+            .append(dayTitleSummary(jdn, mainDate))
     }
 
     val shift = getShiftWorkTitle(jdn, false)
@@ -99,13 +91,10 @@ fun getA11yDaySummary(
         }
     }
 
-    val events = getEvents(jdn, deviceCalendarEvents)
+    val events = jdn.getEvents(deviceCalendarEvents)
     val holidays = getEventsTitle(
         events, true,
-        compact = true,
-        showDeviceCalendarEvents = true,
-        insertRLM = false,
-        addIsHoliday = false
+        compact = true, showDeviceCalendarEvents = true, insertRLM = false, addIsHoliday = false
     )
     if (holidays.isNotEmpty()) {
         result.append("\n\n")
@@ -115,12 +104,8 @@ fun getA11yDaySummary(
     }
 
     val nonHolidays = getEventsTitle(
-        events,
-        holiday = false,
-        compact = true,
-        showDeviceCalendarEvents = true,
-        insertRLM = false,
-        addIsHoliday = false
+        events, false,
+        compact = true, showDeviceCalendarEvents = true, insertRLM = false, addIsHoliday = false
     )
     if (nonHolidays.isNotEmpty()) {
         result.append("\n\n")
@@ -130,11 +115,8 @@ fun getA11yDaySummary(
     }
 
     if (isShowWeekOfYearEnabled) {
-        val startOfYearJdn = getDateOfCalendar(
-            mainCalendar,
-            mainDate.year, 1, 1
-        ).toJdn()
-        val weekOfYearStart = calculateWeekOfYear(jdn, startOfYearJdn)
+        val startOfYearJdn = Jdn(mainCalendar, mainDate.year, 1, 1)
+        val weekOfYearStart = jdn.getWeekOfYear(startOfYearJdn)
         result.append("\n\n")
             .append(
                 context.getString(R.string.nth_week_of_year).format(formatNumber(weekOfYearStart))
@@ -151,20 +133,6 @@ fun getA11yDaySummary(
     return result.toString()
 }
 
-fun getEvents(jdn: Long, deviceCalendarEvents: DeviceCalendarEventsStore): List<CalendarEvent<*>> =
-    ArrayList<CalendarEvent<*>>().apply {
-        addAll(persianCalendarEvents.getEvents(PersianDate(jdn)))
-        val islamic = IslamicDate(jdn)
-        addAll(islamicCalendarEvents.getEvents(islamic))
-        // Special case Islamic events happening in 30th day but the month has only 29 days
-        if (islamic.dayOfMonth == 29 &&
-            getMonthLength(CalendarType.ISLAMIC, islamic.year, islamic.month) == 29
-        ) addAll(islamicCalendarEvents.getEvents(IslamicDate(islamic.year, islamic.month, 30)))
-        val civil = CivilDate(jdn)
-        addAll(deviceCalendarEvents.getEvents(civil)) // Passed by caller
-        addAll(gregorianCalendarEvents.getEvents(civil))
-    }
-
 private fun baseFormatClock(hour: Int, minute: Int): String =
     formatNumber("%02d:%02d".format(Locale.ENGLISH, hour, minute))
 
@@ -173,26 +141,28 @@ fun Clock.toFormattedString(forcedIn12: Boolean = false) =
     else baseFormatClock((hour % 12).takeIf { it != 0 } ?: 12, minute) + " " +
             if (hour >= 12) pmString else amString
 
-fun calendarToCivilDate(calendar: Calendar) = CivilDate(
-    calendar[Calendar.YEAR], calendar[Calendar.MONTH] + 1, calendar[Calendar.DAY_OF_MONTH]
+fun Calendar.toCivilDate() = CivilDate(
+    this[Calendar.YEAR], this[Calendar.MONTH] + 1, this[Calendar.DAY_OF_MONTH]
 )
 
-fun makeCalendarFromDate(date: Date, forceLocalTime: Boolean = false): Calendar =
-    Calendar.getInstance().apply {
-        if (!forceLocalTime && isForcedIranTimeEnabled)
-            timeZone = TimeZone.getTimeZone("Asia/Tehran")
-        time = date
-    }
+fun Date.toJavaCalendar(forceLocalTime: Boolean = false): Calendar = Calendar.getInstance().also {
+    if (!forceLocalTime && isForcedIranTimeEnabled)
+        it.timeZone = TimeZone.getTimeZone("Asia/Tehran")
+    it.time = this
+}
+
+fun Jdn.toJavaCalendar(): Calendar = Calendar.getInstance().also {
+    val gregorian = this.toGregorianCalendar()
+    it.set(gregorian.year, gregorian.month - 1, gregorian.dayOfMonth)
+}
 
 private fun readDeviceEvents(
-    context: Context,
-    startingDate: Calendar,
-    rangeInMillis: Long
-): List<DeviceCalendarEvent> = if (!isShowDeviceCalendarEvents ||
+    context: Context, startingDate: Calendar, rangeInMillis: Long
+): List<CalendarEvent.DeviceCalendarEvent> = if (!isShowDeviceCalendarEvents ||
     ActivityCompat.checkSelfPermission(
         context, Manifest.permission.READ_CALENDAR
     ) != PackageManager.PERMISSION_GRANTED
-) emptyList() else try {
+) emptyList() else runCatching {
     context.contentResolver.query(
         CalendarContract.Instances.CONTENT_URI.buildUpon().apply {
             ContentUris.appendId(this, startingDate.timeInMillis - DAY_IN_MILLIS)
@@ -214,10 +184,10 @@ private fun readDeviceEvents(
         }.map {
             val startDate = Date(it.getLong(3))
             val endDate = Date(it.getLong(4))
-            val startCalendar = makeCalendarFromDate(startDate)
-            val endCalendar = makeCalendarFromDate(endDate)
+            val startCalendar = startDate.toJavaCalendar()
+            val endCalendar = endDate.toJavaCalendar()
             fun Calendar.clock() = baseFormatClock(get(Calendar.HOUR_OF_DAY), get(Calendar.MINUTE))
-            DeviceCalendarEvent(
+            CalendarEvent.DeviceCalendarEvent(
                 id = it.getInt(0),
                 title =
                 if (it.getString(6) == "1") "\uD83D\uDCC5 ${it.getString(1) ?: ""}"
@@ -229,36 +199,28 @@ private fun readDeviceEvents(
                 description = it.getString(2) ?: "",
                 start = startDate,
                 end = endDate,
-                date = calendarToCivilDate(startCalendar),
+                date = startCalendar.toCivilDate(),
                 color = it.getString(7) ?: "",
                 isHoliday = false
             )
         }.take(1000 /* let's put some limitation */).toList()
-    } ?: emptyList()
-} catch (e: Exception) {
-    e.printStackTrace()
-    emptyList()
-}
+    }
+}.onFailure(logException).getOrNull() ?: emptyList()
 
-fun readDayDeviceEvents(ctx: Context, jdn: Long) = readDeviceEvents(
-    ctx,
-    CivilDate(if (jdn == -1L) getTodayJdn() else jdn).toCalendar(),
-    DAY_IN_MILLIS
+fun Jdn.readDayDeviceEvents(ctx: Context) = readDeviceEvents(
+    ctx, this.toJavaCalendar(), DAY_IN_MILLIS
 ).toEventsStore()
 
-fun readMonthDeviceEvents(ctx: Context, jdn: Long) = readDeviceEvents(
-    ctx,
-    CivilDate(jdn).toCalendar(),
-    32L * DAY_IN_MILLIS
+fun Jdn.readMonthDeviceEvents(ctx: Context) = readDeviceEvents(
+    ctx, this.toJavaCalendar(), 32L * DAY_IN_MILLIS
 ).toEventsStore()
 
 fun getAllEnabledAppointments(ctx: Context) = readDeviceEvents(
-    ctx,
-    Calendar.getInstance().apply { add(Calendar.YEAR, -1) },
+    ctx, Calendar.getInstance().apply { add(Calendar.YEAR, -1) },
     365L * 2L * DAY_IN_MILLIS // all the events of previous and next year from today
 )
 
-fun formatDeviceCalendarEventTitle(event: DeviceCalendarEvent): String =
+fun formatDeviceCalendarEventTitle(event: CalendarEvent.DeviceCalendarEvent): String =
     (event.title + if (event.description.isNotBlank())
         " (" + Html.fromHtml(event.description).toString().trim() + ")"
     else "").replace("\n", " ").trim()
@@ -270,11 +232,11 @@ fun getEventsTitle(
     dayEvents: List<CalendarEvent<*>>, holiday: Boolean, compact: Boolean,
     showDeviceCalendarEvents: Boolean, insertRLM: Boolean, addIsHoliday: Boolean
 ) = dayEvents
-    .filter { it.isHoliday == holiday && (it !is DeviceCalendarEvent || showDeviceCalendarEvents) }
+    .filter { it.isHoliday == holiday && (it !is CalendarEvent.DeviceCalendarEvent || showDeviceCalendarEvents) }
     .map {
         val title = when {
-            it is DeviceCalendarEvent && !compact -> formatDeviceCalendarEventTitle(it)
-            compact -> it.title.split(" (")[0]
+            it is CalendarEvent.DeviceCalendarEvent && !compact -> formatDeviceCalendarEventTitle(it)
+            compact -> it.title.replace(Regex(" \\([^)]+\\)$"), "")
             else -> it.title
         }
 
@@ -285,27 +247,23 @@ fun getEventsTitle(
     }
     .joinToString("\n") { if (insertRLM) RLM + it else it }
 
-fun getCalendarTypeFromDate(date: AbstractDate): CalendarType = when (date) {
-    is IslamicDate -> CalendarType.ISLAMIC
-    is CivilDate -> CalendarType.GREGORIAN
-    else -> CalendarType.SHAMSI
-}
-
-fun getDateOfCalendar(calendar: CalendarType, year: Int, month: Int, day: Int): AbstractDate =
-    when (calendar) {
-        CalendarType.ISLAMIC -> IslamicDate(year, month, day)
-        CalendarType.GREGORIAN -> CivilDate(year, month, day)
-        CalendarType.SHAMSI -> PersianDate(year, month, day)
+val AbstractDate.calendarType: CalendarType
+    get() = when (this) {
+        is IslamicDate -> CalendarType.ISLAMIC
+        is CivilDate -> CalendarType.GREGORIAN
+        else -> CalendarType.SHAMSI
     }
 
-fun getMonthLength(calendar: CalendarType, year: Int, month: Int): Int = (getDateOfCalendar(
-    calendar, if (month == 12) year + 1 else year, if (month == 12) 1 else month + 1, 1
-).toJdn() - getDateOfCalendar(
-    calendar, year, month, 1
-).toJdn()).toInt()
+fun CalendarType.getMonthLength(year: Int, month: Int): Int {
+    val nextMonthYear = if (month == 12) year + 1 else year
+    val nextMonthMonth = if (month == 12) 1 else month + 1
+    val nextMonthStartingDay = Jdn(this, nextMonthYear, nextMonthMonth, 1)
+    val thisMonthStartingDay = Jdn(this, year, month, 1)
+    return nextMonthStartingDay - thisMonthStartingDay
+}
 
-fun calculateDaysDifference(jdn: Long, messageToFormat: String): String {
-    val selectedDayAbsoluteDistance = abs(getTodayJdn() - jdn)
+fun calculateDaysDifference(jdn: Jdn, messageToFormat: String): String {
+    val selectedDayAbsoluteDistance = abs(Jdn.today - jdn)
     val civilBase = CivilDate(2000, 1, 1)
     val civilOffset = CivilDate(civilBase.toJdn() + selectedDayAbsoluteDistance)
     val yearDiff = civilOffset.year - 2000
@@ -313,10 +271,30 @@ fun calculateDaysDifference(jdn: Long, messageToFormat: String): String {
     val dayOfMonthDiff = civilOffset.dayOfMonth - 1
 
     val result = messageToFormat.format(
-        formatNumber(selectedDayAbsoluteDistance.toInt()),
-        formatNumber(yearDiff),
-        formatNumber(monthDiff),
-        formatNumber(dayOfMonthDiff)
+        formatNumber(selectedDayAbsoluteDistance), formatNumber(yearDiff),
+        formatNumber(monthDiff), formatNumber(dayOfMonthDiff)
     )
     return if (selectedDayAbsoluteDistance <= 31) result.split(" (")[0] else result
 }
+
+fun Jdn.getWeekOfYear(startOfYear: Jdn): Int {
+    val dayOfYear = this - startOfYear
+    return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(dayOfWeek)) / 7.0).toInt()
+}
+
+val Jdn.dayOfWeekName: String
+    get() = weekDays[dayOfWeek]
+
+fun Jdn.getEvents(deviceCalendarEvents: DeviceCalendarEventsStore): List<CalendarEvent<*>> =
+    ArrayList<CalendarEvent<*>>().apply {
+        addAll(persianCalendarEvents.getEvents(toPersianCalendar()))
+        val islamic = toIslamicCalendar()
+        addAll(islamicCalendarEvents.getEvents(islamic))
+        // Special case Islamic events happening in 30th day but the month has only 29 days
+        if (islamic.dayOfMonth == 29 &&
+            CalendarType.ISLAMIC.getMonthLength(islamic.year, islamic.month) == 29
+        ) addAll(islamicCalendarEvents.getEvents(IslamicDate(islamic.year, islamic.month, 30)))
+        val civil = toGregorianCalendar()
+        addAll(deviceCalendarEvents.getEvents(civil)) // Passed by caller
+        addAll(gregorianCalendarEvents.getEvents(civil))
+    }

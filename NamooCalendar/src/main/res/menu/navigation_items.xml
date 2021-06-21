@@ -47,6 +47,11 @@
         android:title="@string/about" />
 
     <item
+        android:id="@+id/donate"
+        android:icon="@drawable/ic_baseline_monetization_on_24"
+        android:title="@string/donate" />
+
+    <item
         android:id="@+id/exit"
         android:icon="@drawable/ic_cancel"
         android:title="@string/exit" />

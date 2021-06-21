@@ -3,9 +3,10 @@ package ir.namoo.religiousprayers.ui.calendar.calendarpager
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.R
-import ir.namoo.religiousprayers.entities.DeviceCalendarEvent
+import ir.namoo.religiousprayers.entities.CalendarEvent
 import ir.namoo.religiousprayers.utils.*
 
 class DaysAdapter internal constructor(
@@ -13,7 +14,7 @@ class DaysAdapter internal constructor(
     private val selectableItemBackground: Int
 ) : RecyclerView.Adapter<DaysAdapter.ViewHolder>() {
 
-    var days = emptyList<Long>()
+    var days = emptyList<Jdn>()
     var startingDayOfWeek: Int = 0
     var weekOfYearStart: Int = 0
     var weeksCount: Int = 0
@@ -27,7 +28,7 @@ class DaysAdapter internal constructor(
     private var selectedDay = -1
 
     fun initializeMonthEvents() {
-        if (isShowDeviceCalendarEvents) monthEvents = readMonthDeviceEvents(context, days[0])
+        if (isShowDeviceCalendarEvents) monthEvents = days[0].readMonthDeviceEvents(context)
     }
 
     internal fun selectDay(dayOfMonth: Int) {
@@ -58,7 +59,7 @@ class DaysAdapter internal constructor(
     // days of week * month view rows
     override fun getItemCount(): Int = 7 * if (isShowWeekOfYearEnabled) 8 else 7
 
-    val todayJdn = getTodayJdn()
+    val todayJdn = Jdn.today
 
     inner class ViewHolder(itemView: DayView) : RecyclerView.ViewHolder(itemView),
         View.OnClickListener, View.OnLongClickListener {
@@ -78,21 +79,15 @@ class DaysAdapter internal constructor(
             context.resources.getDimensionPixelSize(R.dimen.day_item_persian_digits_text_size)
 
         override fun onClick(v: View) {
-            val itemDayView = v as DayView
-            val jdn = itemDayView.jdn
-            if (jdn == -1L) return
-
+            val itemDayView = (v as? DayView).debugAssertNotNull ?: return
+            val jdn = itemDayView.jdn ?: return
             calendarPager.onDayClicked(jdn)
             this@DaysAdapter.selectDay(itemDayView.dayOfMonth)
         }
 
         override fun onLongClick(v: View): Boolean {
             onClick(v)
-
-            val itemDayView = v as DayView
-            val jdn = itemDayView.jdn
-            if (jdn == -1L) return false
-
+            val jdn = (v as? DayView).debugAssertNotNull?.jdn ?: return false
             calendarPager.onDayLongClicked(jdn)
             return false
         }
@@ -100,7 +95,7 @@ class DaysAdapter internal constructor(
         fun bind(position: Int) {
             var position = position
             val originalPosition = position
-            val dayView = itemView as DayView
+            val dayView = (itemView as? DayView).debugAssertNotNull ?: return
             if (isShowWeekOfYearEnabled) {
                 if (position % 8 == 0) {
                     val row = position / 8
@@ -114,7 +109,7 @@ class DaysAdapter internal constructor(
                             context.getString(R.string.nth_week_of_year).format(weekNumber)
                         else weekNumber
 
-                        dayView.visibility = View.VISIBLE
+                        dayView.isVisible = true
                     } else
                         setEmpty()
                     return
@@ -138,23 +133,22 @@ class DaysAdapter internal constructor(
                         .format(getWeekDayName(revertWeekStartOffsetFromWeekDay(position)))
                 else weekDayInitial
 
-                dayView.visibility = View.VISIBLE
+                dayView.isVisible = true
                 dayView.setBackgroundResource(0)
             } else {
                 if (position - 7 - fixedStartingDayOfWeek >= 0) {
                     val day = days[position - 7 - fixedStartingDayOfWeek]
-                    val events = getEvents(day, monthEvents)
+                    val events = day.getEvents(monthEvents)
 
                     val isToday = day == todayJdn
 
                     val dayOfMonth = position - 6 - fixedStartingDayOfWeek
-
                     dayView.setDayOfMonthItem(
                         isToday,
                         originalPosition == selectedDay,
                         events.isNotEmpty(),
-                        events.any { it is DeviceCalendarEvent },
-                        isWeekEnd(((startingDayOfWeek + day - days[0]) % 7).toInt()) || events.any { it.isHoliday },
+                        events.any { it is CalendarEvent.DeviceCalendarEvent },
+                        isWeekEnd((day + startingDayOfWeek - days[0]) % 7) || events.any { it.isHoliday },
                         if (isArabicDigit) arabicDigitsTextSize else persianDigitsTextSize,
                         day, dayOfMonth, getShiftWorkTitle(day, true)
                     )
@@ -164,7 +158,7 @@ class DaysAdapter internal constructor(
                         withZodiac = isToday, withOtherCalendars = false, withTitle = true
                     ) else dayOfMonth.toString()
 
-                    dayView.visibility = View.VISIBLE
+                    dayView.isVisible = true
                     dayView.setBackgroundResource(selectableItemBackground)
                 } else {
                     setEmpty()
@@ -173,7 +167,7 @@ class DaysAdapter internal constructor(
         }
 
         private fun setEmpty() {
-            itemView.visibility = View.GONE
+            itemView.isVisible = false
         }
     }
 }

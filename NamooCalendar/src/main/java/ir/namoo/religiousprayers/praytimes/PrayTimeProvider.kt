@@ -10,8 +10,14 @@ import ir.namoo.religiousprayers.DEFAULT_CITY
 import ir.namoo.religiousprayers.PREF_ENABLE_EDIT
 import ir.namoo.religiousprayers.PREF_GEOCODED_CITYNAME
 import ir.namoo.religiousprayers.PREF_SUMMER_TIME
-import ir.namoo.religiousprayers.utils.*
-import java.util.*
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.asrMethod
+import ir.namoo.religiousprayers.utils.deleteSummerTimes
+import ir.namoo.religiousprayers.utils.fixTime
+import ir.namoo.religiousprayers.utils.getDayNum
+import ir.namoo.religiousprayers.utils.toDouble
+import ir.namoo.religiousprayers.utils.toJavaCalendar
 
 class PrayTimeProvider {
 
@@ -19,14 +25,14 @@ class PrayTimeProvider {
         var ptFrom = 0// 0=generated 1=exact 2=edited
         fun calculate(
             method: CalculationMethod,
-            date: Date,
+            jdn: Jdn,
             coordinate: Coordinate,
             context: Context
         ): PrayTimes {
             ptFrom = 0
             PrayTimesCalculator.ASR_METHOD = asrMethod
-            var times = PrayTimesCalculator.calculate(method, date, coordinate)
-            val civilDate = calendarToCivilDate(makeCalendarFromDate(date))
+            var times = PrayTimesCalculator.calculate(method, jdn.toJavaCalendar().time, coordinate)
+            val civilDate = jdn.toGregorianCalendar()
             val pDate = PersianDate(civilDate.toJdn())
             val dayOfYear = getDayNum(pDate.month, pDate.dayOfMonth)
             times = when {
@@ -52,7 +58,7 @@ class PrayTimeProvider {
 
         fun calculate(
             method: CalculationMethod,
-            date: Date,
+            jdn: Jdn,
             coordinate: Coordinate,
             timeZone: Double,
             dst: Boolean,
@@ -60,8 +66,14 @@ class PrayTimeProvider {
         ): PrayTimes {
             ptFrom = 0
             PrayTimesCalculator.ASR_METHOD = asrMethod
-            var times = PrayTimesCalculator.calculate(method, date, coordinate, timeZone, dst)
-            val civilDate = calendarToCivilDate(makeCalendarFromDate(date))
+            var times = PrayTimesCalculator.calculate(
+                method,
+                jdn.toJavaCalendar().time,
+                coordinate,
+                timeZone,
+                dst
+            )
+            val civilDate = jdn.toGregorianCalendar()
             val pDate = PersianDate(civilDate.toJdn())
             val dayOfYear = getDayNum(pDate.month, pDate.dayOfMonth)
             times = when {
@@ -87,9 +99,10 @@ class PrayTimeProvider {
 
         private fun replaceTimes(times: PrayTimes?, dayOfYear: Int, context: Context): PrayTimes? {
             var res = times
-            val ts = DPTDB.getInstance(context.applicationContext).downloadedPrayTimes().getDownloadFor(
-                context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
-            )
+            val ts =
+                DPTDB.getInstance(context.applicationContext).downloadedPrayTimes().getDownloadFor(
+                    context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
+                )
             for (t in ts!!) {
                 if (t.dayNumber == dayOfYear) {
                     val strImsak = fixTime(t.fajr, -10)
@@ -152,9 +165,10 @@ class PrayTimeProvider {
         }
 
         private fun isExistExactTimes(context: Context): Boolean {
-            return DPTDB.getInstance(context.applicationContext).downloadedPrayTimes().getDownloadFor(
-                context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
-            )?.size == 366
+            return DPTDB.getInstance(context.applicationContext).downloadedPrayTimes()
+                .getDownloadFor(
+                    context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
+                )?.size == 366
         }
 
         private fun isExistAndEnabledEdit(context: Context): Boolean {

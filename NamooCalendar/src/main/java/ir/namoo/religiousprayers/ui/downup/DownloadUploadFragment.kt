@@ -29,7 +29,6 @@ import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.FragmentDownupBinding
 import ir.namoo.religiousprayers.databinding.ItemAvailableCityBinding
 import ir.namoo.religiousprayers.praytimes.*
-import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.*
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -55,13 +54,13 @@ class DownloadUploadFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentDownupBinding.inflate(inflater)
-        (requireActivity() as MainActivity).setTitleAndSubtitle(
-            getString(R.string.download_upload),
-            ""
-        )
-        setHasOptionsMenu(true)
+    ): View {
+        binding = FragmentDownupBinding.inflate(inflater, container, false).apply {
+            appBar.toolbar.let {
+                it.setTitle(R.string.download_upload)
+                it.setupUpNavigation()
+            }
+        }
         binding.recyclerViewAvailableCities.layoutManager = LinearLayoutManager(requireContext())
         binding.txtAvailableCitySearch.addTextChangedListener {
             (binding.recyclerViewAvailableCities.adapter as AAdapter).filter.filter(it)
@@ -78,28 +77,22 @@ class DownloadUploadFragment : Fragment() {
                 true
             } else false
         }
+        binding.appBar.let {
+            it.toolbar.inflateMenu(R.menu.ud_menu)
+            it.toolbar.setOnMenuItemClickListener { clickedMenuItem ->
+                when (clickedMenuItem?.itemId) {
+                    R.id.mnu_ud_refresh ->
+                        updateView()
+                }
+                true
+            }
+        }
         return binding.root
     }
 
     override fun onResume() {
         super.onResume()
         updateView()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        menu.clear()
-        inflater.inflate(R.menu.ud_menu, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.mnu_ud_refresh -> {
-                updateView()
-                true
-            }
-            else -> false
-        }
     }
 
     private fun updateView() {
@@ -129,10 +122,7 @@ class DownloadUploadFragment : Fragment() {
             existInServer -> {
                 binding.txtUploadTitle.text = getString(R.string.available_exact_times)
                 binding.txtUploadTitle.setTextColor(
-                    getColorFromAttr(
-                        requireContext(),
-                        R.attr.colorTextHoliday
-                    )
+                    requireContext().resolveColor(R.attr.colorTextHoliday)
                 )
                 binding.btnUpload.visibility = View.GONE
             }
@@ -165,8 +155,8 @@ class DownloadUploadFragment : Fragment() {
                     alert.setPositiveButton(
                         R.string.yes
                     ) { dialog: DialogInterface, _: Int ->
-                        try {
-                            val city: JSONCity = JSONCity()
+                        runCatching {
+                            val city = JSONCity()
                             city.name =
                                 requireContext().appPrefs.getString(PREF_GEOCODED_CITYNAME, "-")
                             city.lat =
@@ -219,8 +209,7 @@ class DownloadUploadFragment : Fragment() {
                                     resources.getText(R.string.send_times)
                                 )
                             )
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "send time error ", ex)
+                        }.onFailure(logException).getOrElse {
                             snackMessage(binding.btnUpload, getString(R.string.error_sending_times))
                         }
                         dialog.dismiss()
@@ -238,10 +227,7 @@ class DownloadUploadFragment : Fragment() {
             else -> { // no custom db
                 binding.txtUploadTitle.text = getString(R.string.edit_times_first)
                 binding.txtUploadTitle.setTextColor(
-                    getColorFromAttr(
-                        requireContext(),
-                        R.attr.colorTextHoliday
-                    )
+                    requireContext().resolveColor(R.attr.colorTextHoliday)
                 )
                 binding.btnUpload.isEnabled = false
             }
@@ -285,7 +271,7 @@ class DownloadUploadFragment : Fragment() {
     @SuppressLint("StaticFieldLeak")
     inner class GetListTask : AsyncTask<String, Int, String>() {
         override fun doInBackground(vararg params: String?): String {
-            try {
+            runCatching {
                 val httpclient: HttpClient = DefaultHttpClient()
                 val httpGet = HttpGet("http://www.namoo.ir/Home/GetAddedCities")
                 val response: HttpResponse = httpclient.execute(httpGet)
@@ -311,9 +297,7 @@ class DownloadUploadFragment : Fragment() {
                             .getCities()!!
                     )
                 } else return "error"
-            } catch (ex: Exception) {
-                Log.d(TAG, "Error get available cities!$ex")
-            }
+            }.onFailure(logException)
             return "OK"
         }
 
@@ -386,18 +370,12 @@ class DownloadUploadFragment : Fragment() {
                 binding.txtAvailableCityName.text = city.name
                 if (city.name == requireContext().appPrefs.getString(PREF_GEOCODED_CITYNAME, "")) {
                     binding.txtAvailableCityName.setTextColor(
-                        getColorFromAttr(
-                            requireContext(),
-                            R.attr.colorTextPrimary
-                        )
+                        requireContext().resolveColor(R.attr.colorTextPrimary)
                     )
                     prev = binding.txtAvailableCityName
                 }
                 binding.txtAvailableCityUpdateDate.text = formatDate(
-                    getDateFromJdnOfCalendar(
-                        mainCalendar,
-                        calendarToCivilDate(makeCalendarFromDate(Date(city.insertDate.toLong()))).toJdn()
-                    )
+                    Jdn(Date(city.insertDate.toLong()).toJavaCalendar().toCivilDate()).toCalendar(mainCalendar)
                 )
 
                 if (!downloadedList.find { it == city.name }.isNullOrEmpty())
@@ -419,12 +397,9 @@ class DownloadUploadFragment : Fragment() {
                         GetPrayTimeTask(position, city.id).execute()
                 }
                 if (filter.isNotEmpty()) {
-                    try {
+                    runCatching {
                         val fColorSpan = ForegroundColorSpan(
-                            getColorFromAttr(
-                                itemView.context,
-                                R.attr.colorHighlight
-                            )
+                            requireContext().resolveColor(R.attr.colorHighlight)
                         )
                         val spannableStringBuilder =
                             SpannableStringBuilder(binding.txtAvailableCityName.text)
@@ -435,10 +410,7 @@ class DownloadUploadFragment : Fragment() {
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                         binding.txtAvailableCityName.text = spannableStringBuilder
-                    } catch (ex: Exception) {
-
-                    }
-
+                    }.onFailure(logException)
                 }
             }
 
@@ -447,53 +419,49 @@ class DownloadUploadFragment : Fragment() {
                 AsyncTask<String, Int, String>() {
                 private val url = "http://www.namoo.ir/Home/GetPTime/"
 
-                override fun doInBackground(vararg params: String?): String {
-                    return try {
-                        val httpclient: HttpClient = DefaultHttpClient()
-                        val httpGet = HttpGet("$url$id")
-                        val response = httpclient.execute(httpGet)
-                        if (response.statusLine.statusCode == 200) {
-                            val serverResponse = EntityUtils.toString(response.entity)
-                            val outFile = File(
-                                "${getTimesDirectoryPath(requireContext())}/${
-                                    getCity(
-                                        serverResponse
-                                    )?.name ?: "_"
-                                }"
-                            )
-                            val outStream = FileOutputStream(outFile)
-                            if (!outFile.exists())
-                                outFile.createNewFile()
-                            outStream.write(serverResponse.toByteArray(charset = Charset.forName("UTF-8")))
-                            outStream.flush()
-                            outStream.close()
-                            val city = getCity(serverResponse)
-                            if (city != null) {
-                                requireContext().appPrefs.edit {
-                                    putString(PREF_GEOCODED_CITYNAME, city.name)
-                                    putString(PREF_LATITUDE, city.lat.toString())
-                                    putString(PREF_LONGITUDE, city.lng.toString())
-                                }
-                                val times = getPrayTimes(serverResponse)
-                                if (times != null) {
-                                    val db =
-                                        DPTDB.getInstance(requireContext().applicationContext)
-                                            .downloadedPrayTimes()
-                                    if (db.getDownloadFor(city.name!!) != null)
-                                        db.clearDownloadFor(city.name!!)
-                                    db.insertToDownload(getPrayTimes(serverResponse)!!)
-                                }
+                override fun doInBackground(vararg params: String?): String = runCatching {
+                    val httpclient: HttpClient = DefaultHttpClient()
+                    val httpGet = HttpGet("$url$id")
+                    val response = httpclient.execute(httpGet)
+                    if (response.statusLine.statusCode == 200) {
+                        val serverResponse = EntityUtils.toString(response.entity)
+                        val outFile = File(
+                            "${getTimesDirectoryPath(requireContext())}/${
+                                getCity(
+                                    serverResponse
+                                )?.name ?: "_"
+                            }"
+                        )
+                        val outStream = FileOutputStream(outFile)
+                        if (!outFile.exists())
+                            outFile.createNewFile()
+                        outStream.write(serverResponse.toByteArray(charset = Charset.forName("UTF-8")))
+                        outStream.flush()
+                        outStream.close()
+                        val city = getCity(serverResponse)
+                        if (city != null) {
+                            requireContext().appPrefs.edit {
+                                putString(PREF_GEOCODED_CITYNAME, city.name)
+                                putString(PREF_LATITUDE, city.lat.toString())
+                                putString(PREF_LONGITUDE, city.lng.toString())
                             }
-                            initUtils(requireContext().applicationContext)
-                            loadApp(requireContext())
-                            update(requireContext(), true)
-                            "OK"
-                        } else
-                            "Error"
-                    } catch (ex: Exception) {
-                        "Error get time : ${ex.message}"
-                    }
-                }
+                            val times = getPrayTimes(serverResponse)
+                            if (times != null) {
+                                val db =
+                                    DPTDB.getInstance(requireContext().applicationContext)
+                                        .downloadedPrayTimes()
+                                if (db.getDownloadFor(city.name!!) != null)
+                                    db.clearDownloadFor(city.name!!)
+                                db.insertToDownload(getPrayTimes(serverResponse)!!)
+                            }
+                        }
+                        initUtils(requireContext().applicationContext)
+                        loadApp(requireContext())
+                        update(requireContext(), true)
+                        "OK"
+                    } else
+                        "Error"
+                }.onFailure(logException).getOrDefault("Error get time")
 
                 override fun onPreExecute() {
                     super.onPreExecute()
@@ -508,7 +476,7 @@ class DownloadUploadFragment : Fragment() {
                         DPTDB.getInstance(requireContext()).downloadedPrayTimes().getCities()!!
                     )
                     notifyItemChanged(position)
-                    prev?.setTextColor(getColorFromAttr(requireContext(), R.attr.colorTextNormal))
+                    prev?.setTextColor(requireContext().resolveColor(R.attr.colorTextNormal))
                 }
             }
         }

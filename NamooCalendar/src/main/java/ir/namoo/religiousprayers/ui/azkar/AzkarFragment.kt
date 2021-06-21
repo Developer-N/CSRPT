@@ -14,13 +14,14 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,7 +29,6 @@ import androidx.recyclerview.widget.RecyclerView
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.AzkarItemBinding
 import ir.namoo.religiousprayers.databinding.FragmentAzkarBinding
-import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.*
 import net.lingala.zip4j.ZipFile
 import java.io.File
@@ -39,109 +39,94 @@ class AzkarFragment : Fragment() {
 
     private lateinit var binding: FragmentAzkarBinding
     private var isBookmarkShown = false
-    private var menu: Menu? = null
+    private lateinit var azkarDB: AzkarDB
+    private val azkarAdapter = AzkarAdapter()
 
     @SuppressLint("SdCardPath")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentAzkarBinding.inflate(inflater, container, false)
-        (activity as MainActivity).setTitleAndSubtitle(
-            getString(R.string.azkar),
-            getString(R.string.hisnulmuslim)
-        )
-        setHasOptionsMenu(true)
-        val db =
-            File("/data/data/" + requireContext().packageName.toString() + "/databases/azkar.db")
-        val dbExists: Boolean = db.exists()
-        if (!dbExists) {
-            FirstCreateDB(binding, requireContext(), activity as MainActivity).execute()
-        } else {
-            binding.recyclerAzkarTitle.layoutManager = LinearLayoutManager(context)
-            val adb = AzkarDB.getInstance(requireContext())
-            val titleList = adb.azkarsDAO().getAzkarTitleFor()
-            binding.recyclerAzkarTitle.adapter = AzkarAdapter(titleList, activity as MainActivity)
+    ): View {
+        binding = FragmentAzkarBinding.inflate(inflater, container, false).apply {
+            appBar.toolbar.let {
+                it.setTitle(R.string.azkar)
+                it.subtitle = getString(R.string.hisnulmuslim)
+                it.setupUpNavigation()
+            }
+        }
+        azkarDB = AzkarDB.getInstance(requireContext().applicationContext)
+        binding.recyclerAzkarTitle.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerAzkarTitle.adapter = azkarAdapter
+
+        if (!File("/data/data/" + requireContext().packageName.toString() + "/databases/azkar.db").exists())
+            FirstCreateDB().execute()
+        else
+            azkarAdapter.updateAzkars()
+
+        binding.appBar.let {
+            it.toolbar.inflateMenu(R.menu.azkar_menu)
+            it.toolbar.setOnMenuItemClickListener { clickedMenuItem ->
+                when (clickedMenuItem?.itemId) {
+                    R.id.mnu_azkar_fav -> {
+                        if (isBookmarkShown) {
+                            (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter("")
+                            clickedMenuItem.setIcon(R.drawable.ic_favorite_border)
+                        } else {
+                            (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter("fav1")
+                            clickedMenuItem.setIcon(R.drawable.ic_favorite)
+                        }
+                        isBookmarkShown = !isBookmarkShown
+                    }
+                }
+                true
+            }
+
+            val searchView: SearchView =
+                it.toolbar.menu.findItem(R.id.mnu_azkar_search).actionView as SearchView
+            val searchBar: LinearLayout = searchView.findViewById(R.id.search_bar)
+            searchBar.layoutTransition = LayoutTransition()
+            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    return false
+                }
+
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter(newText)
+                    return true
+                }
+            })
         }
 
         return binding.root
-
-    }
-
-    private fun unBookmark() {
-        if (isBookmarkShown && menu != null) {
-            (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter("")
-            menu!!.getItem(0).setIcon(R.drawable.ic_favorite_border)
-            isBookmarkShown = false
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        menu.clear()
-        inflater.inflate(R.menu.azkar_menu, menu)
-        this.menu = menu
-        val searchView: SearchView =
-            menu.findItem(R.id.mnu_azkar_search).actionView as SearchView
-        val searchBar: LinearLayout = searchView.findViewById(R.id.search_bar)
-        searchBar.layoutTransition = LayoutTransition()
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter(newText)
-                return true
-            }
-        })
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.mnu_azkar_fav -> {
-                if (isBookmarkShown) {
-                    (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter("")
-                    item.setIcon(R.drawable.ic_favorite_border)
-                } else {
-                    (binding.recyclerAzkarTitle.adapter as AzkarAdapter).filter.filter("fav1")
-                    item.setIcon(R.drawable.ic_favorite)
-                }
-                isBookmarkShown = !isBookmarkShown
-                return true
-            }
-            else -> super.onContextItemSelected(item)
-        }
-
     }
 
     //#################################################################
-    private class AzkarAdapter(
-        private val azkarTitels: List<AzkarTitels>,
-        private val activity: AppCompatActivity
-    ) :
+    private inner class AzkarAdapter :
         RecyclerView.Adapter<AzkarAdapter.AV>(), Filterable {
         private var filter: String
         private var filteredAzkarList: MutableList<AzkarTitels>
+        private var titleList: List<AzkarTitels>
 
         init {
             filter = ""
             filteredAzkarList = arrayListOf()
-            filteredAzkarList.addAll(azkarTitels)
+            titleList = arrayListOf()
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AV {
-            return AV(AzkarItemBinding.inflate(parent.context.layoutInflater, parent, false))
+        fun updateAzkars() {
+            titleList = azkarDB.azkarsDAO().getAzkarTitleFor()
+            filteredAzkarList.addAll(titleList)
+            notifyDataSetChanged()
         }
 
-        override fun getItemCount(): Int {
-            return filteredAzkarList.size
-        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AV =
+            AV(AzkarItemBinding.inflate(parent.context.layoutInflater, parent, false))
 
-        override fun getItemViewType(position: Int): Int {
-            return position
-        }
+
+        override fun getItemCount(): Int = filteredAzkarList.size
+
+        override fun getItemViewType(position: Int): Int = position
 
         override fun getFilter(): Filter {
             return object : Filter() {
@@ -151,15 +136,15 @@ class AzkarFragment : Fragment() {
                     ) {
                         filter = ""
                         filteredAzkarList.clear()
-                        filteredAzkarList.addAll(azkarTitels)
+                        filteredAzkarList.addAll(titleList)
                     } else if (constraint.toString() == "fav1") {
                         filter = ""
                         filteredAzkarList.clear()
-                        filteredAzkarList.addAll(azkarTitels.filter { it.fav == 1 })
+                        filteredAzkarList.addAll(titleList.filter { it.fav == 1 })
                     } else {
                         filter = constraint.toString()
                         filteredAzkarList.clear()
-                        for (t in azkarTitels) {
+                        for (t in titleList) {
                             if (language == "fa") {
                                 if ((!t.title_fa.isNullOrEmpty() && t.title_fa!!.contains(constraint.toString())))
                                     filteredAzkarList.add(t)
@@ -187,105 +172,107 @@ class AzkarFragment : Fragment() {
 
         @SuppressLint("PrivateResource")
         override fun onBindViewHolder(holder: AV, position: Int) {
-            holder.bind(position, filteredAzkarList[position], filter, activity)
-            holder.binding.btnAzkarFav.setOnClickListener {
-                it.startAnimation(
-                    AnimationUtils.loadAnimation(
-                        it.context,
-                        com.google.android.material.R.anim.abc_fade_in
-                    )
-                )
-                val title = filteredAzkarList[position]
-                title.fav = if (title.fav == 1) 0 else 1
-                AzkarDB.getInstance(it.context).azkarsDAO().updateAzkarTitle(title)
-                notifyItemChanged(position)
-            }
-            val scaleDownX = ObjectAnimator.ofFloat(holder.binding.root, "scaleX", 0.7f, 1f).apply {
-                duration = 250
-                interpolator = AnticipateOvershootInterpolator()
-            }
-            val scaleDownY = ObjectAnimator.ofFloat(holder.binding.root, "scaleY", 0.7f, 1f).apply {
-                duration = 250
-                interpolator = AnticipateOvershootInterpolator()
-            }
+            holder.bind(position, filteredAzkarList[position], filter)
+            val scaleDownX =
+                ObjectAnimator.ofFloat(holder.itemBinding.root, "scaleX", 0.7f, 1f).apply {
+                    duration = 250
+                    interpolator = AnticipateOvershootInterpolator()
+                }
+            val scaleDownY =
+                ObjectAnimator.ofFloat(holder.itemBinding.root, "scaleY", 0.7f, 1f).apply {
+                    duration = 250
+                    interpolator = AnticipateOvershootInterpolator()
+                }
             val scaleDown = AnimatorSet()
             scaleDown.play(scaleDownX).with(scaleDownY)
             scaleDownX.addUpdateListener {
-                holder.binding.root.invalidate()
+                holder.itemBinding.root.invalidate()
             }
             scaleDown.start()
         }
 
-        private class AV(val binding: AzkarItemBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        private inner class AV(val itemBinding: AzkarItemBinding) :
+            RecyclerView.ViewHolder(itemBinding.root) {
             init {
-                binding.txtAzkarTitle.typeface = getAppFont(binding.root.context)
+                itemBinding.txtAzkarTitle.typeface = getAppFont(itemBinding.root.context)
             }
 
             @SuppressLint("SetTextI18n")
             fun bind(
                 position: Int,
                 title: AzkarTitels,
-                filter: String,
-                activity: AppCompatActivity
+                filter: String
             ) {
-                binding.root.setOnClickListener {
+                itemBinding.root.setOnClickListener {
                     val intent = Intent(it.context.applicationContext, AzkarActivity::class.java)
                     intent.putExtra("id", title.id)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         val options = ActivityOptions
-                            .makeSceneTransitionAnimation(activity, binding.txtAzkarTitle, "azkarT")
+                            .makeSceneTransitionAnimation(
+                                activity,
+                                itemBinding.txtAzkarTitle,
+                                "azkarT"
+                            )
                         it.context.startActivity(intent, options.toBundle())
                     } else
                         it.context.startActivity(intent)
                 }
-                binding.txtAzkarTitle.text =
+                itemBinding.btnAzkarFav.setOnClickListener {
+                    it.startAnimation(
+                        AnimationUtils.loadAnimation(
+                            it.context,
+                            com.google.android.material.R.anim.abc_fade_in
+                        )
+                    )
+                    if (isBookmarkShown) {
+                        title.fav = 0
+                        filteredAzkarList.remove(title)
+                        notifyItemRemoved(position)
+                    } else {
+                        title.fav = if (title.fav == 1) 0 else 1
+                        notifyItemChanged(position)
+                    }
+                    azkarDB.azkarsDAO().updateAzkarTitle(title)
+
+                }
+                itemBinding.txtAzkarTitle.text =
                     when (language) {
                         "fa" -> "${formatNumber(position + 1)} : ${title.title_fa}"
                         "ckb" -> "${formatNumber(position + 1)} : ${title.title_ku}"
                         else -> "${formatNumber(position + 1)} : ${title.title_en}"
                     }
                 if (title.fav == 1)
-                    binding.btnAzkarFav.setImageResource(R.drawable.ic_favorite)
+                    itemBinding.btnAzkarFav.setImageResource(R.drawable.ic_favorite)
                 else
-                    binding.btnAzkarFav.setImageResource(R.drawable.ic_favorite_border)
+                    itemBinding.btnAzkarFav.setImageResource(R.drawable.ic_favorite_border)
                 if (filter.isNotEmpty()) {
-                    try {
+                    runCatching {
                         val fColorSpan = ForegroundColorSpan(
-                            getColorFromAttr(
-                                itemView.context,
-                                R.attr.colorHighlight
-                            )
+                                itemView.context.resolveColor( R.attr.colorHighlight)
                         )
                         val spannableStringBuilder =
-                            SpannableStringBuilder(binding.txtAzkarTitle.text)
+                            SpannableStringBuilder(itemBinding.txtAzkarTitle.text)
                         spannableStringBuilder.setSpan(
                             fColorSpan,
                             spannableStringBuilder.indexOf(filter),
                             spannableStringBuilder.indexOf(filter) + filter.length,
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
-                        binding.txtAzkarTitle.text = spannableStringBuilder
-                    } catch (ex: Exception) {
-
-                    }
+                        itemBinding.txtAzkarTitle.text = spannableStringBuilder
+                    }.onFailure(logException)
                 }
             }
         }
     }
 
-    private class FirstCreateDB(
-        val binding: FragmentAzkarBinding,
-        val context: Context,
-        val activity: AppCompatActivity
-    ) :
-        AsyncTask<String, String, String>() {
+    @SuppressLint("StaticFieldLeak")
+    private inner class FirstCreateDB() : AsyncTask<String, String, String>() {
 
         override fun doInBackground(vararg params: String?): String {
             var result = "Success!!!"
-            if (!copyDB(context))
+            if (!copyDB(requireContext()))
                 result = "DB Copy ERROR!!!"
-            if (!unzip(context))
+            if (!unzip(requireContext()))
                 result = "UNZIP Copy ERROR!!!"
             return result
         }
@@ -293,45 +280,32 @@ class AzkarFragment : Fragment() {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             Log.d("NAMOO", result!!)
-            binding.recyclerAzkarTitle.layoutManager = LinearLayoutManager(context)
-            val adb = AzkarDB.getInstance(context)
-            val titleList = adb.azkarsDAO().getAzkarTitleFor()
-            binding.recyclerAzkarTitle.adapter = AzkarAdapter(titleList, activity)
+            azkarAdapter.updateAzkars()
         }
 
         @SuppressLint("SdCardPath")
-        private fun copyDB(context: Context): Boolean {
-            return try {
-                val dis = File("/data/data/${context.packageName}/databases")
-                if (!dis.exists())
-                    dis.mkdir()
-                val outPutFile =
-                    File("/data/data/${context.packageName}/databases/azkar.zip")
-                val fileOutputStream = FileOutputStream(outPutFile)
-                context.assets.open("azkar.zip").copyTo(fileOutputStream)
-                fileOutputStream.close()
-                true
-            } catch (ex: Exception) {
-                Log.d("NAMOO", "Error copy db $ex")
-                ex.printStackTrace()
-                false
-            }
-        }
+        private fun copyDB(context: Context): Boolean = runCatching {
+            val dis = File("/data/data/${context.packageName}/databases")
+            if (!dis.exists())
+                dis.mkdir()
+            val outPutFile =
+                File("/data/data/${context.packageName}/databases/azkar.zip")
+            val fileOutputStream = FileOutputStream(outPutFile)
+            context.assets.open("azkar.zip").copyTo(fileOutputStream)
+            fileOutputStream.close()
+            true
+        }.onFailure(logException).getOrDefault(false)
+
 
         @SuppressLint("SdCardPath")
-        private fun unzip(context: Context): Boolean {
-            return try {
+        private fun unzip(context: Context): Boolean = runCatching {
 
-                ZipFile(
-                    "/data/data/${context.packageName}/databases/azkar.zip",
-                    ("@zKa6").toCharArray()
-                ).extractAll("/data/data/${context.packageName}/databases/")
-                File("/data/data/${context.packageName}/databases/azkar.zip").delete()
-                true
-            } catch (ex: Exception) {
-                Log.d("NAMOO", "Error unzip db $ex")
-                false
-            }
-        }
+            ZipFile(
+                "/data/data/${context.packageName}/databases/azkar.zip",
+                ("@zKa6").toCharArray()
+            ).extractAll("/data/data/${context.packageName}/databases/")
+            File("/data/data/${context.packageName}/databases/azkar.zip").delete()
+            true
+        }.onFailure(logException).getOrDefault(false)
     }
 }//end of class

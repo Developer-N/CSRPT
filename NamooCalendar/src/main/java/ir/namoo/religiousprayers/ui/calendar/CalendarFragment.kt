@@ -5,16 +5,14 @@ import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.AsyncTask
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.provider.CalendarContract
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -22,11 +20,11 @@ import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
-import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.SearchAutoComplete
 import androidx.browser.customtabs.CustomTabsIntent
@@ -34,15 +32,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
-import io.github.persiancalendar.calendar.CivilDate
-import io.github.persiancalendar.calendar.IslamicDate
-import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.Coordinate
 import ir.cepmuvakkit.times.posAlgo.SunMoonPosition
@@ -50,17 +47,53 @@ import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.EventsTabContentBinding
 import ir.namoo.religiousprayers.databinding.FragmentCalendarBinding
 import ir.namoo.religiousprayers.databinding.OwghatTabContentBinding
+import ir.namoo.religiousprayers.databinding.OwghatTabPlaceholderBinding
 import ir.namoo.religiousprayers.entities.CalendarEvent
-import ir.namoo.religiousprayers.entities.DeviceCalendarEvent
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
-import ir.namoo.religiousprayers.ui.MainActivity
-import ir.namoo.religiousprayers.ui.calendar.dialogs.MonthOverviewDialog
-import ir.namoo.religiousprayers.ui.calendar.dialogs.SelectDayDialog
-import ir.namoo.religiousprayers.ui.calendar.dialogs.ShiftWorkDialog
+import ir.namoo.religiousprayers.ui.DrawerHost
+import ir.namoo.religiousprayers.ui.calendar.dialogs.showDayPickerDialog
+import ir.namoo.religiousprayers.ui.calendar.dialogs.showMonthOverviewDialog
+import ir.namoo.religiousprayers.ui.calendar.dialogs.showShiftWorkDialog
+import ir.namoo.religiousprayers.ui.calendar.searchevent.SearchEventsAdapter
 import ir.namoo.religiousprayers.ui.calendar.times.TimeItemAdapter
 import ir.namoo.religiousprayers.ui.downup.CityList
+import ir.namoo.religiousprayers.ui.preferences.LOCATION_ATHAN_TAB
 import ir.namoo.religiousprayers.ui.shared.CalendarsView
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.allEnabledEvents
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.appPrefsLite
+import ir.namoo.religiousprayers.utils.askForCalendarPermission
+import ir.namoo.religiousprayers.utils.calculationMethod
+import ir.namoo.religiousprayers.utils.calendarType
+import ir.namoo.religiousprayers.utils.createBitmapFromView2
+import ir.namoo.religiousprayers.utils.dayTitleSummary
+import ir.namoo.religiousprayers.utils.emptyEventsStore
+import ir.namoo.religiousprayers.utils.formatDeviceCalendarEventTitle
+import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.getA11yDaySummary
+import ir.namoo.religiousprayers.utils.getAllEnabledAppointments
+import ir.namoo.religiousprayers.utils.getAppFont
+import ir.namoo.religiousprayers.utils.getCityName
+import ir.namoo.religiousprayers.utils.getCoordinate
+import ir.namoo.religiousprayers.utils.getEnabledCalendarTypes
+import ir.namoo.religiousprayers.utils.getEvents
+import ir.namoo.religiousprayers.utils.getEventsTitle
+import ir.namoo.religiousprayers.utils.getShiftWorkTitle
+import ir.namoo.religiousprayers.utils.isHighTextContrastEnabled
+import ir.namoo.religiousprayers.utils.isNetworkConnected
+import ir.namoo.religiousprayers.utils.isPackageInstalled
+import ir.namoo.religiousprayers.utils.isShowDeviceCalendarEvents
+import ir.namoo.religiousprayers.utils.isTalkBackEnabled
+import ir.namoo.religiousprayers.utils.language
+import ir.namoo.religiousprayers.utils.logException
+import ir.namoo.religiousprayers.utils.mainCalendar
+import ir.namoo.religiousprayers.utils.monthName
+import ir.namoo.religiousprayers.utils.readDayDeviceEvents
+import ir.namoo.religiousprayers.utils.resolveColor
+import ir.namoo.religiousprayers.utils.startAthan
+import ir.namoo.religiousprayers.utils.toFormattedString
+import ir.namoo.religiousprayers.utils.toJavaCalendar
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
@@ -86,8 +119,7 @@ class CalendarFragment : Fragment() {
     private var eventsBinding: EventsTabContentBinding? = null
     private var searchView: SearchView? = null
     private var todayButton: MenuItem? = null
-    private lateinit var mainActivity: MainActivity
-    private val initialDate = getTodayOfCalendar(mainCalendar)
+    private val initialDate = Jdn.today.toCalendar(mainCalendar)
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -100,49 +132,84 @@ class CalendarFragment : Fragment() {
         todayButton = null
     }
 
-    @SuppressLint("PrivateResource")
+    private val onBackPressedCloseSearchCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() {
+            searchView?.takeIf { !it.isIconified }?.onActionViewCollapsed()
+            isEnabled = false
+        }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity?.onBackPressedDispatcher?.addCallback(this, onBackPressedCloseSearchCallback)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View = FragmentCalendarBinding.inflate(inflater, container, false).apply {
-        mainBinding = this
+    ): View = FragmentCalendarBinding.inflate(inflater, container, false).also { binding ->
+        mainBinding = binding
 
-        mainActivity = activity as MainActivity
+        val coordinate = getCoordinate(inflater.context)
+        this.coordinate = coordinate
+
+        val appPrefs = inflater.context.appPrefs
+        val shouldDisableOwghat = coordinate == null &&
+                (appPrefs.getBoolean(PREF_DISABLE_OWGHAT, false) ||
+                        // Just to check the isn't new to the app, the value will be not null when
+                        // preferences is visited once.
+                        appPrefs.getString(PREF_THEME, null) != null ||
+                        // Really extra check as a user that has non default PREF_THEME sure went to
+                        // preferences once but when we decide to remove the above one we should
+                        // have this one at least as the placeholder isn't translated yet.
+                        language != LANG_FA)
 
         val tabs = listOf(
-
             // First tab
-            R.string.calendar to CalendarsView(mainActivity).apply {
-                calendarsView = this
-            },
+            R.string.calendar to CalendarsView(inflater.context).also { this.calendarsView = it },
 
             // Second tab
-            R.string.events to EventsTabContentBinding.inflate(inflater, container, false).apply {
-                eventsBinding = this
-
-                // Apply some animation, don't do the same for others tabs, it is problematic
-                eventsContent.layoutTransition = LayoutTransition().apply {
-                    enableTransitionType(LayoutTransition.CHANGING)
-                    setAnimateParentHierarchy(false)
+            R.string.events to EventsTabContentBinding.inflate(
+                inflater, container, false
+            ).also { eventsBinding ->
+                this.eventsBinding = eventsBinding
+                eventsBinding.eventsContent.layoutTransition = LayoutTransition().also {
+                    it.enableTransitionType(LayoutTransition.CHANGING)
+                    it.setAnimateParentHierarchy(false)
                 }
             }.root
-
-        ) + (getCoordinate(mainActivity)?.run {
-            coordinate = this
-
-            listOf(
-                // Optional third tab
-                R.string.owghat to OwghatTabContentBinding.inflate(
+        ) + if (shouldDisableOwghat) emptyList() else listOf(
+            // The optional third tab
+            R.string.owghat to if (coordinate == null) {
+                OwghatTabPlaceholderBinding.inflate(
                     inflater, container, false
-                ).apply {
-                    owghatBinding = this
+                ).also { owghatBindingPlaceholder ->
+                    owghatBindingPlaceholder.activate.setOnClickListener {
+                        findNavController().navigate(
+                            CalendarFragmentDirections.navigateToSettings(LOCATION_ATHAN_TAB)
+                        )
+                    }
+                    owghatBindingPlaceholder.discard.setOnClickListener {
+                        context?.appPrefs?.edit { putBoolean(PREF_DISABLE_OWGHAT, true) }
+                        findNavController().navigate(CalendarFragmentDirections.navigateToSelf())
+                    }
+                }.root
+            } else {
+                OwghatTabContentBinding.inflate(
+                    inflater, container, false
+                ).also { owghatBinding ->
+                    this.owghatBinding = owghatBinding
 
-                    root.setOnClickListener { onOwghatClick() }
+                    owghatBinding.root.setOnClickListener { onOwghatClick() }
 
-                    cityName.run {
+                    owghatBinding.cityName.run {
                         setOnClickListener { onOwghatClick() }
                         // Easter egg to test AthanActivity
                         setOnLongClickListener {
-                            startAthan(context, "ASR", "00:00")
+                            startAthan(
+                                requireContext(),
+                                listOf("FAJR", "DHUHR", "ASR", "MAGHRIB", "ISHA").random(),
+                                Clock(Calendar.getInstance(Locale.getDefault())).toFormattedString()
+                            )
                             true
                         }
                         var cityName = getCityName(context, false)
@@ -157,14 +224,14 @@ class CalendarFragment : Fragment() {
 
                         this.setTextColor(
                             when (PrayTimeProvider.ptFrom) {
-                                2 -> getColorFromAttr(requireContext(), R.attr.colorWarning)
-                                0 -> getColorFromAttr(requireContext(), R.attr.colorTextHoliday)
-                                else -> getColorFromAttr(requireContext(), R.attr.colorTextPrimary)
+                                2 -> requireContext().resolveColor(R.attr.colorWarning)
+                                0 -> requireContext().resolveColor(R.attr.colorTextHoliday)
+                                else -> requireContext().resolveColor(R.attr.colorTextPrimary)
                             }
                         )
 
                     }
-                    btnOwghatShare.setOnClickListener {
+                    owghatBinding.btnOwghatShare.setOnClickListener {
                         it.startAnimation(
                             AnimationUtils.loadAnimation(
                                 requireContext(),
@@ -173,8 +240,8 @@ class CalendarFragment : Fragment() {
                         )
                         shareOwghat()
                     }
-                    btnOwghatTackPhoto.setOnClickListener {
-                        try {
+                    owghatBinding.btnOwghatTackPhoto.setOnClickListener {
+                        runCatching {
                             MediaPlayer().apply {
                                 setDataSource(
                                     requireContext(),
@@ -186,26 +253,22 @@ class CalendarFragment : Fragment() {
                                 setVolume(6f, 6f)
                                 prepare()
                             }.start()
-                        } catch (ex: Exception) {
-                        }
-                        try {
-                            owghatBinding?.let {
+                        }.onFailure(logException)
+                        runCatching {
+                            owghatBinding.let {
 
-                                btnOwghatTackPhoto.visibility = View.GONE
-                                btnOwghatShare.visibility = View.GONE
-                                val prevBack = root.background
-                                root.setBackgroundColor(
-                                    getColorFromAttr(
-                                        requireContext(),
-                                        R.attr.colorBackground
-                                    )
+                                owghatBinding.btnOwghatTackPhoto.isVisible = false
+                                owghatBinding.btnOwghatShare.isVisible = false
+                                val prevBack = owghatBinding.root.background
+                                owghatBinding.root.setBackgroundColor(
+                                    requireContext().resolveColor(R.attr.colorBackground)
                                 )
 
-                                val photo = createBitmapFromView2(root)
+                                val photo = createBitmapFromView2(owghatBinding.root)
 
-                                btnOwghatTackPhoto.visibility = View.VISIBLE
-                                btnOwghatShare.visibility = View.VISIBLE
-                                root.background = prevBack
+                                owghatBinding.btnOwghatTackPhoto.isVisible = true
+                                owghatBinding.btnOwghatShare.isVisible = true
+                                owghatBinding.root.background = prevBack
 
                                 val path = requireContext().getExternalFilesDir("pic")?.absolutePath
                                     ?: ""
@@ -213,14 +276,12 @@ class CalendarFragment : Fragment() {
                                 if (!f.exists()) f.mkdirs()
 
                                 val file = File("$path/share.png")
-                                try {
+                                runCatching {
                                     val out = FileOutputStream(file)
                                     photo.compress(Bitmap.CompressFormat.PNG, 100, out)
                                     out.flush()
                                     out.close()
-                                } catch (ex: Exception) {
-                                    Log.e(TAG, "on share error ", ex)
-                                }
+                                }.onFailure(logException)
                                 val shareIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -234,17 +295,15 @@ class CalendarFragment : Fragment() {
                                     var text = "\uD83D\uDDD3 "
                                     text += formatNumber(
                                         dayTitleSummary(
-                                            getDateFromJdnOfCalendar(
-                                                mainCalendar,
-                                                selectedJdn
-                                            )
+                                            selectedJdn,
+                                            selectedJdn.toCalendar(mainCalendar)
                                         )
                                     )
-                                    if (selectedJdn != getTodayJdn()) {
+                                    if (selectedJdn != Jdn.today) {
                                         val times = PrayTimeProvider.calculate(
                                             calculationMethod,
-                                            CivilDate(selectedJdn).toCalendar().time,
-                                            coordinate!!,
+                                            selectedJdn,
+                                            coordinate,
                                             requireContext()
                                         )
                                         val length =
@@ -270,50 +329,50 @@ class CalendarFragment : Fragment() {
                                     )
                                 )
                             }
-                        } catch (e: Exception) {
-                        }
-
+                        }.onFailure(logException)
                     }
-                    timesRecyclerView.run {
+                    owghatBinding.timesRecyclerView.run {
                         layoutManager = LinearLayoutManager(requireContext())
 //                            FlexboxLayoutManager(context).apply {
 //                            flexWrap = FlexWrap.NOWRAP
 //                            justifyContent = JustifyContent.CENTER
 //                        }
-                        adapter = TimeItemAdapter()
+                        adapter = TimeItemAdapter(childFragmentManager)
                     }
                 }.root
-            )
-        } ?: emptyList())
+            }
+        )
 
         // tabs should fill their parent otherwise view pager can't handle it
-        tabs.forEach {
-            it.second.layoutParams = ViewGroup.LayoutParams(
+        tabs.forEach { (_: Int, tabView: ViewGroup) ->
+            tabView.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
 
-        calendarPager.run {
-            onDayClicked = fun(jdn: Long) { bringDate(jdn, monthChange = false) }
-            onDayLongClicked = fun(jdn: Long) { addEventOnCalendar(jdn) }
-            onMonthSelected = fun() {
-                selectedMonth.let {
-                    mainActivity.setTitleAndSubtitle(getMonthName(it), formatNumber(it.year))
+        binding.calendarPager.also {
+            it.onDayClicked = fun(jdn: Jdn) { bringDate(jdn, monthChange = false) }
+            it.onDayLongClicked = fun(jdn: Jdn) { addEventOnCalendar(jdn) }
+            it.onMonthSelected = fun() {
+                it.selectedMonth.let { date ->
+                    updateToolbar(date.monthName, formatNumber(date.year))
                     todayButton?.isVisible =
-                        it.year != initialDate.year || it.month != initialDate.month
+                        date.year != initialDate.year || date.month != initialDate.month
                 }
             }
         }
 
-        viewPager.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        binding.viewPager.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun getItemCount(): Int = tabs.size
             override fun getItemViewType(position: Int) = position // set viewtype equal to position
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
                 object : RecyclerView.ViewHolder(tabs[viewType].second) {}
         }
-        TabLayoutMediator(tabLayout, viewPager) { tab, i -> tab.setText(tabs[i].first) }.attach()
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, i ->
+            tab.setText(tabs[i].first)
+        }.attach()
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 if (position == OWGHAT_TAB) {
                     owghatBinding?.sunView?.startAnimate()
@@ -323,15 +382,15 @@ class CalendarFragment : Fragment() {
                         }
                     }, 1500)
                 } else owghatBinding?.sunView?.clear()
-                mainActivity.appPrefsLite.edit { putInt(LAST_CHOSEN_TAB_KEY, position) }
+                context?.appPrefsLite?.edit { putInt(LAST_CHOSEN_TAB_KEY, position) }
             }
         })
 
-        var lastTab = mainActivity.appPrefsLite.getInt(LAST_CHOSEN_TAB_KEY, CALENDARS_TAB)
+        var lastTab = inflater.context.appPrefsLite.getInt(LAST_CHOSEN_TAB_KEY, CALENDARS_TAB)
         if (lastTab >= tabs.size) lastTab = CALENDARS_TAB
-        viewPager.setCurrentItem(lastTab, true)
+        binding.viewPager.setCurrentItem(lastTab, true)
         //################################### notify for generated and edited time if exact is available
-        try {
+        runCatching {
             if (isNetworkConnected(requireContext()) && PrayTimeProvider.ptFrom != 1)
                 GetAvailableCitiesTask(
                     requireContext().appPrefs.getString(
@@ -339,29 +398,27 @@ class CalendarFragment : Fragment() {
                         DEFAULT_CITY
                     ) ?: DEFAULT_CITY
                 ).execute()
-        } catch (ex: Exception) {
-
-        }
+        }.onFailure(logException)
     }.root
 
     private fun shareOwghat() {
         val times = PrayTimeProvider.calculate(
             calculationMethod,
-            CivilDate(selectedJdn).toCalendar().time,
+            selectedJdn,
             coordinate!!,
             requireContext()
         )
-        val date = when (mainCalendar) {
-            CalendarType.SHAMSI -> PersianDate(selectedJdn)
-            CalendarType.ISLAMIC -> IslamicDate(selectedJdn)
-            else -> CivilDate(selectedJdn)
-        }
         val cityName = requireContext().appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY)
             ?: DEFAULT_CITY
         val dayLength = Clock.fromInt((times.sunsetClock.toInt() - times.fajrClock.toInt()))
         val text =
             "\uD83D\uDD4C ${resources.getString(R.string.owghat)} $cityName  \uD83D\uDD4C \r\n" +
-                    "\uD83D\uDDD3 ${dayTitleSummary(date)} \r\n" +
+                    "\uD83D\uDDD3 ${
+                        dayTitleSummary(
+                            selectedJdn,
+                            selectedJdn.toCalendar(mainCalendar)
+                        )
+                    } \r\n" +
                     "${resources.getString(R.string.fajr)} : ${formatNumber(times.fajrClock.toFormattedString())}\r\n" +
                     "${resources.getString(R.string.sunrise)} : ${formatNumber(times.sunriseClock.toFormattedString())}\r\n" +
                     "${resources.getString(R.string.dhuhr)} : ${formatNumber(times.dhuhrClock.toFormattedString())}\r\n" +
@@ -388,48 +445,50 @@ class CalendarFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        bringDate(getTodayJdn(), monthChange = false, highlight = false)
+        bringDate(Jdn.today, monthChange = false, highlight = false)
 
-        setHasOptionsMenu(true)
+        mainBinding?.let {
+            (activity as? DrawerHost)
+                ?.setupToolbarWithDrawer(viewLifecycleOwner, it.appBar.toolbar)
+            it.appBar.toolbar.inflateMenu(R.menu.calendar_menu_buttons)
+            setupToolbarMenu(it.appBar.toolbar.menu)
+            it.appBar.toolbar.setOnMenuItemClickListener { clickedMenuItem ->
+                when (clickedMenuItem?.itemId) {
+                    R.id.go_to -> showDayPickerDialog(selectedJdn) { jdn -> bringDate(jdn) }
+                    R.id.add_event -> addEventOnCalendar(selectedJdn)
+                    R.id.shift_work -> showShiftWorkDialog(selectedJdn)
+                    R.id.month_overview -> showMonthOverviewDialog(it.calendarPager.selectedMonth)
+                    R.id.support -> {
+                        val url = "http://www.namoo.ir/FAQ"
+                        CustomTabsIntent.Builder().build().apply {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            if (isPackageInstalled(
+                                    "com.android.chrome",
+                                    requireContext().packageManager
+                                )
+                            )
+                                intent.setPackage("com.android.chrome")
+                        }.launchUrl(requireActivity(), Uri.parse(url))
+                    }
+                }
+                true
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                it.appBar.appbarLayout.outlineProvider = null
+        }
 
-        getTodayOfCalendar(mainCalendar).also {
-            mainActivity.setTitleAndSubtitle(
-                getMonthName(it),
-                formatNumber(it.year)
-            )
+        Jdn.today.toCalendar(mainCalendar).let { today ->
+            updateToolbar(today.monthName, formatNumber(today.year))
         }
     }
 
-    private fun addEventOnCalendar(jdn: Long) {
-        val civil = CivilDate(jdn)
-        val time = Calendar.getInstance()
-        time.set(civil.year, civil.month - 1, civil.dayOfMonth)
+    private fun addEventOnCalendar(jdn: Jdn) {
+        val activity = activity ?: return
         if (ActivityCompat.checkSelfPermission(
-                mainActivity, Manifest.permission.READ_CALENDAR
+                activity, Manifest.permission.READ_CALENDAR
             ) != PackageManager.PERMISSION_GRANTED
         ) askForCalendarPermission(activity) else {
-            try {
-                startActivityForResult(
-                    Intent(Intent.ACTION_INSERT)
-                        .setData(CalendarContract.Events.CONTENT_URI)
-                        .putExtra(
-                            CalendarContract.Events.DESCRIPTION, dayTitleSummary(
-                                getDateFromJdnOfCalendar(mainCalendar, jdn)
-                            )
-                        )
-                        .putExtra(
-                            CalendarContract.EXTRA_EVENT_BEGIN_TIME,
-                            time.timeInMillis
-                        )
-                        .putExtra(
-                            CalendarContract.EXTRA_EVENT_END_TIME,
-                            time.timeInMillis
-                        )
-                        .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true),
-                    CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
+            runCatching { addEvent.launch(jdn) }.onFailure(logException).onFailure {
                 Snackbar.make(
                     mainBinding?.root ?: return,
                     R.string.device_calendar_does_not_support,
@@ -439,59 +498,70 @@ class CalendarFragment : Fragment() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE) {
-            if (isShowDeviceCalendarEvents)
-                mainBinding?.calendarPager?.refresh(isEventsModified = true)
-            else {
-                if (ActivityCompat.checkSelfPermission(
-                        mainActivity, Manifest.permission.READ_CALENDAR
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) askForCalendarPermission(activity) else {
-                    toggleShowDeviceCalendarOnPreference(mainActivity, true)
-                    mainActivity.restartActivity()
-                }
-            }
+    private fun updateToolbar(title: String, subTitle: String) {
+        mainBinding?.appBar?.toolbar?.let {
+            it.title = title
+            it.subtitle = subTitle
         }
     }
 
-    private fun getDeviceEventsTitle(dayEvents: List<CalendarEvent<*>>) = dayEvents
-        .filterIsInstance<DeviceCalendarEvent>()
-        .map { event ->
-            SpannableString(formatDeviceCalendarEventTitle(event)).apply {
-                setSpan(object : ClickableSpan() {
-                    override fun onClick(textView: View) = try {
-                        startActivityForResult(
-                            Intent(Intent.ACTION_VIEW)
-                                .setData(
-                                    ContentUris.withAppendedId(
-                                        CalendarContract.Events.CONTENT_URI, event.id.toLong()
-                                    )
-                                ),
-                            CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE
+    private val addEvent =
+        registerForActivityResult(object : ActivityResultContract<Jdn, Void>() {
+            override fun parseResult(resultCode: Int, intent: Intent?): Void? = null
+            override fun createIntent(context: Context, jdn: Jdn): Intent {
+                val time = jdn.toJavaCalendar().timeInMillis
+                return Intent(Intent.ACTION_INSERT)
+                    .setData(CalendarContract.Events.CONTENT_URI)
+                    .putExtra(
+                        CalendarContract.Events.DESCRIPTION, dayTitleSummary(
+                            jdn, jdn.toCalendar(mainCalendar)
                         )
-                    } catch (e: Exception) { // Should be ActivityNotFoundException but we don't care really
-                        e.printStackTrace()
-                        Snackbar.make(
-                            textView,
-                            R.string.device_calendar_does_not_support,
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                    }
-
-                    override fun updateDrawState(ds: TextPaint) {
-                        super.updateDrawState(ds)
-                        if (event.color.isNotEmpty()) {
-                            try {
-                                // should be turned to long then int otherwise gets stupid alpha
-                                ds.color = event.color.toLong().toInt()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                }, 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    )
+                    .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, time)
+                    .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, time)
+                    .putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
             }
+        }) { mainBinding?.calendarPager?.refresh(isEventsModified = true) }
+
+    private val viewEvent =
+        registerForActivityResult(object : ActivityResultContract<Long, Void>() {
+            override fun parseResult(resultCode: Int, intent: Intent?): Void? = null
+            override fun createIntent(context: Context, id: Long): Intent =
+                Intent(Intent.ACTION_VIEW).setData(
+                    ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, id)
+                )
+        }) { mainBinding?.calendarPager?.refresh(isEventsModified = true) }
+
+    override fun onResume() {
+        super.onResume()
+        // If events are enabled refresh the pager events on resumes anyway
+        if (isShowDeviceCalendarEvents) mainBinding?.calendarPager?.refresh(isEventsModified = true)
+    }
+
+    private fun getDeviceEventsTitle(dayEvents: List<CalendarEvent<*>>) = dayEvents
+        .filterIsInstance<CalendarEvent.DeviceCalendarEvent>()
+        .map { event ->
+            val spannableString = SpannableString(formatDeviceCalendarEventTitle(event))
+            spannableString.setSpan(object : ClickableSpan() {
+                override fun onClick(textView: View) = runCatching {
+                    viewEvent.launch(event.id.toLong())
+                }.onFailure(logException).getOrElse {
+                    Snackbar.make(
+                        textView,
+                        R.string.device_calendar_does_not_support,
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+
+                override fun updateDrawState(ds: TextPaint) {
+                    super.updateDrawState(ds)
+                    runCatching {
+                        // should be turned to long then int otherwise gets stupid alpha
+                        if (event.color.isNotEmpty()) ds.color = event.color.toLong().toInt()
+                    }.onFailure(logException)
+                }
+            }, 0, spannableString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannableString
         }
         .foldIndexed(SpannableStringBuilder()) { i, result, x ->
             if (i != 0) result.append("\n")
@@ -499,19 +569,15 @@ class CalendarFragment : Fragment() {
             result
         }
 
-    private var selectedJdn = getTodayJdn()
+    private var selectedJdn = Jdn.today
 
-    private fun bringDate(jdn: Long, highlight: Boolean = true, monthChange: Boolean = true) {
+    private fun bringDate(jdn: Jdn, highlight: Boolean = true, monthChange: Boolean = true) {
         selectedJdn = jdn
 
         mainBinding?.calendarPager?.setSelectedDay(jdn, highlight, monthChange)
 
-        val isToday = getTodayJdn() == jdn
-        try {
-            (owghatBinding!!.timesRecyclerView.adapter as TimeItemAdapter).isToday = isToday
-        } catch (ex: Exception) {
-            Log.e(TAG, "is today error :/")
-        }
+        val isToday = Jdn.today == jdn
+
         // Show/Hide bring today menu button
         todayButton?.isVisible = !isToday
 
@@ -524,142 +590,130 @@ class CalendarFragment : Fragment() {
         if (isTalkBackEnabled && !isToday && monthChange) Snackbar.make(
             mainBinding?.root ?: return,
             getA11yDaySummary(
-                mainActivity, jdn, false, emptyEventsStore(),
+                context ?: return, jdn, false, emptyEventsStore(),
                 withZodiac = true, withOtherCalendars = true, withTitle = true
             ),
             Snackbar.LENGTH_SHORT
         ).show()
     }
 
-    private fun showEvent(jdn: Long) {
-        eventsBinding?.run {
-            shiftWorkTitle.text = getShiftWorkTitle(jdn, false)
-            val events = getEvents(
-                jdn,
-                readDayDeviceEvents(mainActivity, jdn)
-            )
-            val holidays = getEventsTitle(
-                events,
-                holiday = true,
-                compact = false,
-                showDeviceCalendarEvents = false,
-                insertRLM = false,
-                addIsHoliday = isHighTextContrastEnabled
-            )
-            val nonHolidays = getEventsTitle(
-                events,
-                holiday = false,
-                compact = false,
-                showDeviceCalendarEvents = false,
-                insertRLM = false,
-                addIsHoliday = false
-            )
-            val deviceEvents = getDeviceEventsTitle(events)
-            val contentDescription = StringBuilder()
+    private fun showEvent(jdn: Jdn) {
+        val activity = activity ?: return
+        val eventsBinding = eventsBinding ?: return
 
-            eventMessage.visibility = View.GONE
-            noEvent.visibility = View.VISIBLE
+        eventsBinding.shiftWorkTitle.text = getShiftWorkTitle(jdn, false)
+        val events = jdn.getEvents(jdn.readDayDeviceEvents(activity))
+        val holidays = getEventsTitle(
+            events,
+            holiday = true, compact = false, showDeviceCalendarEvents = false, insertRLM = false,
+            addIsHoliday = isHighTextContrastEnabled
+        )
+        val nonHolidays = getEventsTitle(
+            events,
+            holiday = false, compact = false, showDeviceCalendarEvents = false, insertRLM = false,
+            addIsHoliday = false
+        )
+        val deviceEvents = getDeviceEventsTitle(events)
+        val contentDescription = StringBuilder()
 
-            if (holidays.isNotEmpty()) {
-                noEvent.visibility = View.GONE
-                holidayTitle.text = holidays
-                val holidayContent = getString(R.string.holiday_reason) + "\n" + holidays
-                holidayTitle.contentDescription = holidayContent
-                contentDescription.append(holidayContent)
-                holidayTitle.visibility = View.VISIBLE
-            } else {
-                holidayTitle.visibility = View.GONE
-            }
+        eventsBinding.eventMessage.isVisible = false
+        eventsBinding.noEvent.isVisible = true
 
-            if (deviceEvents.isNotEmpty()) {
-                noEvent.visibility = View.GONE
-                deviceEventTitle.text = deviceEvents
-                contentDescription
-                    .append("\n")
-                    .append(getString(R.string.show_device_calendar_events))
-                    .append("\n")
-                    .append(deviceEvents)
-
-
-                deviceEventTitle.run {
-                    movementMethod = LinkMovementMethod.getInstance()
-                    visibility = View.VISIBLE
-                }
-
-            } else {
-                deviceEventTitle.visibility = View.GONE
-            }
-
-            if (nonHolidays.isNotEmpty()) {
-                noEvent.visibility = View.GONE
-                eventTitle.text = nonHolidays
-                contentDescription
-                    .append("\n")
-                    .append(getString(R.string.events))
-                    .append("\n")
-                    .append(nonHolidays)
-
-
-                eventTitle.visibility = View.VISIBLE
-            } else {
-                eventTitle.visibility = View.GONE
-            }
-
-            val messageToShow = SpannableStringBuilder()
-
-            val enabledTypes = mainActivity.appPrefs
-                .getStringSet(PREF_HOLIDAY_TYPES, null) ?: emptySet()
-            if (enabledTypes.isEmpty()) {
-                noEvent.visibility = View.GONE
-                if (messageToShow.isNotEmpty()) messageToShow.append("\n")
-
-                val title = getString(R.string.warn_if_events_not_set)
-                val ss = SpannableString(title)
-                val clickableSpan = object : ClickableSpan() {
-                    override fun onClick(textView: View) {
-                        mainActivity.navigateTo(R.id.settings)
-                    }
-                }
-                ss.setSpan(clickableSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                messageToShow.append(ss)
-
-                contentDescription
-                    .append("\n")
-                    .append(title)
-            }
-
-            if (messageToShow.isNotEmpty()) {
-                eventMessage.run {
-                    text = messageToShow
-                    movementMethod = LinkMovementMethod.getInstance()
-                    visibility = View.VISIBLE
-                }
-            }
-
-            root.contentDescription = contentDescription
+        if (holidays.isNotEmpty()) {
+            eventsBinding.noEvent.isVisible = false
+            eventsBinding.holidayTitle.text = holidays
+            val holidayContent = getString(R.string.holiday_reason) + "\n" + holidays
+            eventsBinding.holidayTitle.contentDescription = holidayContent
+            contentDescription.append(holidayContent)
+            eventsBinding.holidayTitle.isVisible = true
+        } else {
+            eventsBinding.holidayTitle.isVisible = false
         }
+
+        if (deviceEvents.isNotEmpty()) {
+            eventsBinding.noEvent.isVisible = false
+            eventsBinding.deviceEventTitle.text = deviceEvents
+            contentDescription
+                .append("\n")
+                .append(getString(R.string.show_device_calendar_events))
+                .append("\n")
+                .append(deviceEvents)
+
+            eventsBinding.deviceEventTitle.let {
+                it.movementMethod = LinkMovementMethod.getInstance()
+                it.isVisible = true
+            }
+        } else {
+            eventsBinding.deviceEventTitle.isVisible = false
+        }
+
+        if (nonHolidays.isNotEmpty()) {
+            eventsBinding.noEvent.isVisible = false
+            eventsBinding.eventTitle.text = nonHolidays
+            contentDescription
+                .append("\n")
+                .append(getString(R.string.events))
+                .append("\n")
+                .append(nonHolidays)
+
+            eventsBinding.eventTitle.isVisible = true
+        } else {
+            eventsBinding.eventTitle.isVisible = false
+        }
+
+        val messageToShow = SpannableStringBuilder()
+
+        val enabledTypes = activity.appPrefs
+            .getStringSet(PREF_HOLIDAY_TYPES, null) ?: emptySet()
+        if (enabledTypes.isEmpty()) {
+            eventsBinding.noEvent.isVisible = false
+            if (messageToShow.isNotEmpty()) messageToShow.append("\n")
+
+            val title = getString(R.string.warn_if_events_not_set)
+            val ss = SpannableString(title)
+            val clickableSpan = object : ClickableSpan() {
+                override fun onClick(textView: View) {
+                    val direction = CalendarFragmentDirections.navigateToSettings()
+                    findNavController().navigate(direction)
+                }
+            }
+            ss.setSpan(clickableSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            messageToShow.append(ss)
+
+            contentDescription
+                .append("\n")
+                .append(title)
+        }
+
+        if (messageToShow.isNotEmpty()) {
+            eventsBinding.eventMessage.let {
+                it.text = messageToShow
+                it.movementMethod = LinkMovementMethod.getInstance()
+                it.isVisible = true
+            }
+        }
+
+        eventsBinding.root.contentDescription = contentDescription
     }
 
-    private fun setOwghat(jdn: Long, isToday: Boolean) {
+    private fun setOwghat(jdn: Jdn, isToday: Boolean) {
         if (coordinate == null) return
 
         val prayTimes = PrayTimeProvider.calculate(
-            calculationMethod, CivilDate(jdn).toCalendar().time, coordinate!!, requireContext()
+            calculationMethod, jdn, coordinate!!, requireContext()
         )
+        (owghatBinding?.timesRecyclerView?.adapter as? TimeItemAdapter)?.isToday = isToday
         (owghatBinding?.timesRecyclerView?.adapter as? TimeItemAdapter)?.prayTimes = prayTimes
         owghatBinding?.sunView?.run {
-            setSunriseSunsetMoonPhase(prayTimes, try {
+            setSunriseSunsetMoonPhase(prayTimes, runCatching {
                 coordinate?.run {
                     SunMoonPosition(
-                        getTodayJdn().toDouble(), latitude,
+                        jdn.value.toDouble(), latitude,
                         longitude, 0.0, 0.0
                     ).moonPhase
-                } ?: 1.0
-            } catch (e: Exception) {
-                e.printStackTrace()
-                1.0
-            })
-            visibility = if (isToday) View.VISIBLE else View.GONE
+                }
+            }.onFailure(logException).getOrNull() ?: 1.0)
+            isVisible = isToday
             if (isToday && mainBinding?.viewPager?.currentItem == OWGHAT_TAB) startAnimate()
         }
     }
@@ -674,130 +728,81 @@ class CalendarFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        menu.clear()
-        inflater.inflate(R.menu.calendar_menu_buttons, menu)
-
-        todayButton = menu.findItem(R.id.today_button).apply {
-            isVisible = false
-            setOnMenuItemClickListener {
-                bringDate(getTodayJdn(), highlight = false)
+    private fun setupToolbarMenu(menu: Menu) {
+        todayButton = menu.findItem(R.id.today_button).also {
+            it.isVisible = false
+            it.setOnMenuItemClickListener {
+                bringDate(Jdn.today, highlight = false)
                 true
             }
         }
-        searchView = (menu.findItem(R.id.search).actionView as? SearchView?)?.apply {
-            setOnSearchClickListener {
+        searchView = (menu.findItem(R.id.search).actionView as? SearchView)?.also { searchView ->
+            searchView.setOnCloseListener {
+                onBackPressedCloseSearchCallback.isEnabled = false
+                false // don't prevent the event cascade
+            }
+            searchView.setOnSearchClickListener {
+                onBackPressedCloseSearchCallback.isEnabled = true
                 // Remove search edit view below bar
-                findViewById<View?>(androidx.appcompat.R.id.search_plate)?.setBackgroundColor(
-                    Color.TRANSPARENT
-                )
+                searchView.findViewById<View?>(
+                    androidx.appcompat.R.id.search_plate
+                )?.setBackgroundColor(Color.TRANSPARENT)
 
-                findViewById<SearchAutoComplete?>(androidx.appcompat.R.id.search_src_text)?.apply {
-                    setHint(R.string.search_in_events)
-                    setAdapter(
-                        ArrayAdapter(
-                            mainActivity, R.layout.suggestion, android.R.id.text1,
-                            allEnabledEvents + getAllEnabledAppointments(context)
-                        )
-                    )
-                    setOnItemClickListener { parent, _, position, _ ->
+                searchView.findViewById<SearchAutoComplete?>(
+                    androidx.appcompat.R.id.search_src_text
+                )?.also { searchAutoComplete ->
+                    val context = searchAutoComplete.context
+                    searchAutoComplete.setHint(R.string.search_in_events)
+                    val events = allEnabledEvents + getAllEnabledAppointments(context)
+                    searchAutoComplete.setAdapter(SearchEventsAdapter(context, events))
+                    searchAutoComplete.setOnItemClickListener { parent, _, position, _ ->
                         val date = (parent.getItemAtPosition(position) as CalendarEvent<*>).date
-                        val type = getCalendarTypeFromDate(date)
-                        val today = getTodayOfCalendar(type)
+                        val type = date.calendarType
+                        val today = Jdn.today.toCalendar(type)
                         bringDate(
-                            getDateOfCalendar(
-                                type,
-                                if (date.year == -1)
+                            Jdn(
+                                type, if (date.year == -1)
                                     (today.year + if (date.month < today.month) 1 else 0)
-                                else date.year,
-                                date.month,
-                                date.dayOfMonth
-                            ).toJdn()
+                                else date.year, date.month, date.dayOfMonth
+                            )
                         )
-                        onActionViewCollapsed()
+                        searchView.onActionViewCollapsed()
                     }
                 }
             }
         }
     }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.go_to -> SelectDayDialog.newInstance(selectedJdn).apply {
-                onSuccess = fun(jdn: Long) { bringDate(jdn) }
-            }.show(
-                childFragmentManager,
-                SelectDayDialog::class.java.name
-            )
-            R.id.add_event -> addEventOnCalendar(selectedJdn)
-            R.id.shift_work -> ShiftWorkDialog.newInstance(selectedJdn).apply {
-                onSuccess = fun() {
-                    updateStoredPreference(mainActivity)
-                    mainActivity.restartActivity()
-                }
-            }.show(
-                childFragmentManager,
-                ShiftWorkDialog::class.java.name
-            )
-            R.id.month_overview -> MonthOverviewDialog
-                .newInstance(mainBinding?.calendarPager?.selectedMonth?.toJdn() ?: getTodayJdn())
-                .show(childFragmentManager, MonthOverviewDialog::class.java.name)
-
-            R.id.support -> {
-                val url = "http://www.namoo.ir/FAQ"
-                CustomTabsIntent.Builder().build().apply {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (isPackageInstalled("com.android.chrome", requireContext().packageManager))
-                        intent.setPackage("com.android.chrome")
-                }.launchUrl(requireActivity(), Uri.parse(url))
-            }
-        }
-        return true
-    }
-
-    fun closeSearch() = searchView?.run {
-        if (!isIconified) {
-            onActionViewCollapsed()
-            return true
-        } else false
-    } ?: false
 
     @SuppressLint("StaticFieldLeak")
     private inner class GetAvailableCitiesTask(val cityName: String) :
         AsyncTask<String?, Int?, String?>() {
         private val list = arrayListOf<CityList>()
 
-        override fun doInBackground(vararg strings: String?): String {
-            try {
-                val httpclient: HttpClient = DefaultHttpClient()
-                val httpGet = HttpGet("http://www.namoo.ir/Home/GetAddedCities")
-                val response: HttpResponse = httpclient.execute(httpGet)
-                if (response.statusLine.statusCode == 200) {
-                    val serverResponse = EntityUtils.toString(response.entity)
-                    val parser = JSONParser()
-                    val jsonArray: JSONArray = parser.parse(serverResponse) as JSONArray
-                    val jsonObjectIterator: MutableIterator<Any?> = jsonArray.iterator()
-                    list.clear()
-                    while (jsonObjectIterator.hasNext()) {
-                        val jt: JSONObject = jsonObjectIterator.next() as JSONObject
-                        val t = CityList()
-                        t.id = jt["id"].toString().toInt()
-                        t.name = jt["cityName"].toString()
-                        t.setInsertDate(jt["lastUpdate"].toString())
-                        list.add(t)
-                    }
-                    list.sortBy { it.name }
-                } else return "error"
-            } catch (ex: java.lang.Exception) {
-                Log.d(TAG, "Error get available cities!$ex")
-            }
-            return "OK"
-        }
+        override fun doInBackground(vararg strings: String?): String = runCatching {
+            val httpclient: HttpClient = DefaultHttpClient()
+            val httpGet = HttpGet("http://www.namoo.ir/Home/GetAddedCities")
+            val response: HttpResponse = httpclient.execute(httpGet)
+            if (response.statusLine.statusCode == 200) {
+                val serverResponse = EntityUtils.toString(response.entity)
+                val parser = JSONParser()
+                val jsonArray: JSONArray = parser.parse(serverResponse) as JSONArray
+                val jsonObjectIterator: MutableIterator<Any?> = jsonArray.iterator()
+                list.clear()
+                while (jsonObjectIterator.hasNext()) {
+                    val jt: JSONObject = jsonObjectIterator.next() as JSONObject
+                    val t = CityList()
+                    t.id = jt["id"].toString().toInt()
+                    t.name = jt["cityName"].toString()
+                    t.setInsertDate(jt["lastUpdate"].toString())
+                    list.add(t)
+                }
+                list.sortBy { it.name }
+            } else return "error"
+        }.onFailure(logException).getOrDefault("OK").toString()
 
         override fun onPostExecute(s: String?) {
             super.onPostExecute(s)
-            try {
+            runCatching {
                 val city = list.find { it.name == cityName.trimStart().trimEnd() }
                 if (city != null) {
                     val snackBar =
@@ -813,10 +818,7 @@ class CalendarFragment : Fragment() {
                                 requireActivity().sendBroadcast(intent)
                             }
                             view.setBackgroundColor(
-                                getColorFromAttr(
-                                    requireContext(),
-                                    R.attr.colorSnack
-                                )
+                                requireContext().resolveColor(R.attr.colorSnack)
                             )
                             view.setOnClickListener {
                                 dismiss()
@@ -825,9 +827,7 @@ class CalendarFragment : Fragment() {
                             }
                         }.show()
                 }
-            } catch (ex: java.lang.Exception) {
-                Log.e(TAG, "Check for exact time error : $ex")
-            }
+            }.onFailure(logException)
         }
 
     } //end of class GetAvailableCitiesTask

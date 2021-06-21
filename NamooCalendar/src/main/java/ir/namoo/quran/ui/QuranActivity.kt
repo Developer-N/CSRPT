@@ -14,7 +14,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.Window
@@ -74,8 +73,8 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             this,
             binding.quranDrawer,
             binding.quranToolbar,
-            R.string.openDrawer,
-            R.string.closeDrawer
+            R.string.open,
+            R.string.close
         ) {
             val slidingDirection = if (isRTL) -1 else +1
 
@@ -137,7 +136,7 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                             navigateTo(R.id.quran_download_manager)
                         }
                     } else
-                        try {
+                        runCatching {
                             val sura: Int = intent.extras!!.getInt("sura")
                             val aya: Int = intent.extras!!.getInt("aya")
                             val sIntent =
@@ -145,9 +144,7 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                             sIntent.putExtra("sura", sura)
                             sIntent.putExtra("aya", aya)
                             startActivity(sIntent)
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "receiver error : $ex")
-                        }
+                        }.onFailure(logException)
                 }
 
             }

@@ -35,8 +35,8 @@
     <string name="language">زمان</string>
     <string name="version">وەشان %1$s</string>
     <string name="athan_volume_summary">ڕێکخستنی قەبارەی دەنگی بانگ</string>
-    <string name="closeDrawer">داخستن</string>
-    <string name="openDrawer">کردنەوە</string>
+    <string name="close">داخستن</string>
+    <string name="open">کردنەوە</string>
     <string name="imsak">ئیمساک</string>
     <string name="fajr">بانگی بەیانی</string>
     <string name="dhuhr">بانگی نیوەڕۆ</string>
@@ -283,7 +283,6 @@
     <string name="play_athan">Play athan</string>
     <string name="reset_athan">Reset athan</string>
     <string name="ok">OK</string>
-    <string name="close">Close</string>
     <string name="select_athan_file_title">Select Athan</string>
     <string name="alarm_before">Alarm before </string>
     <string name="enable_alarm_before">Enable or Disable</string>
@@ -404,5 +403,13 @@
     <string name="all_added_athans_will_cleared">Are you sure want to clear all athans and alerts?</string>
     <string name="done">Done</string>
     <string name="summer_time">Summer Time</string>
+    <string name="fonts">Font</string>
+    <string name="donate">Donate</string>
+    <string name="donate_msg">Doante MSG</string>
+    <string name="custom_donate">Custom Donate</string>
+    <string name="_50">50$</string>
+    <string name="_20">20$</string>
+    <string name="_10">10$</string>
+    <string name="_5">5$</string>
 
 </resources>

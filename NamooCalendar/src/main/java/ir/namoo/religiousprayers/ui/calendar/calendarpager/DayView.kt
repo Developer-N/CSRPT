@@ -3,38 +3,24 @@ package ir.namoo.religiousprayers.ui.calendar.calendarpager
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.View
-import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
 import ir.namoo.religiousprayers.R
-import ir.namoo.religiousprayers.utils.appTheme
-import ir.namoo.religiousprayers.utils.formatNumber
-import ir.namoo.religiousprayers.utils.isHighTextContrastEnabled
-import ir.namoo.religiousprayers.utils.isNonArabicScriptSelected
+import ir.namoo.religiousprayers.utils.*
 import kotlin.math.min
 
 class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     View(context, attrs) {
 
-    private val tempTypedValue = TypedValue()
+    private val colorHoliday = context.resolveColor(R.attr.colorHoliday)
+    private val colorHolidaySelected = context.resolveColor(R.attr.colorHolidaySelected)
 
-    @ColorInt
-    fun resolveColor(attr: Int) = tempTypedValue.let {
-        context.theme.resolveAttribute(attr, it, true)
-        ContextCompat.getColor(context, it.resourceId)
-    }
+    // private val colorTextHoliday = context.resolveColor(R.attr.colorTextHoliday)
+    private val colorTextDay = context.resolveColor(R.attr.colorTextDay)
+    private val colorTextDaySelected = context.resolveColor(R.attr.colorTextDaySelected)
 
-    private val colorHoliday = resolveColor(R.attr.colorHoliday)
-    private val colorHolidaySelected = resolveColor(R.attr.colorHolidaySelected)
-
-    // private val colorTextHoliday = resolveColor(R.attr.colorTextHoliday)
-    private val colorTextDay = resolveColor(R.attr.colorTextDay)
-    private val colorTextDaySelected = resolveColor(R.attr.colorTextDaySelected)
-
-    // private val colorTextToday = resolveColor(R.attr.colorTextToday)
-    private val colorTextDayName = resolveColor(R.attr.colorTextDayName)
-    private val colorEventLine = resolveColor(R.attr.colorEventLine)
+    // private val colorTextToday = context.resolveColor(R.attr.colorTextToday)
+    private val colorTextDayName = context.resolveColor(R.attr.colorTextDayName)
+    private val colorEventLine = context.resolveColor(R.attr.colorEventLine)
 
     private val halfEventBarWidth = context.resources
         .getDimensionPixelSize(R.dimen.day_item_event_bar_width) / 2
@@ -48,13 +34,13 @@ class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
     }
     private val selectedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = resolveColor(R.attr.colorSelectDay)
+        color = context.resolveColor(R.attr.colorSelectDay)
     }
     private val todayPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = context.resources
             .getDimensionPixelSize(R.dimen.day_item_today_indicator_thickness).toFloat()
-        color = resolveColor(R.attr.colorCurrentDay)
+        color = context.resolveColor(R.attr.colorCurrentDay)
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -71,7 +57,7 @@ class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
     private var hasAppointment: Boolean = false
     private var holiday: Boolean = false
     private var textSize: Int = 0
-    var jdn: Long = -1
+    var jdn: Jdn? = null
         private set
     var dayOfMonth = -1
         private set
@@ -177,7 +163,7 @@ class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
     private fun setAll(
         text: String, isToday: Boolean, isSelected: Boolean,
         hasEvent: Boolean, hasAppointment: Boolean, isHoliday: Boolean,
-        textSize: Int, jdn: Long, dayOfMonth: Int, isNumber: Boolean,
+        textSize: Int, jdn: Jdn?, dayOfMonth: Int, isNumber: Boolean,
         header: String
     ) {
         this.text = text
@@ -197,7 +183,7 @@ class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
     fun setDayOfMonthItem(
         isToday: Boolean, isSelected: Boolean,
         hasEvent: Boolean, hasAppointment: Boolean, isHoliday: Boolean,
-        textSize: Int, jdn: Long, dayOfMonth: Int, header: String
+        textSize: Int, jdn: Jdn, dayOfMonth: Int, header: String
     ) = setAll(
         formatNumber(dayOfMonth), isToday, isSelected, hasEvent, hasAppointment,
         isHoliday, textSize, jdn, dayOfMonth, true, header
@@ -205,7 +191,7 @@ class DayView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
 
     fun setNonDayOfMonthItem(text: String, textSize: Int) = setAll(
         text, isToday = false, isSelected = false, hasEvent = false, hasAppointment = false,
-        isHoliday = false, textSize = textSize, jdn = -1, dayOfMonth = -1, isNumber = false,
-        header = ""
+        isHoliday = false, textSize = textSize, jdn = null, dayOfMonth = -1,
+        isNumber = false, header = ""
     )
 }

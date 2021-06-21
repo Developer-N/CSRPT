@@ -1,44 +1,38 @@
 package ir.namoo.religiousprayers.ui.widget
 
-import android.content.ContentValues
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
+import androidx.annotation.ColorInt
 import androidx.appcompat.widget.LinearLayoutCompat
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.Clock
 import ir.namoo.religiousprayers.PREF_GEOCODED_CITYNAME
 import ir.namoo.religiousprayers.R
-import ir.namoo.religiousprayers.utils.*
-import java.util.*
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.appTheme
+import ir.namoo.religiousprayers.utils.dayTitleSummary
+import ir.namoo.religiousprayers.utils.getAppFont
+import ir.namoo.religiousprayers.utils.getNextOwghatTimeId
+import ir.namoo.religiousprayers.utils.mainCalendar
+import ir.namoo.religiousprayers.utils.prayTimes
+import ir.namoo.religiousprayers.utils.selectedWidgetBackgroundColor
+import ir.namoo.religiousprayers.utils.selectedWidgetNextAthanTextColor
+import ir.namoo.religiousprayers.utils.selectedWidgetTextColor
+import ir.namoo.religiousprayers.utils.toFormattedString
+import ir.namoo.religiousprayers.utils.toJavaCalendar
 
-class NWidgetView : View {
-
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attributes: AttributeSet?) : super(context, attributes)
-    constructor(context: Context, attributes: AttributeSet?, defStyle: Int) : super(
-        context,
-        attributes,
-        defStyle
-    )
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    constructor(
-        context: Context,
-        attributes: AttributeSet?,
-        defStyle: Int,
-        defStyleRes: Int
-    ) : super(context, attributes, defStyle, defStyleRes)
+class NWidgetView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
+    View(context, attrs) {
 
     //############################################
     private val displayMetrics: DisplayMetrics = DisplayMetrics()
@@ -51,10 +45,14 @@ class NWidgetView : View {
 
     private val prayNamePaint: Paint
     private val prayTimePaint: Paint
-    private val prayNextPaint: Paint
 
     private val athanNames = resources.getStringArray(R.array.prayerTimeNames)
     private val nextTimeIndex: Int
+
+    @ColorInt
+    private val textColorNext: Int
+@ColorInt
+    private val textColor: Int
 
     private val pDate: PersianDate
 
@@ -79,8 +77,9 @@ class NWidgetView : View {
         )
         layoutParams = params
         context.setTheme(appTheme)
-        val textColor = getColorFromAttr(context, R.attr.colorNWidgetText)
-        val bgColor = getColorFromAttr(context, R.attr.colorNWidgetBackground)
+        textColor = Color.parseColor(selectedWidgetTextColor)
+        textColorNext = Color.parseColor(selectedWidgetNextAthanTextColor)
+        val bgColor = Color.parseColor(selectedWidgetBackgroundColor)
 
         circlePaint = Paint(Paint.ANTI_ALIAS_FLAG)
         circlePaint.style = Paint.Style.STROKE
@@ -121,14 +120,9 @@ class NWidgetView : View {
         prayTimePaint.color = textColor
         prayTimePaint.textAlign = Paint.Align.LEFT
 
-        prayNextPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        prayNextPaint.color = textColor
-        prayNextPaint.style = Paint.Style.STROKE
-        prayNextPaint.strokeWidth = displayMetrics.density * 2
-
-        val civilDate = calendarToCivilDate(makeCalendarFromDate(Date()))
+        val civilDate = Jdn.today.toGregorianCalendar()
         pDate = PersianDate(civilDate.toJdn())
-        val now = Clock(makeCalendarFromDate(Date()))
+        val now = Clock(Jdn.today.toJavaCalendar())
         nextTimeIndex = getNextOwghatTimeId(now, false, context)
 
     }//end of init
@@ -136,20 +130,13 @@ class NWidgetView : View {
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         drawBackground(canvas)
-
-        //drawCircle(canvas);
-        //drawDateNum(canvas);
-        //drawCircle(canvas);
-        //drawDateNum(canvas);
         drawDateStr(canvas)
-
         drawMorning(canvas)
         drawSunrise(canvas)
         drawNoon(canvas)
         drawEvening(canvas)
         drawSunset(canvas)
         drawIsha(canvas)
-
         drawBorder(canvas)
     }//end of onDraw
 
@@ -167,130 +154,89 @@ class NWidgetView : View {
 
     private fun drawMorning(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 0) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             val time = it.fajrClock.toFormattedString()
             var x = width.toFloat()
             val bounds = Rect()
             prayNamePaint.getTextBounds(athanNames[0], 0, athanNames[0].length, bounds)
             var y =  /*bounds.height() + */paddingTop + height / 2.toFloat()
             canvas!!.drawText(
-                athanNames[0],
-                x - (width / 12 - bounds.width() / 2),
-                y,
-                prayNamePaint
+                athanNames[0], x - (width / 12 - bounds.width() / 2), y, prayNamePaint
             )
 
             y += bounds.height() + paddingTop * 2.toFloat()
-            prayTimePaint.getTextBounds(
-                time,
-                0,
-                time.length,
-                bounds
-            )
+            prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6.toFloat()
-            canvas.drawText(
-                time,
-                x + bounds.width() / 3,
-                y,
-                prayTimePaint
-            )
-
-            if (nextTimeIndex == 0) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
 
     }//end of drawMorning
 
     private fun drawSunrise(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 1) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             val time = it.sunriseClock.toFormattedString()
             var x = (width - width / 6).toFloat()
             val bounds = Rect()
             prayNamePaint.getTextBounds(athanNames[1], 0, athanNames[1].length, bounds)
             var y =  /*bounds.height() + */paddingTop + height / 2.toFloat()
             canvas!!.drawText(
-                athanNames[1],
-                x - (width / 12 - bounds.width() / 2),
-                y,
-                prayNamePaint
+                athanNames[1], x - (width / 12 - bounds.width() / 2), y, prayNamePaint
             )
 
             y += bounds.height() + paddingTop * 2.toFloat()
-            prayTimePaint.getTextBounds(
-                time,
-                0,
-                time.length,
-                bounds
-            )
+            prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6 * 2.toFloat()
-            canvas.drawText(
-                time,
-                x + bounds.width() / 3,
-                y,
-                prayTimePaint
-            )
-
-            if (nextTimeIndex == 1) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
     }//end of drawSunrise
 
     private fun drawNoon(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 2) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             val time = it.dhuhrClock.toFormattedString()
             var x = (width - width / 6 * 2).toFloat()
             val bounds = Rect()
             prayNamePaint.getTextBounds(athanNames[2], 0, athanNames[2].length, bounds)
             var y =  /*bounds.height() + */paddingTop + height / 2.toFloat()
             canvas!!.drawText(
-                athanNames[2],
-                x - (width / 12 - bounds.width() / 2),
-                y,
-                prayNamePaint
+                athanNames[2], x - (width / 12 - bounds.width() / 2), y, prayNamePaint
             )
 
             y += bounds.height() + paddingTop * 2.toFloat()
-            prayTimePaint.getTextBounds(
-                time,
-                0,
-                time.length,
-                bounds
-            )
+            prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6 * 3.toFloat()
-            canvas.drawText(
-                time,
-                x + bounds.width() / 3,
-                y,
-                prayTimePaint
-            )
-
-            if (nextTimeIndex == 2) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
     }//end of drawNoon
 
     private fun drawEvening(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 3) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             var x = (width - width / 6 * 3).toFloat()
             val bounds = Rect()
             val athanName = athanNames[3]
@@ -302,148 +248,69 @@ class NWidgetView : View {
             y += bounds.height() + paddingTop * 2.toFloat()
             prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6 * 4.toFloat()
-            canvas.drawText(time, x + bounds.width() / 3, y, prayTimePaint)
-
-            if (nextTimeIndex == 3) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
     }//end of drawEvening
 
     private fun drawSunset(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 4) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             val time = it.maghribClock.toFormattedString()
             var x = (width - width / 6 * 4).toFloat()
             val bounds = Rect()
             prayNamePaint.getTextBounds(athanNames[4], 0, athanNames[4].length, bounds)
             var y =  /*bounds.height() + */paddingTop + height / 2.toFloat()
             canvas!!.drawText(
-                athanNames[4],
-                x - (width / 12 - bounds.width() / 2),
-                y,
-                prayNamePaint
+                athanNames[4], x - (width / 12 - bounds.width() / 2), y, prayNamePaint
             )
 
             y += bounds.height() + paddingTop * 2.toFloat()
-            prayTimePaint.getTextBounds(
-                time,
-                0,
-                time.length,
-                bounds
-            )
+            prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6 * 5.toFloat()
-            canvas.drawText(
-                time,
-                x + bounds.width() / 3,
-                y,
-                prayTimePaint
-            )
-
-            if (nextTimeIndex == 4) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
     }//end of drawSunset
 
     private fun drawIsha(canvas: Canvas?) {
         prayTimes?.let {
+            if (nextTimeIndex == 5) {
+                prayNamePaint.color = textColorNext
+                prayTimePaint.color = textColorNext
+            }else{
+                prayNamePaint.color = textColor
+                prayTimePaint.color = textColor
+            }
             val time = it.ishaClock.toFormattedString()
             var x = (width - width / 6 * 5).toFloat()
             val bounds = Rect()
             prayNamePaint.getTextBounds(athanNames[5], 0, athanNames[5].length, bounds)
             var y =  /*bounds.height() + */paddingTop + height / 2.toFloat()
             canvas!!.drawText(
-                athanNames[5],
-                x - (width / 12 - bounds.width() / 2),
-                y,
-                prayNamePaint
+                athanNames[5], x - (width / 12 - bounds.width() / 2), y, prayNamePaint
             )
 
             y += bounds.height() + paddingTop * 2.toFloat()
-            prayTimePaint.getTextBounds(
-                time,
-                0,
-                time.length,
-                bounds
-            )
+            prayTimePaint.getTextBounds(time, 0, time.length, bounds)
             x = width - width / 6 * 6.toFloat()
-            canvas.drawText(
-                time,
-                x + bounds.width() / 3,
-                y,
-                prayTimePaint
-            )
-
-            if (nextTimeIndex == 5) { //DrawNextHere
-                canvas.drawLine(
-                    x + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    x + bounds.width() + bounds.width() / 3,
-                    y + bounds.height() / 4,
-                    prayNextPaint
-                )
-            }
+            canvas.drawText(time, x + bounds.width() / 2, y, prayTimePaint)
         }
     }//end of drawIsha
 
-    private fun drawCircle(canvas: Canvas?) {
-        val height = height / 2
-        canvas!!.drawCircle(
-            width / 2.toFloat(),
-            height / 2.toFloat(),
-            (height / 2 - paddingTop * 1.3).toFloat(),
-            circlePaint
-        )
-    }
-
-    private fun drawDateNum(canvas: Canvas?) {
-        val bounds = Rect()
-        val height = height / 2
-        dayNumPaint.getTextBounds(
-            pDate.dayOfMonth.toString(),
-            0,
-            pDate.dayOfMonth.toString().length,
-            bounds
-        )
-        canvas!!.drawText(
-            pDate.dayOfMonth.toString() + "",
-            width / 2.toFloat(),
-            height / 2 + bounds.height() / 2.toFloat(),
-            dayNumPaint
-        )
-    }
-
     private fun drawDateStr(canvas: Canvas?) {
-        Log.d(
-            ContentValues.TAG,
-            "density dpi: " + displayMetrics.densityDpi + " scaled density" + displayMetrics.scaledDensity
-                    + " ~ " + displayMetrics.widthPixels + " x " + displayMetrics.heightPixels
-        )
-
-//        val text =
-//            resources.getString(R.string.today) + Utils.getWeekDayName(persianDate).toString() + "، " + CalendarUtils.dateToString(
-//                persianDate
-//            ).toString() + "" +
-//                    " - افق " + cityDBAdapter.getCity(preferences.getCityCode()).getName()
-        val mainCalendar = mainCalendar
         val text =
             "${resources.getString(R.string.today)} :" +
-                    " ${dayTitleSummary(getTodayOfCalendar(mainCalendar))}" +
-                    " - ${context.appPrefs.getString(
-                        PREF_GEOCODED_CITYNAME, ""
-                    )}"
+                    " ${dayTitleSummary(Jdn.today, Jdn.today.toCalendar(mainCalendar))}" +
+                    " - ${
+                        context.appPrefs.getString(
+                            PREF_GEOCODED_CITYNAME, ""
+                        )
+                    }"
 
         val bounds = Rect()
         dayStringPaint.getTextBounds(text, 0, text.length, bounds)
@@ -476,18 +343,11 @@ class NWidgetView : View {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(measureWidth(widthMeasureSpec), measureHeight(heightMeasureSpec))
+        setMeasuredDimension(measureWidth(), measureHeight())
     }
 
-    private fun measureHeight(measureSpec: Int): Int { //        int size = getPaddingTop() + getPaddingBottom();
-//        size += 250;
-//        return resolveSizeAndState(size, measureSpec, 0);
-        return displayMetrics.heightPixels / 7
-    }
+    private fun measureHeight(): Int = displayMetrics.heightPixels / 7
 
-    private fun measureWidth(measureSpec: Int): Int { //        int size = getPaddingLeft() + getPaddingRight();
-//        size += 200 * 6;
-//        return resolveSizeAndState(size, measureSpec, 0);
-        return displayMetrics.widthPixels
-    }
+    private fun measureWidth(): Int = displayMetrics.widthPixels
+
 }//end of class

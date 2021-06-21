@@ -17,29 +17,22 @@
         android:label="Calendar Fragment"
         tools:layout="@layout/fragment_calendar">
         <action
-            android:id="@+id/navigate_to_converter"
-            app:destination="@id/converter" />
-        <action
-            android:id="@+id/navigate_to_azkar"
-            app:destination="@id/azkar" />
-        <action
-            android:id="@+id/navigate_to_monthly"
-            app:destination="@id/monthly" />
-        <action
-            android:id="@+id/navigate_to_edit"
-            app:destination="@id/edit" />
-        <action
-            android:id="@+id/navigate_to_downup"
-            app:destination="@id/downup" />
-        <action
-            android:id="@+id/navigate_to_about"
-            app:destination="@id/about" />
+            android:id="@+id/navigate_to_self"
+            app:destination="@id/calendar"
+            app:popUpTo="@id/calendar"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/navigate_to_settings"
-            app:destination="@id/settings" />
-        <action
-            android:id="@+id/navigate_to_compass"
-            app:destination="@id/compass" />
+            app:destination="@id/settings"
+            app:enterAnim="@anim/nav_enter_anim"
+            app:exitAnim="@anim/nav_exit_anim"
+            app:popEnterAnim="@anim/nav_enter_anim"
+            app:popExitAnim="@anim/nav_exit_anim">
+            <argument
+                android:name="tab"
+                android:defaultValue="0"
+                app:argType="integer" />
+        </action>
     </fragment>
 
     <fragment
@@ -76,19 +69,37 @@
         tools:layout="@layout/fragment_compass">
         <action
             android:id="@+id/action_compass_to_level"
-            app:destination="@id/level" />
+            app:destination="@id/level"
+            app:enterAnim="@anim/nav_enter_anim"
+            app:exitAnim="@anim/nav_exit_anim"
+            app:popEnterAnim="@anim/nav_enter_anim"
+            app:popExitAnim="@anim/nav_exit_anim" />
     </fragment>
 
     <fragment
         android:id="@+id/level"
         android:name="net.androgames.level.LevelFragment"
-        android:label="Level Fragment" />
+        android:label="Level Fragment">
+
+        <action
+            android:id="@+id/action_level_to_compass"
+            app:destination="@id/compass"
+            app:enterAnim="@anim/nav_enter_anim"
+            app:exitAnim="@anim/nav_exit_anim"
+            app:popEnterAnim="@anim/nav_enter_anim"
+            app:popExitAnim="@anim/nav_exit_anim" />
+    </fragment>
 
     <fragment
         android:id="@+id/settings"
         android:name="ir.namoo.religiousprayers.ui.preferences.PreferencesFragment"
         android:label="Settings Fragment"
-        tools:layout="@layout/fragment_calendar" />
+        tools:layout="@layout/fragment_calendar">
+        <argument
+            android:name="tab"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </fragment>
 
     <fragment
         android:id="@+id/about"
@@ -97,7 +108,11 @@
         tools:layout="@layout/fragment_about">
         <action
             android:id="@+id/action_about_to_deviceinfo"
-            app:destination="@id/deviceInformation" />
+            app:destination="@id/deviceInformation"
+            app:enterAnim="@anim/nav_enter_anim"
+            app:exitAnim="@anim/nav_exit_anim"
+            app:popEnterAnim="@anim/nav_enter_anim"
+            app:popExitAnim="@anim/nav_exit_anim" />
     </fragment>
 
     <fragment

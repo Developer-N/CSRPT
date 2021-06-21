@@ -1,8 +1,6 @@
 package ir.namoo.religiousprayers.utils
 
 import android.Manifest
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
@@ -14,15 +12,14 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
@@ -30,16 +27,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.graphics.drawable.DrawerArrowDrawable
 import androidx.appcompat.widget.LinearLayoutCompat
+import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.helper.widget.Flow
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.navigation.findNavController
+import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.work.*
-import com.google.android.material.circularreveal.CircularRevealCompat
-import com.google.android.material.circularreveal.CircularRevealWidget
 import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.Equinox
 import io.github.persiancalendar.calendar.AbstractDate
@@ -55,26 +55,22 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.db.AthanSetting
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.entities.CalendarTypeItem
-import ir.namoo.religiousprayers.entities.CityItem
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import ir.namoo.religiousprayers.service.ApplicationService
 import ir.namoo.religiousprayers.service.BroadcastReceivers
 import ir.namoo.religiousprayers.service.UpdateWorker
 import net.lingala.zip4j.ZipFile
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 // This should be called before any use of Utils on the activity and services
 fun initUtils(context: Context) {
     updateStoredPreference(context)
     createAthansSettingDB(context)
     applyAppLanguage(context)
-    loadLanguageResource(context)
+    loadLanguageResource()
     loadAlarms(context)
     loadEvents(context)
 }
@@ -97,15 +93,13 @@ fun isNightModeEnabled(context: Context): Boolean =
     context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
 fun formatDate(
-    date: AbstractDate,
-    calendarNameInLinear: Boolean = true,
-    forceNonNumerical: Boolean = false
+    date: AbstractDate, calendarNameInLinear: Boolean = true, forceNonNumerical: Boolean = false
 ): String = if (numericalDatePreferred && !forceNonNumerical)
     (toLinearDate(date) + if (calendarNameInLinear) (" " + getCalendarNameAbbr(date)) else "").trim()
 else when (language) {
     LANG_CKB -> "%sی %sی %s"
     else -> "%s %s %s"
-}.format(formatNumber(date.dayOfMonth), getMonthName(date), formatNumber(date.year))
+}.format(formatNumber(date.dayOfMonth), date.monthName, formatNumber(date.year))
 
 fun isNonArabicScriptSelected() = when (language) {
     LANG_EN_US, LANG_JA -> true
@@ -128,98 +122,64 @@ fun formatNumber(number: Int): String = formatNumber(number.toString())
 
 fun formatNumber(number: String): String = when (preferredDigits) {
     ARABIC_DIGITS -> number
-    else -> number.toCharArray().map {
-        if (Character.isDigit(it)) preferredDigits[Character.getNumericValue(it)] else it
+    else -> number.map {
+        preferredDigits.getOrNull(Character.getNumericValue(it)) ?: it
     }.joinToString("")
 }
 
-// https://stackoverflow.com/a/52557989
-fun <T> circularRevealFromMiddle(circularRevealWidget: T) where T : View?, T : CircularRevealWidget {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-        circularRevealWidget.post {
-            val viewWidth = circularRevealWidget.width
-            val viewHeight = circularRevealWidget.height
-
-            val viewDiagonal =
-                sqrt((viewWidth * viewWidth + viewHeight * viewHeight).toDouble()).toInt()
-
-            AnimatorSet().apply {
-                playTogether(
-                    CircularRevealCompat.createCircularReveal(
-                        circularRevealWidget,
-                        (viewWidth / 2).toFloat(), (viewHeight / 2).toFloat(),
-                        10f, (viewDiagonal / 2).toFloat()
-                    ),
-                    ObjectAnimator.ofArgb(
-                        circularRevealWidget,
-                        CircularRevealWidget.CircularRevealScrimColorProperty
-                            .CIRCULAR_REVEAL_SCRIM_COLOR,
-                        Color.GRAY, Color.TRANSPARENT
-                    )
-                )
-                duration = 500
-            }.start()
-        }
+// It should match with calendar_type_abbr array
+fun getCalendarNameAbbr(date: AbstractDate) = calendarTypesTitleAbbr.getOrNull(
+    when (date) {
+        is PersianDate -> 0
+        is IslamicDate -> 1
+        is CivilDate -> 2
+        else -> -1
     }
-}
-
-fun getCalendarNameAbbr(date: AbstractDate): String {
-    if (calendarTypesTitleAbbr.size < 3) return ""
-    // It should match with calendar_type array
-    return when (date) {
-        is PersianDate -> calendarTypesTitleAbbr[0]
-        is IslamicDate -> calendarTypesTitleAbbr[1]
-        is CivilDate -> calendarTypesTitleAbbr[2]
-        else -> ""
-    }
-}
+) ?: ""
 
 fun getThemeFromPreference(context: Context, prefs: SharedPreferences): String =
-    prefs.getString(PREF_THEME, null)?.takeIf { it != "SystemDefault" }
+    prefs.getString(PREF_THEME, null)?.takeIf { it != SYSTEM_DEFAULT_THEME }
         ?: if (isNightModeEnabled(context)) DARK_THEME else CYAN_THEME
 
 fun getEnabledCalendarTypes() = listOf(mainCalendar) + otherCalendars
 
-fun loadApp(context: Context) {
-    if (goForWorker()) return
-    try {
-        val alarmManager = context.getSystemService<AlarmManager>() ?: return
+fun loadApp(context: Context): Unit = if (!goForWorker()) runCatching {
+    val alarmManager = context.getSystemService<AlarmManager>() ?: return@runCatching
 
-        val startTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 1)
-            add(Calendar.DATE, 1)
-        }
-
-        val dailyPendingIntent = PendingIntent.getBroadcast(
-            context, LOAD_APP_ID,
-            Intent(context, BroadcastReceivers::class.java).setAction(BROADCAST_RESTART_APP),
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        alarmManager.set(AlarmManager.RTC, startTime.timeInMillis, dailyPendingIntent)
-
-        // There are simpler triggers on older Androids like SCREEN_ON but they
-        // are not available anymore, lets register an hourly alarm for >= Oreo
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val threeHoursPendingIntent = PendingIntent.getBroadcast(
-                context,
-                THREE_HOURS_APP_ID,
-                Intent(context, BroadcastReceivers::class.java).setAction(BROADCAST_UPDATE_APP),
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-
-            alarmManager.setInexactRepeating(
-                AlarmManager.RTC,
-                // Start from one hour from now
-                Calendar.getInstance().timeInMillis + TimeUnit.HOURS.toMillis(1),
-                TimeUnit.HOURS.toMillis(3), threeHoursPendingIntent
-            )
-        }
-    } catch (e: Exception) {
-        Log.e(TAG, "loadApp fail", e)
+    val startTime = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 1)
+        add(Calendar.DATE, 1)
     }
-}
+
+    val dailyPendingIntent = PendingIntent.getBroadcast(
+        context, LOAD_APP_ID,
+        Intent(context, BroadcastReceivers::class.java).setAction(BROADCAST_RESTART_APP),
+        PendingIntent.FLAG_UPDATE_CURRENT or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+    )
+    alarmManager.set(AlarmManager.RTC, startTime.timeInMillis, dailyPendingIntent)
+
+    // There are simpler triggers on older Androids like SCREEN_ON but they
+    // are not available anymore, lets register an hourly alarm for >= Oreo
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val threeHoursPendingIntent = PendingIntent.getBroadcast(
+            context,
+            THREE_HOURS_APP_ID,
+            Intent(context, BroadcastReceivers::class.java).setAction(BROADCAST_UPDATE_APP),
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC,
+            // Start from one hour from now
+            Calendar.getInstance().timeInMillis + TimeUnit.HOURS.toMillis(1),
+            TimeUnit.HOURS.toMillis(3), threeHoursPendingIntent
+        )
+    }
+}.getOrElse(logException) else Unit
 
 fun getOrderedCalendarTypes(): List<CalendarType> = getEnabledCalendarTypes().let {
     it + (CalendarType.values().toList() - it)
@@ -228,7 +188,7 @@ fun getOrderedCalendarTypes(): List<CalendarType> = getEnabledCalendarTypes().le
 fun loadAlarms(context: Context) {
     val athans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
-    Log.e(TAG, "reading and loading all alarms")
+    logDebug(TAG, "reading and loading all alarms")
 
     if (coordinate != null && !athans.isNullOrEmpty()) {
         val athanGap =
@@ -237,7 +197,7 @@ fun loadAlarms(context: Context) {
 
         val prayTimes = PrayTimeProvider.calculate(
             calculationMethod,
-            Date(), coordinate!!, context
+            Jdn.today, coordinate!!, context
         )
         // convert spacedComma separated string to a set
         athans.filter { it.state }.forEach {
@@ -266,7 +226,7 @@ fun loadAlarms(context: Context) {
                     set(Calendar.HOUR_OF_DAY, at.hour)
                     set(Calendar.MINUTE, at.minute)
                     set(Calendar.SECOND, 0)
-                }.timeInMillis, "B${it.athanKey}", it.id + 6, athanGap, at)
+                }.timeInMillis, "B${it.athanKey}", it.id + 10, athanGap, at)
             }
         }
     }
@@ -277,11 +237,11 @@ private fun set(
     context: Context,
     time: Long,
     athanKey: String,
-    id: Int,
+    ord: Int,
     athanGap: Long,
     alarmTime: Clock
 ) {
-    Log.e(TAG, "set for key= $athanKey time=${alarmTime.toFormattedString()}")
+    logDebug(TAG, "set for key= $athanKey ord=$ord --> time=${alarmTime.toFormattedString()}")
     if (athanSetting.playType == 0)// full screen
         if (context.appPrefsLite.getInt(
                 PREF_FULL_SCREEN_METHOD,
@@ -292,7 +252,7 @@ private fun set(
                 context,
                 athanKey,
                 time,
-                id,
+                ord,
                 athanGap,
                 alarmTime.toFormattedString()
             )
@@ -301,7 +261,7 @@ private fun set(
                 context,
                 athanKey,
                 time,
-                id,
+                ord,
                 athanGap,
                 alarmTime.toFormattedString()
             )
@@ -315,7 +275,7 @@ private fun set(
                 context,
                 athanKey,
                 time,
-                id,
+                ord,
                 athanGap,
                 alarmTime.toFormattedString()
             )
@@ -324,7 +284,7 @@ private fun set(
                 context,
                 athanKey,
                 time,
-                id,
+                ord,
                 athanGap,
                 alarmTime.toFormattedString()
             )
@@ -344,7 +304,7 @@ private fun setAlarm(
 
     // don't set an alarm in the past
     if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
-        Log.e(TAG, "setting alarm1 for $alarmTimeName in -> " + triggerTime.time)
+        logDebug(TAG, "setting alarm1 for $alarmTimeName in -> " + triggerTime.time)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             ALARMS_BASE_ID + ord,
@@ -352,7 +312,8 @@ private fun setAlarm(
                 .putExtra(KEY_EXTRA_PRAYER_KEY, alarmTimeName)
                 .putExtra(KEY_EXTRA_PRAYER_TIME, alarmTime)
                 .setAction(BROADCAST_ALARM),
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
         when {
@@ -399,7 +360,7 @@ private fun setAlarm2(
 
     // don't set an alarm in the past
     if (alarmManager != null && !triggerTime.before(Calendar.getInstance())) {
-        Log.e(TAG, "setting alarm2 for $alarmTimeName in -> " + triggerTime.time)
+        logDebug(TAG, "setting alarm2 for $alarmTimeName in -> " + triggerTime.time)
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -408,7 +369,8 @@ private fun setAlarm2(
                 .putExtra(KEY_EXTRA_PRAYER_KEY, alarmTimeName)
                 .putExtra(KEY_EXTRA_PRAYER_TIME, alarmTime)
                 .setAction(BROADCAST_ALARM),
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
 
         when {
@@ -431,30 +393,25 @@ private fun setAlarm2(
     }
 }
 
-fun getOrderedCalendarEntities(context: Context): List<CalendarTypeItem> {
+fun getOrderedCalendarEntities(
+    context: Context, abbreviation: Boolean = false
+): List<CalendarTypeItem> {
     applyAppLanguage(context)
-    val typeTitleMap = context.resources.getStringArray(R.array.calendar_values)
-        .map(CalendarType::valueOf)
-        .zip(context.resources.getStringArray(R.array.calendar_type))
-        .toMap()
+    val typeTitleMap =
+        context.resources.getStringArray(R.array.calendar_values)
+            .map(CalendarType::valueOf)
+            .zip(context.resources.getStringArray(if (abbreviation) R.array.calendar_type_abbr else R.array.calendar_type))
+            .toMap()
     return getOrderedCalendarTypes().mapNotNull {
         typeTitleMap[it]?.run { CalendarTypeItem(it, this) }
     }
 }
 
-fun getDayIconResource(day: Int): Int = try {
-    when (preferredDigits) {
-        ARABIC_DIGITS -> DAYS_ICONS_ARABIC[day]
-        ARABIC_INDIC_DIGITS -> DAYS_ICONS_ARABIC_INDIC[day]
-        else -> DAYS_ICONS_PERSIAN[day]
-    }
-} catch (e: IndexOutOfBoundsException) {
-    Log.e(TAG, "No such field is available", e)
-    0
-}
-
-fun readRawResource(context: Context, @RawRes res: Int) =
-    context.resources.openRawResource(res).use { String(it.readBytes()) }
+fun getDayIconResource(day: Int): Int = when (preferredDigits) {
+    ARABIC_DIGITS -> DAYS_ICONS_ARABIC
+    ARABIC_INDIC_DIGITS -> DAYS_ICONS_ARABIC_INDIC
+    else -> DAYS_ICONS_PERSIAN
+}.getOrNull(day - 1) ?: 0
 
 fun formatCoordinate(context: Context, coordinate: Coordinate, separator: String) =
     "%s: %.7f%s%s: %.7f".format(
@@ -467,11 +424,10 @@ fun formatCoordinate(context: Context, coordinate: Coordinate, separator: String
 // https://en.wikipedia.org/wiki/ISO_6709#Representation_at_the_human_interface_(Annex_D)
 fun formatCoordinateISO6709(lat: Double, long: Double, alt: Double? = null) = listOf(
     abs(lat) to if (lat >= 0) "N" else "S", abs(long) to if (long >= 0) "E" else "W"
-).joinToString(" ") {
-    val degrees = it.first.toInt()
-    val minutes = ((it.first - degrees) * 60).toInt()
-    val seconds = ((it.first - degrees) * 3600 % 60).toInt()
-    "%d°%02d′%02d%s".format(Locale.US, degrees, minutes, seconds, it.second)
+).joinToString(" ") { (degree: Double, direction: String) ->
+    val minutes = ((degree - degree.toInt()) * 60).toInt()
+    val seconds = ((degree - degree.toInt()) * 3600 % 60).toInt()
+    "%d°%02d′%02d″%s".format(Locale.US, degree.toInt(), minutes, seconds, direction)
 } + (alt?.let { " %s%.1fm".format(Locale.US, if (alt < 0) "−" else "", abs(alt)) } ?: "")
 
 fun getCityName(context: Context, fallbackToCoord: Boolean): String =
@@ -481,7 +437,7 @@ fun getCityName(context: Context, fallbackToCoord: Boolean): String =
             LANG_CKB -> it.ckb
             else -> it.fa
         }
-    } ?: context.appPrefs.getString(PREF_GEOCODED_CITYNAME, null)?.takeUnless { it.isEmpty() }
+    } ?: context.appPrefs.getString(PREF_GEOCODED_CITYNAME, null)?.takeIf { it.isNotEmpty() }
     ?: coordinate?.takeIf { fallbackToCoord }?.let { formatCoordinate(context, it, spacedComma) }
     ?: ""
 
@@ -491,16 +447,11 @@ fun getCoordinate(context: Context): Coordinate? =
             getString(PREF_LATITUDE, null)?.toDoubleOrNull() ?: .0,
             getString(PREF_LONGITUDE, null)?.toDoubleOrNull() ?: .0,
             getString(PREF_ALTITUDE, null)?.toDoubleOrNull() ?: .0
-        ).takeUnless { it.latitude == 0.0 && it.longitude == 0.0 }
+        ).takeIf { it.latitude != 0.0 || it.longitude != 0.0 }
         // If latitude or longitude is zero probably preference is not set yet
     }
 
-fun getTodayOfCalendar(calendar: CalendarType) = getDateFromJdnOfCalendar(calendar, getTodayJdn())
-
-fun getTodayJdn(): Long = calendarToCivilDate(makeCalendarFromDate(Date())).toJdn()
-
-fun getSpringEquinox(jdn: Long) =
-    makeCalendarFromDate(Equinox.northwardEquinox(CivilDate(jdn).year))
+fun CivilDate.getSpringEquinox() = Equinox.northwardEquinox(this.year).toJavaCalendar()
 
 @StringRes
 fun getPrayTimeText(athanKey: String?): Int = when (athanKey) {
@@ -527,12 +478,6 @@ fun getPrayTimeImage(athanKey: String?): Int = when (athanKey) {
     "ISHA" -> R.drawable.isha
     "SUNRISE" -> R.drawable.fajr
     else -> R.drawable.isha
-}
-
-fun getDateFromJdnOfCalendar(calendar: CalendarType, jdn: Long): AbstractDate = when (calendar) {
-    CalendarType.ISLAMIC -> IslamicDate(jdn)
-    CalendarType.GREGORIAN -> CivilDate(jdn)
-    CalendarType.SHAMSI -> PersianDate(jdn)
 }
 
 @StyleRes
@@ -573,7 +518,8 @@ fun askForLocationPermission(activity: Activity?) {
                 LOCATION_PERMISSION_REQUEST_CODE
             )
         }
-        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }.show()
+        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
+        .show()
 }
 
 fun askForCalendarPermission(activity: Activity?) {
@@ -584,31 +530,30 @@ fun askForCalendarPermission(activity: Activity?) {
         .setMessage(R.string.phone_calendar_required)
         .setPositiveButton(R.string.continue_button) { _, _ ->
             activity.requestPermissions(
-                arrayOf(Manifest.permission.READ_CALENDAR),
-                CALENDAR_READ_PERMISSION_REQUEST_CODE
+                arrayOf(Manifest.permission.READ_CALENDAR), CALENDAR_READ_PERMISSION_REQUEST_CODE
             )
         }
-        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }.show()
+        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
+        .show()
 }
 
 fun copyToClipboard(
     view: View?, label: CharSequence?, text: CharSequence?, showToastInstead: Boolean = false
-) {
-    view ?: return
+) = runCatching {
+    view ?: return@runCatching null
     val clipboardService = view.context.getSystemService<ClipboardManager>()
-
-    if (clipboardService == null || label == null || text == null) return
-
+    if (clipboardService == null || label == null || text == null) return@runCatching null
     clipboardService.setPrimaryClip(ClipData.newPlainText(label, text))
-    val textToShow = view.context.getString(R.string.date_copied_clipboard).format(text)
+    val textToShow =
+        view.context.getString(R.string.date_copied_clipboard).format(text)
     if (showToastInstead)
         Toast.makeText(view.context, textToShow, Toast.LENGTH_SHORT).show()
     else
         Snackbar.make(view, textToShow, Snackbar.LENGTH_SHORT).show()
-}
+}.onFailure(logException).getOrNull().debugAssertNotNull ?: Unit
 
-fun dateStringOfOtherCalendars(jdn: Long, separator: String) =
-    otherCalendars.joinToString(separator) { formatDate(getDateFromJdnOfCalendar(it, jdn)) }
+fun dateStringOfOtherCalendars(jdn: Jdn, separator: String) =
+    otherCalendars.joinToString(separator) { formatDate(jdn.toCalendar(it)) }
 
 private fun calculateDiffToChangeDate(): Long = Calendar.getInstance().apply {
     set(Calendar.HOUR_OF_DAY, 0)
@@ -619,53 +564,38 @@ private fun calculateDiffToChangeDate(): Long = Calendar.getInstance().apply {
 fun setChangeDateWorker(context: Context) {
     val remainedSeconds = calculateDiffToChangeDate()
     val changeDateWorker = OneTimeWorkRequest.Builder(UpdateWorker::class.java)
-        .setInitialDelay(
-            remainedSeconds,
-            TimeUnit.SECONDS
-        )// Use this when you want to add initial delay or schedule initial work to `OneTimeWorkRequest` e.g. setInitialDelay(2, TimeUnit.HOURS)
+        // Use this when you want to add initial delay or schedule initial work
+        // to `OneTimeWorkRequest` e.g. setInitialDelay(2, TimeUnit.HOURS)
+        .setInitialDelay(remainedSeconds, TimeUnit.SECONDS)
         .build()
 
     WorkManager.getInstance(context).beginUniqueWork(
-        CHANGE_DATE_TAG,
-        ExistingWorkPolicy.REPLACE,
-        changeDateWorker
+        CHANGE_DATE_TAG, ExistingWorkPolicy.REPLACE, changeDateWorker
     ).enqueue()
 }
 
 fun String.splitIgnoreEmpty(delim: String) = this.split(delim).filter { it.isNotEmpty() }
 
 fun startEitherServiceOrWorker(context: Context) {
-    val workManager = WorkManager.getInstance(context)
     if (goForWorker()) {
-        val updateBuilder =
-            PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1L, TimeUnit.HOURS)
-
-        val updateWork = updateBuilder.build()
-        workManager.enqueueUniquePeriodicWork(
-            UPDATE_TAG,
-            ExistingPeriodicWorkPolicy.REPLACE,
-            updateWork
-        )
+        runCatching {
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                UPDATE_TAG, ExistingPeriodicWorkPolicy.REPLACE,
+                // An hourly task to call UpdateWorker.doWork
+                PeriodicWorkRequest.Builder(UpdateWorker::class.java, 1L, TimeUnit.HOURS).build()
+            )
+        }.onFailure(logException).getOrNull().debugAssertNotNull
     } else {
-        // Disable all the scheduled workers, just in case enabled before
-        workManager.cancelAllWork()
-        // Or,
-        // workManager.cancelAllWorkByTag(UPDATE_TAG);
-        // workManager.cancelUniqueWork(CHANGE_DATE_TAG);
-
         val isRunning = context.getSystemService<ActivityManager>()?.let { am ->
-            try {
+            runCatching {
                 am.getRunningServices(Integer.MAX_VALUE).any {
                     ApplicationService::class.java.name == it.service.className
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "startEitherServiceOrWorker service's first part fail", e)
-                false
-            }
+            }.onFailure(logException).getOrNull()
         } ?: false
 
         if (!isRunning) {
-            try {
+            runCatching {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     ContextCompat.startForegroundService(
                         context,
@@ -673,15 +603,14 @@ fun startEitherServiceOrWorker(context: Context) {
                     )
 
                 context.startService(Intent(context, ApplicationService::class.java))
-            } catch (e: Exception) {
-                Log.e(TAG, "startEitherServiceOrWorker service's second part fail", e)
-            }
+            }.onFailure(logException)
         }
     }
 }
 
-fun getShiftWorkTitle(jdn: Long, abbreviated: Boolean): String {
-    if (shiftWorkStartingJdn == -1L || jdn < shiftWorkStartingJdn || shiftWorkPeriod == 0)
+fun getShiftWorkTitle(jdn: Jdn, abbreviated: Boolean): String {
+    val shiftWorkStartingJdn = shiftWorkStartingJdn ?: return ""
+    if (jdn < shiftWorkStartingJdn || shiftWorkPeriod == 0)
         return ""
 
     val passedDays = jdn - shiftWorkStartingJdn
@@ -704,102 +633,21 @@ fun getShiftWorkTitle(jdn: Long, abbreviated: Boolean): String {
     else title
 }
 
-fun getAllCities(context: Context, needsSort: Boolean): List<CityItem> {
-    val result = mutableListOf<CityItem>()
-    try {
-        fun JSONObject.forEach(f: (String, JSONObject) -> Unit) =
-            this.keys().asSequence().forEach { f(it, this.getJSONObject(it)) }
-
-        JSONObject(readRawResource(context, R.raw.cities)).forEach { countryCode, country ->
-            val countryEn = country.getString("en")
-            val countryFa = country.getString("fa")
-            val countryCkb = country.getString("ckb")
-            val countryAr = country.getString("ar")
-
-            country.getJSONObject("cities").forEach { key, city ->
-                result.add(
-                    CityItem(
-                        key = key,
-                        en = city.getString("en"), fa = city.getString("fa"),
-                        ckb = city.getString("ckb"), ar = city.getString("ar"),
-                        countryCode = countryCode,
-                        countryEn = countryEn, countryFa = countryFa,
-                        countryCkb = countryCkb, countryAr = countryAr,
-                        coordinate = Coordinate(
-                            city.getDouble("latitude"),
-                            city.getDouble("longitude"),
-                            // Don't Consider elevation for Iran
-                            if (countryCode == "ir") 0.0 else city.getDouble("elevation")
-                        )
-                    )
-                )
-            }
-        }
-    } catch (e: JSONException) {
-        e.printStackTrace()
-    }
-
-    if (!needsSort) return result
-
-    val irCodeOrder = listOf("zz", "ir", "af", "iq")
-    val afCodeOrder = listOf("zz", "af", "ir", "iq")
-    val arCodeOrder = listOf("zz", "iq", "ir", "af")
-
-    fun getCountryCodeOrder(countryCode: String): Int =
-        when (language) {
-            LANG_FA_AF, LANG_PS -> afCodeOrder.indexOf(countryCode)
-            LANG_AR -> arCodeOrder.indexOf(countryCode)
-            LANG_FA, LANG_GLK, LANG_AZB -> irCodeOrder.indexOf(countryCode)
-            else -> irCodeOrder.indexOf(countryCode)
-        }
-
-    fun prepareForArabicSort(text: String) = text
-        .replace("ی", "ي")
-        .replace("ک", "ك")
-        .replace("گ", "كی")
-        .replace("ژ", "زی")
-        .replace("چ", "جی")
-        .replace("پ", "بی")
-        .replace("ڕ", "ری")
-        .replace("ڵ", "لی")
-        .replace("ڤ", "فی")
-        .replace("ۆ", "وی")
-        .replace("ێ", "یی")
-        .replace("ھ", "نی")
-        .replace("ە", "هی")
-
-    return result.sortedWith(kotlin.Comparator { l, r ->
-        if (l.key == "") return@Comparator -1
-
-        if (r.key == DEFAULT_CITY) return@Comparator 1
-
-        val compare = getCountryCodeOrder(l.countryCode) - getCountryCodeOrder(r.countryCode)
-        if (compare != 0) return@Comparator compare
-
-        when (language) {
-            LANG_EN_US, LANG_JA, LANG_EN_IR -> l.en.compareTo(r.en)
-            LANG_AR -> l.ar.compareTo(r.ar)
-            LANG_CKB -> prepareForArabicSort(l.ckb).compareTo(prepareForArabicSort(r.ckb))
-            else -> prepareForArabicSort(l.fa).compareTo(prepareForArabicSort(r.fa))
-        }
-    })
-}
-
 val Context.appPrefs: SharedPreferences
     get() = PreferenceManager.getDefaultSharedPreferences(this)
 
 val Context.appPrefsLite: SharedPreferences
     get() = this.getSharedPreferences("lite_prefs", Context.MODE_PRIVATE)
 
+fun SharedPreferences.Editor.putJdn(key: String, jdn: Jdn?) {
+    if (jdn == null) remove(jdn) else putLong(key, jdn.value)
+}
+
+fun SharedPreferences.getJdnOrNull(key: String): Jdn? =
+    getLong(key, -1).takeIf { it != -1L }?.let(::Jdn)
+
 val Context.layoutInflater: LayoutInflater
     get() = LayoutInflater.from(this)
-
-fun getColorFromAttr(context: Context, @AttrRes attr: Int): Int {
-    val typedValue = TypedValue()
-    val theme: Resources.Theme = context.theme
-    theme.resolveAttribute(attr, typedValue, true)
-    return typedValue.data
-}
 
 fun isNetworkConnected(context: Context): Boolean {
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -936,8 +784,6 @@ fun getDayMonthForDayOfYear(day: Int): String {
     val res: String
     var m = 0
     var d = 0
-    val strM: String
-    val strD: String
     when {
         day <= 31 -> {// 1
             m = 1
@@ -988,8 +834,8 @@ fun getDayMonthForDayOfYear(day: Int): String {
             d = day - 336
         }
     }
-    strM = if (m <= 9) "0$m" else m.toString()
-    strD = if (d <= 9) "0$d" else d.toString()
+    val strM: String = if (m <= 9) "0$m" else m.toString()
+    val strD: String = if (d <= 9) "0$d" else d.toString()
     res = "$strM/$strD"
     return res
 }
@@ -1010,32 +856,23 @@ fun fixTime(time: String, min: Int): String {
         sh--
         if (sh < 0) sh = 23
     }
-    val nh: String
-    val nm: String
-    nh = sh.toString() + ""
-    nm = sm.toString() + ""
+    val nh: String = sh.toString() + ""
+    val nm: String = sm.toString() + ""
 //    if (sh <= 9) nh = "0$nh"
 //    if (sm <= 9) nm = "0$nm"
     return "$nh:$nm"
 }
 
-//fun add0ToTime(time: String): String {
-//    val h = if (time.split(":")[0].length == 2) time.split(":")[0] else "0${time.split(":")[0]}"
-//    val m = if (time.split(":")[1].length == 2) time.split(":")[1] else "0${time.split(":")[1]}"
-//    return "$h:$m"
-//}
 
 fun snackMessage(view: View?, msg: String) {
-    view ?: return
-    try {
+    runCatching {
+        view ?: return
         val snack = Snackbar.make(view, msg, Snackbar.LENGTH_SHORT)
         (snack.view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView).typeface =
             getAppFont(view.context)
-        snack.view.setBackgroundColor(getColorFromAttr(view.context, R.attr.colorSnack))
+        snack.view.setBackgroundColor(view.context.resolveColor(R.attr.colorSnack))
         snack.show()
-    } catch (ex: Exception) {
-        Log.e(TAG, "snackMessage: ", ex)
-    }
+    }.onFailure(logException)
 }
 
 fun getTimesDirectoryPath(context: Context): String =
@@ -1084,28 +921,24 @@ fun getDatabasesDirectory(applicationContext: Context): String =
     "/data/data/${applicationContext.packageName}/databases/"
 
 @SuppressLint("SdCardPath")
-fun copyCityDB(applicationContext: Context) {
-    try {
-        val dis = File("/data/data/${applicationContext.packageName}/databases")
-        if (!dis.exists())
-            dis.mkdir()
-        val outPutFile =
-            File("/data/data/${applicationContext.packageName}/databases/city.zip")
-        val fileOutputStream = FileOutputStream(outPutFile)
-        applicationContext.assets.open("city.zip").copyTo(fileOutputStream)
-        fileOutputStream.close()
-        ZipFile(
-            "/data/data/${applicationContext.packageName}/databases/city.zip",
-            ("@zKa6").toCharArray()
-        ).extractAll("/data/data/${applicationContext.packageName}/databases/")
-        File("/data/data/${applicationContext.packageName}/databases/city.zip").delete()
-        applicationContext.appPrefs.edit {
-            putBoolean("pref_first_city_copy", true)
-        }
-    } catch (ex: Exception) {
-
+fun copyCityDB(applicationContext: Context) = runCatching {
+    val dis = File("/data/data/${applicationContext.packageName}/databases")
+    if (!dis.exists())
+        dis.mkdir()
+    val outPutFile =
+        File("/data/data/${applicationContext.packageName}/databases/city.zip")
+    val fileOutputStream = FileOutputStream(outPutFile)
+    applicationContext.assets.open("city.zip").copyTo(fileOutputStream)
+    fileOutputStream.close()
+    ZipFile(
+        "/data/data/${applicationContext.packageName}/databases/city.zip",
+        ("@zKa6").toCharArray()
+    ).extractAll("/data/data/${applicationContext.packageName}/databases/")
+    File("/data/data/${applicationContext.packageName}/databases/city.zip").delete()
+    applicationContext.appPrefs.edit {
+        putBoolean("pref_first_city_copy", true)
     }
-}
+}.onFailure(logException).getOrNull() ?: Unit
 
 fun toDouble(hour: Int, minute: Int): Double {
     val ashari = (minute * 100) / 60
@@ -1150,12 +983,10 @@ fun addSummerTimes(times: PrayTimes): PrayTimes {
 }
 
 fun isPackageInstalled(packageName: String, packageManager: PackageManager): Boolean {
-    return try {
+    return runCatching {
         packageManager.getPackageInfo(packageName, 0)
         true
-    } catch (ex: Exception) {
-        false
-    }
+    }.onFailure(logException).getOrDefault(false)
 }
 
 fun appendLog(context: Context, text: String?) {
@@ -1163,38 +994,38 @@ fun appendLog(context: Context, text: String?) {
     val logFile = File("${context.getExternalFilesDir("logs")?.absolutePath ?: ""}/log.file")
     if (logFile.exists() && logFile.length() > 1024 * 500) logFile.delete()//if log size > 500kb delete it
     if (!logFile.exists()) {
-        try {
+        runCatching {
             if (!File(context.getExternalFilesDir("logs")?.absolutePath ?: "").exists())
                 File(context.getExternalFilesDir("logs")?.absolutePath ?: "").mkdirs()
             logFile.createNewFile()
-        } catch (e: IOException) {
-        }
+        }.onFailure(logException)
     }
-    try {
+    runCatching {
         val buf = BufferedWriter(FileWriter(logFile, true))
         buf.append(text)
         buf.newLine()
         buf.close()
-    } catch (e: IOException) {
-    }
+    }.onFailure(logException)
 }
 
-fun bringMarketPage(activity: Activity) = try {
+fun bringMarketPage(activity: Activity): Unit = runCatching {
     activity.startActivity(
         Intent(Intent.ACTION_VIEW, "market://details?id=${activity.packageName}".toUri())
     )
-} catch (e: ActivityNotFoundException) {
-    e.printStackTrace()
-    activity.startActivity(
-        Intent(
-            Intent.ACTION_VIEW,
-            "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
+}.onFailure(logException).getOrElse {
+    runCatching {
+        activity.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
+            )
         )
-    )
+    }.onFailure(logException)
 }
 
 fun createAthansSettingDB(context: Context) {
-    val athanSettingDB = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+    val athanSettingDB =
+        AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
     if (athanSettingDB.getAllAthanSettings().isNullOrEmpty()) {
         athanSettingDB.insert(
             AthanSetting(
@@ -1283,5 +1114,60 @@ fun createAthansSettingDB(context: Context) {
     }
 }
 
-val Number.dp: Int
-    get() = (toFloat() * Resources.getSystem().displayMetrics.density).toInt()
+val Number.dp: Int get() = (this.toFloat() * Resources.getSystem().displayMetrics.density).toInt()
+
+
+val logException = fun(e: Throwable) { logDebug(TAG, e) }
+
+fun Toolbar.setupUpNavigation() {
+    navigationIcon = DrawerArrowDrawable(context).apply { progress = 1f }
+    setNavigationContentDescription(androidx.navigation.ui.R.string.nav_app_bar_navigate_up_description)
+    setNavigationOnClickListener { findNavController().navigateUp() }
+}
+
+@ColorInt
+fun Context.resolveColor(attr: Int) = TypedValue().let {
+    theme.resolveAttribute(attr, it, true)
+    ContextCompat.getColor(this, it.resourceId)
+}
+
+fun Flow.addViewsToFlow(viewList: List<View>) {
+    val parentView = (this.parent as? ViewGroup).debugAssertNotNull ?: return
+    this.referencedIds = viewList.map {
+        View.generateViewId().also { id ->
+            it.id = id
+            parentView.addView(it)
+        }
+    }.toIntArray()
+}
+
+inline fun Preference.setOnClickListener(crossinline listener: () -> Unit) {
+    this.setOnPreferenceClickListener {
+        listener()
+        true // means it captures the click event
+    }
+}
+
+fun <T> listOf31Items(
+    x1: T, x2: T, x3: T, x4: T, x5: T, x6: T, x7: T, x8: T, x9: T, x10: T, x11: T, x12: T,
+    x13: T, x14: T, x15: T, x16: T, x17: T, x18: T, x19: T, x20: T, x21: T, x22: T,
+    x23: T, x24: T, x25: T, x26: T, x27: T, x28: T, x29: T, x30: T, x31: T
+) = listOf(
+    x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12,
+    x13, x14, x15, x16, x17, x18, x19, x20, x21, x22,
+    x23, x24, x25, x26, x27, x28, x29, x30, x31
+)
+
+fun <T> listOf12Items(
+    x1: T, x2: T, x3: T, x4: T, x5: T, x6: T, x7: T, x8: T, x9: T, x10: T, x11: T, x12: T
+) = listOf(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)
+
+fun <T> listOf7Items(
+    x1: T, x2: T, x3: T, x4: T, x5: T, x6: T, x7: T
+) = listOf(x1, x2, x3, x4, x5, x6, x7)
+
+fun logDebug(tag: String, msg: String) = Log.e(tag, msg)
+fun logDebug(tag: String, exception: Throwable) = Log.e(tag, exception.message, exception)
+
+inline val <T> T.debugAssertNotNull: T
+    inline get() = this ?: throw NullPointerException("A debug only assert has happened")

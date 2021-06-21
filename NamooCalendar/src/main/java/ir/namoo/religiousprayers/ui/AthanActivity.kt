@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
@@ -20,7 +19,6 @@ import ir.namoo.religiousprayers.databinding.ActivityAthanBinding
 import ir.namoo.religiousprayers.db.AthanSetting
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.utils.*
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class AthanActivity : AppCompatActivity() {
@@ -35,7 +33,7 @@ class AthanActivity : AppCompatActivity() {
     private var isDoaPlayed = false
     private val stopTask = object : Runnable {
         override fun run() {
-            try {
+            runCatching {
                 if (!isDoaPlayed &&
                     ((mediaPlayer != null && mediaPlayer?.isPlaying == false) || mediaPlayer == null)
                 ) {
@@ -44,10 +42,7 @@ class AthanActivity : AppCompatActivity() {
                     !(doaPlayer?.isPlaying == true || mediaPlayer?.isPlaying == true)
                 ) return this@AthanActivity.finish()
                 handler.postDelayed(this, TimeUnit.SECONDS.toMillis(1))
-            } catch (e: Exception) {
-                e.printStackTrace()
-                return this@AthanActivity.finish()
-            }
+            }.onFailure(logException).getOrElse { return this@AthanActivity.finish() }
         }
     }
 
@@ -93,9 +88,9 @@ class AthanActivity : AppCompatActivity() {
         val prayerTime = intent.getStringExtra(KEY_EXTRA_PRAYER_TIME)
         if (prayerKey[0] == 'B') isDoaPlayed = true
 
-        try {
+        runCatching {
             mediaPlayer = MediaPlayer().apply {
-                try {
+                runCatching {
                     if (prayerKey[0] == 'B') {
                         setDataSource(
                             this@AthanActivity, if (setting.alertURI == "")
@@ -130,15 +125,10 @@ class AthanActivity : AppCompatActivity() {
                     if (prayerKey[0] == 'B')
                         isLooping = true
                     prepare()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
+                }.onFailure(logException)
                 start()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-
-        }
+        }.onFailure(logException)
 
         applyAppLanguage(this)
 
@@ -175,21 +165,19 @@ class AthanActivity : AppCompatActivity() {
 
         if (setting.isAscending) handler.post(ascendVolume)
 
-        try {
+        runCatching {
             getSystemService<TelephonyManager>()?.listen(
                 phoneStateListener,
                 PhoneStateListener.LISTEN_CALL_STATE
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        }.onFailure(logException)
     }
 
     fun playDoa() {
         isDoaPlayed = true
         if (setting.playDoa)//play doa
             doaPlayer = MediaPlayer().apply {
-                try {
+                runCatching {
                     setDataSource(
                         this@AthanActivity,
                         getDefaultDOAUri(this@AthanActivity)
@@ -207,9 +195,7 @@ class AthanActivity : AppCompatActivity() {
                     }
                     volumeControlStream = AudioManager.STREAM_ALARM
                     prepare()
-                } catch (ex: Exception) {
-                    ex.printStackTrace()
-                }
+                }.onFailure(logException)
                 start()
             }
     }
@@ -225,37 +211,30 @@ class AthanActivity : AppCompatActivity() {
         if (alreadyStopped) return
         alreadyStopped = true
 
-        try {
+        runCatching {
             getSystemService<TelephonyManager>()?.listen(
                 phoneStateListener, PhoneStateListener.LISTEN_NONE
             )
             phoneStateListener = null
-        } catch (e: RuntimeException) {
-            Log.e("Athan", "TelephonyManager handling fail", e)
-        }
+        }.onFailure(logException)
 
-        try {
+        runCatching {
             mediaPlayer?.apply {
                 if (isPlaying) {
                     stop()
                     release()
                 }
             }
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }
+        }.onFailure(logException)
 
-        try {
+        runCatching {
             doaPlayer?.apply {
                 if (isPlaying) {
                     stop()
                     release()
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
+        }.onFailure(logException)
 
         handler.removeCallbacks(stopTask)
         handler.removeCallbacks(ascendVolume)

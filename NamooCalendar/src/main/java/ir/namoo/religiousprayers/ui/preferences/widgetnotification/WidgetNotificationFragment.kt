@@ -1,146 +1,112 @@
 package ir.namoo.religiousprayers.ui.preferences.widgetnotification
 
-import android.graphics.Color
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.edit
+import android.os.Handler
+import android.os.Looper
+import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import ir.namoo.religiousprayers.*
-import ir.namoo.religiousprayers.utils.appPrefs
-import ir.namoo.religiousprayers.utils.dp
-import java.util.*
+import androidx.preference.SwitchPreferenceCompat
+import ir.namoo.religiousprayers.PREF_CENTER_ALIGN_WIDGETS
+import ir.namoo.religiousprayers.PREF_IRAN_TIME
+import ir.namoo.religiousprayers.PREF_NOTIFY_DATE
+import ir.namoo.religiousprayers.PREF_NOTIFY_DATE_LOCK_SCREEN
+import ir.namoo.religiousprayers.PREF_NUMERICAL_DATE_PREFERRED
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_BACKGROUND_COLOR
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_TEXT_COLOR
+import ir.namoo.religiousprayers.PREF_WHAT_TO_SHOW_WIDGETS
+import ir.namoo.religiousprayers.PREF_WIDGET_CLOCK
+import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.ui.preferences.shared.showColorPickerDialog
+import ir.namoo.religiousprayers.utils.setOnClickListener
 
-// Don't use MainActivity here as it is used in WidgetConfigurationActivity also
+
+// Consider that it is used both in MainActivity and WidgetConfigurationActivity
 class WidgetNotificationFragment : PreferenceFragmentCompat() {
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        val context = context ?: return
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) =
-        addPreferencesFromResource(R.xml.preferences_widget_notification)
-
-    override fun onPreferenceTreeClick(preference: Preference?): Boolean {
-        val activity = activity ?: return false
-
-        val sharedPreferences = activity.appPrefs
-
-        if (preference?.key == PREF_SELECTED_WIDGET_TEXT_COLOR) {
-            val colorPickerView = ColorPickerView(activity)
-            colorPickerView.setColorsToPick(
-                listOf(0xFFFFFFFFL, 0xFFE65100L, 0xFF00796bL, 0xFFFEF200L, 0xFF202020L)
-            )
-            colorPickerView.setPickedColor(
-                Color.parseColor(
-                    sharedPreferences.getString(
-                        PREF_SELECTED_WIDGET_TEXT_COLOR,
-                        DEFAULT_SELECTED_WIDGET_TEXT_COLOR
-                    )
-                )
-            )
-            colorPickerView.hideAlphaSeekBar()
-
-            val padding = 10.dp
-            colorPickerView.setPadding(padding, padding, padding, padding)
-
-            AlertDialog.Builder(activity).apply {
-                setTitle(R.string.widget_text_color)
-                setView(colorPickerView)
-                setPositiveButton(R.string.accept) { _, _ ->
-                    try {
-                        sharedPreferences.edit {
-                            putString(
-                                PREF_SELECTED_WIDGET_TEXT_COLOR,
-                                "#%06X".format(
-                                    Locale.ENGLISH,
-                                    0xFFFFFF and colorPickerView.pickerColor
-                                )
-                            )
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+        val screen = preferenceManager.createPreferenceScreen(context)
+        val isWidgetsConfiguration = arguments?.getBoolean(IS_WIDGETS_CONFIGURATION, false) == true
+        val handler = Handler(Looper.getMainLooper())
+        listOf(
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_NOTIFY_DATE
+                it.setDefaultValue(true)
+                it.setTitle(R.string.notify_date)
+                it.setSummary(R.string.enable_notify)
+                if (isWidgetsConfiguration) it.isVisible = false
+            },
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_NOTIFY_DATE_LOCK_SCREEN
+                handler.post { it.dependency = PREF_NOTIFY_DATE } // deferred dependency wire up
+                it.setDefaultValue(true)
+                it.setTitle(R.string.notify_date_lock_screen)
+                it.setSummary(R.string.notify_date_lock_screen_summary)
+                if (isWidgetsConfiguration) it.isVisible = false
+            },
+            Preference(context).also {
+                it.setTitle(R.string.widget_text_color)
+                it.setSummary(R.string.select_widgets_text_color)
+                it.setOnClickListener {
+                    showColorPickerDialog(false, PREF_SELECTED_WIDGET_TEXT_COLOR)
                 }
-                setNegativeButton(R.string.cancel, null)
-            }.show()
-            return true
-        }
-
-        if (preference?.key == PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR) {
-            val colorPickerView = ColorPickerView(activity)
-            colorPickerView.setColorsToPick(
-                listOf(0xFFFFFFFFL, 0xFFE65100L, 0xFF00796bL, 0xFFFEF200L, 0xFF202020L)
-            )
-            colorPickerView.setPickedColor(
-                Color.parseColor(
-                    sharedPreferences.getString(
-                        PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR,
-                        DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
-                    )
-                )
-            )
-            colorPickerView.hideAlphaSeekBar()
-
-            val padding = (activity.resources.displayMetrics.density * 10).toInt()
-            colorPickerView.setPadding(padding, padding, padding, padding)
-
-            AlertDialog.Builder(activity).apply {
-                setTitle(R.string.widget_next_athan_text_color)
-                setView(colorPickerView)
-                setPositiveButton(R.string.accept) { _, _ ->
-                    try {
-                        sharedPreferences.edit {
-                            putString(
-                                PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR,
-                                "#%06X".format(
-                                    Locale.ENGLISH,
-                                    0xFFFFFF and colorPickerView.pickerColor
-                                )
-                            )
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+            },
+            Preference(context).also {
+                it.setTitle(R.string.widget_next_athan_text_color)
+                it.setSummary(R.string.select_widgets_next_athan_text_color)
+                it.setOnClickListener {
+                    showColorPickerDialog(false, PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR)
                 }
-                setNegativeButton(R.string.cancel, null)
-            }.show()
-            return true
-        }
-
-        if (preference?.key == PREF_SELECTED_WIDGET_BACKGROUND_COLOR) {
-            val colorPickerView = ColorPickerView(activity)
-            colorPickerView.setColorsToPick(listOf(0x00000000L, 0x50000000L, 0xFF000000L))
-            colorPickerView.setPickedColor(
-                Color.parseColor(
-                    sharedPreferences.getString(
-                        PREF_SELECTED_WIDGET_BACKGROUND_COLOR,
-                        DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
-                    )
-                )
-            )
-
-            val padding = (activity.resources.displayMetrics.density * 10).toInt()
-            colorPickerView.setPadding(padding, padding, padding, padding)
-
-            AlertDialog.Builder(activity).apply {
-                setTitle(R.string.widget_background_color)
-                setView(colorPickerView)
-                setPositiveButton(R.string.accept) { _, _ ->
-                    try {
-                        sharedPreferences.edit {
-                            putString(
-                                PREF_SELECTED_WIDGET_BACKGROUND_COLOR,
-                                "#%08X".format(
-                                    Locale.ENGLISH,
-                                    0xFFFFFFFF and colorPickerView.pickerColor.toLong()
-                                )
-                            )
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+            },
+            Preference(context).also {
+                it.setTitle(R.string.widget_background_color)
+                it.setSummary(R.string.select_widgets_background_color)
+                it.setOnClickListener {
+                    showColorPickerDialog(true, PREF_SELECTED_WIDGET_BACKGROUND_COLOR)
                 }
-                setNegativeButton(R.string.cancel, null)
-            }.show()
-            return true
-        }
-        return super.onPreferenceTreeClick(preference)
+            },
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_NUMERICAL_DATE_PREFERRED
+                it.setDefaultValue(false)
+                it.setTitle(R.string.prefer_linear_date)
+                it.setSummary(R.string.prefer_linear_date_summary)
+            },
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_WIDGET_CLOCK
+                it.setDefaultValue(true)
+                it.setTitle(R.string.clock_on_widget)
+                it.setSummary(R.string.showing_clock_on_widget)
+            },
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_CENTER_ALIGN_WIDGETS
+                it.setDefaultValue(false)
+                it.setTitle(R.string.center_align_widgets)
+                it.setSummary(R.string.center_align_widgets_summary)
+            },
+            SwitchPreferenceCompat(context).also {
+                it.key = PREF_IRAN_TIME
+                it.setDefaultValue(false)
+                it.setTitle(R.string.iran_time)
+                it.setSummary(R.string.showing_iran_time)
+            },
+            MultiSelectListPreference(context).also {
+                it.key = PREF_WHAT_TO_SHOW_WIDGETS
+                it.setTitle(R.string.customize_widget)
+                it.setSummary(R.string.customize_widget_summary)
+                it.setDialogTitle(R.string.which_one_to_show)
+                it.setNegativeButtonText(R.string.cancel)
+                it.setPositiveButtonText(R.string.accept)
+                it.setDefaultValue(resources.getStringArray(R.array.what_to_show_default).toSet())
+                it.entries = resources.getStringArray(R.array.what_to_show)
+                it.entryValues = resources.getStringArray(R.array.what_to_show_keys)
+            }
+        ).onEach { it.isIconSpaceReserved = false }.forEach(screen::addPreference)
+        preferenceScreen = screen
+    }
+
+    companion object {
+        const val IS_WIDGETS_CONFIGURATION = "IS_WIDGETS_CONFIGURATION"
     }
 }

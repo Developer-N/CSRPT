@@ -11,7 +11,6 @@ import android.text.InputType
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
 import android.widget.Filter
@@ -408,12 +407,9 @@ class ChapterFragment : Fragment() {
                         R.drawable.ic_favorite_border
                 )
                 if (filter.isNotEmpty()) {
-                    try {
+                    runCatching {
                         val fColorSpan = ForegroundColorSpan(
-                            getColorFromAttr(
-                                itemView.context,
-                                R.attr.colorHighlight
-                            )
+                            itemView.context.resolveColor(R.attr.colorHighlight)
                         )
                         val spannableStringBuilder =
                             SpannableStringBuilder(itemBinding.chapterTxtSuraName.text)
@@ -424,8 +420,7 @@ class ChapterFragment : Fragment() {
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                         itemBinding.chapterTxtSuraName.text = spannableStringBuilder
-                    } catch (ex: Exception) {
-                    }
+                    }.onFailure(logException)
                 }//end of if Filter.isNotEmpty
                 itemBinding.btnChapterFav.setOnClickListener {
                     it as AppCompatImageButton
@@ -490,7 +485,7 @@ class ChapterFragment : Fragment() {
 
         @SuppressLint("SdCardPath")
         override fun doInBackground(vararg p0: Unit?): String {
-            return try {
+            return runCatching {
                 val dbFile =
                     File("/data/data/${requireContext().packageName}/databases/quran.zip")
                 if (dbFile.exists())
@@ -527,23 +522,16 @@ class ChapterFragment : Fragment() {
                     else
                         "OK"
                 }
-            } catch (ex: Exception) {
-                Log.e(TAG, "quran download: ", ex)
-                "Error"
-            }
+            }.onFailure(logException).getOrDefault("Error")
         }//end of doInBackground
 
         @SuppressLint("SdCardPath")
-        private fun unzip(context: Context): Boolean {
-            return try {
-                ZipFile("/data/data/${context.packageName}/databases/quran.zip").extractAll("/data/data/${context.packageName}/databases/")
-                File("/data/data/${context.packageName}/databases/quran.zip").delete()
-                true
-            } catch (ex: Exception) {
-                Log.d("NAMOO", "Error unzip db $ex")
-                false
-            }
-        }
+        private fun unzip(context: Context): Boolean = runCatching {
+            ZipFile("/data/data/${context.packageName}/databases/quran.zip").extractAll("/data/data/${context.packageName}/databases/")
+            File("/data/data/${context.packageName}/databases/quran.zip").delete()
+            true
+        }.onFailure(logException).getOrDefault(false)
+
     }//end of download task
 
 }//end of ChapterFragment

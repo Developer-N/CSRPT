@@ -13,7 +13,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
-import android.util.Log
 import android.view.*
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -162,12 +161,6 @@ class AzkarActivity : AppCompatActivity() {
         private inner class AVH(val binding: AzkarSubitemsBinding) :
             RecyclerView.ViewHolder(binding.root) {
 
-            init {
-                binding.title.typeface = getAppFont(binding.root.context)
-                binding.description.typeface = getAppFont(binding.root.context)
-                binding.info.typeface = getAppFont(binding.root.context)
-            }
-
             @SuppressLint("PrivateResource")
             fun bind(azkar: AzkarsEntity) {
                 binding.title.text = azkar.title
@@ -229,13 +222,7 @@ class AzkarActivity : AppCompatActivity() {
                             val url = "https://archive.org/download/azkar_n/" + azkar.muzic + ".MP3"
                             DownloadTask(File(mp3File.absolutePath)).execute(url)
                         }
-                    } //else if (mp != null && mp!!.isPlaying) {
-//                        mp!!.stop()
-//                        mp!!.release()
-//                        mp = null
-//                        binding.btnAzkarPlay.setImageResource(R.drawable.ic_play)
-//                    }
-                    else {
+                    } else {
                         if (lastPlay != null) {
                             mp!!.stop()
                             mp!!.release()
@@ -338,7 +325,7 @@ class AzkarActivity : AppCompatActivity() {
             }//end of class TASK
 
             fun play(mp3File: File) {
-                try {
+                runCatching {
                     mp = MediaPlayer()
                     mp?.setDataSource(applicationContext, Uri.fromFile(mp3File))
                     mp?.prepare()
@@ -348,23 +335,19 @@ class AzkarActivity : AppCompatActivity() {
                         binding.btnAzkarPlay.setImageResource(R.drawable.ic_play)
                         lastPlay = null
                     }
-                } catch (ex: Exception) {
-                    Log.e(TAG, "play: Error == >> $ex")
-                }
+                }.onFailure(logException)
             }
         }//end of view holder
     }//end of Adapter
 
     override fun onBackPressed() {
-        try {
+        runCatching {
             if (mp != null && mp!!.isPlaying) {
                 mp!!.stop()
                 mp!!.release()
                 mp = null
             }
-        } catch (ex: Exception) {
-            Log.e(TAG, "onBackPressed: $ex")
-        }
+        }.onFailure(logException)
         super.onBackPressed()
     }
 

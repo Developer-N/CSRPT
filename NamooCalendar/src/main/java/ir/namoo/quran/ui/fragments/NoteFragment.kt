@@ -23,6 +23,7 @@ import ir.namoo.religiousprayers.databinding.FragmentNoteBinding
 import ir.namoo.religiousprayers.databinding.ItemNoteBinding
 import ir.namoo.religiousprayers.utils.animateVisibility
 import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.logException
 import ir.namoo.religiousprayers.utils.snackMessage
 
 class NoteFragment : Fragment() {
@@ -79,11 +80,9 @@ class NoteFragment : Fragment() {
             NoteViewHolder(ItemNoteBinding.inflate(layoutInflater, parent, false))
 
 
-        override fun getItemCount(): Int = try {
+        override fun getItemCount(): Int = runCatching {
             noteList!!.size
-        } catch (ex: Exception) {
-            0
-        }
+        }.onFailure(logException).getOrDefault(0)
 
         override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
             noteList?.let {

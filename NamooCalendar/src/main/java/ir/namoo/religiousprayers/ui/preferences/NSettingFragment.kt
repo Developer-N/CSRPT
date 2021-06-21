@@ -8,41 +8,26 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.*
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.MediaPlayer
-import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.NumberPicker
-import android.widget.SeekBar
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import androidx.core.content.getSystemService
-import androidx.core.net.toUri
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.ChangeBounds
-import androidx.transition.TransitionManager
-import com.google.android.material.chip.Chip
-import com.google.android.material.switchmaterial.SwitchMaterial
 import io.github.persiancalendar.praytimes.CalculationMethod
 import ir.namoo.religiousprayers.*
 import ir.namoo.religiousprayers.databinding.FragmentNsettingBinding
 import ir.namoo.religiousprayers.databinding.ItemAthanSettingBinding
 import ir.namoo.religiousprayers.db.*
-import ir.namoo.religiousprayers.praytimes.getAllAvailableAthans
-import ir.namoo.religiousprayers.praytimes.getAthanUriFor
 import ir.namoo.religiousprayers.ui.edit.ShapedAdapter
 import ir.namoo.religiousprayers.utils.*
 import org.apache.http.HttpResponse
@@ -55,7 +40,6 @@ import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.util.*
 
 
@@ -64,8 +48,6 @@ class NSettingFragment : Fragment() {
     private lateinit var lm: LocationManager
     private var lat = ""
     private var long = ""
-    private var mediaPlayer: MediaPlayer = MediaPlayer()
-    private var audioManager: AudioManager? = null
     private val locationListener = LocationListener { showLocation(it) }
 
     private lateinit var athansAdapter: AthansAdapter
@@ -77,9 +59,8 @@ class NSettingFragment : Fragment() {
         binding.txtLongitudeNs.text = formatNumber(long)
         binding.btnRenewLocation.isEnabled = true
         val gcd = Geocoder(requireContext(), Locale.getDefault())
-        val addresses: List<Address>
-        try {
-            addresses = gcd.getFromLocation(it.latitude, it.longitude, 1)
+        runCatching {
+            val addresses: List<Address> = gcd.getFromLocation(it.latitude, it.longitude, 1)
             if (addresses.isNotEmpty())
                 binding.txtCityNs.setText(addresses[0].locality)
             else {
@@ -88,8 +69,7 @@ class NSettingFragment : Fragment() {
                 animateVisibility(binding.btnSaveLocation, false)
                 snackMessage(binding.txtCityNs, getString(R.string.intro1_msg))
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
+        }.onFailure(logException).getOrElse {
             binding.txtCityNs.setText("")
             binding.txtCityNs.requestFocus()
             animateVisibility(binding.btnSaveLocation, false)
@@ -206,16 +186,12 @@ class NSettingFragment : Fragment() {
             // request for new location
             var gpsEnabled = false
             var networkEnabled = false
-            try {
+            runCatching {
                 gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
-            } catch (ex: Exception) {
-                Log.d(TAG, "checkLocationEnabled: $ex")
-            }
-            try {
+            }.onFailure(logException)
+            runCatching {
                 networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-            } catch (ex: Exception) {
-                Log.d(TAG, "checkLocationEnabled: $ex")
-            }
+            }.onFailure(logException)
             if (!gpsEnabled && !networkEnabled) {
                 val dialog =
                     AlertDialog.Builder(requireContext())
@@ -267,12 +243,6 @@ class NSettingFragment : Fragment() {
             lm.removeUpdates(locationListener)
         }
         //end location block
-
-        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ start init audioManager and mediaPlayer
-        audioManager = requireContext().getSystemService()
-        audioManager?.getStreamVolume(AudioManager.STREAM_ALARM)
-        mediaPlayer = MediaPlayer()
-        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ end init audioManager and mediaPlayer
 
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Start feqh
         val feqhNames = resources.getStringArray(R.array.feqh)
@@ -395,7 +365,7 @@ class NSettingFragment : Fragment() {
                     setTitle(R.string.warning)
                     setMessage(R.string.all_added_athans_will_cleared)
                     setPositiveButton(R.string.go) { _, _ ->
-                        try {
+                        runCatching {
                             val db =
                                 AthanDB.getInstance(requireContext().applicationContext).athanDAO()
                             db.clearDB()
@@ -416,9 +386,7 @@ class NSettingFragment : Fragment() {
                                     aDB.update(s)
                                 }
                             athansAdapter.notifyDataSetChanged()
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "error - >", ex)
-                        }
+                        }.onFailure(logException)
                     }
                     setNegativeButton(R.string.cancel) { dialog, _ ->
                         dialog.cancel()
@@ -439,11 +407,6 @@ class NSettingFragment : Fragment() {
 
         return binding.root
     }//end of onCreateView
-
-    override fun onPause() {
-        super.onPause()
-        if (mediaPlayer.isPlaying) mediaPlayer.stop()
-    }
 
     @SuppressLint("PrivateResource")
     private fun addOnline(view: View, type: Int) {
@@ -488,29 +451,6 @@ class NSettingFragment : Fragment() {
         }
     }
 
-    private fun getNames(type: Int): Array<String> {
-        val athanNames = arrayListOf<String>()
-        athanNames.add(
-            when (type) {
-                0 -> resources.getString(R.string.default_athan_name)
-                1 -> resources.getString(R.string.default_fajr_athan_name)
-                else -> resources.getString(R.string.default_alert_before_name)
-            }
-        )
-        val existsFiles = getAllAvailableAthans(requireContext())
-        val db = AthanDB.getInstance(requireContext().applicationContext).athanDAO()
-        val inDB = db.getAllAthans()
-        for (f in existsFiles) {
-            val fName = getFileNameFromLink(f.absolutePath)
-            for (d in inDB)
-                if (d.link.contains(fName) && d.type == type)
-                    athanNames.add(d.name)
-        }
-        val res = Array(athanNames.size, init = { i -> "$i" })
-        athanNames.toArray(res)
-        return res
-    }
-
     private fun askForPermission() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
             AlertDialog.Builder(requireContext())
@@ -543,7 +483,7 @@ class NSettingFragment : Fragment() {
                     requestCode == REQ_CODE_PICK_ALARM_FILE)
             && resultCode == Activity.RESULT_OK
         )
-            try {
+            runCatching {
                 if ((data != null) && (data.data != null)) {
                     val athanFileUri = data.data ?: return
                     val inputFile =
@@ -573,9 +513,7 @@ class NSettingFragment : Fragment() {
                     db.insert(athan)
                     athansAdapter.notifyDataSetChanged()
                 }
-            } catch (ex: Exception) {
-                Log.e(TAG, "onActivityResult: ", ex)
-            }
+            }.onFailure(logException)
     }//end of onActivityResult
 
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -583,49 +521,44 @@ class NSettingFragment : Fragment() {
     private inner class GetAthansTask(val type: Int) : AsyncTask<String, String, String>() {
         private val url = "http://www.namoo.ir/Home/GetAthans"
 
-        override fun doInBackground(vararg params: String?): String {
-            return try {
-                val athansList = arrayListOf<Athan>()
-                val httpclient: HttpClient = DefaultHttpClient()
-                val httpGet = HttpGet(url)
-                val response: HttpResponse = httpclient.execute(httpGet)
-                if (response.statusLine.statusCode == 200) {
-                    val serverResponse = EntityUtils.toString(response.entity)
-                    val parser = JSONParser()
-                    val jsonArray: JSONArray = parser.parse(serverResponse) as JSONArray
-                    val jsonObjectIterator: MutableIterator<Any?> = jsonArray.iterator()
-                    while (jsonObjectIterator.hasNext()) {
-                        val jt: JSONObject = jsonObjectIterator.next() as JSONObject
-                        athansList.add(
-                            Athan(
-                                name = jt["name"].toString(),
-                                link = jt["link"].toString(),
-                                type = jt["type"].toString().toInt()
-                            )
+        override fun doInBackground(vararg params: String?): String = runCatching {
+            val athansList = arrayListOf<Athan>()
+            val httpclient: HttpClient = DefaultHttpClient()
+            val httpGet = HttpGet(url)
+            val response: HttpResponse = httpclient.execute(httpGet)
+            if (response.statusLine.statusCode == 200) {
+                val serverResponse = EntityUtils.toString(response.entity)
+                val parser = JSONParser()
+                val jsonArray: JSONArray = parser.parse(serverResponse) as JSONArray
+                val jsonObjectIterator: MutableIterator<Any?> = jsonArray.iterator()
+                while (jsonObjectIterator.hasNext()) {
+                    val jt: JSONObject = jsonObjectIterator.next() as JSONObject
+                    athansList.add(
+                        Athan(
+                            name = jt["name"].toString(),
+                            link = jt["link"].toString(),
+                            type = jt["type"].toString().toInt()
                         )
-                    }
-                    if (athansList.size > 0) {
-                        val db = AthanDB.getInstance(requireContext().applicationContext).athanDAO()
-                        for (a in athansList) {
-                            val ad = db.getAthan(a.name)
-                            if (ad == null)
-                                db.insert(a)
-                            else {
-                                ad.name = a.name
-                                ad.link = a.link
-                                ad.type = a.type
-                                db.update(ad)
-                            }
+                    )
+                }
+                if (athansList.size > 0) {
+                    val db = AthanDB.getInstance(requireContext().applicationContext).athanDAO()
+                    for (a in athansList) {
+                        val ad = db.getAthan(a.name)
+                        if (ad == null)
+                            db.insert(a)
+                        else {
+                            ad.name = a.name
+                            ad.link = a.link
+                            ad.type = a.type
+                            db.update(ad)
                         }
                     }
-                    "OK"
-                } else
-                    "Error"
-            } catch (ex: Exception) {
-                Log.e(TAG, "error get athans: $ex")
+                }
+                "OK"
+            } else
                 "Error"
-            }
-        }
+        }.onFailure(logException).getOrDefault("Error")
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -649,20 +582,12 @@ class NSettingFragment : Fragment() {
 
     //########################################################################## Athans Setting Adapter
     inner class AthansAdapter : RecyclerView.Adapter<AthansAdapter.AViewHolder>() {
-        private var lastExpand: ItemAthanSettingBinding? = null
-        private val aDB = AthanSettingsDB.getInstance(requireContext().applicationContext)
-        private val athansName = mutableListOf<String>(
-            getString(R.string.fajr),
-            getString(R.string.sunrise),
-            getString(R.string.dhuhr),
-            getString(R.string.asr),
-            getString(R.string.maghrib),
-            getString(R.string.isha)
-        )
         private var athansSetting = listOf<AthanSetting>()
 
         init {
-            athansSetting = aDB.athanSettingsDAO().getAllAthanSettings()!!
+            athansSetting =
+                AthanSettingsDB.getInstance(requireContext().applicationContext).athanSettingsDAO()
+                    .getAllAthanSettings()!!
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AViewHolder =
@@ -671,7 +596,7 @@ class NSettingFragment : Fragment() {
             )
 
         override fun onBindViewHolder(holder: AViewHolder, position: Int) {
-            holder.bind(athansSetting[position], position)
+            holder.bind(athansSetting[position])
         }
 
         override fun getItemCount(): Int = athansSetting.size
@@ -680,32 +605,15 @@ class NSettingFragment : Fragment() {
         //#################
         inner class AViewHolder(var itemBinding: ItemAthanSettingBinding) :
             RecyclerView.ViewHolder(itemBinding.root) {
-            private var mPosition = 0
 
             init {
                 itemBinding.allAthanSettingsLayouts.visibility = View.GONE
-                itemBinding.titleLayout.setOnClickListener {
-                    if (itemBinding.allAthanSettingsLayouts.visibility == View.GONE) {
-                        if (lastExpand != null && lastExpand != itemBinding)
-                            lastExpand?.allAthanSettingsLayouts?.visibility = View.GONE
-                        itemBinding.allAthanSettingsLayouts.visibility = View.VISIBLE
-                        lastExpand = itemBinding
-                        (binding.recyclerAthans.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
-                            mPosition,
-                            0
-                        )
-                    } else {
-                        itemBinding.allAthanSettingsLayouts.visibility = View.GONE
-                        lastExpand = null
-                    }
-                    val transition = ChangeBounds()
-                    transition.interpolator = AnticipateOvershootInterpolator()
-                    TransitionManager.beginDelayedTransition(binding.recyclerAthans, transition)
-                }
+                itemBinding.btnAthanSettingClose.visibility = View.GONE
+
             }
 
-            fun bind(athanSetting: AthanSetting, position: Int) {
-                mPosition = position
+            fun bind(athanSetting: AthanSetting) {
+
                 when (athanSetting.athanKey) {
                     "FAJR" -> {
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.fajr)
@@ -732,381 +640,15 @@ class NSettingFragment : Fragment() {
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.isha)
                     }
                 }
-
-                //######################################## STATE
-                itemBinding.itemAthanSettingState.isChecked = athanSetting.state
-                itemBinding.itemAthanSettingState.setOnClickListener {
-                    athanSetting.state = itemBinding.itemAthanSettingState.isChecked
-                    aDB.athanSettingsDAO().update(athanSetting)
-                    loadAlarms(requireContext())
+                itemBinding.titleLayout.setOnClickListener {
+                    AthanSettingDialog(athanSetting).show(
+                        childFragmentManager,
+                        AthanSettingDialog::class.java.name
+                    )
                 }
 
-                //######################################## AlertType
-                itemBinding.itemAthanSettingAlertType.check(
-                    when (athanSetting.playType) {
-                        0 -> R.id.item_athan_setting_fullscreen
-                        1 -> R.id.item_athan_setting_notification
-                        else -> R.id.item_athan_setting_just_notification
-                    }
-                )
-                itemBinding.itemAthanSettingAlertType.setOnCheckedChangeListener { _, checkedId ->
-                    val type =
-                        when (checkedId) {
-                            R.id.item_athan_setting_fullscreen -> 0
-                            R.id.item_athan_setting_notification -> 1
-                            else -> 2
-                        }
-                    athanSetting.playType = type
-                    aDB.athanSettingsDAO().update(athanSetting)
-                }
-
-                if (athanSetting.athanKey != "SUNRISE") {
-                    //######################################## PlayDOA
-                    itemBinding.switchDoa.isChecked = athanSetting.playDoa
-                    itemBinding.switchDoa.setOnClickListener {
-                        athanSetting.playDoa = itemBinding.switchDoa.isChecked
-                        aDB.athanSettingsDAO().update(athanSetting)
-                    }
-
-                    //######################################## Before
-                    itemBinding.switchAlarmBefore.isChecked = athanSetting.isBeforeEnabled
-                    itemBinding.switchAlarmBefore.setOnClickListener {
-                        athanSetting.isBeforeEnabled = itemBinding.switchAlarmBefore.isChecked
-                        aDB.athanSettingsDAO().update(athanSetting)
-                        loadAlarms(requireContext())
-                    }
-                    //######################################## Before minute
-                    itemBinding.numberPickerAlarmBefore.minValue = 5
-                    if (athanSetting.athanKey == "FAJR")
-                        itemBinding.numberPickerAlarmBefore.maxValue = 90
-                    else
-                        itemBinding.numberPickerAlarmBefore.maxValue = 60
-                    itemBinding.numberPickerAlarmBefore.value =
-                        if (athanSetting.beforeAlertMinute >= itemBinding.numberPickerAlarmBefore.minValue && athanSetting.beforeAlertMinute <= itemBinding.numberPickerAlarmBefore.maxValue) athanSetting.beforeAlertMinute else 10
-                    itemBinding.numberPickerAlarmBefore.setOnValueChangedListener { numberPicker: NumberPicker, _: Int, _: Int ->
-                        athanSetting.beforeAlertMinute = numberPicker.value
-                        aDB.athanSettingsDAO().update(athanSetting)
-                        loadAlarms(requireContext())
-                    }
-                    //######################################## isAscending
-                    itemBinding.switchAscendingAthanVolume.isChecked = athanSetting.isAscending
-                    itemBinding.switchAscendingAthanVolume.setOnClickListener {
-                        it as SwitchMaterial
-                        athanSetting.isAscending = it.isChecked
-                        aDB.athanSettingsDAO().update(athanSetting)
-                        itemBinding.seekBarAthanVolume.isEnabled = !it.isChecked
-                    }
-                    //######################################## AthanVolume
-                    itemBinding.seekBarAthanVolume.isEnabled =
-                        !itemBinding.switchAscendingAthanVolume.isChecked
-                    itemBinding.seekBarAthanVolume.apply {
-                        max = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
-                        progress = athanSetting.athanVolume
-                        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                            override fun onProgressChanged(
-                                seekBar: SeekBar?,
-                                progress: Int,
-                                fromUser: Boolean
-                            ) {
-                                audioManager?.setStreamVolume(
-                                    AudioManager.STREAM_ALARM,
-                                    progress,
-                                    0
-                                )
-                            }
-
-                            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
-                            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                                athanSetting.athanVolume = progress
-                                aDB.athanSettingsDAO().update(athanSetting)
-                            }
-                        })
-                    }
-                    //######################################## END AthanVolume
-                    //######################################## Select Athan
-                    var selectedAthan =
-                        if (athanSetting.athanKey == "FAJR")
-                            getString(R.string.default_fajr_athan_name)
-                        else
-                            getString(R.string.default_athan_name)
-                    if (athanSetting.athanURI.isNotEmpty()) {
-                        selectedAthan = when (athanSetting.athanURI) {
-                            "" -> if (athanSetting.athanKey == "FAJR")
-                                getString(R.string.default_fajr_athan_name)
-                            else
-                                getString(R.string.default_athan_name)
-                            else -> {
-                                val name = getFileNameFromLink(athanSetting.athanURI)
-                                val all =
-                                    AthanDB.getInstance(requireContext()).athanDAO().getAllAthans()
-                                var n = ""
-                                for (a in all)
-                                    if (a.link.contains(name))
-                                        n = a.name
-                                n
-                            }
-                        }
-                    }
-                    val athanNames = getNames(if (athanSetting.athanKey == "FAJR") 1 else 0)
-                    itemBinding.spinnerAthanName.adapter = ShapedAdapter(
-                        requireContext(),
-                        R.layout.select_dialog_item,
-                        athanNames
-                    )
-                    itemBinding.spinnerAthanName.setSelection(athanNames.indexOf(selectedAthan))
-                    itemBinding.spinnerAthanName.onItemSelectedListener = object :
-                        AdapterView.OnItemSelectedListener {
-                        override fun onNothingSelected(parent: AdapterView<*>?) {}
-
-                        override fun onItemSelected(
-                            parent: AdapterView<*>?,
-                            view: View?,
-                            position: Int,
-                            id: Long
-                        ) {
-                            if (position == 0) {
-                                athanSetting.athanURI = ""
-                                itemBinding.txtSelectedAthanName.text =
-                                    if (athanSetting.athanKey == "FAJR")
-                                        getString(R.string.default_fajr_athan_name)
-                                    else
-                                        getString(R.string.default_athan_name)
-                            } else {
-                                val selectedName = athanNames[position]
-                                for (d in AthanDB.getInstance(requireContext()).athanDAO()
-                                    .getAllAthans())
-                                    if (selectedName == d.name) {
-                                        val athanUri =
-                                            getAthanUriFor(
-                                                requireContext(),
-                                                getFileNameFromLink(d.link)
-                                            )
-                                        if (athanUri != null) {
-                                            athanSetting.athanURI = athanUri.toString()
-                                            itemBinding.txtSelectedAthanName.text = selectedName
-                                        }
-                                    }
-                            }
-                            aDB.athanSettingsDAO().update(athanSetting)
-                        }
-                    }
-                    //############################################## Alert
-                    var selectedAlert = getString(R.string.default_alert_before_name)
-                    if (athanSetting.alertURI.isNotEmpty()) {
-                        selectedAlert = when (athanSetting.alertURI) {
-                            "" -> resources.getString(R.string.default_alert_before_name)
-                            else -> {
-                                val name = getFileNameFromLink(athanSetting.alertURI)
-                                val all =
-                                    AthanDB.getInstance(requireContext()).athanDAO().getAllAthans()
-                                var n = ""
-                                for (a in all)
-                                    if (a.link.contains(name))
-                                        n = a.name
-                                n
-                            }
-                        }
-                    }
-                    val alarmNames = getNames(2)
-                    itemBinding.spinnerAlarmName.adapter = ShapedAdapter(
-                        requireContext(),
-                        R.layout.select_dialog_item,
-                        alarmNames
-                    )
-                    itemBinding.spinnerAlarmName.setSelection(alarmNames.indexOf(selectedAlert))
-                    itemBinding.spinnerAlarmName.onItemSelectedListener = object :
-                        AdapterView.OnItemSelectedListener {
-                        override fun onNothingSelected(parent: AdapterView<*>?) {}
-
-                        override fun onItemSelected(
-                            parent: AdapterView<*>?,
-                            view: View?,
-                            position: Int,
-                            id: Long
-                        ) {
-                            if (position == 0) {
-                                athanSetting.alertURI = ""
-                                itemBinding.txtSelectedAlarmName.text =
-                                    resources.getString(R.string.default_alert_before_name)
-                            } else {
-                                val selectedName = alarmNames[position]
-                                for (d in AthanDB.getInstance(requireContext()).athanDAO()
-                                    .getAllAthans())
-                                    if (selectedName == d.name) {
-                                        val athanUri =
-                                            getAthanUriFor(
-                                                requireContext(),
-                                                getFileNameFromLink(d.link)
-                                            )
-                                        if (athanUri != null) {
-                                            athanSetting.alertURI = athanUri.toString()
-                                            itemBinding.txtSelectedAlarmName.text = selectedName
-                                        }
-                                    }
-                            }
-                            aDB.athanSettingsDAO().update(athanSetting)
-                        }
-                    }
-
-                    //########################################### play buttons
-                    itemBinding.btnAthanPlay.setOnClickListener {
-                        it as Chip
-                        it.startAnimation(
-                            AnimationUtils.loadAnimation(
-                                requireContext(),
-                                com.google.android.material.R.anim.abc_fade_in
-                            )
-                        )
-                        audioManager?.setStreamVolume(
-                            AudioManager.STREAM_ALARM,
-                            athanSetting.athanVolume,
-                            0
-                        )
-                        if (itemBinding.btnAlertPlay.text == getString(R.string.stop))
-                            stopAlert()
-                        if (!mediaPlayer.isPlaying)
-                            playAthan(
-                                if (athanSetting.athanURI == "")
-                                    if (athanSetting.athanKey == "FAJR")
-                                        getDefaultFajrAthanUri(requireContext())
-                                    else
-                                        getDefaultAthanUri(requireContext())
-                                else
-                                    athanSetting.athanURI.toUri()
-                            )
-                        else
-                            stopAthan()
-                    }
-
-                    itemBinding.btnAlertPlay.setOnClickListener {
-                        it as Chip
-                        it.startAnimation(
-                            AnimationUtils.loadAnimation(
-                                requireContext(),
-                                com.google.android.material.R.anim.abc_fade_in
-                            )
-                        )
-                        audioManager?.setStreamVolume(
-                            AudioManager.STREAM_ALARM,
-                            athanSetting.athanVolume,
-                            0
-                        )
-                        if (itemBinding.btnAthanPlay.text == getString(R.string.stop))
-                            stopAthan()
-                        if (!mediaPlayer.isPlaying)
-                            playAlert(
-                                if (athanSetting.alertURI == "")
-                                    getDefaultBeforeAlertUri(requireContext())
-                                else
-                                    athanSetting.alertURI.toUri()
-                            )
-                        else
-                            stopAlert()
-                    }
-
-                    //########################################### reset button
-
-                    itemBinding.btnAthanRest.setOnClickListener {
-                        athanSetting.alertURI = ""
-                        athanSetting.athanURI = ""
-                        athanSetting.athanVolume = 1
-                        athanSetting.isAscending = false
-                        athanSetting.beforeAlertMinute = 10
-                        athanSetting.isBeforeEnabled = false
-                        athanSetting.playDoa = false
-                        athanSetting.playType = 0
-                        athanSetting.state = false
-                        aDB.athanSettingsDAO().update(athanSetting)
-                        notifyItemChanged(position)
-                    }
-
-                }//end of if(!Sunrise)
             }//end of bind
 
-            private fun playAthan(uri: Uri) {
-                try {
-                    itemBinding.btnAthanPlay.setChipIconResource(R.drawable.ic_stop)
-                    itemBinding.btnAthanPlay.text = resources.getString(R.string.stop)
-                    mediaPlayer.apply {
-                        try {
-                            reset()
-                            setDataSource(requireContext(), uri)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                        .setUsage(AudioAttributes.USAGE_ALARM)
-                                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                        .build()
-                                )
-                            } else {
-                                @Suppress("DEPRECATION")
-                                setAudioStreamType(AudioManager.STREAM_ALARM)
-                            }
-                            requireActivity().volumeControlStream = AudioManager.STREAM_ALARM
-                            setOnCompletionListener { stopAthan() }
-                            prepare()
-                            start()
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "prepare media player error : $ex ")
-                        }
-                    }
-                } catch (ex: Exception) {
-                    Log.e(TAG, "play: ", ex)
-                }
-            }//end of play
-
-            private fun stopAthan() {
-                try {
-                    itemBinding.btnAthanPlay.setChipIconResource(R.drawable.ic_play)
-                    itemBinding.btnAthanPlay.text = resources.getString(R.string.play_athan)
-                    if (mediaPlayer.isPlaying) mediaPlayer.pause()
-                } catch (ex: Exception) {
-                    Log.e(TAG, "stop: ", ex)
-                }
-            }//end of stop
-
-            private fun playAlert(uri: Uri) {
-                try {
-                    itemBinding.btnAlertPlay.setChipIconResource(R.drawable.ic_stop)
-                    itemBinding.btnAlertPlay.text = resources.getString(R.string.stop)
-                    mediaPlayer.apply {
-                        try {
-                            reset()
-                            setDataSource(requireContext(), uri)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                        .setUsage(AudioAttributes.USAGE_ALARM)
-                                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                        .build()
-                                )
-                            } else {
-                                @Suppress("DEPRECATION")
-                                setAudioStreamType(AudioManager.STREAM_ALARM)
-                            }
-                            requireActivity().volumeControlStream = AudioManager.STREAM_ALARM
-                            setOnCompletionListener { stopAlert() }
-                            prepare()
-                            start()
-                        } catch (ex: Exception) {
-                            Log.e(TAG, "prepare media player error : $ex ")
-                        }
-                    }
-                } catch (ex: Exception) {
-                    Log.e(TAG, "play: ", ex)
-                }
-            }//end of play
-
-            private fun stopAlert() {
-                try {
-                    itemBinding.btnAlertPlay.setChipIconResource(R.drawable.ic_play)
-                    itemBinding.btnAlertPlay.text = resources.getString(R.string.play_alert)
-                    if (mediaPlayer.isPlaying) mediaPlayer.pause()
-                } catch (ex: Exception) {
-                    Log.e(TAG, "stop: ", ex)
-                }
-            }//end of stop
         }//end of class AViewHolder
     } //end of class AthansAdapter
 }//end of class NSettingFragment

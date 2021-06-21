@@ -2,19 +2,29 @@ package ir.namoo.religiousprayers.ui.shared
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.core.view.isVisible
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
-import io.github.persiancalendar.calendar.CivilDate
-import io.github.persiancalendar.praytimes.Clock
 import ir.namoo.religiousprayers.R
-import ir.namoo.religiousprayers.databinding.CalendarItemBinding
 import ir.namoo.religiousprayers.databinding.CalendarsViewBinding
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.utils.CalendarType
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.calculateDaysDifference
+import ir.namoo.religiousprayers.utils.dayOfWeekName
+import ir.namoo.religiousprayers.utils.emptyEventsStore
+import ir.namoo.religiousprayers.utils.formatDate
+import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.getA11yDaySummary
+import ir.namoo.religiousprayers.utils.getSpringEquinox
+import ir.namoo.religiousprayers.utils.getWeekOfYear
+import ir.namoo.religiousprayers.utils.getZodiacInfo
+import ir.namoo.religiousprayers.utils.isForcedIranTimeEnabled
+import ir.namoo.religiousprayers.utils.layoutInflater
+import ir.namoo.religiousprayers.utils.mainCalendar
+import ir.namoo.religiousprayers.utils.toCivilDate
+import ir.namoo.religiousprayers.utils.toFormattedString
+import io.github.persiancalendar.praytimes.Clock
 import java.util.*
 
 class CalendarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
@@ -23,83 +33,73 @@ class CalendarsView @JvmOverloads constructor(context: Context, attrs: Attribute
     private val changeBoundTransition = ChangeBounds()
     private val arrowRotationAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
-    private val calendarItemAdapter = CalendarItemAdapter(context)
-    private val binding: CalendarsViewBinding =
-        CalendarsViewBinding.inflate(context.layoutInflater, this, true).apply {
-            root.setOnClickListener { expand(!calendarItemAdapter.isExpanded) }
-            extraInformationContainer.visibility = View.GONE
-            calendarsRecyclerView.apply {
-                layoutManager = LinearLayoutManager(context).apply {
-                    orientation = RecyclerView.HORIZONTAL
-                }
-                adapter = calendarItemAdapter
-            }
-        }
-
-    fun hideMoreIcon() {
-        binding.moreCalendar.visibility = View.GONE
+    private val binding = CalendarsViewBinding.inflate(context.layoutInflater, this, true).also {
+        it.root.setOnClickListener { toggle() }
+        it.extraInformationContainer.isVisible = false
     }
+    private var isExpanded = false
 
-    fun expand(expanded: Boolean) {
-        calendarItemAdapter.isExpanded = expanded
+    fun toggle() {
+        isExpanded = !isExpanded
+
+        binding.moreCalendar.contentDescription = context.getString(
+            if (isExpanded) R.string.close else R.string.open
+        )
 
         // Rotate expansion arrow
         binding.moreCalendar.animate()
-            .rotation(if (expanded) 180f else 0f)
+            .rotation(if (isExpanded) 180f else 0f)
             .setDuration(arrowRotationAnimationDuration)
             .start()
 
         TransitionManager.beginDelayedTransition(binding.calendarsTabContent, changeBoundTransition)
-        binding.extraInformationContainer.visibility = if (expanded) View.VISIBLE else View.GONE
+        binding.extraInformationContainer.isVisible = isExpanded
+    }
+
+    fun hideMoreIcon() {
+        binding.moreCalendar.isVisible = false
     }
 
     fun showCalendars(
-        jdn: Long, chosenCalendarType: CalendarType, calendarsToShow: List<CalendarType>
+        jdn: Jdn, chosenCalendarType: CalendarType, calendarsToShow: List<CalendarType>
     ) {
         val context = context ?: return
 
-        calendarItemAdapter.setDate(calendarsToShow, jdn)
-        binding.weekDayName.text = getWeekDayName(CivilDate(jdn))
+        binding.calendarsFlow.update(calendarsToShow, jdn)
+        binding.weekDayName.text = jdn.dayOfWeekName
 
-        binding.zodiac.apply {
-            text = getZodiacInfo(context, jdn, withEmoji = true, short = false)
-            visibility = if (text.isEmpty()) View.GONE else View.VISIBLE
+        binding.zodiac.also {
+            it.text = getZodiacInfo(context, jdn, withEmoji = true, short = false)
+            it.isVisible = it.text.isNotEmpty()
         }
 
-        val isToday = getTodayJdn() == jdn
-
+        val isToday = Jdn.today == jdn
         if (isToday) {
             if (isForcedIranTimeEnabled) binding.weekDayName.text = "%s (%s)".format(
-                getWeekDayName(CivilDate(jdn)),
-                context.getString(R.string.iran_time)
+                jdn.dayOfWeekName, context.getString(R.string.iran_time)
             )
-            binding.diffDate.visibility = View.GONE
+            binding.diffDate.isVisible = false
         } else {
-            binding.diffDate.visibility = View.VISIBLE
-            binding.diffDate.text =
-                calculateDaysDifference(jdn, context.getString(R.string.date_diff_text))
+            binding.also {
+                it.diffDate.isVisible = true
+                it.diffDate.text =
+                    calculateDaysDifference(jdn, context.getString(R.string.date_diff_text))
+            }
         }
 
-        val mainDate = getDateFromJdnOfCalendar(chosenCalendarType, jdn)
-        val startOfYear = getDateOfCalendar(
-            chosenCalendarType,
-            mainDate.year, 1, 1
-        )
-        val startOfNextYear = getDateOfCalendar(
-            chosenCalendarType, mainDate.year + 1, 1, 1
-        )
-        val startOfYearJdn = startOfYear.toJdn()
-        val endOfYearJdn = startOfNextYear.toJdn() - 1
-        val currentWeek = calculateWeekOfYear(jdn, startOfYearJdn)
-        val weeksCount = calculateWeekOfYear(endOfYearJdn, startOfYearJdn)
+        val mainDate = jdn.toCalendar(chosenCalendarType)
+        val startOfYearJdn = Jdn(chosenCalendarType, mainDate.year, 1, 1)
+        val endOfYearJdn = Jdn(chosenCalendarType, mainDate.year + 1, 1, 1) - 1
+        val currentWeek = jdn.getWeekOfYear(startOfYearJdn)
+        val weeksCount = endOfYearJdn.getWeekOfYear(startOfYearJdn)
 
         val startOfYearText = context.getString(R.string.start_of_year_diff).format(
-            formatNumber((jdn - startOfYearJdn + 1).toInt()),
+            formatNumber(jdn - startOfYearJdn + 1),
             formatNumber(currentWeek),
             formatNumber(mainDate.month)
         )
         val endOfYearText = context.getString(R.string.end_of_year_diff).format(
-            formatNumber((endOfYearJdn - jdn).toInt()),
+            formatNumber(endOfYearJdn - jdn),
             formatNumber(weeksCount - currentWeek),
             formatNumber(12 - mainDate.month)
         )
@@ -110,88 +110,26 @@ class CalendarsView @JvmOverloads constructor(context: Context, attrs: Attribute
         if (mainCalendar == chosenCalendarType && chosenCalendarType == CalendarType.SHAMSI) {
             if (mainDate.month == 12 && mainDate.dayOfMonth >= 20 || mainDate.month == 1 && mainDate.dayOfMonth == 1) {
                 val addition = if (mainDate.month == 12) 1 else 0
-                val springEquinox = getSpringEquinox(mainDate.toJdn())
+                val springEquinox = jdn.toGregorianCalendar().getSpringEquinox()
                 equinox = context.getString(R.string.spring_equinox).format(
                     formatNumber(mainDate.year + addition),
                     Clock(springEquinox[Calendar.HOUR_OF_DAY], springEquinox[Calendar.MINUTE])
                         .toFormattedString(forcedIn12 = true) + " " +
                             formatDate(
-                                getDateFromJdnOfCalendar(
-                                    mainCalendar,
-                                    calendarToCivilDate(springEquinox).toJdn()
-                                ),
+                                Jdn(springEquinox.toCivilDate()).toCalendar(mainCalendar),
                                 forceNonNumerical = true
                             )
                 )
             }
         }
-        binding.equinox.apply {
-            text = equinox
-            visibility = if (equinox.isEmpty()) View.GONE else View.VISIBLE
+        binding.equinox.also {
+            it.text = equinox
+            it.isVisible = equinox.isNotEmpty()
         }
 
         binding.root.contentDescription = getA11yDaySummary(
             context, jdn, isToday, emptyEventsStore(),
             withZodiac = true, withOtherCalendars = true, withTitle = true
         )
-    }
-
-    class CalendarItemAdapter internal constructor(context: Context) :
-        RecyclerView.Adapter<CalendarItemAdapter.ViewHolder>() {
-
-        private val calendarFont = getCalendarFragmentFont(context)
-        private var calendars = emptyList<CalendarType>()
-        internal var isExpanded = false
-            set(expanded) {
-                field = expanded
-                calendars.indices.forEach(::notifyItemChanged)
-            }
-        private var jdn = 0L
-
-        internal fun setDate(calendars: List<CalendarType>, jdn: Long) {
-            this.calendars = calendars
-            this.jdn = jdn
-            calendars.indices.forEach(::notifyItemChanged)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-            CalendarItemBinding.inflate(parent.context.layoutInflater, parent, false)
-        )
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
-
-        override fun getItemCount(): Int = calendars.size
-
-        inner class ViewHolder(private val binding: CalendarItemBinding) :
-            RecyclerView.ViewHolder(binding.root), OnClickListener {
-
-            init {
-                val applyLineMultiplier = !isCustomFontEnabled
-
-                binding.monthYear.typeface = calendarFont
-                binding.day.typeface = calendarFont
-                if (applyLineMultiplier) binding.monthYear.setLineSpacing(0f, .8f)
-
-                binding.container.setOnClickListener(this)
-                binding.linear.setOnClickListener(this)
-            }
-
-            fun bind(position: Int) {
-                val date = getDateFromJdnOfCalendar(calendars[position], jdn)
-
-                binding.linear.text = toLinearDate(date)
-                binding.linear.contentDescription = toLinearDate(date)
-                val firstCalendarString = formatDate(date)
-                binding.container.contentDescription = firstCalendarString
-                binding.day.contentDescription = ""
-                binding.day.text = formatNumber(date.dayOfMonth)
-                binding.monthYear.contentDescription = ""
-                binding.monthYear.text =
-                    listOf(getMonthName(date), formatNumber(date.year)).joinToString("\n")
-            }
-
-            override fun onClick(view: View?) =
-                copyToClipboard(view, "converted date", view?.contentDescription)
-        }
     }
 }

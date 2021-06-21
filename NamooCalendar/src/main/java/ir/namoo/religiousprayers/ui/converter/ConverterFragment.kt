@@ -2,46 +2,47 @@ package ir.namoo.religiousprayers.ui.converter
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentConverterBinding
-import ir.namoo.religiousprayers.ui.MainActivity
+import ir.namoo.religiousprayers.utils.Jdn
 import ir.namoo.religiousprayers.utils.getOrderedCalendarTypes
-import ir.namoo.religiousprayers.utils.getTodayJdn
+import ir.namoo.religiousprayers.utils.setupUpNavigation
 
 class ConverterFragment : Fragment() {
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ) = FragmentConverterBinding.inflate(inflater, container, false).apply {
-        (activity as? MainActivity)?.setTitleAndSubtitle(
-            getString(R.string.date_converter), ""
-        )
-
-        calendarsView.expand(true)
-        calendarsView.hideMoreIcon()
-
-        val todayJdn = getTodayJdn()
-
-        todayButton.setOnClickListener { dayPickerView.setDayJdnOnView(todayJdn) }
-
-        dayPickerView.selectedDayListener = fun(jdn) {
-            if (jdn == -1L) {
-                calendarsView.visibility = View.GONE
-            } else {
-                if (jdn == todayJdn) todayButton.hide() else todayButton.show()
-
-                calendarsView.visibility = View.VISIBLE
-                val selectedCalendarType = dayPickerView.selectedCalendarType
-                calendarsView.showCalendars(
-                    jdn, selectedCalendarType,
-                    getOrderedCalendarTypes() - selectedCalendarType
-                )
-            }
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ) = FragmentConverterBinding.inflate(inflater, container, false).also { binding ->
+        binding.appBar.toolbar.let {
+            it.setupUpNavigation()
+            it.setTitle(R.string.date_converter)
         }
-        dayPickerView.setDayJdnOnView(getTodayJdn())
+
+        binding.calendarsView.toggle()
+        binding.calendarsView.hideMoreIcon()
+
+        val todayJdn = Jdn.today
+
+        binding.todayButton.setOnClickListener { binding.dayPickerView.jdn = todayJdn }
+
+        binding.dayPickerView.also {
+            it.selectedDayListener = fun(jdn) {
+                if (jdn == null) {
+                    binding.resultCard.isVisible = false
+                } else {
+                    if (jdn == todayJdn) binding.todayButton.hide() else binding.todayButton.show()
+
+                    binding.resultCard.isVisible = true
+                    val selectedCalendarType = binding.dayPickerView.selectedCalendarType
+                    binding.calendarsView.showCalendars(
+                        jdn, selectedCalendarType, getOrderedCalendarTypes() - selectedCalendarType
+                    )
+                }
+            }
+            it.jdn = Jdn.today
+            it.anchorView = binding.todayButton
+        }
     }.root
 }

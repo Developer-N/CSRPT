@@ -109,7 +109,7 @@ class DownloadFragment : Fragment() {
             @SuppressLint("PrivateResource")
             fun bind(chapter: ChapterEntity, position: Int) {
                 itemBinding.txtItemQdSuraName.text = chapter.nameArabic
-                try {
+                runCatching {
 //                    var allFileAreExists = true
 //                    for (i in 1..chapter.ayaCount!!)
 //                        if (!File(
@@ -133,9 +133,7 @@ class DownloadFragment : Fragment() {
                             else -> R.drawable.ic_files_download
                         }
                     )
-                } catch (ex: Exception) {
-                    Log.e(TAG, "on bind file error : ", ex)
-                }
+                }.onFailure(logException)
                 itemBinding.btnItemQdDownload.setOnClickListener {
                     it.startAnimation(
                         AnimationUtils.loadAnimation(
@@ -187,7 +185,7 @@ class DownloadFragment : Fragment() {
                 }
 
                 override fun doInBackground(vararg p0: String?): String {
-                    return try {
+                    return runCatching {
                         val url = URL(
                             links[binding.spinnerQuranDownloadType.selectedItemPosition] + getSuraFileName(
                                 chapter.sura
@@ -228,9 +226,7 @@ class DownloadFragment : Fragment() {
                             file.delete()
                             "Success!"
                         }
-                    } catch (ex: Exception) {
-                        "Error --> $ex"
-                    }
+                    }.onFailure(logException).getOrDefault("Error")
                 }
 
                 @SuppressLint("SetTextI18n")

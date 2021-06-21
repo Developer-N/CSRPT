@@ -8,7 +8,6 @@ import android.os.PowerManager
 import androidx.core.net.toUri
 import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_KEY
 import ir.namoo.religiousprayers.KEY_EXTRA_PRAYER_TIME
-import ir.namoo.religiousprayers.PREF_ATHAN_URI
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.service.AthanNotification
@@ -43,22 +42,20 @@ fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
     context.resources.getResourceEntryName(R.raw.doa)
 ).toUri()
 
-fun getCustomAthanUri(context: Context): Uri? =
-    context.appPrefs.getString(PREF_ATHAN_URI, null)?.takeUnless { it.isEmpty() }?.toUri()
-
 fun startAthan(context: Context, prayTimeKey: String, prayTime: String) {
-    try {
+    runCatching {
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SRPT::MyWakelockTag").apply {
                 acquire(1 * 60 * 1000L /*1 minutes*/)
             }
         }
-    } catch (e: Exception) {
-        appendLog(context, "error: " + e.message)
+    }.onFailure(logException).getOrElse {
+        appendLog(context, "error: " + it.message)
     }
     appendLog(context, "startAthan................ $prayTimeKey")
     val setting = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()?.filter { prayTimeKey.contains(it.athanKey) }?.get(0) ?: return
+    if (!setting.state || (prayTimeKey.startsWith("B") && !setting.isBeforeEnabled)) return
     when (setting.playType) {
         0 -> {
             context.startActivity(

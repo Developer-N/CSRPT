@@ -25,7 +25,6 @@ import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.db.AthanSetting
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.utils.*
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
@@ -172,7 +171,7 @@ class AthanNotification : IntentService("NotificactionService") {
             notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
 
             if (setting.playType == 1)
-                try {
+                runCatching {
                     audioManager = context.getSystemService()
                     audioManager?.setStreamVolume(
                         AudioManager.STREAM_ALARM,
@@ -180,7 +179,7 @@ class AthanNotification : IntentService("NotificactionService") {
                         0
                     )
                     mediaPlayer = MediaPlayer().apply {
-                        try {
+                        runCatching {
                             if (prayerKey[0] == 'B') {
                                 setDataSource(
                                     context, if (setting.alertURI == "")
@@ -215,14 +214,10 @@ class AthanNotification : IntentService("NotificactionService") {
                             if (prayerKey[0] == 'B')
                                 isLooping = true
                             prepare()
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
+                        }.onFailure(logException)
                         Handler(Looper.getMainLooper()).postDelayed({ start() }, 1000L)
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                }.onFailure(logException)
             if (setting.isAscending) handler.post(ascendVolume)
 
             Handler(Looper.getMainLooper()).postDelayed({
@@ -235,7 +230,7 @@ class AthanNotification : IntentService("NotificactionService") {
             isDoaPlayed = true
             if (setting.playDoa)//play doa
                 doaPlayer = MediaPlayer().apply {
-                    try {
+                    runCatching {
                         setDataSource(
                             context,
                             getDefaultDOAUri(context)
@@ -252,30 +247,28 @@ class AthanNotification : IntentService("NotificactionService") {
                             setAudioStreamType(AudioManager.STREAM_ALARM)
                         }
                         prepare()
-                    } catch (ex: Exception) {
-                        ex.printStackTrace()
-                    }
+                    }.onFailure(logException)
                     start()
                 }
         }
 
         private fun stop(context: Context) {
-            try {
+            runCatching {
                 if (mediaPlayer != null)
                     if (mediaPlayer!!.isPlaying) {
                         mediaPlayer!!.release()
                         mediaPlayer!!.stop()
                     }
-            } catch (ex: Exception) {
-            }
-            try {
+            }.onFailure(logException)
+
+            runCatching {
                 if (doaPlayer != null)
                     if (doaPlayer!!.isPlaying) {
                         doaPlayer!!.release()
                         doaPlayer!!.stop()
                     }
-            } catch (ex: Exception) {
-            }
+            }.onFailure(logException)
+
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
             notificationManager!!.cancel(NOTIFICATION_ID)

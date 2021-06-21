@@ -42,9 +42,9 @@
     </string-array>
 
     <string-array name="calendar_type_abbr">
-        <item>ک.ھ</item>
-        <item>ک.م</item>
-        <item>ز.</item>
+        <item>ھەتاوی</item>
+        <item>مانگی</item>
+        <item>زایینی</item>
     </string-array>
 
     <string-array name="week_days">
@@ -62,6 +62,7 @@
         <item>ئەو بۆنانەی کە پشوودان نین لە ویجیتی ٢×٢ و ئاگاداریدا</item>
         <item>کاتی شەرعی لە ویجیتی ٢×٢ و ئاگاداریدا (ئەگەر ڕێکخرابێ)</item>
         <item>شوێن لە لای کاتی شەرعیدا لە ویجیتی ٢×٢ و ئاگاداریدا (ئەگەر ڕێکخرابێ)</item>
+<!--        <item>نمایش روز هفته در ویجت ۴×۱ فقط تاریخ</item>-->
     </string-array>
 
     <string-array name="islamicOffsetNames">

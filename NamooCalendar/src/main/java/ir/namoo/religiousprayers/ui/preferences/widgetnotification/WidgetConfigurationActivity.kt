@@ -5,10 +5,16 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.WidgetPreferenceLayoutBinding
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.applyAppLanguage
+import ir.namoo.religiousprayers.utils.getThemeFromName
+import ir.namoo.religiousprayers.utils.getThemeFromPreference
+import ir.namoo.religiousprayers.utils.update
+import ir.namoo.religiousprayers.utils.updateStoredPreference
 
 class WidgetConfigurationActivity : AppCompatActivity() {
 
@@ -36,7 +42,10 @@ class WidgetConfigurationActivity : AppCompatActivity() {
         }
 
         supportFragmentManager.commit {
-            add(R.id.preference_fragment_holder, WidgetNotificationFragment(), "TAG")
+            add(
+                R.id.preference_fragment_holder, WidgetNotificationFragment::class.java,
+                bundleOf(WidgetNotificationFragment.IS_WIDGETS_CONFIGURATION to true), "TAG"
+            )
         }
         binding.addWidgetButton.setOnClickListener { finishAndSuccess() }
     }

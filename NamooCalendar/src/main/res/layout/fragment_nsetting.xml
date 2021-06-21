@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -315,11 +316,11 @@
                     <com.google.android.material.chip.Chip
                         android:id="@+id/btn_clear_added_athans"
                         style="@style/Widget.MaterialComponents.Chip.Action"
-                        app:chipIcon="@drawable/ic_delete"
-                        android:text="@string/clear_added_athans"
-                        app:chipIconTint="?attr/colorDanger"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:text="@string/clear_added_athans"
+                        app:chipIcon="@drawable/ic_delete"
+                        app:chipIconTint="?attr/colorDanger" />
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
                 <!--########################### End Add Athans -->

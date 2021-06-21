@@ -3,14 +3,52 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/circular_reveal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground"
+    android:fitsSystemWindows="true">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/navigationBarColor"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/toolbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            app:contentScrim="?attr/colorCard"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <ir.namoo.religiousprayers.ui.about.CheckerBoard
+                android:id="@+id/expandedImage"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="?attr/colorCard"
+                android:importantForAccessibility="no"
+                android:scaleType="center"
+                app:layout_collapseMode="parallax"
+                app:layout_collapseParallaxMultiplier="0.7" />
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="55dp"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
@@ -18,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         app:itemIconTint="?attr/normalTabTextColor"
-        app:itemTextColor="?attr/normalTabTextColor" />
+        app:itemTextColor="?attr/normalTabTextColor"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </com.google.android.material.circularreveal.coordinatorlayout.CircularRevealCoordinatorLayout>
-

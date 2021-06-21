@@ -2,14 +2,13 @@ package ir.namoo.religiousprayers.ui.edit
 
 import android.app.Dialog
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.GeditDialogBinding
-import ir.namoo.religiousprayers.utils.TAG
 import ir.namoo.religiousprayers.utils.getDayNum
+import ir.namoo.religiousprayers.utils.logException
 
 class GEditDialog : AppCompatDialogFragment() {
     private lateinit var binding: GeditDialogBinding
@@ -55,7 +54,7 @@ class GEditDialog : AppCompatDialogFragment() {
                         getDayNum(binding.pickerFromMonth.value, binding.pickerFromDay.value)
                     val toDay = getDayNum(binding.pickerToMonth.value, binding.pickerToDay.value)
                     val editPrayTimesFragment = parentFragment as EditFragment?
-                    try {
+                    runCatching {
                         editPrayTimesFragment!!.groupChange(
                             binding.spinnerAthanSE.selectedItemPosition,
                             fromDay,
@@ -63,10 +62,7 @@ class GEditDialog : AppCompatDialogFragment() {
                             binding.pickerMinuteChange.value,
                             binding.radioBtnForward.isChecked
                         )
-                    } catch (ex: Exception) {
-                        Log.e(TAG, "onCreateDialog: $ex")
-                        ex.printStackTrace()
-                    }
+                    }.onFailure(logException)
                 } else {
                     Toast.makeText(context, getString(R.string.error_gedit_data), Toast.LENGTH_LONG)
                         .show()

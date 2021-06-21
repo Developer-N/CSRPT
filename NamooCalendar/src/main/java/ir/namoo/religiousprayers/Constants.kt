@@ -1,5 +1,7 @@
 package ir.namoo.religiousprayers
 
+import ir.namoo.religiousprayers.utils.listOf31Items
+
 const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
 //const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
 //const val appLink="\r\n https://bit.ly/2juUc1y"//myket
@@ -8,7 +10,6 @@ const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
 const val LOCATION_PERMISSION_REQUEST_CODE = 23
 const val STORAGE_PERMISSION_REQUEST_CODE = 24
 const val CALENDAR_READ_PERMISSION_REQUEST_CODE = 55
-const val CALENDAR_EVENT_ADD_MODIFY_REQUEST_CODE = 63
 
 const val REQ_CODE_PICK_ATHAN_FILE = 6236
 const val REQ_CODE_PICK_FAJR_FILE = 6237
@@ -43,12 +44,17 @@ const val PREF_ALTITUDE = "Altitude"
 const val PREF_WIDGET_IN_24 = "WidgetIn24"
 const val PREF_IRAN_TIME = "IranTime"
 const val PREF_PERSIAN_DIGITS = "PersianDigits"
-const val PREF_ATHAN_URI = "AthanURI"
 const val PREF_SHOW_DEVICE_CALENDAR_EVENTS = "showDeviceCalendarEvents"
 const val PREF_WIDGET_CLOCK = "WidgetClock"
+const val PREF_CENTER_ALIGN_WIDGETS = "CenterAlignWidgets"
+const val PREF_WHAT_TO_SHOW_WIDGETS = "what_to_show"
+const val PREF_NUMERICAL_DATE_PREFERRED = "numericalDatePreferred"
+const val PREF_ASTRONOMICAL_FEATURES = "astronomicalFeatures"
+const val PREF_SHOW_WEEK_OF_YEAR_NUMBER = "showWeekOfYearNumber"
 const val PREF_NOTIFY_DATE = "NotifyDate"
 const val PREF_NOTIFY_DATE_LOCK_SCREEN = "NotifyDateLockScreen"
 const val PREF_APP_LANGUAGE = "AppLanguage"
+const val PREF_EASTERN_GREGORIAN_ARABIC_MONTHS = "EasternGregorianArabicMonths"
 const val PREF_SELECTED_WIDGET_TEXT_COLOR = "SelectedWidgetTextColor"
 const val PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR = "SelectedWidgetNextAthanTextColor"
 const val PREF_SELECTED_WIDGET_BACKGROUND_COLOR = "SelectedWidgetBackgroundColor"
@@ -62,6 +68,7 @@ const val PREF_WEEK_ENDS = "WeekEnds"
 const val PREF_SHIFT_WORK_STARTING_JDN = "ShiftWorkJdn"
 const val PREF_SHIFT_WORK_SETTING = "ShiftWorkSetting"
 const val PREF_SHIFT_WORK_RECURS = "ShiftWorkRecurs"
+const val PREF_DISABLE_OWGHAT = "DisableOwghat"
 const val PREF_APP_FONT = "app_font"
 const val PREF_FIRST_START = "first_start"
 const val PREF_SUMMER_TIME = "summer_time"
@@ -106,6 +113,7 @@ const val BROWN_THEME = "BrownTheme"
 const val NEW_BLUE_THEME = "NewBlueTheme"
 const val BLUE_THEME = "BlueTheme"
 const val MODERN_THEME = "ClassicTheme" // don't change it, for legacy reasons
+const val SYSTEM_DEFAULT_THEME = "SystemDefault"
 
 const val LOAD_APP_ID = 1000
 const val THREE_HOURS_APP_ID = 1010
@@ -117,7 +125,7 @@ const val BROADCAST_RESTART_APP = "BROADCAST_RESTART_APP"
 const val BROADCAST_UPDATE_APP = "BROADCAST_UPDATE_APP"
 const val KEY_EXTRA_PRAYER_KEY = "prayer_name"
 const val KEY_EXTRA_PRAYER_TIME = "prayer_time"
-const val FONT_PATH = "fonts/Vazir.ttf"
+const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
 
 const val RLM = '\u200F'
 const val ZWJ = "\u200D"
@@ -127,8 +135,7 @@ const val DEFAULT_PM = "ب.ظ"
 
 // See the naming here, https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type
 val PERSIAN_DIGITS = charArrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
-val DAYS_ICONS_PERSIAN = listOf(
-    0,
+val DAYS_ICONS_PERSIAN = listOf31Items(
     R.drawable.day1, R.drawable.day2, R.drawable.day3, R.drawable.day4, R.drawable.day5,
     R.drawable.day6, R.drawable.day7, R.drawable.day8, R.drawable.day9, R.drawable.day10,
     R.drawable.day11, R.drawable.day12, R.drawable.day13, R.drawable.day14, R.drawable.day15,
@@ -141,8 +148,7 @@ val DAYS_ICONS_PERSIAN = listOf(
 // No Urdu ones as they don't use them commonly nowadays
 ///
 val ARABIC_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-val DAYS_ICONS_ARABIC = listOf(
-    0,
+val DAYS_ICONS_ARABIC = listOf31Items(
     R.drawable.day1_ar, R.drawable.day2_ar, R.drawable.day3_ar, R.drawable.day4_ar,
     R.drawable.day5_ar, R.drawable.day6_ar, R.drawable.day7_ar, R.drawable.day8_ar,
     R.drawable.day9_ar, R.drawable.day10_ar, R.drawable.day11_ar, R.drawable.day12_ar,
@@ -158,8 +164,7 @@ val CJK_DIGITS = ARABIC_DIGITS
 
 ///
 val ARABIC_INDIC_DIGITS = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
-val DAYS_ICONS_ARABIC_INDIC = listOf(
-    0,
+val DAYS_ICONS_ARABIC_INDIC = listOf31Items(
     R.drawable.day1, R.drawable.day2, R.drawable.day3, R.drawable.day4_ckb, R.drawable.day5_ckb,
     R.drawable.day6_ckb, R.drawable.day7, R.drawable.day8, R.drawable.day9, R.drawable.day10,
     R.drawable.day11, R.drawable.day12, R.drawable.day13, R.drawable.day14_ckb,
@@ -168,4 +173,3 @@ val DAYS_ICONS_ARABIC_INDIC = listOf(
     R.drawable.day24_ckb, R.drawable.day25_ckb, R.drawable.day26_ckb, R.drawable.day27,
     R.drawable.day28, R.drawable.day29, R.drawable.day30, R.drawable.day31
 )
-

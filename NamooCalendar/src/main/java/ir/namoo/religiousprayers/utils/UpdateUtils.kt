@@ -10,20 +10,26 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.IdRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import io.github.persiancalendar.calendar.AbstractDate
-import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Clock
-import ir.namoo.religiousprayers.*
+import ir.namoo.religiousprayers.BuildConfig
+import ir.namoo.religiousprayers.NWidget
+import ir.namoo.religiousprayers.R
+import ir.namoo.religiousprayers.RLM
+import ir.namoo.religiousprayers.Widget1x1
+import ir.namoo.religiousprayers.Widget2x2
+import ir.namoo.religiousprayers.Widget4x1
+import ir.namoo.religiousprayers.Widget4x1dateOnly
+import ir.namoo.religiousprayers.Widget4x2
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import ir.namoo.religiousprayers.service.ApplicationService
-import ir.namoo.religiousprayers.ui.MainActivity
+import ir.namoo.religiousprayers.ui.SplashActivity
 import ir.namoo.religiousprayers.ui.widget.NWidgetView
 import java.util.*
 import java.util.concurrent.TimeUnit.MINUTES
@@ -32,31 +38,30 @@ private const val NOTIFICATION_ID = 6236
 private var pastDate: AbstractDate? = null
 private var deviceCalendarEvents: DeviceCalendarEventsStore = emptyEventsStore()
 
-fun setDeviceCalendarEvents(context: Context) = try {
-    deviceCalendarEvents = readDayDeviceEvents(context, -1)
-} catch (e: Exception) {
-    e.printStackTrace()
-}
+fun setDeviceCalendarEvents(context: Context): Unit = runCatching {
+    deviceCalendarEvents = Jdn.today.readDayDeviceEvents(context)
+}.getOrElse(logException)
 
 var latestFiredUpdate = 0L
 
 fun update(context: Context, updateDate: Boolean) {
     val now = System.currentTimeMillis()
     if (!updateDate && now - latestFiredUpdate < HALF_SECOND_IN_MILLIS) {
-        Log.d("UpdateUtils", "skip update")
+        logDebug("UpdateUtils", "skip update")
         return
     }
     latestFiredUpdate = now
 
-    Log.d("UpdateUtils", "update")
+    logDebug("UpdateUtils", "update")
     applyAppLanguage(context)
-    val date = getTodayOfCalendar(mainCalendar)
-    val jdn = date.toJdn()
+    val jdn = Jdn.today
+    val date = jdn.toCalendar(mainCalendar)
 
     val launchAppPendingIntent = PendingIntent.getActivity(
         context, 0,
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-        PendingIntent.FLAG_UPDATE_CURRENT
+        Intent(context, SplashActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        PendingIntent.FLAG_UPDATE_CURRENT or
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     )
 
     //
@@ -75,6 +80,7 @@ fun update(context: Context, updateDate: Boolean) {
     val widget4x1 = ComponentName(context, Widget4x1::class.java)
     val widget4x2 = ComponentName(context, Widget4x2::class.java)
     val widget2x2 = ComponentName(context, Widget2x2::class.java)
+    val widget4x1dateOnly = ComponentName(context, Widget4x1dateOnly::class.java)
     val nWidget = ComponentName(context, NWidget::class.java)
 
     fun RemoteViews.setBackgroundColor(@IdRes layoutId: Int): Unit =
@@ -89,14 +95,8 @@ fun update(context: Context, updateDate: Boolean) {
             setBackgroundColor(R.id.widget_layout1x1)
             setTextColor(R.id.textPlaceholder1_1x1, color)
             setTextColor(R.id.textPlaceholder2_1x1, color)
-            setTextViewText(
-                R.id.textPlaceholder1_1x1,
-                formatNumber(date.dayOfMonth)
-            )
-            setTextViewText(
-                R.id.textPlaceholder2_1x1,
-                getMonthName(date)
-            )
+            setTextViewText(R.id.textPlaceholder1_1x1, formatNumber(date.dayOfMonth))
+            setTextViewText(R.id.textPlaceholder2_1x1, date.monthName)
             setOnClickPendingIntent(R.id.widget_layout1x1, launchAppPendingIntent)
             manager.updateAppWidget(widget1x1, this)
         }
@@ -104,7 +104,7 @@ fun update(context: Context, updateDate: Boolean) {
     //endregion
 
     //region NWidget
-    try {
+    runCatching {
         if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
             if (manager.getAppWidgetIds(nWidget)?.isNotEmpty() == true)
                 RemoteViews(context.packageName, R.layout.n_widget).apply {
@@ -113,14 +113,13 @@ fun update(context: Context, updateDate: Boolean) {
                     setOnClickPendingIntent(R.id.widget_image, launchAppPendingIntent)
                     manager.updateAppWidget(nWidget, this)
                 }
-    } catch (ex: Exception) {
-        Log.e(TAG, "update nWidget : $ex")
-    }
+    }.onFailure(logException)
     //endregion
 
     var dateHasChanged = false
     if (pastDate == null || pastDate != date || updateDate) {
-        Log.d("UpdateUtils", "date has changed")
+        logDebug("UpdateUtils", "date has changed")
+
         loadAlarms(context)
         pastDate = date
         dateHasChanged = true
@@ -129,9 +128,9 @@ fun update(context: Context, updateDate: Boolean) {
 
     val showOtherCalendars = "other_calendars" in whatToShowOnWidgets
 
-    val weekDayName = getWeekDayName(date)
-    var title = context.getString(R.string.today) + " " + dayTitleSummary(date)
-    var widgetTitle = dayTitleSummary(date, calendarNameInLinear = showOtherCalendars)
+    val weekDayName = jdn.dayOfWeekName
+    var title = context.getString(R.string.today) + " " + dayTitleSummary(jdn, date)
+    var widgetTitle = dayTitleSummary(jdn, date, calendarNameInLinear = showOtherCalendars)
     val shiftWorkTitle = getShiftWorkTitle(jdn, false)
     if (shiftWorkTitle.isNotEmpty()) {
         title += " ($shiftWorkTitle)"
@@ -139,14 +138,14 @@ fun update(context: Context, updateDate: Boolean) {
     }
     var subtitle = dateStringOfOtherCalendars(jdn, spacedComma)
 
-    val owghatClock = Clock(makeCalendarFromDate(Date(), forceLocalTime = true))
-    var owghat: String
+    val owghatClock = Clock(Date().toJavaCalendar(forceLocalTime = true))
+    var owghat = ""
 
 //    @StringRes
     val nextOwghatId = getNextOwghatTimeId(owghatClock, dateHasChanged, context)
     var prayTimes = PrayTimeProvider.calculate(
         calculationMethod,
-        CivilDate(getTodayJdn()).toCalendar().time,
+        Jdn.today,
         getCoordinate(context)!!,
         context
     )
@@ -154,11 +153,11 @@ fun update(context: Context, updateDate: Boolean) {
     owghat = when (nextOwghatId) {
         1 -> athanNames[1] + " : " + prayTimes.sunriseClock.toFormattedString()
         6 -> {
-            val cal = CivilDate(getTodayJdn()).toCalendar()
+            val cal = Jdn.today.toJavaCalendar()
             cal.add(Calendar.DAY_OF_MONTH, 1)
             prayTimes = PrayTimeProvider.calculate(
                 calculationMethod,
-                cal.time,
+                Jdn(cal.time.time),
                 getCoordinate(context)!!,
                 context
             )
@@ -178,7 +177,7 @@ fun update(context: Context, updateDate: Boolean) {
         }
     }
 
-    val events = getEvents(jdn, deviceCalendarEvents)
+    val events = jdn.getEvents(deviceCalendarEvents)
 
     val enableClock = isWidgetClock && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
     val isCenterAligned = isCenterAlignWidgets
@@ -348,7 +347,7 @@ fun update(context: Context, updateDate: Boolean) {
 
             var text2 = formatDate(date, calendarNameInLinear = showOtherCalendars)
             if (enableClock)
-                text2 = getWeekDayName(date) + "\n" + text2
+                text2 = jdn.dayOfWeekName + "\n" + text2
             else
                 setTextViewText(R.id.textPlaceholder0_4x2, weekDayName)
 
@@ -495,7 +494,10 @@ fun update(context: Context, updateDate: Boolean) {
 
         // Night mode doesn't like our custom notification in Samsung and HTC One UI
         val shouldDisableCustomNotification = false
-//            (Build.BRAND in listOf("samsung", "htc")) && isNightModeEnabled(context)
+//            = when (Build.BRAND) {
+//            "samsung", "htc" -> isNightModeEnabled(context)
+//            else -> false
+//        }
 
         if (!isTalkBackEnabled && !shouldDisableCustomNotification) {
             val holidays = getEventsTitle(
@@ -575,14 +577,10 @@ fun update(context: Context, updateDate: Boolean) {
 
         if (BuildConfig.DEBUG) builder.setWhen(Calendar.getInstance().timeInMillis)
 
-        if (goForWorker())
-            notificationManager?.notify(NOTIFICATION_ID, builder.build())
-        else
-            try {
-                ApplicationService.getInstance()?.startForeground(NOTIFICATION_ID, builder.build())
-            } catch (e: Exception) {
-                Log.e("UpdateUtils", "failed to start service with the notification", e)
-            }
+        if (goForWorker()) notificationManager?.notify(NOTIFICATION_ID, builder.build())
+        else runCatching {
+            ApplicationService.getInstance()?.startForeground(NOTIFICATION_ID, builder.build())
+        }.onFailure(logException)
     } else if (goForWorker()) {
         context.getSystemService<NotificationManager>()?.cancel(NOTIFICATION_ID)
     }

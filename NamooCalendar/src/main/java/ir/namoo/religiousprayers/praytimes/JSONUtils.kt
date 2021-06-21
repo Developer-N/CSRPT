@@ -1,5 +1,6 @@
 package ir.namoo.religiousprayers.praytimes
 
+import ir.namoo.religiousprayers.utils.logException
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
@@ -49,56 +50,45 @@ fun toJson(
     return res
 }
 
-fun getCity(strJson: String?): JSONCity? {
-    return try {
-        val jsonParser = JSONParser()
-        val obj = jsonParser.parse(strJson)
-        val jsonObject = obj as JSONObject
-        val jsonCity = jsonObject["city"]
-        val jCity = jsonCity as JSONObject? ?: return null
-        val res = JSONCity()
-        res.name = Objects.requireNonNull<Any>(jCity["name"]).toString()
-        res.lat =
-            Objects.requireNonNull<Any>(jCity["lat"]).toString().toDouble()
-        res.lng =
-            Objects.requireNonNull<Any>(jCity["lng"]).toString().toDouble()
-        res
-    } catch (ex: Exception) {
-        println("Error: $ex")
-        ex.printStackTrace()
-        null
-    }
-}
+fun getCity(strJson: String?): JSONCity? = runCatching {
+    val jsonParser = JSONParser()
+    val obj = jsonParser.parse(strJson)
+    val jsonObject = obj as JSONObject
+    val jsonCity = jsonObject["city"]
+    val jCity = jsonCity as JSONObject? ?: return null
+    val res = JSONCity()
+    res.name = Objects.requireNonNull<Any>(jCity["name"]).toString()
+    res.lat =
+        Objects.requireNonNull<Any>(jCity["lat"]).toString().toDouble()
+    res.lng =
+        Objects.requireNonNull<Any>(jCity["lng"]).toString().toDouble()
+    res
+}.onFailure(logException).getOrNull()
 
-fun getPrayTimes(strJson: String?): List<DownloadedPrayTimesEntity>? {
-    return try {
-        val res: MutableList<DownloadedPrayTimesEntity> =
-            ArrayList()
-        val jsonParser = JSONParser()
-        val obj = jsonParser.parse(strJson)
-        val jsonObject = obj as JSONObject
-        val jsonTimes = jsonObject["times"]
-        val times = jsonTimes as JSONArray? ?: return null
-        for (j in times) {
-            val t = j as JSONObject
-            val temp = DownloadedPrayTimesEntity(
-                id = 0,
-                city = getCity(strJson)!!.name!!,
-                dayNumber = t["dayNum"].toString().toInt(),
-                fajr = t["fajr"] as String,
-                sunrise = t["sunrise"] as String,
-                dhuhr = t["dhuhr"] as String,
-                asr = t["asr"] as String,
-                maghrib = t["maghrib"] as String,
-                isha = t["isha"] as String
-            )
+fun getPrayTimes(strJson: String?): List<DownloadedPrayTimesEntity>? = runCatching {
+    val res: MutableList<DownloadedPrayTimesEntity> =
+        ArrayList()
+    val jsonParser = JSONParser()
+    val obj = jsonParser.parse(strJson)
+    val jsonObject = obj as JSONObject
+    val jsonTimes = jsonObject["times"]
+    val times = jsonTimes as JSONArray? ?: return null
+    for (j in times) {
+        val t = j as JSONObject
+        val temp = DownloadedPrayTimesEntity(
+            id = 0,
+            city = getCity(strJson)!!.name!!,
+            dayNumber = t["dayNum"].toString().toInt(),
+            fajr = t["fajr"] as String,
+            sunrise = t["sunrise"] as String,
+            dhuhr = t["dhuhr"] as String,
+            asr = t["asr"] as String,
+            maghrib = t["maghrib"] as String,
+            isha = t["isha"] as String
+        )
 
-            res.add(temp)
-        }
-        res
-    } catch (ex: java.lang.Exception) {
-        println("Error: $ex")
-        ex.printStackTrace()
-        null
+        res.add(temp)
     }
-}
+    res
+}.onFailure(logException).getOrNull()
+

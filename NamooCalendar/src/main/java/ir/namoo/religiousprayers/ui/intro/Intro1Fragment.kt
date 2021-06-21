@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -36,7 +35,6 @@ import ir.namoo.religiousprayers.db.CityInDB
 import ir.namoo.religiousprayers.ui.IntroActivity
 import ir.namoo.religiousprayers.ui.MainActivity
 import ir.namoo.religiousprayers.utils.*
-import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -162,24 +160,20 @@ class Intro1Fragment : Fragment() {
 
     private fun checkGPSProvider() {
         if (latitude != null && longitude != null) return
-        try {
+        runCatching {
             val gps = activity?.getSystemService<LocationManager>()
             if (gps?.isProviderEnabled(LocationManager.GPS_PROVIDER) == false) {
                 AlertDialog.Builder(requireActivity())
                     .setMessage(resources.getString(R.string.turn_on_location))
                     .setPositiveButton(R.string.accept) { _, _ ->
-                        try {
+                        runCatching {
                             requireActivity().startActivity(
                                 Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                             )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        }.onFailure(logException)
                     }.create().show()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        }.onFailure(logException)
     }
 
     @SuppressLint("PrivateResource")
@@ -198,17 +192,13 @@ class Intro1Fragment : Fragment() {
         // request for new location
         var gpsEnabled = false
         var networkEnabled = false
-        try {
+        runCatching {
             gpsEnabled = locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
-        } catch (ex: Exception) {
-            Log.d(TAG, "checkLocationEnabled: $ex")
-        }
-        try {
+        }.onFailure(logException)
+        runCatching {
             networkEnabled =
                 locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ?: false
-        } catch (ex: Exception) {
-            Log.d(TAG, "checkLocationEnabled: $ex")
-        }
+        }.onFailure(logException)
         if (!gpsEnabled && !networkEnabled) {
             val dialog =
                 AlertDialog.Builder(requireContext())
@@ -224,14 +214,13 @@ class Intro1Fragment : Fragment() {
             ) { paramDialogInterface: DialogInterface, _: Int -> paramDialogInterface.dismiss() }
             dialog.show()
         } else {
-            try {
+            runCatching {
                 val animation =
                     AnimationUtils.loadAnimation(context, androidx.appcompat.R.anim.abc_fade_in)
                 animation.interpolator = LinearInterpolator()
                 animation.repeatCount = Animation.INFINITE
                 binding.iconLocation.startAnimation(animation)
-            } catch (ex: Exception) {
-            }
+            }.onFailure(logException)
             locationManager?.apply {
                 if (LocationManager.GPS_PROVIDER in allProviders) {
                     requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
@@ -255,15 +244,13 @@ class Intro1Fragment : Fragment() {
         latitude = "%f".format(Locale.ENGLISH, location.latitude)
         longitude = "%f".format(Locale.ENGLISH, location.longitude)
         val gcd = Geocoder(requireContext(), Locale.getDefault())
-        val addresses: List<Address>
-        try {
-            addresses = gcd.getFromLocation(location.latitude, location.longitude, 1)
+        runCatching {
+            val addresses: List<Address> =
+                gcd.getFromLocation(location.latitude, location.longitude, 1)
             if (addresses.isNotEmpty()) {
                 cityName = addresses[0].locality
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
+        }.onFailure(logException)
         save()
     }
 

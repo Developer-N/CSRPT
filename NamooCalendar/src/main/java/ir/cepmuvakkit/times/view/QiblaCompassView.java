@@ -2,6 +2,13 @@
 // licensed under GPLv3
 package ir.cepmuvakkit.times.view;
 
+import ir.cepmuvakkit.times.posAlgo.AstroLib;
+import ir.cepmuvakkit.times.posAlgo.EarthHeading;
+import ir.cepmuvakkit.times.posAlgo.Horizontal;
+import ir.cepmuvakkit.times.posAlgo.SunMoonPosition;
+
+import static ir.namoo.religiousprayers.utils.UtilsKt.a11yAnnounceAndClick;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,13 +31,6 @@ import ir.cepmuvakkit.times.posAlgo.Horizontal;
 import ir.cepmuvakkit.times.posAlgo.SunMoonPosition;
 
 import java.util.GregorianCalendar;
-
-import ir.cepmuvakkit.times.posAlgo.AstroLib;
-import ir.cepmuvakkit.times.posAlgo.EarthHeading;
-import ir.cepmuvakkit.times.posAlgo.Horizontal;
-import ir.cepmuvakkit.times.posAlgo.SunMoonPosition;
-
-import static ir.namoo.religiousprayers.utils.UtilsKt.a11yAnnounceAndClick;
 
 public class QiblaCompassView extends View {
     private final Path mPath = new Path();
