@@ -64,8 +64,8 @@ https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)
 </div>
 
 ## Build
-Require android studio 4.1.1
+Require latest stable Android Studio
 
 1. `git clone https://github.com/Developer-N/CSRPT`
-1. Import the project on Android Studio
+1. Import the project in Android Studio
 

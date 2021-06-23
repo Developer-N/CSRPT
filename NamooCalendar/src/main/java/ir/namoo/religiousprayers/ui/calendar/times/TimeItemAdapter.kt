@@ -202,6 +202,10 @@ class TimeItemAdapter(val childFragmentManager: FragmentManager) :
             val cal = Calendar.getInstance()
             val current = Clock(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
             val rem = Clock.fromInt(clock.toInt() - current.toInt())
+            if (clock.toInt() - current.toInt() < 0) {
+                binding.remainToNext.visibility = View.INVISIBLE
+                return
+            }
             binding.remainToNext.text =
                 formatNumber(
                     String.format(
