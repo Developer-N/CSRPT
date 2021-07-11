@@ -26,7 +26,11 @@ import ir.namoo.religiousprayers.databinding.TimeItemBinding
 import ir.namoo.religiousprayers.db.AthanSetting
 import ir.namoo.religiousprayers.db.AthanSettingsDB
 import ir.namoo.religiousprayers.ui.preferences.AthanSettingDialog
-import ir.namoo.religiousprayers.utils.*
+import ir.namoo.religiousprayers.utils.formatNumber
+import ir.namoo.religiousprayers.utils.layoutInflater
+import ir.namoo.religiousprayers.utils.logException
+import ir.namoo.religiousprayers.utils.toFormattedString
+import ir.namoo.religiousprayers.utils.update
 import java.util.*
 
 class TimeItemAdapter(val childFragmentManager: FragmentManager) :
@@ -201,11 +205,11 @@ class TimeItemAdapter(val childFragmentManager: FragmentManager) :
             }
             val cal = Calendar.getInstance()
             val current = Clock(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
-            val rem = Clock.fromInt(clock.toInt() - current.toInt())
             if (clock.toInt() - current.toInt() < 0) {
                 binding.remainToNext.visibility = View.INVISIBLE
                 return
             }
+            val rem = Clock.fromInt(clock.toInt() - current.toInt())
             binding.remainToNext.text =
                 formatNumber(
                     String.format(

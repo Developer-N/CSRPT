@@ -4,6 +4,9 @@
     package="ir.namoo.religiousprayers">
     <!-- remove the permission taken by work manager -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- don't ever add requiredFeature to them even the fact the app functions without them anyway,
+         this is how 6.6.1 permissions getting was ruined -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

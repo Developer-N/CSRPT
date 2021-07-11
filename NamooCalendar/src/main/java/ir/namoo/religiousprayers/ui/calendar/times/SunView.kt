@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers.ui.calendar.times
 
-import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -16,10 +15,13 @@ import android.view.animation.DecelerateInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.withClip
 import androidx.core.graphics.withScale
+import com.google.android.material.animation.ArgbEvaluatorCompat
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.religiousprayers.LANG_EN_IR
 import ir.namoo.religiousprayers.LANG_EN_US
+import ir.namoo.religiousprayers.LANG_ES
+import ir.namoo.religiousprayers.LANG_FR
 import ir.namoo.religiousprayers.LANG_JA
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.utils.dp
@@ -99,11 +101,10 @@ class SunView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
     private val sunsetString = context.getString(R.string.sunsetSunView)
     private var isRTL = false
     private var segmentByPixel = .0
-    private val argbEvaluator = ArgbEvaluator()
     private var prayTimes: PrayTimes? = null
     private var moonPhase = 1.0
     private val fontSize = when (language) {
-        LANG_EN_IR, LANG_EN_US, LANG_JA -> 12.dp
+        LANG_EN_IR, LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> 12.dp
         else -> 14.dp
     }.toFloat()
 
@@ -181,9 +182,9 @@ class SunView @JvmOverloads constructor(context: Context, attrs: AttributeSet? =
             // draw sun
             val sunMoonRadius = height * .09f
             if (current in .17f..0.83f) {
-                sunPaint.color = argbEvaluator.evaluate(
+                sunPaint.color = ArgbEvaluatorCompat.getInstance().evaluate(
                     current, sunBeforeMiddayColor, sunAfterMiddayColor
-                ) as Int
+                )
                 drawCircle(
                     width * current,
                     getY((width * current).toInt(), segmentByPixel, (height * .9f).toInt()),

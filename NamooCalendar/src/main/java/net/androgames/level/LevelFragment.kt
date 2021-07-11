@@ -12,8 +12,10 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.FragmentLevelBinding
+import ir.namoo.religiousprayers.utils.getCompatDrawable
+import ir.namoo.religiousprayers.utils.navigateSafe
+import ir.namoo.religiousprayers.utils.onClick
 import ir.namoo.religiousprayers.utils.setupUpNavigation
-import net.androgames.level.orientation.OrientationProvider
 
 /*
  *  This file is part of Level (an Android Bubble Level).
@@ -42,18 +44,20 @@ class LevelFragment : Fragment() {
     ): View {
         val activity = activity ?: return View(inflater.context)
         val binding = FragmentLevelBinding.inflate(inflater, container, false)
-        binding.appBar.toolbar.setTitle(R.string.level)
-        binding.appBar.toolbar.setupUpNavigation()
-        binding.appBar.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
+        binding.appBar.toolbar.also {
+            it.setTitle(R.string.level)
+            it.setupUpNavigation()
+            it.setNavigationOnClickListener { findNavController().navigateUp() }
+        }
         provider = OrientationProvider(activity, binding.levelView)
-        binding.bottomAppbar.replaceMenu(R.menu.level_menu_buttons)
-        binding.bottomAppbar.setOnMenuItemClickListener { item: MenuItem ->
-            if (item.itemId == R.id.compass) {
+        binding.bottomAppbar.menu.add(R.string.level).also {
+            it.icon = binding.bottomAppbar.context.getCompatDrawable(R.drawable.ic_compass_menu)
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.onClick {
                 // If compass wasn't in backstack (level is brought from shortcut), navigate to it
                 if (!findNavController().popBackStack(R.id.compass, false))
-                    findNavController().navigate(LevelFragmentDirections.actionLevelToCompass())
+                    findNavController().navigateSafe(LevelFragmentDirections.actionLevelToCompass())
             }
-            true
         }
         binding.fab.setOnClickListener {
             val provider = provider ?: return@setOnClickListener

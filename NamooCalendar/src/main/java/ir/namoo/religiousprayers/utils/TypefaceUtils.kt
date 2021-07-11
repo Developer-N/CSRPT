@@ -8,12 +8,11 @@ import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
-import ir.namoo.religiousprayers.SYSTEM_DEFAULT_FONT
 import ir.namoo.religiousprayers.PREF_APP_FONT
+import ir.namoo.religiousprayers.SYSTEM_DEFAULT_FONT
 
 // https://gist.github.com/artem-zinnatullin/7749076
-val isCustomFontEnabled: Boolean
-    get() = isArabicDigitSelected() || isNonArabicScriptSelected()
+val isCustomFontEnabled: Boolean get() = isArabicDigitSelected() || isNonArabicScriptSelected()
 
 /**
  * Using reflection to override default typeface

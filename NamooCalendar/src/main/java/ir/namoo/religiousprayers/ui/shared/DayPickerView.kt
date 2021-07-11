@@ -8,6 +8,8 @@ import android.widget.NumberPicker
 import com.google.android.material.snackbar.Snackbar
 import ir.namoo.religiousprayers.LANG_AR
 import ir.namoo.religiousprayers.LANG_EN_US
+import ir.namoo.religiousprayers.LANG_ES
+import ir.namoo.religiousprayers.LANG_FR
 import ir.namoo.religiousprayers.LANG_JA
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.DayPickerViewBinding
@@ -36,7 +38,7 @@ class DayPickerView @JvmOverloads constructor(context: Context, attrs: Attribute
     val binding = DayPickerViewBinding.inflate(inflater, this, true).also { binding ->
         val calendarTypes = getOrderedCalendarEntities(
             context, abbreviation = when (language) {
-                LANG_EN_US, LANG_JA, LANG_AR -> true
+                LANG_EN_US, LANG_JA, LANG_FR, LANG_ES, LANG_AR -> true
                 else -> false
             }
         ).also { selectedCalendarType = it[0].type }

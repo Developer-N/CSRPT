@@ -5,8 +5,8 @@
 
     <string name="app_name">تقویم + اوقات شرعی اهل سنت</string>
     <string name="cancel">لغو</string>
-    <string name="widget_name">تقویم فارسی</string>
-    <string name="widget_mini_name">تقویم فارسی (کوچک)</string>
+    <string name="widget_name">تقویم + اوقات شرعی</string>
+    <string name="widget_mini_name">تقویم + اوقات شرعی(کوچک)</string>
     <string name="latitude">عرض جغرافیایی</string>
     <string name="longitude">طول جغرافیایی</string>
     <string name="settings">تنظیمات</string>
@@ -151,7 +151,7 @@
     <string name="location_access">دسترسی به موقعیت مکانی</string>
     <string name="phone_location_required">این قسمت از برنامه نیازمند گرفتن دسترسی مکان است، در غیر است می‌بایست طول و عرض جفرافیایی خود را به صورت دستی وارد کنید.</string>
     <string name="calendar_access">دسترسی به تقویم دستگاه</string>
-    <string name="phone_calendar_required">ابتدا باید مجوز دسترسی به تقویم دستگاه را بدهید، اگر اجازه دسترسی به تقویم دستگاه دهید برنامه می‌تواند رویدادهای شخصی شما را در تقویم فارسی نمایش دهد.</string>
+    <string name="phone_calendar_required">ابتدا باید مجوز دسترسی به تقویم دستگاه را بدهید، اگر اجازه دسترسی به تقویم دستگاه دهید برنامه می‌تواند رویدادهای شخصی شما را در تقویم+اوقات شرعی اهل سنت نمایش دهد.</string>
 
     <!--TalkBack, a11y-->
     <string name="previous_month">ماه قبل</string>
@@ -314,6 +314,12 @@
 
 
     <string name="changes">
+         \n----تغییرات نسخه : 9.3.2.2021----\n
+1.	رفع مشکل تغییر شهر و چند مشکل گزارش شده دیگر\n
+
+        \n----تغییرات نسخه : 9.3.1.2021----\n
+1.	بروزرسانی تقویم، رفع مشکل و بهبود برنامه\n
+
         \n----تغییرات نسخه : 9.3.2021----\n
 1.	اضافه شدن امکان تغییر فونت برنامه\n
 2.	اضافه شدن امکان استفاده از صداهای زنگ گوشی برای هشدار قبل از اذان ها\n
@@ -568,5 +574,6 @@
     <string name="_20">20 هزار</string>
     <string name="_10">10 هزار</string>
     <string name="_5">5 هزار </string>
-
+    <string name="pref_notification">اعلان</string>
+    <string name="pref_widget">ویجت</string>
 </resources>

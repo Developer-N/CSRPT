@@ -40,34 +40,6 @@
         <item>NewBlueTheme</item>
     </string-array>
 
-    <string-array name="languageNames" translatable="false">
-        <item>فارسی</item>
-        <!--        <item>دری</item>-->
-        <!--        <item>پښتو</item>-->
-        <!--        <item>کوردی</item>-->
-        <!--        <item>العربية</item>-->
-        <!--        <item>گيلکي</item>-->
-        <!--        <item>تۆرکجه‌</item>-->
-        <!--        <item>اردو</item>-->
-        <!--        <item>English (Iran)</item>-->
-        <!--        <item>English</item>-->
-        <!--        <item>日本語</item>-->
-    </string-array>
-
-    <string-array name="languageKeys" translatable="false">
-        <item>fa</item>
-        <!--        <item>fa-AF</item>-->
-        <!--        <item>ps</item>-->
-        <!--        <item>ckb</item>-->
-        <!--        <item>ar</item>-->
-        <!--        <item>glk</item>-->
-        <!--        <item>azb</item>-->
-        <!--        <item>ur</item>-->
-        <!--        <item>en</item>-->
-        <!--        <item>en-US</item>-->
-        <!--        <item>ja</item>-->
-    </string-array>
-
     <string-array name="fontNames" translatable="false">
         <item>Vazir</item>
         <item>Noto Naskh Arabic</item>
@@ -144,31 +116,6 @@
         <item>GREGORIAN</item>
     </string-array>
 
-    <string-array name="week_days">
-        <item>Saturday</item>
-        <item>Sunday</item>
-        <item>Monday</item>
-        <item>Tuesday</item>
-        <item>Wednesday</item>
-        <item>Thursday</item>
-        <item>Friday</item>
-    </string-array>
-
-    <string-array name="week_days_value" translatable="false">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-    </string-array>
-
-    <!-- Which means Friday -->
-    <string-array name="default_weekends" translatable="false">
-        <item>6</item>
-    </string-array>
-
     <string-array name="what_to_show">
         <item>Other calendars on 1x4 and 2x2 widgets</item>
         <item>Non-holidays on 2x2 widget and notification</item>
@@ -191,22 +138,6 @@
         <item>owghat</item>
         <item>owghat_location</item>
 <!--        <item>show_weekday</item>-->
-    </string-array>
-
-    <string-array name="islamicOffsetNames">
-        <item>-2</item>
-        <item>-1</item>
-        <item>0</item>
-        <item>+1</item>
-        <item>+2</item>
-    </string-array>
-
-    <string-array name="islamicOffsetKeys" translatable="false">
-        <item>-2</item>
-        <item>-1</item>
-        <item>0</item>
-        <item>+1</item>
-        <item>+2</item>
     </string-array>
 
     <string-array name="shift_work">

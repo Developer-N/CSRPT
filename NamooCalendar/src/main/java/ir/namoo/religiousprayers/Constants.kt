@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers
 
-import ir.namoo.religiousprayers.utils.listOf31Items
 
 const val appLink = "\r\n http://namoo.ir/pt"//namoo.ir
 //const val appLink = "\r\n https://bit.ly/2JB7Rz7"//cafebazar
@@ -21,6 +20,8 @@ const val LANG_PS = "ps"
 const val LANG_GLK = "glk"
 const val LANG_AR = "ar"
 const val LANG_EN_IR = "en"
+const val LANG_FR = "fr"
+const val LANG_ES = "es"
 const val LANG_EN_US = "en-US"
 const val LANG_JA = "ja"
 const val LANG_AZB = "azb"
@@ -73,6 +74,9 @@ const val PREF_APP_FONT = "app_font"
 const val PREF_FIRST_START = "first_start"
 const val PREF_SUMMER_TIME = "summer_time"
 const val PREF_ENABLE_EDIT = "enable_edit"
+const val PREF_INSTALL_INFO_SENT = "install_info_sent"
+const val PREF_PHONE_ID_IN_SERVER = "phone_id_in_server"
+const val PREF_LAST_INSTALL_SEND_TIME = "last_install_time"
 const val PREF_LAST_UPDATE_CHECK = "last_update_check"
 
 
@@ -97,9 +101,10 @@ const val DEFAULT_WIDGET_CLOCK = true
 const val DEFAULT_NOTIFY_DATE = true
 const val DEFAULT_NOTIFY_DATE_LOCK_SCREEN = true
 const val DEFAULT_WEEK_START = "0"
+const val DEFAULT_ISLAMIC_OFFSET = "0"
 
 // WeekEnds, 6 means Friday
-val DEFAULT_WEEK_ENDS: Set<String> = setOf("6")
+val DEFAULT_WEEK_ENDS = setOf("6")
 
 const val LIGHT_THEME = "LightTheme"
 const val DARK_THEME = "DarkTheme"
@@ -133,43 +138,3 @@ const val ZWJ = "\u200D"
 const val DEFAULT_AM = "ق.ظ"
 const val DEFAULT_PM = "ب.ظ"
 
-// See the naming here, https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type
-val PERSIAN_DIGITS = charArrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
-val DAYS_ICONS_PERSIAN = listOf31Items(
-    R.drawable.day1, R.drawable.day2, R.drawable.day3, R.drawable.day4, R.drawable.day5,
-    R.drawable.day6, R.drawable.day7, R.drawable.day8, R.drawable.day9, R.drawable.day10,
-    R.drawable.day11, R.drawable.day12, R.drawable.day13, R.drawable.day14, R.drawable.day15,
-    R.drawable.day16, R.drawable.day17, R.drawable.day18, R.drawable.day19, R.drawable.day20,
-    R.drawable.day21, R.drawable.day22, R.drawable.day23, R.drawable.day24, R.drawable.day25,
-    R.drawable.day26, R.drawable.day27, R.drawable.day28, R.drawable.day29, R.drawable.day30,
-    R.drawable.day31
-)
-
-// No Urdu ones as they don't use them commonly nowadays
-///
-val ARABIC_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-val DAYS_ICONS_ARABIC = listOf31Items(
-    R.drawable.day1_ar, R.drawable.day2_ar, R.drawable.day3_ar, R.drawable.day4_ar,
-    R.drawable.day5_ar, R.drawable.day6_ar, R.drawable.day7_ar, R.drawable.day8_ar,
-    R.drawable.day9_ar, R.drawable.day10_ar, R.drawable.day11_ar, R.drawable.day12_ar,
-    R.drawable.day13_ar, R.drawable.day14_ar, R.drawable.day15_ar, R.drawable.day16_ar,
-    R.drawable.day17_ar, R.drawable.day18_ar, R.drawable.day19_ar, R.drawable.day20_ar,
-    R.drawable.day21_ar, R.drawable.day22_ar, R.drawable.day23_ar, R.drawable.day24_ar,
-    R.drawable.day25_ar, R.drawable.day26_ar, R.drawable.day27_ar, R.drawable.day28_ar,
-    R.drawable.day29_ar, R.drawable.day30_ar, R.drawable.day31_ar
-)
-
-// Not that great to have charArrayOf('０', '１', '２', '３', '４', '５', '６', '７', '８', '９')
-val CJK_DIGITS = ARABIC_DIGITS
-
-///
-val ARABIC_INDIC_DIGITS = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
-val DAYS_ICONS_ARABIC_INDIC = listOf31Items(
-    R.drawable.day1, R.drawable.day2, R.drawable.day3, R.drawable.day4_ckb, R.drawable.day5_ckb,
-    R.drawable.day6_ckb, R.drawable.day7, R.drawable.day8, R.drawable.day9, R.drawable.day10,
-    R.drawable.day11, R.drawable.day12, R.drawable.day13, R.drawable.day14_ckb,
-    R.drawable.day15_ckb, R.drawable.day16_ckb, R.drawable.day17, R.drawable.day18,
-    R.drawable.day19, R.drawable.day20, R.drawable.day21, R.drawable.day22, R.drawable.day23,
-    R.drawable.day24_ckb, R.drawable.day25_ckb, R.drawable.day26_ckb, R.drawable.day27,
-    R.drawable.day28, R.drawable.day29, R.drawable.day30, R.drawable.day31
-)

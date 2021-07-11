@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="code">en</string>
-
     <!--Global-->
     <string name="app_name">Calendar + Sunnah Prayer Times</string>
     <string name="widget_name">Calendar + Sunnah Prayer Times</string>
@@ -15,11 +13,12 @@
     <string name="help">Help</string>
     <string name="cancel">Cancel</string>
     <string name="continue_button">Continue</string>
-
     <string name="outdated_app">Due to being outdated, things can be inaccurate</string>
     <string name="update">Update</string>
-
     <!-- No need for translation, remove the section from your translation -->
+    <string name="iran_holidays" translatable="false">مرکز تقویم دانشگاه تهران، <a href="https://calendar.ut.ac.ir/Fa/News/Data/Doc/Calendar%201400-Full.pdf">مشاهده منبع</a></string>
+    <string name="afghanistan_holidays" translatable="false">افغانستان، <a href="https://w.mudl.gov.af/sites/default/files/2020-03/Calendar%202020%20Website.pdf">مشاهده منبع</a></string>
+    <string name="other_holidays" translatable="false">سایر</string>
     <string name="about_developers_list" translatable="false">"ebraminio: Ebrahim Byagowi
 hamidsafdari: Hamid Safdari
 behdad222: Behdad Abedi
@@ -29,7 +28,10 @@ MEHDIMYADI: Mehdi Dimyadi
 runo280: Ruhollah Nosrati
 FtADev: Fatemeh Akhlaghi
 MasoodFallahpoor: Masood Fallahpoor
-beigirad: Farhad BeigiRad"</string>
+beigirad: Farhad BeigiRad
+AryanAhadinia: Aryan Ahadinia
+shahabhm: Shahab Hosseini Moghaddam
+MohammadKashaniJabbari: Mohammad Kashani"</string>
     <string name="about_designers_list" translatable="false">"MEHDIMYADI: Mehdi Dimyadi
 MehraraAbedi: Mehrara Abedi
 behdude: Behdad Pournader
@@ -167,21 +169,18 @@ MMeshkiny: Mohsen Meshkini"</string>
     <string name="day">Day</string>
     <string name="select_day">Select day</string>
     <string name="date_exception">"The entered day isn't valid."</string>
-
     <!--Compass-->
     <string name="compass_not_found">Compass sensor not found</string>
     <string name="calibrate_compass_summary">For improving compass sensor accuracy move the phone away from any magnetic objects, tilt and rotate the device back and forth on every axis.</string>
     <string name="level">Level</string>
     <string name="stop">Stop</string>
     <string name="resume">Resume</string>
-    <string name="set_location">In order to have Sun and Moon location, and Qibla direction, set the location in the settings</string>
-
+    <string name="set_location">In order to have Sun and Moon location, and Qibla direction, set the location in the settings.</string>
     <string name="north">North</string>
     <string name="east">East</string>
     <string name="south">South</string>
     <string name="west">West</string>
     <string name="qibla">Qibla</string>
-
     <!-- Settings -->
     <string name="pref_header_interface_calendar">Interface and Calendar</string>
     <string name="pref_header_widget_location">Widget and Notification</string>
@@ -193,7 +192,6 @@ MMeshkiny: Mohsen Meshkini"</string>
     <string name="select_skin">Select a skin</string>
     <string name="persian_digits">Persian Digits</string>
     <string name="enable_persian_digits">Enable Persian Digits</string>
-
     <string name="events_summary">Events to show</string>
     <string name="show_device_calendar_events">Personal Calendar Events</string>
     <string name="show_device_calendar_events_summary">Show personal calendar events</string>
@@ -211,7 +209,6 @@ MMeshkiny: Mohsen Meshkini"</string>
     <string name="islamic_offset_summary">Adjust Islamic calendar by adding a number</string>
     <string name="clock_in_24">Clock in 24 hour</string>
     <string name="showing_clock_in_24">Show the clock in 24 hour</string>
-
     <!--Widget and Notification Settings-->
     <string name="widget_text_color">Widget Text Color</string>
     <string name="select_widgets_text_color">Select custom color for widgets texts</string>
@@ -227,7 +224,6 @@ MMeshkiny: Mohsen Meshkini"</string>
     <string name="enable_notify">Persistent notification for all date types</string>
     <string name="notify_date_lock_screen">Show notification on the lock screen</string>
     <string name="notify_date_lock_screen_summary">Only when a lock screen security method is set.</string>
-
     <!--Location and Athan-->
     <string name="gps_internet_desc">"Enable device's GPS and Internet connection to find your location, please.
 
@@ -250,7 +246,6 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="phone_location_required">This part of the app needs location permission, if you choose deny you have to enter your latitude and longitude manually.</string>
     <string name="calendar_access">Calendar Access</string>
     <string name="phone_calendar_required">This part of the app needs calendar permission, if you allow it your personal events will be shown on the calendar.</string>
-
     <!--About-->
     <string name="gpl_logo">GPL Logo</string>
     <string name="version">Version %1$s</string>
@@ -512,5 +507,7 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="_20">20$</string>
     <string name="_10">10$</string>
     <string name="_5">5$</string>
+    <string name="pref_notification">Widget and Notification</string>
+    <string name="pref_widget">Widget and Notification</string>
 
 </resources>

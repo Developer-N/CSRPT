@@ -16,13 +16,11 @@ import android.opengl.GLES20
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
@@ -37,20 +35,37 @@ import androidx.core.content.getSystemService
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
 import androidx.core.net.toUri
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.*
-import com.google.android.material.bottomnavigation.LabelVisibilityMode
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.circularreveal.CircularRevealCompat
-import com.google.android.material.circularreveal.CircularRevealWidget
-import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.tabs.TabLayout
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.databinding.DeviceInformationRowBinding
 import ir.namoo.religiousprayers.databinding.FragmentDeviceInfoBinding
 import ir.namoo.religiousprayers.utils.*
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.circularreveal.CircularRevealCompat
+import com.google.android.material.circularreveal.CircularRevealWidget
+import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.tabs.TabLayout
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.head
+import kotlinx.html.html
+import kotlinx.html.meta
+import kotlinx.html.script
+import kotlinx.html.stream.createHTML
+import kotlinx.html.style
+import kotlinx.html.table
+import kotlinx.html.tbody
+import kotlinx.html.th
+import kotlinx.html.thead
+import kotlinx.html.tr
+import kotlinx.html.unsafe
 import java.util.*
 import kotlin.math.sqrt
+
 
 /**
  * @author MEHDI DIMYADI
@@ -70,16 +85,19 @@ class DeviceInformationFragment : Fragment() {
 
         binding.circularReveal.circularRevealFromMiddle()
 
+        val adapter = DeviceInformationAdapter(activity ?: return@also, binding.root)
         binding.recyclerView.let {
             it.setHasFixedSize(true)
             it.layoutManager = LinearLayoutManager(inflater.context)
             it.addItemDecoration(
-                DividerItemDecoration(
-                    inflater.context,
-                    LinearLayoutManager.VERTICAL
-                )
+                DividerItemDecoration(inflater.context, LinearLayoutManager.VERTICAL)
             )
-            it.adapter = DeviceInformationAdapter(activity ?: return@let, binding.root)
+            it.adapter = adapter
+        }
+        binding.toolbar.menu.add("Print").also {
+            it.icon = binding.toolbar.context.getCompatDrawable(R.drawable.ic_print)
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.onClick { context?.also(adapter::print) }
         }
 
         binding.bottomNavigation.also { bottomNavigationView ->
@@ -100,122 +118,116 @@ class DeviceInformationFragment : Fragment() {
                 it.add(Build.MODEL)
                 it.getItem(3).setIcon(R.drawable.ic_device_information_white).isEnabled = false
             }
-            bottomNavigationView.labelVisibilityMode =
-                LabelVisibilityMode.LABEL_VISIBILITY_LABELED
+            bottomNavigationView.labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
             bottomNavigationView.setOnNavigationItemSelectedListener {
                 val activity = activity ?: return@setOnNavigationItemSelectedListener true
                 // Easter egg
-                when {
-                    ++clickCount % 10 == 0 -> {
-                        BottomSheetDialog(activity).also { bottomSheetDialog ->
-                            bottomSheetDialog.setContentView(LinearLayout(activity).also { linearLayout ->
-                                linearLayout.orientation = LinearLayout.VERTICAL
-                                // Add one with CircularProgressIndicator also
-                                linearLayout.addView(LinearProgressIndicator(activity).also { linearProgressIndicator ->
-                                    linearProgressIndicator.isIndeterminate = true
-                                    linearProgressIndicator.setIndicatorColor(
-                                        Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
-                                    )
-                                    linearProgressIndicator.layoutParams =
-                                        ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            ViewGroup.LayoutParams.WRAP_CONTENT
-                                        )
-                                })
-                                linearLayout.addView(TabLayout(
-                                    activity, null, R.style.TabLayoutColored
-                                ).also { tabLayout ->
-                                    val tintColor = activity.resolveColor(R.attr.normalTabTextColor)
-                                    listOf(
-                                        R.drawable.ic_developer to -1,
-                                        R.drawable.ic_translator to 0,
-                                        R.drawable.ic_motorcycle to 1,
-                                        R.drawable.ic_help to 33,
-                                        R.drawable.ic_bug to 9999
-                                    ).map { (iconId: Int, badgeNumber: Int) ->
-                                        tabLayout.addTab(tabLayout.newTab().also { tab ->
-                                            tab.setIcon(iconId)
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                                tab.icon?.setTint(tintColor)
-                                            }
-                                            tab.orCreateBadge.also { badge ->
-                                                badge.isVisible = badgeNumber >= 0
-                                                if (badgeNumber > 0) badge.number = badgeNumber
-                                            }
-                                        })
+                if (++clickCount % 10 == 0) BottomSheetDialog(activity).also { bottomSheetDialog ->
+                    bottomSheetDialog.setContentView(LinearLayout(activity).also { linearLayout ->
+                        linearLayout.orientation = LinearLayout.VERTICAL
+                        // Add one with CircularProgressIndicator also
+                        linearLayout.addView(LinearProgressIndicator(activity).also { linearProgressIndicator ->
+                            linearProgressIndicator.isIndeterminate = true
+                            linearProgressIndicator.setIndicatorColor(
+                                Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
+                            )
+                            linearProgressIndicator.layoutParams =
+                                ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                                )
+                        })
+                        linearLayout.addView(TabLayout(
+                            activity, null, R.style.TabLayoutColored
+                        ).also { tabLayout ->
+                            val tintColor = activity.resolveColor(R.attr.normalTabTextColor)
+                            listOf(
+                                R.drawable.ic_developer to -1,
+                                R.drawable.ic_translator to 0,
+                                R.drawable.ic_motorcycle to 1,
+                                R.drawable.ic_help to 33,
+                                R.drawable.ic_bug to 9999
+                            ).map { (iconId: Int, badgeNumber: Int) ->
+                                tabLayout.addTab(tabLayout.newTab().also { tab ->
+                                    tab.setIcon(iconId)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                        tab.icon?.setTint(tintColor)
                                     }
-                                    tabLayout.addOnTabSelectedListener(object :
-                                        TabLayout.OnTabSelectedListener {
-                                        override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
-                                        override fun onTabReselected(tab: TabLayout.Tab?) = Unit
-                                        override fun onTabSelected(tab: TabLayout.Tab?) {
-                                            tab?.orCreateBadge?.isVisible = false
-                                        }
-                                    })
-                                    tabLayout.setSelectedTabIndicator(R.drawable.cat_tabs_pill_indicator)
-                                    tabLayout.setSelectedTabIndicatorGravity(TabLayout.INDICATOR_GRAVITY_STRETCH)
-                                })
-                                linearLayout.addView(ImageView(activity).also { imageView ->
-                                    imageView.minimumHeight = 80.dp
-                                    imageView.minimumWidth = 80.dp
-                                    imageView.setImageDrawable(DrawerArrowDrawable(activity).also { drawable ->
-                                        ValueAnimator.ofFloat(-.1f, 1.1f).also { valueAnimator ->
-                                            valueAnimator.duration = 3000
-                                            valueAnimator.interpolator = LinearInterpolator()
-                                            valueAnimator.repeatMode = ValueAnimator.REVERSE
-                                            valueAnimator.repeatCount = ValueAnimator.INFINITE
-                                            valueAnimator.addUpdateListener {
-                                                drawable.progress = (it.animatedValue as Float)
-                                                    .coerceIn(0f, 1f)
-                                            }
-                                        }.start()
-                                    })
-                                })
-                                linearLayout.addView(ProgressBar(activity).also { progressBar ->
-                                    progressBar.isIndeterminate = true
-                                    when {
-                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> ValueAnimator.ofArgb(
-                                            Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
-                                        ).also { valueAnimator ->
-                                            valueAnimator.duration = 3000
-                                            valueAnimator.interpolator = LinearInterpolator()
-                                            valueAnimator.repeatMode = ValueAnimator.REVERSE
-                                            valueAnimator.repeatCount = ValueAnimator.INFINITE
-                                            valueAnimator.addUpdateListener {
-                                                progressBar.indeterminateDrawable?.colorFilter =
-                                                    BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                                                        it.animatedValue as Int,
-                                                        BlendModeCompat.SRC_ATOP
-                                                    )
-                                            }
-                                        }.start()
+                                    tab.orCreateBadge.also { badge ->
+                                        badge.isVisible = badgeNumber >= 0
+                                        if (badgeNumber > 0) badge.number = badgeNumber
                                     }
-                                    progressBar.layoutParams =
-                                        ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            600
-                                        )
-                                    // setOnLongClickListener {
-                                    //     val player = MediaPlayer.create(activity, R.raw.moonlight)
-                                    //     runCatching {
-                                    //         if (!player.isPlaying) player.start()
-                                    //     }.onFailure(logException)
-                                    //     AlertDialog.Builder(activity)
-                                    //         .setView(AppCompatImageButton(context).apply {
-                                    //             setImageResource(R.drawable.ic_stop)
-                                    //             setOnClickListener { dismiss() }
-                                    //         })
-                                    //         .setOnDismissListener {
-                                    //             runCatching { player.stop() }.onFailure(logException)
-                                    //         }
-                                    //         .show()
-                                    //     true
-                                    // }
                                 })
+                            }
+                            tabLayout.addOnTabSelectedListener(object :
+                                TabLayout.OnTabSelectedListener {
+                                override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
+                                override fun onTabReselected(tab: TabLayout.Tab?) = Unit
+                                override fun onTabSelected(tab: TabLayout.Tab?) {
+                                    tab?.orCreateBadge?.isVisible = false
+                                }
                             })
-                        }.show()
-                    }
-                }
+                            tabLayout.setSelectedTabIndicator(R.drawable.cat_tabs_pill_indicator)
+                            tabLayout.setSelectedTabIndicatorGravity(TabLayout.INDICATOR_GRAVITY_STRETCH)
+                        })
+                        linearLayout.addView(ImageView(activity).also { imageView ->
+                            imageView.minimumHeight = 80.dp
+                            imageView.minimumWidth = 80.dp
+                            imageView.setImageDrawable(DrawerArrowDrawable(activity).also { drawable ->
+                                ValueAnimator.ofFloat(-.1f, 1.1f).also { valueAnimator ->
+                                    valueAnimator.duration = 3000
+                                    valueAnimator.interpolator = LinearInterpolator()
+                                    valueAnimator.repeatMode = ValueAnimator.REVERSE
+                                    valueAnimator.repeatCount = ValueAnimator.INFINITE
+                                    valueAnimator.addUpdateListener {
+                                        drawable.progress =
+                                            (it.animatedValue as Float).coerceIn(0f, 1f)
+                                    }
+                                }.start()
+                            })
+                        })
+                        linearLayout.addView(ProgressBar(activity).also { progressBar ->
+                            progressBar.isIndeterminate = true
+                            when {
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> ValueAnimator.ofArgb(
+                                    Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
+                                ).also { valueAnimator ->
+                                    valueAnimator.duration = 3000
+                                    valueAnimator.interpolator = LinearInterpolator()
+                                    valueAnimator.repeatMode = ValueAnimator.REVERSE
+                                    valueAnimator.repeatCount = ValueAnimator.INFINITE
+                                    valueAnimator.addUpdateListener {
+                                        progressBar.indeterminateDrawable?.colorFilter =
+                                            BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                                                it.animatedValue as Int, BlendModeCompat.SRC_ATOP
+                                            )
+                                    }
+                                }.start()
+                            }
+                            progressBar.layoutParams =
+                                ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    600
+                                )
+                            // setOnLongClickListener {
+                            //     val player = MediaPlayer.create(activity, R.raw.moonlight)
+                            //     runCatching {
+                            //         if (!player.isPlaying) player.start()
+                            //     }.onFailure(logException)
+                            //     AlertDialog.Builder(activity)
+                            //         .setView(AppCompatImageButton(context).also {
+                            //             it.setImageResource(R.drawable.ic_stop)
+                            //             it.setOnClickListener { dismiss() }
+                            //         })
+                            //         .setOnDismissListener {
+                            //             runCatching { player.stop() }.onFailure(logException)
+                            //         }
+                            //         .show()
+                            //     true
+                            // }
+                        })
+                    })
+                }.show()
                 true
             }
         }
@@ -235,12 +247,11 @@ fun <T> T.circularRevealFromMiddle() where T : View?, T : CircularRevealWidget {
             AnimatorSet().also {
                 it.playTogether(
                     CircularRevealCompat.createCircularReveal(
-                        this@circularRevealFromMiddle,
-                        (viewWidth / 2).toFloat(), (viewHeight / 2).toFloat(),
+                        this, (viewWidth / 2).toFloat(), (viewHeight / 2).toFloat(),
                         10f, (viewDiagonal / 2).toFloat()
                     ),
                     ObjectAnimator.ofArgb(
-                        this@circularRevealFromMiddle,
+                        this,
                         CircularRevealWidget.CircularRevealScrimColorProperty
                             .CIRCULAR_REVEAL_SCRIM_COLOR,
                         Color.GRAY, Color.TRANSPARENT
@@ -273,23 +284,17 @@ class CheckerBoard(context: Context, attrs: AttributeSet?) :
 // https://stackoverflow.com/a/58471997
 private fun createCheckerRoundedBoard(
     tileSize: Float, r: Float, @ColorInt color: Int
-) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    shader = BitmapShader(
-        Bitmap.createBitmap(
-            tileSize.toInt() * 2, tileSize.toInt() * 2, Bitmap.Config.ARGB_8888
-        ).apply {
-            Canvas(this).apply {
-                val fill = Paint(Paint.ANTI_ALIAS_FLAG).also {
-                    it.style = Paint.Style.FILL
-                    it.color = color
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    drawRoundRect(0f, 0f, tileSize, tileSize, r, r, fill)
-                    drawRoundRect(tileSize, tileSize, tileSize * 2f, tileSize * 2f, r, r, fill)
-                }
-            }
-        }, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT
-    )
+) = Paint(Paint.ANTI_ALIAS_FLAG).also { paint ->
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return@also
+    val tileSize2x = tileSize.toInt() * 2
+    val bitmap = Bitmap.createBitmap(tileSize2x, tileSize2x, Bitmap.Config.ARGB_8888)
+    val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+    fill.style = Paint.Style.FILL
+    fill.color = color
+    val canvas = Canvas(bitmap)
+    canvas.drawRoundRect(0f, 0f, tileSize, tileSize, r, r, fill)
+    canvas.drawRoundRect(tileSize, tileSize, tileSize * 2f, tileSize * 2f, r, r, fill)
+    paint.shader = BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
 }
 
 // https://stackoverflow.com/a/59234917
@@ -325,9 +330,9 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
 
     data class Item(val title: String, val content: CharSequence?, val version: String)
 
-    val deviceInformationItems = listOf(
-        Item("Screen Resolution", activity.windowManager.run {
-            "%d*%d pixels".format(Locale.ENGLISH, defaultDisplay.width, defaultDisplay.height)
+    private val deviceInformationItems = listOf(
+        Item("Screen Resolution", activity.windowManager.let {
+            "%d*%d pixels".format(Locale.ENGLISH, it.defaultDisplay.width, it.defaultDisplay.height)
         }, "%.1fHz".format(Locale.ENGLISH, activity.windowManager.defaultDisplay.refreshRate)),
         Item("DPI", activity.resources.displayMetrics.densityDpi.toString(), ""),
         Item(
@@ -335,8 +340,7 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
             Build.VERSION.SDK_INT.toString()
         ),
         Item(
-            "CPU Instructions Sets",
-            (when {
+            "CPU Instructions Sets", (when {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> Build.SUPPORTED_ABIS
                 else -> arrayOf(Build.CPU_ABI, Build.CPU_ABI2)
             }).joinToString(", "),
@@ -361,31 +365,28 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
         Item("Display", Build.DISPLAY, ""),
         Item("Device Fingerprints", Build.FINGERPRINT, ""),
         Item(
-            "RAM",
-            humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
+            "RAM", humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
                 activity.getSystemService<ActivityManager>()?.getMemoryInfo(it)
             }.totalMem),
             ""
         ),
         Item(
-            "Battery",
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                (activity.getSystemService<BatteryManager>())?.run {
-                    listOf("Charging: $isCharging") + listOf(
+            "Battery", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                (activity.getSystemService<BatteryManager>())?.let {
+                    listOf("Charging: ${it.isCharging}") + listOf(
                         "Capacity" to BatteryManager.BATTERY_PROPERTY_CAPACITY,
                         "Charge Counter" to BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER,
                         "Current Avg" to BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,
                         "Current Now" to BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,
                         "Energy Counter" to BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER
-                    ).map { (title: String, id: Int) -> "$title: ${getLongProperty(id)}" }
+                    ).map { (title: String, id: Int) -> "$title: ${it.getLongProperty(id)}" }
                 }?.joinToString("\n")
             else "",
             ""
         ),
         Item("Display Metrics", activity.resources.displayMetrics.toString(), ""),
         Item(
-            "Sensors",
-            (activity.getSystemService<SensorManager>())
+            "Sensors", (activity.getSystemService<SensorManager>())
                 ?.getSensorList(Sensor.TYPE_ALL)?.joinToString("\n"), ""
         ),
         Item(
@@ -419,10 +420,8 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
         }
         listOf(
             Item(
-                "OpenGL",
-                (listOf(
-                    "GL_VERSION" to GLES20.GL_VERSION,
-                    "GL_RENDERER" to GLES20.GL_RENDERER,
+                "OpenGL", (listOf(
+                    "GL_VERSION" to GLES20.GL_VERSION, "GL_RENDERER" to GLES20.GL_RENDERER,
                     "GL_VENDOR" to GLES20.GL_VENDOR
                 ).map { (title: String, id: Int) -> "$title: ${GLES20.glGetString(id)}" } + listOf(
                     "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
@@ -444,27 +443,22 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
                 ""
             ),
             Item(
-                "OpenGL Extensions",
-                SpannableStringBuilder().also { spannableStringBuilder ->
+                "OpenGL Extensions", buildSpannedString {
                     val extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS).trim().split(" ")
                     val regex = Regex("GL_([a-zA-Z]+)_(.+)")
                     extensions.forEachIndexed { i, it ->
-                        if (i != 0) spannableStringBuilder.append("\n")
+                        if (i != 0) append("\n")
 
-                        if (!regex.matches(it)) spannableStringBuilder.append(it)
-                        else spannableStringBuilder.append(SpannableString(it).also { spannableString ->
-                            spannableString.setSpan(object : ClickableSpan() {
-                                override fun onClick(textView: View) = runCatching {
-                                    CustomTabsIntent.Builder().build().launchUrl(
-                                        activity,
-                                        it.replace(
-                                            regex,
-                                            "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
-                                        ).toUri()
-                                    )
-                                }.getOrElse(logException)
-                            }, 0, it.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        })
+                        if (!regex.matches(it)) append(it)
+                        else inSpans(object : ClickableSpan() {
+                            override fun onClick(textView: View) = runCatching {
+                                val pattern =
+                                    "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
+                                CustomTabsIntent.Builder().build().launchUrl(
+                                    activity, it.replace(regex, pattern).toUri()
+                                )
+                            }.onFailure(logException).let {}
+                        }) { append(it) }
                     }
                 },
                 ""
@@ -479,6 +473,28 @@ private class DeviceInformationAdapter(activity: Activity, private val rootView:
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
 
     override fun getItemCount() = deviceInformationItems.size
+
+    fun print(context: Context) = context.showHtml(createHTML().html {
+        head {
+            meta(charset = "utf8")
+            style { unsafe { +"td { padding: .5em; border-top: 1px solid lightgray }" } }
+        }
+        body {
+            h1 { +"Device Information" }
+            table {
+                thead { tr { th { +"Item" }; th { +"Value" } } }
+                tbody {
+                    deviceInformationItems.forEach {
+                        tr {
+                            th { +(it.title + if (it.version.isEmpty()) "" else " (${it.version})") }
+                            th { +it.content.toString() }
+                        }
+                    }
+                }
+            }
+            script { unsafe { +"print()" } }
+        }
+    })
 
     inner class ViewHolder(private val binding: DeviceInformationRowBinding) :
         RecyclerView.ViewHolder(binding.root), View.OnClickListener {

@@ -47,16 +47,6 @@
         <item>میلادی</item>
     </string-array>
 
-    <string-array name="week_days">
-        <item>شنبه</item>
-        <item>یکشنبه</item>
-        <item>دوشنبه</item>
-        <item>سه‌شنبه</item>
-        <item>چهارشنبه</item>
-        <item>پنجشنبه</item>
-        <item>جمعه</item>
-    </string-array>
-
     <string-array name="what_to_show">
         <item>سایر تقویم‌ها در ویجت ۴×۱ و ۲×۲</item>
         <item>مناسبت‌های غیر تعطیل در ویجت ۲×۲ و اعلان</item>
@@ -65,24 +55,18 @@
 <!--        <item>نمایش روز هفته در ویجت ۴×۱ فقط تاریخ</item>-->
     </string-array>
 
-    <string-array name="islamicOffsetNames">
-        <item>۲-</item>
-        <item>۱-</item>
-        <item>۰</item>
-        <item>۱+</item>
-        <item>۲+</item>
-    </string-array>
-
     <string-array name="shift_work">
         <item>روزکاری</item>
         <item>استراحت</item>
         <item>عصرکاری</item>
         <item>شب‌کاری</item>
     </string-array>
+
     <string-array name="feqh">
         <item>شافعی</item>
         <item>حنفی</item>
     </string-array>
+
     <string-array name="quran_names">
         <item>ترجمه فارسی</item>
         <item>ترجمه کوردی</item>

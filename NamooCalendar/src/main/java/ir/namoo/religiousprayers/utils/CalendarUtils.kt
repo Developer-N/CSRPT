@@ -167,8 +167,7 @@ private fun readDeviceEvents(
         CalendarContract.Instances.CONTENT_URI.buildUpon().apply {
             ContentUris.appendId(this, startingDate.timeInMillis - DAY_IN_MILLIS)
             ContentUris.appendId(this, startingDate.timeInMillis + rangeInMillis + DAY_IN_MILLIS)
-        }.build(),
-        arrayOf(
+        }.build(), arrayOf(
             CalendarContract.Instances.EVENT_ID, // 0
             CalendarContract.Instances.TITLE, // 1
             CalendarContract.Instances.DESCRIPTION, // 2
@@ -282,8 +281,7 @@ fun Jdn.getWeekOfYear(startOfYear: Jdn): Int {
     return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(dayOfWeek)) / 7.0).toInt()
 }
 
-val Jdn.dayOfWeekName: String
-    get() = weekDays[dayOfWeek]
+val Jdn.dayOfWeekName: String get() = weekDays[dayOfWeek]
 
 fun Jdn.getEvents(deviceCalendarEvents: DeviceCalendarEventsStore): List<CalendarEvent<*>> =
     ArrayList<CalendarEvent<*>>().apply {

@@ -15,14 +15,13 @@ import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Clock
 import io.github.persiancalendar.praytimes.Coordinate
 import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.religiousprayers.ARABIC_DIGITS
-import ir.namoo.religiousprayers.ARABIC_INDIC_DIGITS
 import ir.namoo.religiousprayers.AppLocalesData
 import ir.namoo.religiousprayers.DEFAULT_AM
 import ir.namoo.religiousprayers.DEFAULT_APP_LANGUAGE
 import ir.namoo.religiousprayers.DEFAULT_ASR_JURISTICS
 import ir.namoo.religiousprayers.DEFAULT_CITY
 import ir.namoo.religiousprayers.DEFAULT_IRAN_TIME
+import ir.namoo.religiousprayers.DEFAULT_ISLAMIC_OFFSET
 import ir.namoo.religiousprayers.DEFAULT_NOTIFY_DATE
 import ir.namoo.religiousprayers.DEFAULT_NOTIFY_DATE_LOCK_SCREEN
 import ir.namoo.religiousprayers.DEFAULT_PERSIAN_DIGITS
@@ -40,13 +39,14 @@ import ir.namoo.religiousprayers.LANG_AZB
 import ir.namoo.religiousprayers.LANG_CKB
 import ir.namoo.religiousprayers.LANG_EN_IR
 import ir.namoo.religiousprayers.LANG_EN_US
+import ir.namoo.religiousprayers.LANG_ES
 import ir.namoo.religiousprayers.LANG_FA
 import ir.namoo.religiousprayers.LANG_FA_AF
+import ir.namoo.religiousprayers.LANG_FR
 import ir.namoo.religiousprayers.LANG_GLK
 import ir.namoo.religiousprayers.LANG_JA
 import ir.namoo.religiousprayers.LANG_PS
 import ir.namoo.religiousprayers.LANG_UR
-import ir.namoo.religiousprayers.PERSIAN_DIGITS
 import ir.namoo.religiousprayers.PREF_APP_LANGUAGE
 import ir.namoo.religiousprayers.PREF_ASR_JURISTICS
 import ir.namoo.religiousprayers.PREF_ASTRONOMICAL_FEATURES
@@ -89,7 +89,6 @@ import ir.namoo.religiousprayers.generated.persianEvents
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import java.util.*
 
-
 const val TAG = "NAMOO"
 const val CHANGE_DATE_TAG = "changeDate"
 const val UPDATE_TAG = "update"
@@ -129,7 +128,9 @@ var selectedWidgetBackgroundColor = DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
     private set
 var calculationMethod = CalculationMethod.valueOf(DEFAULT_PRAY_TIME_METHOD)
     private set
+
 var asrMethod = CalculationMethod.AsrJuristics.Standard
+
 var language = DEFAULT_APP_LANGUAGE
     private set
     get() = if (field.isEmpty()) DEFAULT_APP_LANGUAGE else field
@@ -209,9 +210,8 @@ fun loadEvents(context: Context) {
     val afghanistanHolidays = "afghanistan_holidays" in enabledTypes
     val afghanistanOthers = "afghanistan_others" in enabledTypes
     val iranHolidays = "iran_holidays" in enabledTypes
-    val iranIslamic = "iran_islamic" in enabledTypes
     val iranAncient = "iran_ancient" in enabledTypes
-    val iranOthers = "iran_others" in enabledTypes
+    val iranOthers = "iran_others" in enabledTypes || /*legacy*/ "iran_islamic" in enabledTypes
     val international = "international" in enabledTypes
 
     isIranHolidaysEnabled = iranHolidays
@@ -222,7 +222,7 @@ fun loadEvents(context: Context) {
             IslamicDate.useUmmAlQura = true
         }
         when (language) {
-            LANG_FA_AF, LANG_PS, LANG_UR, LANG_AR, LANG_CKB, LANG_EN_US, LANG_JA ->
+            LANG_FA_AF, LANG_PS, LANG_UR, LANG_AR, LANG_CKB, LANG_EN_US, LANG_JA, LANG_FR, LANG_ES ->
                 IslamicDate.useUmmAlQura = true
         }
     }
@@ -230,7 +230,7 @@ fun loadEvents(context: Context) {
     // Now that we are configuring converter's algorithm above, lets set the offset also
 
     IslamicDate.islamicOffset = context.appPrefs
-        .getString(PREF_ISLAMIC_OFFSET, null)?.toIntOrNull() ?: 0
+        .getString(PREF_ISLAMIC_OFFSET, DEFAULT_ISLAMIC_OFFSET)?.toIntOrNull() ?: 0
 
     val allEnabledEventsBuilder = ArrayList<CalendarEvent<*>>()
 
@@ -271,7 +271,6 @@ fun loadEvents(context: Context) {
         if (afghanistanOthers && it.type == EventType.Afghanistan) addOrNot = true
         if (iranHolidays && holiday && it.type == EventType.Iran) addOrNot = true
         if (!iranHolidays && it.type == EventType.Iran) holiday = false
-        if (iranIslamic && it.type == EventType.Iran) addOrNot = true
         if (iranOthers && it.type == EventType.Iran) addOrNot = true
 
         if (addOrNot) {
@@ -290,11 +289,11 @@ fun loadEvents(context: Context) {
         } else null
     }.let { list ->
         list + irregularRecurringEvents.filter { event ->
-            (iranIslamic || iranOthers) && event["calendar"] == "Hijri" && event["type"] == "Iran"
+            iranOthers && event["calendar"] == "Hijri" && event["type"] == "Iran"
         }.flatMap { event ->
             // This adds only this, next and previous years' events, hacky but enough for now
-            if (event["rule"] != "last day of week") return@flatMap emptyList()
-            val dayOfWeek = event["day of week"]?.toIntOrNull() ?: return@flatMap emptyList()
+            if (event["rule"] != "last weekday of month") return@flatMap emptyList()
+            val dayOfWeek = event["weekday"]?.toIntOrNull() ?: return@flatMap emptyList()
             val month = event["month"]?.toIntOrNull() ?: return@flatMap emptyList()
             val title = event["title"] ?: return@flatMap emptyList()
             val year = Jdn.today.toIslamicCalendar().year
@@ -425,7 +424,7 @@ fun updateStoredPreference(context: Context) {
     easternGregorianArabicMonths = prefs.getBoolean(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false)
 
     preferredDigits = when (language) {
-        LANG_EN_US, LANG_JA -> ARABIC_DIGITS
+        LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> ARABIC_DIGITS
         else -> when {
             prefs.getBoolean(PREF_PERSIAN_DIGITS, DEFAULT_PERSIAN_DIGITS) -> when (language) {
                 LANG_AR, LANG_CKB -> ARABIC_INDIC_DIGITS
@@ -445,17 +444,15 @@ fun updateStoredPreference(context: Context) {
     isNotifyDate = prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
     isCenterAlignWidgets = prefs.getBoolean(PREF_CENTER_ALIGN_WIDGETS, false)
 
-    selectedWidgetTextColor =
-        prefs.getString(PREF_SELECTED_WIDGET_TEXT_COLOR, null)
-            ?: DEFAULT_SELECTED_WIDGET_TEXT_COLOR
+    selectedWidgetTextColor = prefs.getString(PREF_SELECTED_WIDGET_TEXT_COLOR, null)
+        ?: DEFAULT_SELECTED_WIDGET_TEXT_COLOR
 
     selectedWidgetNextAthanTextColor =
         prefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
             ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
 
-    selectedWidgetBackgroundColor =
-        prefs.getString(PREF_SELECTED_WIDGET_BACKGROUND_COLOR, null)
-            ?: DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
+    selectedWidgetBackgroundColor = prefs.getString(PREF_SELECTED_WIDGET_BACKGROUND_COLOR, null)
+        ?: DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
 
     // We were using "Jafari" method but later found out Tehran is nearer to time.ir and others
     // so switched to "Tehran" method as default calculation algorithm
@@ -473,7 +470,7 @@ fun updateStoredPreference(context: Context) {
 
         otherCalendars = (prefs.getString(PREF_OTHER_CALENDARS_KEY, null) ?: "GREGORIAN,ISLAMIC")
             .splitIgnoreEmpty(",").map(CalendarType::valueOf)
-    }.onFailure(logException).getOrElse {
+    }.onFailure(logException).onFailure {
         mainCalendar = CalendarType.SHAMSI
         otherCalendars = listOf(CalendarType.GREGORIAN, CalendarType.ISLAMIC)
     }
@@ -527,14 +524,14 @@ fun updateStoredPreference(context: Context) {
         getThemeFromName(getThemeFromPreference(context, prefs))
     }.onFailure(logException).getOrDefault(R.style.LightTheme)
 
-    isTalkBackEnabled = context.getSystemService<AccessibilityManager>()?.run {
-        isEnabled && isTouchExplorationEnabled
+    isTalkBackEnabled = context.getSystemService<AccessibilityManager>()?.let {
+        it.isEnabled && it.isTouchExplorationEnabled
     } ?: false
 
     // https://stackoverflow.com/a/61599809
     isHighTextContrastEnabled = runCatching {
-        context.getSystemService<AccessibilityManager>()?.run {
-            (javaClass.getMethod("isHighTextContrastEnabled").invoke(this) as? Boolean)
+        context.getSystemService<AccessibilityManager>()?.let {
+            (it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean)
         }
     }.onFailure(logException).getOrNull() ?: false
 }

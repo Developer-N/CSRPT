@@ -14,24 +14,28 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
 import android.provider.CalendarContract
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
-import android.view.*
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.SearchAutoComplete
+import androidx.appcompat.widget.Toolbar
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.text.buildSpannedString
+import androidx.core.text.inSpans
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -51,12 +55,14 @@ import ir.namoo.religiousprayers.databinding.OwghatTabPlaceholderBinding
 import ir.namoo.religiousprayers.entities.CalendarEvent
 import ir.namoo.religiousprayers.praytimes.PrayTimeProvider
 import ir.namoo.religiousprayers.ui.DrawerHost
+import ir.namoo.religiousprayers.ui.calendar.calendarpager.CalendarPager
 import ir.namoo.religiousprayers.ui.calendar.dialogs.showDayPickerDialog
 import ir.namoo.religiousprayers.ui.calendar.dialogs.showMonthOverviewDialog
 import ir.namoo.religiousprayers.ui.calendar.dialogs.showShiftWorkDialog
 import ir.namoo.religiousprayers.ui.calendar.searchevent.SearchEventsAdapter
 import ir.namoo.religiousprayers.ui.calendar.times.TimeItemAdapter
 import ir.namoo.religiousprayers.ui.downup.CityList
+import ir.namoo.religiousprayers.ui.preferences.INTERFACE_CALENDAR_TAB
 import ir.namoo.religiousprayers.ui.preferences.LOCATION_ATHAN_TAB
 import ir.namoo.religiousprayers.ui.shared.CalendarsView
 import ir.namoo.religiousprayers.utils.Jdn
@@ -68,6 +74,7 @@ import ir.namoo.religiousprayers.utils.calculationMethod
 import ir.namoo.religiousprayers.utils.calendarType
 import ir.namoo.religiousprayers.utils.createBitmapFromView2
 import ir.namoo.religiousprayers.utils.dayTitleSummary
+import ir.namoo.religiousprayers.utils.debugAssertNotNull
 import ir.namoo.religiousprayers.utils.emptyEventsStore
 import ir.namoo.religiousprayers.utils.formatDeviceCalendarEventTitle
 import ir.namoo.religiousprayers.utils.formatNumber
@@ -75,6 +82,7 @@ import ir.namoo.religiousprayers.utils.getA11yDaySummary
 import ir.namoo.religiousprayers.utils.getAllEnabledAppointments
 import ir.namoo.religiousprayers.utils.getAppFont
 import ir.namoo.religiousprayers.utils.getCityName
+import ir.namoo.religiousprayers.utils.getCompatDrawable
 import ir.namoo.religiousprayers.utils.getCoordinate
 import ir.namoo.religiousprayers.utils.getEnabledCalendarTypes
 import ir.namoo.religiousprayers.utils.getEvents
@@ -89,6 +97,8 @@ import ir.namoo.religiousprayers.utils.language
 import ir.namoo.religiousprayers.utils.logException
 import ir.namoo.religiousprayers.utils.mainCalendar
 import ir.namoo.religiousprayers.utils.monthName
+import ir.namoo.religiousprayers.utils.navigateSafe
+import ir.namoo.religiousprayers.utils.onClick
 import ir.namoo.religiousprayers.utils.readDayDeviceEvents
 import ir.namoo.religiousprayers.utils.resolveColor
 import ir.namoo.religiousprayers.utils.startAthan
@@ -153,15 +163,12 @@ class CalendarFragment : Fragment() {
         this.coordinate = coordinate
 
         val appPrefs = inflater.context.appPrefs
-        val shouldDisableOwghat = coordinate == null &&
-                (appPrefs.getBoolean(PREF_DISABLE_OWGHAT, false) ||
-                        // Just to check the isn't new to the app, the value will be not null when
-                        // preferences is visited once.
-                        appPrefs.getString(PREF_THEME, null) != null ||
-                        // Really extra check as a user that has non default PREF_THEME sure went to
-                        // preferences once but when we decide to remove the above one we should
-                        // have this one at least as the placeholder isn't translated yet.
-                        language != LANG_FA)
+        val shouldDisableOwghatTab = coordinate == null && // if coordinates is set, should be shown
+                (language != LANG_FA || // The placeholder isn't translated to other languages
+                        // The user is already dismissed the third tab
+                        appPrefs.getBoolean(PREF_DISABLE_OWGHAT, false) ||
+                        // Try to not show the placeholder to established users
+                        PREF_APP_LANGUAGE in appPrefs)
 
         val tabs = listOf(
             // First tab
@@ -177,20 +184,20 @@ class CalendarFragment : Fragment() {
                     it.setAnimateParentHierarchy(false)
                 }
             }.root
-        ) + if (shouldDisableOwghat) emptyList() else listOf(
+        ) + if (shouldDisableOwghatTab) emptyList() else listOf(
             // The optional third tab
             R.string.owghat to if (coordinate == null) {
                 OwghatTabPlaceholderBinding.inflate(
                     inflater, container, false
                 ).also { owghatBindingPlaceholder ->
                     owghatBindingPlaceholder.activate.setOnClickListener {
-                        findNavController().navigate(
+                        findNavController().navigateSafe(
                             CalendarFragmentDirections.navigateToSettings(LOCATION_ATHAN_TAB)
                         )
                     }
                     owghatBindingPlaceholder.discard.setOnClickListener {
                         context?.appPrefs?.edit { putBoolean(PREF_DISABLE_OWGHAT, true) }
-                        findNavController().navigate(CalendarFragmentDirections.navigateToSelf())
+                        findNavController().navigateSafe(CalendarFragmentDirections.navigateToSelf())
                     }
                 }.root
             } else {
@@ -389,6 +396,7 @@ class CalendarFragment : Fragment() {
         var lastTab = inflater.context.appPrefsLite.getInt(LAST_CHOSEN_TAB_KEY, CALENDARS_TAB)
         if (lastTab >= tabs.size) lastTab = CALENDARS_TAB
         binding.viewPager.setCurrentItem(lastTab, true)
+        setupMenu(binding.appBar.toolbar, binding.calendarPager)
         //################################### notify for generated and edited time if exact is available
         runCatching {
             if (isNetworkConnected(requireContext()) && PrayTimeProvider.ptFrom != 1)
@@ -448,31 +456,7 @@ class CalendarFragment : Fragment() {
         bringDate(Jdn.today, monthChange = false, highlight = false)
 
         mainBinding?.let {
-            (activity as? DrawerHost)
-                ?.setupToolbarWithDrawer(viewLifecycleOwner, it.appBar.toolbar)
-            it.appBar.toolbar.inflateMenu(R.menu.calendar_menu_buttons)
-            setupToolbarMenu(it.appBar.toolbar.menu)
-            it.appBar.toolbar.setOnMenuItemClickListener { clickedMenuItem ->
-                when (clickedMenuItem?.itemId) {
-                    R.id.go_to -> showDayPickerDialog(selectedJdn) { jdn -> bringDate(jdn) }
-                    R.id.add_event -> addEventOnCalendar(selectedJdn)
-                    R.id.shift_work -> showShiftWorkDialog(selectedJdn)
-                    R.id.month_overview -> showMonthOverviewDialog(it.calendarPager.selectedMonth)
-                    R.id.support -> {
-                        val url = "http://www.namoo.ir/FAQ"
-                        CustomTabsIntent.Builder().build().apply {
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            if (isPackageInstalled(
-                                    "com.android.chrome",
-                                    requireContext().packageManager
-                                )
-                            )
-                                intent.setPackage("com.android.chrome")
-                        }.launchUrl(requireActivity(), Uri.parse(url))
-                    }
-                }
-                true
-            }
+            (activity as? DrawerHost)?.setupToolbarWithDrawer(viewLifecycleOwner, it.appBar.toolbar)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                 it.appBar.appbarLayout.outlineProvider = null
         }
@@ -490,8 +474,7 @@ class CalendarFragment : Fragment() {
         ) askForCalendarPermission(activity) else {
             runCatching { addEvent.launch(jdn) }.onFailure(logException).onFailure {
                 Snackbar.make(
-                    mainBinding?.root ?: return,
-                    R.string.device_calendar_does_not_support,
+                    mainBinding?.root ?: return, R.string.device_calendar_does_not_support,
                     Snackbar.LENGTH_SHORT
                 ).show()
             }
@@ -538,20 +521,19 @@ class CalendarFragment : Fragment() {
         if (isShowDeviceCalendarEvents) mainBinding?.calendarPager?.refresh(isEventsModified = true)
     }
 
-    private fun getDeviceEventsTitle(dayEvents: List<CalendarEvent<*>>) = dayEvents
-        .filterIsInstance<CalendarEvent.DeviceCalendarEvent>()
-        .map { event ->
-            val spannableString = SpannableString(formatDeviceCalendarEventTitle(event))
-            spannableString.setSpan(object : ClickableSpan() {
+    private fun getDeviceEventsTitle(dayEvents: List<CalendarEvent<*>>) = buildSpannedString {
+        dayEvents.filterIsInstance<CalendarEvent.DeviceCalendarEvent>().forEachIndexed { i, event ->
+            if (i != 0) append("\n")
+            inSpans(object : ClickableSpan() {
                 override fun onClick(textView: View) = runCatching {
                     viewEvent.launch(event.id.toLong())
-                }.onFailure(logException).getOrElse {
+                }.onFailure(logException).onFailure {
                     Snackbar.make(
                         textView,
                         R.string.device_calendar_does_not_support,
                         Snackbar.LENGTH_SHORT
                     ).show()
-                }
+                }.let {}
 
                 override fun updateDrawState(ds: TextPaint) {
                     super.updateDrawState(ds)
@@ -560,14 +542,9 @@ class CalendarFragment : Fragment() {
                         if (event.color.isNotEmpty()) ds.color = event.color.toLong().toInt()
                     }.onFailure(logException)
                 }
-            }, 0, spannableString.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            spannableString
+            }) { append(formatDeviceCalendarEventTitle(event)) }
         }
-        .foldIndexed(SpannableStringBuilder()) { i, result, x ->
-            if (i != 0) result.append("\n")
-            result.append(x)
-            result
-        }
+    }
 
     private var selectedJdn = Jdn.today
 
@@ -670,15 +647,15 @@ class CalendarFragment : Fragment() {
             if (messageToShow.isNotEmpty()) messageToShow.append("\n")
 
             val title = getString(R.string.warn_if_events_not_set)
-            val ss = SpannableString(title)
-            val clickableSpan = object : ClickableSpan() {
-                override fun onClick(textView: View) {
-                    val direction = CalendarFragmentDirections.navigateToSettings()
-                    findNavController().navigate(direction)
-                }
-            }
-            ss.setSpan(clickableSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            messageToShow.append(ss)
+            messageToShow.append(buildSpannedString {
+                inSpans(object : ClickableSpan() {
+                    override fun onClick(textView: View) = findNavController().navigateSafe(
+                        CalendarFragmentDirections.navigateToSettings(
+                            INTERFACE_CALENDAR_TAB, PREF_HOLIDAY_TYPES
+                        )
+                    )
+                }) { append(title) }
+            })
 
             contentDescription
                 .append("\n")
@@ -728,48 +705,84 @@ class CalendarFragment : Fragment() {
         }
     }
 
-    private fun setupToolbarMenu(menu: Menu) {
-        todayButton = menu.findItem(R.id.today_button).also {
-            it.isVisible = false
-            it.setOnMenuItemClickListener {
-                bringDate(Jdn.today, highlight = false)
-                true
+    private fun setupMenu(toolbar: Toolbar, calendarPager: CalendarPager) {
+        val context = toolbar.context
+
+        val searchView = SearchView(context)
+        searchView.setOnCloseListener {
+            onBackPressedCloseSearchCallback.isEnabled = false
+            false // don't prevent the event cascade
+        }
+        searchView.setOnSearchClickListener {
+            onBackPressedCloseSearchCallback.isEnabled = true
+            // Remove search edit view below bar
+            searchView.findViewById<View?>(androidx.appcompat.R.id.search_plate)
+                ?.setBackgroundColor(Color.TRANSPARENT)
+
+            val searchAutoComplete = searchView.findViewById<SearchAutoComplete?>(
+                androidx.appcompat.R.id.search_src_text
+            ).debugAssertNotNull
+            searchAutoComplete?.setHint(R.string.search_in_events)
+            val events = allEnabledEvents + getAllEnabledAppointments(context)
+            searchAutoComplete?.setAdapter(SearchEventsAdapter(context, events))
+            searchAutoComplete?.setOnItemClickListener { parent, _, position, _ ->
+                val date = (parent.getItemAtPosition(position) as CalendarEvent<*>).date
+                val type = date.calendarType
+                val today = Jdn.today.toCalendar(type)
+                bringDate(
+                    Jdn(
+                        type, if (date.year == -1)
+                            (today.year + if (date.month < today.month) 1 else 0)
+                        else date.year, date.month, date.dayOfMonth
+                    )
+                )
+                searchView.onActionViewCollapsed()
             }
         }
-        searchView = (menu.findItem(R.id.search).actionView as? SearchView)?.also { searchView ->
-            searchView.setOnCloseListener {
-                onBackPressedCloseSearchCallback.isEnabled = false
-                false // don't prevent the event cascade
-            }
-            searchView.setOnSearchClickListener {
-                onBackPressedCloseSearchCallback.isEnabled = true
-                // Remove search edit view below bar
-                searchView.findViewById<View?>(
-                    androidx.appcompat.R.id.search_plate
-                )?.setBackgroundColor(Color.TRANSPARENT)
+        this.searchView = searchView
 
-                searchView.findViewById<SearchAutoComplete?>(
-                    androidx.appcompat.R.id.search_src_text
-                )?.also { searchAutoComplete ->
-                    val context = searchAutoComplete.context
-                    searchAutoComplete.setHint(R.string.search_in_events)
-                    val events = allEnabledEvents + getAllEnabledAppointments(context)
-                    searchAutoComplete.setAdapter(SearchEventsAdapter(context, events))
-                    searchAutoComplete.setOnItemClickListener { parent, _, position, _ ->
-                        val date = (parent.getItemAtPosition(position) as CalendarEvent<*>).date
-                        val type = date.calendarType
-                        val today = Jdn.today.toCalendar(type)
-                        bringDate(
-                            Jdn(
-                                type, if (date.year == -1)
-                                    (today.year + if (date.month < today.month) 1 else 0)
-                                else date.year, date.month, date.dayOfMonth
-                            )
+        toolbar.menu.add(R.string.return_to_today).also {
+            it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_restore_modified)
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.isVisible = false
+            it.onClick { bringDate(Jdn.today, highlight = false) }
+            todayButton = it
+        }
+        toolbar.menu.add(R.string.search_in_events).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.actionView = searchView
+        }
+        toolbar.menu.add(R.string.support).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_support)
+            it.onClick {
+                val url = "http://www.namoo.ir/FAQ"
+                CustomTabsIntent.Builder().build().apply {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (isPackageInstalled(
+                            "com.android.chrome",
+                            requireContext().packageManager
                         )
-                        searchView.onActionViewCollapsed()
-                    }
-                }
+                    )
+                        intent.setPackage("com.android.chrome")
+                }.launchUrl(requireActivity(), Uri.parse(url))
             }
+        }
+        toolbar.menu.add(R.string.goto_date).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+            it.onClick { showDayPickerDialog(selectedJdn, R.string.go) { jdn -> bringDate(jdn) } }
+        }
+        toolbar.menu.add(R.string.add_event).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+            it.onClick { addEventOnCalendar(selectedJdn) }
+        }
+        toolbar.menu.add(R.string.shift_work_settings).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+            it.onClick { showShiftWorkDialog(selectedJdn) }
+        }
+        toolbar.menu.add(R.string.month_overview).also {
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+            it.onClick { showMonthOverviewDialog(calendarPager.selectedMonth) }
         }
     }
 

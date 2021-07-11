@@ -2,44 +2,54 @@ package ir.namoo.religiousprayers.ui.preferences.agewidget
 
 import android.appwidget.AppWidgetManager
 import android.os.Bundle
-import androidx.preference.Preference
+import androidx.core.content.edit
 import androidx.preference.PreferenceFragmentCompat
 import ir.namoo.religiousprayers.PREF_SELECTED_DATE_AGE_WIDGET
 import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_BACKGROUND_COLOR
 import ir.namoo.religiousprayers.PREF_SELECTED_WIDGET_TEXT_COLOR
 import ir.namoo.religiousprayers.R
 import ir.namoo.religiousprayers.ui.calendar.dialogs.showDayPickerDialog
+import ir.namoo.religiousprayers.ui.preferences.build
+import ir.namoo.religiousprayers.ui.preferences.clickable
+import ir.namoo.religiousprayers.ui.preferences.section
 import ir.namoo.religiousprayers.ui.preferences.shared.showColorPickerDialog
-import ir.namoo.religiousprayers.utils.setOnClickListener
+import ir.namoo.religiousprayers.ui.preferences.summary
+import ir.namoo.religiousprayers.ui.preferences.title
+import ir.namoo.religiousprayers.utils.Jdn
+import ir.namoo.religiousprayers.utils.appPrefs
+import ir.namoo.religiousprayers.utils.getJdnOrNull
+import ir.namoo.religiousprayers.utils.putJdn
 
 class WidgetAgeConfigureFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        val context = context ?: return
         val appWidgetId = arguments
             ?.takeIf { it.containsKey(AppWidgetManager.EXTRA_APPWIDGET_ID) }
             ?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, 0) ?: return
 
-        val screen = preferenceManager.createPreferenceScreen(context)
-        listOf(
-            Preference(context).also {
-                it.setTitle(R.string.select_date)
-                it.setOnClickListener { showDayPickerDialog(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId) }
-            },
-            Preference(context).also {
-                it.setTitle(R.string.widget_text_color)
-                it.setSummary(R.string.select_widgets_text_color)
-                it.setOnClickListener {
-                    showColorPickerDialog(false, PREF_SELECTED_WIDGET_TEXT_COLOR + appWidgetId)
+        preferenceScreen = preferenceManager.createPreferenceScreen(context).build {
+            section(R.string.empty) {
+                clickable(onClick = {
+                    val key = PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId
+                    val jdn = activity?.appPrefs?.getJdnOrNull(key) ?: Jdn.today
+                    showDayPickerDialog(jdn, R.string.accept) { result ->
+                        activity?.appPrefs?.edit { putJdn(key, result) }
+                    }
+                }) {
+                    title(R.string.select_date)
                 }
-            },
-            Preference(context).also {
-                it.setTitle(R.string.widget_background_color)
-                it.setSummary(R.string.select_widgets_background_color)
-                it.setOnClickListener {
+                clickable(onClick = {
+                    showColorPickerDialog(false, PREF_SELECTED_WIDGET_TEXT_COLOR + appWidgetId)
+                }) {
+                    title(R.string.widget_text_color)
+                    summary(R.string.select_widgets_text_color)
+                }
+                clickable(onClick = {
                     showColorPickerDialog(true, PREF_SELECTED_WIDGET_BACKGROUND_COLOR + appWidgetId)
+                }) {
+                    title(R.string.widget_background_color)
+                    summary(R.string.select_widgets_background_color)
                 }
             }
-        ).onEach { it.isIconSpaceReserved = false }.forEach(screen::addPreference)
-        preferenceScreen = screen
+        }
     }
 }

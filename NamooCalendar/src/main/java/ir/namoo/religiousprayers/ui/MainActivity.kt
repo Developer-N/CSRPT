@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Don't apply font override to English and Japanese locales
         when (language) {
-            LANG_EN_US, LANG_JA -> Unit
+            LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> Unit
             else -> overrideFont("SANS_SERIF", getAppFont(applicationContext))
         }
 
@@ -96,18 +96,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             changeNavigationItemTypeface(it.navigation)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            window?.also { window ->
-                // https://learnpainless.com/android/material/make-fully-android-transparent-status-bar
-                window.attributes = window.attributes.also {
-                    it.flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS.inv()
-                }
-                window.statusBarColor = Color.TRANSPARENT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) window?.also { window ->
+            // https://learnpainless.com/android/material/make-fully-android-transparent-status-bar
+            window.attributes = window.attributes.also {
+                it.flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS.inv()
             }
+            window.statusBarColor = Color.TRANSPARENT
+        }
 
         binding.drawer.addDrawerListener(createDrawerListener())
 
-        navController?.addOnDestinationChangedListener(this)
+        navHostFragment?.navController?.addOnDestinationChangedListener(this)
         when (intent?.action) {
             "COMPASS" -> R.id.compass
             "LEVEL" -> R.id.level
@@ -152,11 +151,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
             })
 
-
-//        if (appPrefs.getString(PREF_APP_LANGUAGE, null) == null &&
-//            !appPrefs.getBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)
-//        ) {
-//            showChangeLangSnackbar()
+//        if (!appPrefs.getBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)) {
+//            showChangeLanguageSnackbar()
 //            appPrefs.edit { putBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }
 //        }
 
@@ -188,9 +184,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private var previousAppThemeValue: String? = null
 
-    private val navController by lazy {
+    private val navHostFragment by lazy {
         (supportFragmentManager.findFragmentById(R.id.navHostFragment) as? NavHostFragment)
-            ?.navController.debugAssertNotNull
+            .debugAssertNotNull
     }
 
     override fun onDestinationChanged(
@@ -223,7 +219,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     DonateFragment::class.java.name
                 )
             }
-            else -> navController?.navigate(
+            else -> navHostFragment?.navController?.navigate(
                 id, null, navOptions {
                     anim {
                         enter = R.anim.nav_enter_anim
@@ -238,122 +234,30 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         settingHasChanged = true
+
         when (key) {
-            PREF_APP_LANGUAGE -> {
-                var persianDigits = false
-                var changeToAfghanistanHolidays = false
-                var changeToIslamicCalendar = false
-                var changeToGregorianCalendar = false
-                var changeToPersianCalendar = false
-                var changeToIranEvents = false
-                when (sharedPreferences?.getString(PREF_APP_LANGUAGE, null)
-                    ?: DEFAULT_APP_LANGUAGE) {
-                    LANG_EN_US -> {
-                        changeToGregorianCalendar = true
-                    }
-                    LANG_JA -> {
-                        changeToGregorianCalendar = true
-                        persianDigits = true
-                    }
-                    LANG_AZB, LANG_GLK, LANG_FA -> {
-                        persianDigits = true
-                        changeToPersianCalendar = true
-                        changeToIranEvents = true
-                    }
-                    LANG_EN_IR -> {
-                        persianDigits = false
-                        changeToPersianCalendar = true
-                        changeToIranEvents = true
-                    }
-                    LANG_UR -> {
-                        persianDigits = false
-                        changeToGregorianCalendar = true
-                    }
-                    LANG_AR -> {
-                        persianDigits = true
-                        changeToIslamicCalendar = true
-                    }
-                    LANG_FA_AF -> {
-                        persianDigits = true
-                        changeToPersianCalendar = true
-                        changeToAfghanistanHolidays = true
-                    }
-                    LANG_PS -> {
-                        persianDigits = true
-                        changeToPersianCalendar = true
-                        changeToAfghanistanHolidays = true
-                    }
-                    else -> persianDigits = true
-                }
-
-                sharedPreferences?.edit {
-                    putBoolean(PREF_PERSIAN_DIGITS, persianDigits)
-                    // Enable Afghanistan holidays when Dari or Pashto is set
-                    if (changeToAfghanistanHolidays) {
-                        val currentHolidays =
-                            sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, null)
-                                ?: emptySet()
-
-                        if (currentHolidays.isEmpty() || currentHolidays.size == 1 &&
-                            "iran_holidays" in currentHolidays
-                        ) putStringSet(PREF_HOLIDAY_TYPES, setOf("afghanistan_holidays"))
-                    }
-                    if (changeToIranEvents) {
-                        val currentHolidays =
-                            sharedPreferences.getStringSet(PREF_HOLIDAY_TYPES, null)
-                                ?: emptySet()
-
-                        if (currentHolidays.isEmpty() || currentHolidays.size == 1
-                            && "afghanistan_holidays" in currentHolidays
-                        ) putStringSet(PREF_HOLIDAY_TYPES, setOf("iran_holidays"))
-                    }
-                    when {
-                        changeToGregorianCalendar -> {
-                            putString(PREF_MAIN_CALENDAR_KEY, "GREGORIAN")
-                            putString(PREF_OTHER_CALENDARS_KEY, "ISLAMIC,SHAMSI")
-                            putString(PREF_WEEK_START, "1")
-                            putStringSet(PREF_WEEK_ENDS, setOf("1"))
-                        }
-                        changeToIslamicCalendar -> {
-                            putString(PREF_MAIN_CALENDAR_KEY, "ISLAMIC")
-                            putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,SHAMSI")
-                            putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                            putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
-                        }
-                        changeToPersianCalendar -> {
-                            putString(PREF_MAIN_CALENDAR_KEY, "SHAMSI")
-                            putString(PREF_OTHER_CALENDARS_KEY, "GREGORIAN,ISLAMIC")
-                            putString(PREF_WEEK_START, DEFAULT_WEEK_START)
-                            putStringSet(PREF_WEEK_ENDS, DEFAULT_WEEK_ENDS)
-                        }
-                    }
+            PREF_SHOW_DEVICE_CALENDAR_EVENTS -> {
+                if (sharedPreferences?.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, true) == true
+                    && ActivityCompat.checkSelfPermission(
+                        this, Manifest.permission.READ_CALENDAR
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) askForCalendarPermission(this)
+            }
+            PREF_APP_LANGUAGE, PREF_APP_FONT -> restartToSettings()
+            PREF_THEME -> {
+                // Restart activity if theme is changed and don't if app theme
+                // has just got a default value by preferences as going
+                // from null => SystemDefault which makes no difference
+                if (previousAppThemeValue != null ||
+                    sharedPreferences?.getString(PREF_THEME, null) != SYSTEM_DEFAULT_THEME
+                ) restartToSettings()
+            }
+            PREF_NOTIFY_DATE -> {
+                if (sharedPreferences?.getBoolean(PREF_NOTIFY_DATE, true) == false) {
+                    stopService(Intent(this, ApplicationService::class.java))
+                    startEitherServiceOrWorker(applicationContext)
                 }
             }
-        }
-
-        if (key == PREF_SHOW_DEVICE_CALENDAR_EVENTS &&
-            sharedPreferences?.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, true) == true
-            && ActivityCompat.checkSelfPermission(
-                this, Manifest.permission.READ_CALENDAR
-            ) != PackageManager.PERMISSION_GRANTED
-        ) askForCalendarPermission(this)
-
-        if (key == PREF_APP_LANGUAGE) restartToSettings()
-
-        // Restart activity if theme is changed and don't if app theme
-        // has just got a default value by preferences as going
-        // from null => SystemDefault which makes no difference
-        if (key == PREF_THEME && !(previousAppThemeValue == null &&
-                    sharedPreferences?.getString(PREF_THEME, null) == SYSTEM_DEFAULT_THEME)
-        ) restartToSettings()
-
-        if (key == PREF_APP_FONT) restartToSettings()
-
-        if (key == PREF_NOTIFY_DATE &&
-            sharedPreferences?.getBoolean(PREF_NOTIFY_DATE, true) == false
-        ) {
-            stopService(Intent(this, ApplicationService::class.java))
-            startEitherServiceOrWorker(applicationContext)
         }
 
         updateStoredPreference(this)
@@ -370,8 +274,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                     this, Manifest.permission.READ_CALENDAR
                 ) -> {
                     toggleShowDeviceCalendarOnPreference(this, true)
+                    val navController = navHostFragment?.navController
                     if (navController?.currentDestination?.id == R.id.calendar)
-                        navController?.navigate(CalendarFragmentDirections.navigateToSelf())
+                        navController.navigateSafe(CalendarFragmentDirections.navigateToSelf())
                 }
                 else -> toggleShowDeviceCalendarOnPreference(this, false)
             }
@@ -393,8 +298,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         update(applicationContext, false)
         if (creationDateJdn != Jdn.today) {
             creationDateJdn = Jdn.today
+            val navController = navHostFragment?.navController
             if (navController?.currentDestination?.id == R.id.calendar) {
-                navController?.navigate(CalendarFragmentDirections.navigateToSelf())
+                navController.navigateSafe(CalendarFragmentDirections.navigateToSelf())
             }
         }
     }
@@ -402,11 +308,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     // Checking for the ancient "menu" key
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = when (keyCode) {
         KeyEvent.KEYCODE_MENU -> {
-            when {
-                binding.drawer.isDrawerOpen(GravityCompat.START) ->
-                    binding.drawer.closeDrawer(GravityCompat.START)
-                else -> binding.drawer.openDrawer(GravityCompat.START)
-            }
+            if (binding.drawer.isDrawerOpen(GravityCompat.START))
+                binding.drawer.closeDrawer(GravityCompat.START)
+            else
+                binding.drawer.openDrawer(GravityCompat.START)
             true
         }
         else -> super.onKeyDown(keyCode, event)
@@ -426,7 +331,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             R.id.exit -> finish()
             else -> {
                 binding.drawer.closeDrawer(GravityCompat.START)
-                if (navController?.currentDestination?.id != itemId) {
+                if (navHostFragment?.navController?.currentDestination?.id != itemId) {
                     clickedItem = itemId
                 }
             }
@@ -434,20 +339,26 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         return true
     }
 
-    private fun showChangeLangSnackbar() = Snackbar.make(
-        binding.root, "✖  Change app language?", 7000
-    ).apply {
-        view.layoutDirection = View.LAYOUT_DIRECTION_LTR
-        view.setOnClickListener { dismiss() }
-        setAction("Settings") { appPrefs.edit { putString(PREF_APP_LANGUAGE, LANG_EN_US) } }
-        setActionTextColor(ContextCompat.getColor(context, R.color.dark_accent))
-    }.show()
+//    private fun showChangeLanguageSnackbar() = Snackbar.make(
+//        binding.root, "✖  Change app language?", 7000
+//    ).also {
+//        it.view.layoutDirection = View.LAYOUT_DIRECTION_LTR
+//        it.view.setOnClickListener { _ -> it.dismiss() }
+//        it.setAction("Settings") {
+//            navHostFragment?.navController?.navigateSafe(
+//                CalendarFragmentDirections.navigateToSettings(
+//                    INTERFACE_CALENDAR_TAB, PREF_APP_LANGUAGE
+//                )
+//            )
+//        }
+//        it.setActionTextColor(ContextCompat.getColor(it.context, R.color.dark_accent))
+//    }.show()
 
     private fun showAppIsOutDatedSnackbar() = Snackbar.make(
         binding.root, getString(R.string.outdated_app), 10000
-    ).apply {
-        setAction(getString(R.string.update)) { bringMarketPage(this@MainActivity) }
-        setActionTextColor(ContextCompat.getColor(context, R.color.dark_accent))
+    ).also {
+        it.setAction(getString(R.string.update)) { bringMarketPage(this) }
+        it.setActionTextColor(ContextCompat.getColor(it.context, R.color.dark_accent))
     }.show()
 
     override fun setupToolbarWithDrawer(viewLifecycleOwner: LifecycleOwner, toolbar: Toolbar) {

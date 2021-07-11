@@ -159,7 +159,7 @@ class NSettingFragment : Fragment() {
             ArrayAdapter(
                 requireContext(),
                 R.layout.suggestion,
-                android.R.id.text1,
+                R.id.text,
                 names
             )
         )

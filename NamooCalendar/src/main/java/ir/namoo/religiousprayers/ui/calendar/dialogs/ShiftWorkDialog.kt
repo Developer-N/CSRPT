@@ -24,11 +24,11 @@ import ir.namoo.religiousprayers.entities.ShiftWorkRecord
 import ir.namoo.religiousprayers.ui.calendar.CalendarFragmentDirections
 import ir.namoo.religiousprayers.utils.Jdn
 import ir.namoo.religiousprayers.utils.appPrefs
-import ir.namoo.religiousprayers.utils.applyAppLanguage
 import ir.namoo.religiousprayers.utils.formatDate
 import ir.namoo.religiousprayers.utils.formatNumber
 import ir.namoo.religiousprayers.utils.layoutInflater
 import ir.namoo.religiousprayers.utils.mainCalendar
+import ir.namoo.religiousprayers.utils.navigateSafe
 import ir.namoo.religiousprayers.utils.putJdn
 import ir.namoo.religiousprayers.utils.shiftWorkRecurs
 import ir.namoo.religiousprayers.utils.shiftWorkStartingJdn
@@ -38,18 +38,13 @@ import ir.namoo.religiousprayers.utils.spacedComma
 import ir.namoo.religiousprayers.utils.updateStoredPreference
 
 fun Fragment.showShiftWorkDialog(selectedJdn: Jdn) {
-    val context = context ?: return
-
-    applyAppLanguage(context)
-    updateStoredPreference(context)
-
     var isFirstSetup = false
     var jdn = shiftWorkStartingJdn ?: run {
         isFirstSetup = true
         selectedJdn
     }
 
-    val binding = ShiftWorkSettingsBinding.inflate(context.layoutInflater, null, false)
+    val binding = ShiftWorkSettingsBinding.inflate(layoutInflater, null, false)
     binding.recyclerView.layoutManager = LinearLayoutManager(context)
     val shiftWorkItemAdapter = ShiftWorkItemsAdapter(
         if (shiftWorks.isEmpty()) listOf(ShiftWorkRecord("d", 0)) else shiftWorks,
@@ -71,7 +66,7 @@ fun Fragment.showShiftWorkDialog(selectedJdn: Jdn) {
     binding.recurs.isChecked = shiftWorkRecurs
     binding.root.onCheckIsTextEditor()
 
-    AlertDialog.Builder(context)
+    AlertDialog.Builder(layoutInflater.context)
         .setView(binding.root)
         .setTitle(null)
         .setPositiveButton(R.string.accept) { _, _ ->
@@ -86,9 +81,8 @@ fun Fragment.showShiftWorkDialog(selectedJdn: Jdn) {
             }
 
             updateStoredPreference(this.context ?: return@setPositiveButton)
-            findNavController().navigate(CalendarFragmentDirections.navigateToSelf())
+            findNavController().navigateSafe(CalendarFragmentDirections.navigateToSelf())
         }
-        .setCancelable(true)
         .setNegativeButton(R.string.cancel, null)
         .show()
 }

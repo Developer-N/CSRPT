@@ -15,9 +15,11 @@ import android.graphics.Canvas
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -26,17 +28,21 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.graphics.drawable.DrawerArrowDrawable
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.appcompat.widget.Toolbar
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
-import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.work.*
 import com.google.android.material.snackbar.Snackbar
@@ -74,8 +80,7 @@ fun initUtils(context: Context) {
     loadEvents(context)
 }
 
-val supportedYearOfIranCalendar: Int
-    get() = IranianIslamicDateConverter.latestSupportedYearOfIran
+val supportedYearOfIranCalendar: Int get() = IranianIslamicDateConverter.latestSupportedYearOfIran
 
 fun isArabicDigitSelected(): Boolean = when (preferredDigits) {
     ARABIC_DIGITS -> true
@@ -101,13 +106,13 @@ else when (language) {
 }.format(formatNumber(date.dayOfMonth), date.monthName, formatNumber(date.year))
 
 fun isNonArabicScriptSelected() = when (language) {
-    LANG_EN_US, LANG_JA -> true
+    LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> true
     else -> false
 }
 
 // en-US and ja are our only real LTR locales for now
 fun isLocaleRTL(): Boolean = when (language) {
-    LANG_EN_US, LANG_JA -> false
+    LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> false
     else -> true
 }
 
@@ -401,16 +406,10 @@ fun getOrderedCalendarEntities(
             .map(CalendarType::valueOf)
             .zip(context.resources.getStringArray(if (abbreviation) R.array.calendar_type_abbr else R.array.calendar_type))
             .toMap()
-    return getOrderedCalendarTypes().mapNotNull {
-        typeTitleMap[it]?.run { CalendarTypeItem(it, this) }
+    return getOrderedCalendarTypes().mapNotNull { calendarType ->
+        typeTitleMap[calendarType]?.let { CalendarTypeItem(calendarType, it) }
     }
 }
-
-fun getDayIconResource(day: Int): Int = when (preferredDigits) {
-    ARABIC_DIGITS -> DAYS_ICONS_ARABIC
-    ARABIC_INDIC_DIGITS -> DAYS_ICONS_ARABIC_INDIC
-    else -> DAYS_ICONS_PERSIAN
-}.getOrNull(day - 1) ?: 0
 
 fun formatCoordinate(context: Context, coordinate: Coordinate, separator: String) =
     "%s: %.7f%s%s: %.7f".format(
@@ -432,7 +431,7 @@ fun formatCoordinateISO6709(lat: Double, long: Double, alt: Double? = null) = li
 fun getCityName(context: Context, fallbackToCoord: Boolean): String =
     getCityFromPreference(context)?.let {
         when (language) {
-            LANG_EN_IR, LANG_EN_US, LANG_JA -> it.en
+            LANG_EN_IR, LANG_EN_US, LANG_JA, LANG_FR, LANG_ES -> it.en
             LANG_CKB -> it.ckb
             else -> it.fa
         }
@@ -1009,12 +1008,8 @@ fun bringMarketPage(activity: Activity): Unit = runCatching {
     )
 }.onFailure(logException).getOrElse {
     runCatching {
-        activity.startActivity(
-            Intent(
-                Intent.ACTION_VIEW,
-                "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
-            )
-        )
+        val uri = "https://play.google.com/store/apps/details?id=${activity.packageName}".toUri()
+        activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
     }.onFailure(logException)
 }
 
@@ -1126,6 +1121,16 @@ fun Context.resolveColor(attr: Int) = TypedValue().let {
     ContextCompat.getColor(this, it.resourceId)
 }
 
+fun Context.showHtml(html: String) = runCatching {
+    val uri = FileProvider.getUriForFile(
+        applicationContext, "$packageName.provider",
+        File(externalCacheDir, "temp.html").also { it.writeText(html) }
+    )
+    CustomTabsIntent.Builder().build()
+        .also { it.intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        .launchUrl(this, uri)
+}.onFailure(logException).let {}
+
 fun Flow.addViewsToFlow(viewList: List<View>) {
     val parentView = (this.parent as? ViewGroup).debugAssertNotNull ?: return
     this.referencedIds = viewList.map {
@@ -1136,12 +1141,15 @@ fun Flow.addViewsToFlow(viewList: List<View>) {
     }.toIntArray()
 }
 
-inline fun Preference.setOnClickListener(crossinline listener: () -> Unit) {
-    this.setOnPreferenceClickListener {
-        listener()
-        true // means it captures the click event
-    }
-}
+fun NavController.navigateSafe(directions: NavDirections) = runCatching {
+    navigate(directions)
+}.onFailure(logException).getOrNull().debugAssertNotNull.let {}
+
+fun Context.getCompatDrawable(@DrawableRes drawableRes: Int) =
+    AppCompatResources.getDrawable(this, drawableRes)
+
+inline fun MenuItem.onClick(crossinline action: () -> Unit) =
+    this.setOnMenuItemClickListener { action(); true /* it captures the click event */ }.let {}
 
 fun <T> listOf31Items(
     x1: T, x2: T, x3: T, x4: T, x5: T, x6: T, x7: T, x8: T, x9: T, x10: T, x11: T, x12: T,

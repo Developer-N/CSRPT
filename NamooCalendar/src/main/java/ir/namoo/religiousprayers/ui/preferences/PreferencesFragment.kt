@@ -3,6 +3,7 @@ package ir.namoo.religiousprayers.ui.preferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -27,9 +28,14 @@ class PreferencesFragment : Fragment() {
             R.string.pref_header_interface_calendar to InterfaceCalendarFragment::class.java,
             R.string.pref_header_widget_location to WidgetNotificationFragment::class.java
         )
+        val args: PreferencesFragmentArgs by navArgs()
         binding.viewPager.adapter = object : FragmentStateAdapter(this@PreferencesFragment) {
             override fun getItemCount() = tabs.size
-            override fun createFragment(position: Int) = tabs[position].second.newInstance()
+            override fun createFragment(position: Int) = tabs[position].second.newInstance().also {
+                if (position == args.tab && args.preferenceKey.isNotEmpty()) {
+                    it.arguments = bundleOf(PREF_DESTINATION to args.preferenceKey)
+                }
+            }
         }
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, i ->
             tab.setText(tabs[i].first)
@@ -42,10 +48,11 @@ class PreferencesFragment : Fragment() {
                 }
             )
         }.attach()
-        val args: PreferencesFragmentArgs by navArgs()
         binding.viewPager.currentItem = args.tab
     }.root
 }
+
+val PREF_DESTINATION = "DESTINATION"
 
 val LOCATION_ATHAN_TAB = 0
 val INTERFACE_CALENDAR_TAB = 1

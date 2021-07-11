@@ -411,5 +411,6 @@
     <string name="_20">20$</string>
     <string name="_10">10$</string>
     <string name="_5">5$</string>
-
+    <string name="pref_notification">ئاگاداری</string>
+    <string name="pref_widget">ویجیت</string>
 </resources>

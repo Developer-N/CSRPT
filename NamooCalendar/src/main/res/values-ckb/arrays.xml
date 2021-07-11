@@ -47,16 +47,6 @@
         <item>زایینی</item>
     </string-array>
 
-    <string-array name="week_days">
-        <item>شەممە</item>
-        <item>یەکشەممە</item>
-        <item>دووشەممە</item>
-        <item>سێشەممە</item>
-        <item>چوارشەممە</item>
-        <item>پێنجشەممە</item>
-        <item>ھەینی</item>
-    </string-array>
-
     <string-array name="what_to_show" translatable="false">
         <item>ڕۆژژمێرەکانی تر لە ویجیتی ٤×١ و ٢×٢دا</item>
         <item>ئەو بۆنانەی کە پشوودان نین لە ویجیتی ٢×٢ و ئاگاداریدا</item>
@@ -65,24 +55,18 @@
 <!--        <item>نمایش روز هفته در ویجت ۴×۱ فقط تاریخ</item>-->
     </string-array>
 
-    <string-array name="islamicOffsetNames">
-        <item>٢-</item>
-        <item>١-</item>
-        <item>٠</item>
-        <item>١+</item>
-        <item>٢+</item>
-    </string-array>
-
     <string-array name="shift_work">
         <item>ڕۆژکاری</item>
         <item>پشوو</item>
         <item>ئێوارەکاری</item>
         <item>شەوکاری</item>
     </string-array>
+
     <string-array name="feqh">
         <item>Standard</item>
         <item>Hanafi</item>
     </string-array>
+
     <string-array name="quran_names">
         <item>Farsi Khorramdel</item>
         <item>Kurdish Asan</item>

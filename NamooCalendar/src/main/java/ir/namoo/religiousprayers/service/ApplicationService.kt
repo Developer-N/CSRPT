@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import android.os.IBinder
 import android.util.Log
 import ir.namoo.religiousprayers.utils.loadApp
+import ir.namoo.religiousprayers.utils.logDebug
 import ir.namoo.religiousprayers.utils.logException
 import ir.namoo.religiousprayers.utils.update
 import ir.namoo.religiousprayers.utils.updateStoredPreference
@@ -23,7 +24,7 @@ class ApplicationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         instance = WeakReference(this)
-        Log.d(ApplicationService::class.java.name, "start")
+        logDebug(ApplicationService::class.java.name, "start")
 
         val intentFilter = IntentFilter().apply {
             addAction(Intent.ACTION_DATE_CHANGED)

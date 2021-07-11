@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit
 class Intro1Fragment : Fragment() {
     private lateinit var binding: FragmentIntro1Binding
     private var locationManager: LocationManager? = null
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private var latitude: String? = null
     private var longitude: String? = null
     private var cityName: String? = null
@@ -56,7 +56,7 @@ class Intro1Fragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentIntro1Binding.inflate(inflater, container, false)
         allCities = CityDB.getInstance(requireContext().applicationContext).cityDBDAO()
             .getAllCity()
@@ -274,7 +274,7 @@ class Intro1Fragment : Fragment() {
                     ArrayAdapter(
                         requireContext(),
                         R.layout.suggestion,
-                        android.R.id.text1,
+                        R.id.text,
                         names
                     )
                 )
