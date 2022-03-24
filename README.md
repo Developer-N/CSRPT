@@ -4,10 +4,10 @@
 
 ## تقویم + اوقات شرعی اهل سنت
 
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/ic_launcher-web.png" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/ic_launcher-web.png" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
 <br>
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/1.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/2.jpg" width="200" />
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز و ارائه ی امکانات مانند اذکار و قرآن صوتی. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>
@@ -59,3 +59,7 @@ Require latest stable Android Studio
 1. `git clone https://github.com/Developer-N/CSRPT`
 1. Import the project in Android Studio
 
+
+if rebuild project failed use below terminal commands:
+`gradlew assembleMinApi19Debug`
+`gradlew assembleMinApi21Debug`
