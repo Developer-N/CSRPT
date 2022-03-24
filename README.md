@@ -62,6 +62,5 @@ Require latest stable Android Studio
 
 if rebuild project failed use below terminal commands:
 
-`gradlew assembleMinApi19Debug`
-
-`gradlew assembleMinApi21Debug`
+-`gradlew assembleMinApi19Debug`
+-`gradlew assembleMinApi21Debug`
