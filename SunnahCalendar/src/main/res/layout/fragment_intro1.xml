@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/materialCardView"
+        style="@style/Widget.Material3.CardView.Elevated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        app:cardBackgroundColor="?attr/colorCard"
+        app:cardElevation="@dimen/card_elevation"
+        app:cardPreventCornerOverlap="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:gravity="center"
+            android:layoutAnimation="@anim/layout_animation_from_bottom"
+            android:orientation="vertical">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txt_app_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/app_name" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/icon_location"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:layout_marginTop="16dp"
+                app:srcCompat="@drawable/ic_location"
+                app:tint="?attr/colorIcon" />
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/txt_cityName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/city"
+                android:inputType="textShortMessage"
+                android:textAlignment="center" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txt_latitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/latitude"
+                android:textAlignment="center"
+                android:textColor="?attr/colorTextNormal" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txt_longitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/longitude"
+                android:textAlignment="center"
+                android:textColor="?attr/colorTextNormal" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txt_info_msg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="info msg"
+                android:textAlignment="center"
+                android:textColor="?attr/colorTextHoliday"
+                android:visibility="gone" />
+
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btn_intro1_next"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:text="@string/start"
+                    android:visibility="gone"
+                    app:chipIconTint="?attr/colorIcon"
+                    tools:ignore="RtlHardcoded" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btn_intro1_prev"
+                    style="@style/Widget.MaterialComponents.Chip.Action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left"
+                    android:text="@string/previous_page"
+                    app:chipIconTint="?attr/colorIcon"
+                    tools:ignore="RtlHardcoded" />
+
+            </FrameLayout>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

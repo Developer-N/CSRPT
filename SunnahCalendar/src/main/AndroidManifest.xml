@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.byagowi.persiancalendar">
+
+    <!-- remove the permission taken by work manager -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- don't ever add requiredFeature to them even the fact the app functions without them anyway,
+         this is how 6.6.1 permissions getting was ruined -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
+    <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.faketouch"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.network"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.software.live_wallpaper"
+        android:required="false" />
+
+    <application
+        android:name=".MainApplication"
+        android:allowBackup="true"
+        android:banner="@mipmap/ic_banner"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_descriptor"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/SplashScreenTheme"
+        android:usesCleartextTraffic="true"
+        tools:ignore="GoogleAppIndexingWarning"
+        tools:targetApi="s">
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <activity
+            android:name="ir.namoo.religiousprayers.ui.IntroActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/SplashScreenTheme">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <activity android:name="ir.namoo.religiousprayers.ui.AthanSettingActivity" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:configChanges="keyboardHidden|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            tools:ignore="UnusedAttribute" />
+
+        <activity
+            android:name=".ui.athan.AthanActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showForAllUsers="true"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:theme="@style/AthanTheme"
+            android:turnScreenOn="true" />
+
+        <activity
+            android:name="ir.namoo.religiousprayers.ui.athan.NAthanActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showForAllUsers="true"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <activity android:name="ir.namoo.religiousprayers.ui.azkar.AzkarActivity" />
+
+        <receiver
+            android:name=".service.BroadcastReceivers"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".ui.preferences.widgetnotification.WidgetConfigurationActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.preferences.agewidget.AgeWidgetConfigureActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".Widget1x1"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_mini_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider1x1" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+
+        <receiver
+            android:name=".Widget4x1"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider4x1" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+
+        <receiver
+            android:name=".Widget4x2"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider4x2" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+
+        <receiver
+            android:name=".Widget2x2"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider2x2" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+
+        <!--        <receiver-->
+        <!--            android:name=".Widget4x1dateOnly"-->
+        <!--            android:exported="false"-->
+        <!--            android:icon="@mipmap/ic_launcher"-->
+        <!--            android:label="@string/widget_name">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />-->
+        <!--            </intent-filter>-->
+
+        <!--            <meta-data-->
+        <!--                android:name="android.appwidget.provider"-->
+        <!--                android:resource="@xml/persiancalendar_provider4x1_date_only" />-->
+
+        <!--            <meta-data-->
+        <!--                android:name="android.appwidget.provider.semConfigureActivity"-->
+        <!--                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />-->
+        <!--        </receiver>-->
+
+        <receiver
+            android:name=".WidgetSunView"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/sun_view">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider_sun_view" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+
+        <receiver
+            android:name=".WidgetMonthView"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/calendar">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider_month_view" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.widgetnotification.WidgetConfigurationActivity" />
+        </receiver>
+        <receiver
+            android:name=".NWidget"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/ptwidget_info" />
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.agewidget.WidgetAgeConfigureActivity" />
+        </receiver>
+        <receiver
+            android:name=".AgeWidget"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_age_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/age_widget_info" />
+
+            <meta-data
+                android:name="android.appwidget.provider.semConfigureActivity"
+                android:value="com.byagowi.persiancalendar.ui.preferences.agewidget.WidgetAgeConfigureActivity" />
+        </receiver>
+
+        <service
+            android:name=".service.ApplicationService"
+            android:enabled="true"
+            android:exported="false"
+            android:label="Calendar Service" />
+
+        <service
+            android:name=".service.AthanNotification"
+            android:exported="false"
+            android:label="Athan Service" />
+
+        <service
+            android:name="ir.namoo.religiousprayers.ui.athan.NAthanNotification"
+            android:exported="false"
+            android:label="Athan Service" />
+
+        <service
+            android:name=".service.PersianCalendarTileService"
+            android:exported="true"
+            android:icon="@drawable/day18"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.PersianCalendarWallpaperService"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/wallpaper" />
+        </service>
+
+        <service
+            android:name=".service.PersianCalendarDreamService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.dream"
+                android:resource="@xml/dream" />
+        </service>
+
+        <activity
+            android:name="ir.namoo.quran.ui.QuranActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            tools:targetApi="n" />
+        <activity
+            android:name="ir.namoo.quran.ui.SuraViewActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true"
+            tools:targetApi="n" />
+
+        <service
+            android:name="ir.namoo.quran.ui.QuranPlayer"
+            android:enabled="true" />
+
+    </application>
+
+</manifest>

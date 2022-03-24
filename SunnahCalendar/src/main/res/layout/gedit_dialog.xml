@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="400dp"
+    android:orientation="vertical"
+    app:divider="?attr/dividerVertical"
+    app:showDividers="middle">
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/containerGroupEdite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="start|center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/converter_padding"
+        app:divider="?attr/dividerHorizontal"
+        app:showDividers="middle">
+
+        <!--####################################################### -->
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/containerAthanSelector"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:orientation="vertical"
+            android:padding="@dimen/converter_padding">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txt_athanSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/str_selectAthan"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/spinner_athanSE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_margin="@dimen/card_margin"
+                android:foregroundGravity="right"
+                android:gravity="start"
+                android:prompt="@string/str_selectAthan"
+                android:spinnerMode="dialog"
+                android:textColor="?attr/colorTextNormal"
+                android:textSize="30sp" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+        <!--####################################################### -->
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/containerFromSelector"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="3dp"
+            android:layout_weight="3"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txt_fromSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:padding="5dp"
+                android:text="@string/str_from"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/picker_from_day"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="2dp"
+                android:layout_weight="2"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/picker_from_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="2dp"
+                android:layout_weight="2"
+                android:textSize="@dimen/text_size_description" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+        <!--####################################################### -->
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/containerToSelector"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="3dp"
+            android:layout_weight="3"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txt_toSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:padding="4dp"
+                android:text="@string/str_to"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/picker_to_day"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="2dp"
+                android:layout_weight="2"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/picker_to_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="2dp"
+                android:layout_weight="2"
+                android:textSize="@dimen/text_size_description" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+        <!--####################################################### -->
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/containerGroupEdite2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:gravity="start|center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/converter_padding"
+        app:divider="?attr/dividerHorizontal"
+        app:showDividers="middle">
+
+        <!--####################################################### -->
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/containerTimeSelector"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="@dimen/converter_padding">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/txt_timeSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/str_minute"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/picker_minute_change"
+                android:layout_width="wrap_content"
+                android:layout_height="80dp"
+                android:layout_margin="2dp"
+                android:textSize="@dimen/text_size_description" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+        <!--####################################################### -->
+        <RadioGroup
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatRadioButton
+                android:id="@+id/radioBtn_forward"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/card_margin"
+                android:layout_weight="3"
+                android:checked="true"
+                android:text="@string/str_forward"
+                android:textColor="?attr/colorTextNormal"
+                android:textSize="@dimen/text_size_description" />
+
+            <androidx.appcompat.widget.AppCompatRadioButton
+                android:id="@+id/radioBtn_backward"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/card_margin"
+                android:layout_weight="4"
+                android:text="@string/str_backward"
+                android:textColor="?attr/colorTextNormal"
+                android:textSize="@dimen/text_size_description" />
+        </RadioGroup>
+
+        <!--####################################################### -->
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

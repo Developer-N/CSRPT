@@ -8,20 +8,10 @@
 <br>
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/1.jpg" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/2.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/3.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/4.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/5.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/6.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/7.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/8.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/9.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/10.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/11.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/NamooCalendar/src/main/pics/12.jpg" width="200" />
 
-یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز. اطلاعات بیشتر را در آدرس زیر ببینید.
+یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز و ارائه ی امکانات مانند اذکار و قرآن صوتی. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>
-- [صفحه ی اختصاصی تقویم + اوقات شرعی اهل سنت](http://www.namoo.ir/pt)
+- [صفحه ی اختصاصی تقویم + اوقات شرعی اهل سنت](https://www.namoodev.ir/pt)
 <br>
 آدرس تقویم فارسی:
 <br>
@@ -39,7 +29,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 
 ## License
 
-Copyright (C) 2019-2021  Namoo Developer Group 
+Copyright (C) 2018-2022  Namoo Developer Group 
 
 This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by 

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:targetApi="25">
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_azkar2"
+        android:shortcutId="AZKAR"
+        android:shortcutLongLabel="@string/azkar"
+        android:shortcutShortLabel="@string/azkar">
+
+        <intent
+            android:action="AZKAR"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_quran"
+        android:shortcutId="QURAN"
+        android:shortcutLongLabel="@string/quran"
+        android:shortcutShortLabel="@string/quran">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="ir.namoo.quran.ui.QuranActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_compass"
+        android:shortcutId="COMPASS"
+        android:shortcutLongLabel="@string/compass"
+        android:shortcutShortLabel="@string/compass">
+
+        <intent
+            android:action="COMPASS"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_converter"
+        android:shortcutId="CONVERTER"
+        android:shortcutLongLabel="@string/date_converter"
+        android:shortcutShortLabel="@string/date_converter">
+
+        <intent
+            android:action="CONVERTER"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_level"
+        android:shortcutId="LEVEL"
+        android:shortcutLongLabel="@string/level"
+        android:shortcutShortLabel="@string/level">
+
+        <intent
+            android:action="LEVEL"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_astrology_horoscope"
+        android:shortcutId="ASTRONOMY"
+        android:shortcutLongLabel="@string/astronomical_info"
+        android:shortcutShortLabel="@string/astronomical_info">
+
+        <intent
+            android:action="ASTRONOMY"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_map"
+        android:shortcutId="MAP"
+        android:shortcutLongLabel="@string/map"
+        android:shortcutShortLabel="@string/map">
+
+        <intent
+            android:action="MAP"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+</shortcuts>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minWidth="400dp"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/calendars"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_item"
+        android:paddingBottom="@dimen/padding_item">
+
+        <com.byagowi.persiancalendar.ui.common.DayPickerCalendarsFlow
+            android:id="@+id/calendars_flow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:flow_horizontalAlign="center"
+            app:flow_horizontalGap="8dp"
+            app:flow_horizontalStyle="packed"
+            app:flow_verticalGap="2dp"
+            app:flow_wrapMode="chain"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@string/select_day"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/dayTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/day"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/dayPicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layerType="hardware"
+                android:textSize="@dimen/text_size_description" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@string/select_month"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/monthTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/month"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/monthPicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layerType="hardware"
+                android:textSize="@dimen/text_size_description" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@string/select_year"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/yearTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/year"
+                android:textColor="?attr/colorTextSecond"
+                android:textSize="@dimen/text_size_description" />
+
+            <NumberPicker
+                android:id="@+id/yearPicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layerType="hardware"
+                android:textSize="@dimen/text_size_description" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

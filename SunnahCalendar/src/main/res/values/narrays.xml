@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="sort_order">
+        <item>@string/default_sort</item>
+        <item>@string/alphabet_sort</item>
+        <item>@string/revelation_sort</item>
+        <item>@string/aya_inc_sort</item>
+        <item>@string/aya_dec_sort</item>
+    </array>
+
+    <!--############################################## Arabic-->
+    <string-array name="quran_fonts">
+        <item>UthmanTaha</item>
+        <item>PDMS Saleem</item>
+        <item>Mj Rabie</item>
+        <item>Al Qalam Quran Majeed</item>
+        <item>DUBAI</item>
+        <item>Vazir</item>
+    </string-array>
+    <string-array name="quran_fonts_values">
+        <item>fonts/arabic_UthmanTahaN1B.ttf</item>
+        <item>fonts/arabic_PDMS_Saleem_QuranFont.ttf</item>
+        <item>fonts/arabic_Mj_Rabie.ttf</item>
+        <item>fonts/arabic_Al_Qalam_Quran_Majeed.ttf</item>
+        <item>fonts/arabic_DUBAI-REGULAR.TTF</item>
+        <item>fonts/Vazir.ttf</item>
+    </string-array>
+    <!--############################################## end Arabic-->
+
+    <!--############################################## Farsi-->
+    <string-array name="farsi_fonts">
+        <item>Vazir</item>
+    </string-array>
+    <string-array name="farsi_fonts_values">
+        <item>fonts/Vazir.ttf</item>
+    </string-array>
+    <!--##############################################end Farsi-->
+
+    <!--############################################## Kurdish-->
+    <string-array name="kurdish_fonts">
+        <item>Mestan</item>
+        <item>Tishk</item>
+        <item>Penos</item>
+        <item>Chimen</item>
+        <item>udrLav</item>
+        <item>Vazir</item>
+    </string-array>
+    <string-array name="kurdish_fonts_values">
+        <item>fonts/kurdish_KMestan.ttf</item>
+        <item>fonts/kurdish_KTishk.ttf</item>
+        <item>fonts/kurdish_KPenos.ttf</item>
+        <item>fonts/kurdish_KChimen.ttf</item>
+        <item>fonts/kurdish_KudrLav.ttf</item>
+        <item>fonts/Vazir.ttf</item>
+    </string-array>
+    <!--############################################## end Kurdish-->
+
+    <!--############################################## English-->
+    <string-array name="english_fonts">
+        <item>Segoe UI</item>
+    </string-array>
+    <string-array name="english_fonts_values">
+        <item>fonts/english_segoeui.ttf</item>
+    </string-array>
+    <!--##############################################end English-->
+
+    <string-array name="quran_names">
+        <item>Farsi Khorramdel</item>
+        <item>Kurdish Asan</item>
+        <item>Quran Alafasi</item>
+        <item>Quran MaherAlMuaiqly</item>
+        <item>Quran Manshawi Mujawwad</item>
+        <item>Quran Manshawi Murattal</item>
+        <item>Quran NasserAlqatami</item>
+        <item>Quran SaadAlghamedi</item>
+        <item>Quran Abdul Basit Mujawwad</item>
+        <item>Quran Abdul Basit Murattal</item>
+        <item>Quran Fares Abbad</item>
+        <item>Quran Hani Rifai</item>
+        <item>Quran Al Ajamy</item>
+        <item>Quran AbuBakr Ash Shaatree</item>
+        <item>Quran Abdurrahmaan As Sudais</item>
+        <item>Quran Abdullah Basfar</item>
+        <item>Quran Abdullaah 3awwaad Al Juhaynee</item>
+    </string-array>
+
+    <string-array name="quran_folders">
+        <item>Khorramdel</item>
+        <item>Asan</item>
+        <item>Alafasi</item>
+        <item>MaherAlMuaiqly</item>
+        <item>ManshawiMujawwad</item>
+        <item>ManshawiMurattal</item>
+        <item>NasserAlqatami</item>
+        <item>SaadAlghamedi</item>
+        <item>AbdulBasitMujawwad</item>
+        <item>AbdulBasitMurattal</item>
+        <item>FaresAbbad</item>
+        <item>HaniRifai</item>
+        <item>AlAjamy</item>
+        <item>AbuBakrAshShaatree</item>
+        <item>AbdurrahmaanAsSudais</item>
+        <item>AbdullahBasfar</item>
+        <item>AlJuhaynee</item>
+    </string-array>
+
+    <string-array name="quran_links">
+        <item>https://archive.org/download/khorramdelmp3/</item>
+        <item>https://archive.org/download/asan_kurdi/</item>
+        <item>https://everyayah.com/data/Alafasy_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Maher_AlMuaiqly_64kbps/zips/</item>
+        <item>https://archive.org/download/Minshawy_Mujawwad/</item>
+        <item>https://archive.org/download/Manshawi_Murattal/</item>
+        <item>https://everyayah.com/data/Nasser_Alqatami_128kbps/zips/</item>
+        <item>https://everyayah.com/data/Ghamadi_40kbps/zips/</item>
+        <item>https://everyayah.com/data/Abdul_Basit_Mujawwad_128kbps/zips/</item>
+        <item>https://everyayah.com/data/Abdul_Basit_Murattal_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Fares_Abbad_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Hani_Rifai_64kbps/zips/</item>
+        <item>https://everyayah.com/data/ahmed_ibn_ali_al_ajamy_128kbps/zips/</item>
+        <item>https://everyayah.com/data/Abu_Bakr_Ash-Shaatree_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Abdurrahmaan_As-Sudais_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Abdullah_Basfar_64kbps/zips/</item>
+        <item>https://everyayah.com/data/Abdullaah_3awwaad_Al-Juhaynee_128kbps/zips/</item>
+    </string-array>
+
+</resources>

@@ -1,0 +1,555 @@
+{
+  "zz": {
+    "en": "",
+    "fa": "",
+    "ckb": "",
+    "ar": "",
+    "cities": {
+      "CUSTOM": {
+        "en": "None",
+        "fa": "هیچ‌کدام",
+        "ckb": "ھیچیان",
+        "ar": "لا تختار",
+        "latitude": 0,
+        "longitude": 0,
+        "elevation": 0
+      }
+    }
+  },
+  "ir": {
+    "en": "Iran",
+    "fa": "ایران",
+    "ckb": "ئێران",
+    "ar": "إيران",
+    "cities": {
+      "AHVAZ": {
+        "en": "Ahvaz",
+        "fa": "اهواز",
+        "ckb": "ئەھواز",
+        "ar": "أهواز",
+        "latitude": 31.30,
+        "longitude": 48.65,
+        "elevation": 23.872
+      },
+      "ALBORZ": {
+        "en": "Alborz",
+        "fa": "البرز",
+        "ckb": "ئەلبورز",
+        "ar": "البرز",
+        "latitude": 35.82,
+        "longitude": 50.97,
+        "elevation": 1313.733
+      },
+      "ARAK": {
+        "en": "Arak",
+        "fa": "اراک",
+        "ckb": "ئەراک",
+        "ar": "اراك",
+        "latitude": 34.08,
+        "longitude": 49.7,
+        "elevation": 1743.402
+      },
+      "ARDABIL": {
+        "en": "Ardabil",
+        "fa": "اردبیل",
+        "ckb": "ئەردەوێڵ",
+        "ar": "أردبيل",
+        "latitude": 38.25,
+        "longitude": 48.30,
+        "elevation": 1350
+      },
+      "BANDAR_ABAS": {
+        "en": "Bandar Abbas",
+        "fa": "بندرعباس",
+        "ckb": "بەندەرعەبباس",
+        "ar": "بندر عباس",
+        "latitude": 27.1883,
+        "longitude": 56.2766,
+        "elevation": 9
+      },
+      "BIRJAND": {
+        "en": "Birjand",
+        "fa": "بیرجند",
+        "ckb": "بیرجەند",
+        "ar": "بيرجند",
+        "latitude": 32.87,
+        "longitude": 59.21,
+        "elevation": 1476.299
+      },
+      "BOJNURD": {
+        "en": "Bojnurd",
+        "fa": "بجنورد",
+        "ckb": "بوژنوورت",
+        "ar": "بوجنورد",
+        "latitude": 37.4702,
+        "longitude": 57.3143,
+        "elevation": 1070.864
+      },
+      "BUSHEHR": {
+        "en": "Bushehr",
+        "fa": "بوشهر",
+        "ckb": "بووشەھر",
+        "ar": "بوشهر",
+        "latitude": 28.9576,
+        "longitude": 50.8371,
+        "elevation": 12.883
+      },
+      "ESFEHAN": {
+        "en": "Esfehan",
+        "fa": "اصفهان",
+        "ckb": "ئەسفەھان",
+        "ar": "أصفهان",
+        "latitude": 32.65,
+        "longitude": 51.67,
+        "elevation": 1574.144
+      },
+      "GHAZVIN": {
+        "en": "Ghazvin",
+        "fa": "قزوین",
+        "ckb": "قەزوین",
+        "ar": "قزوين",
+        "latitude": 36.16,
+        "longitude": 50,
+        "elevation": 1834.857
+      },
+      "GHOM": {
+        "en": "Qom",
+        "fa": "قم",
+        "ckb": "قوم",
+        "ar": "قم",
+        "latitude": 34.66,
+        "longitude": 50.88,
+        "elevation": 906
+      },
+      "GORGAN": {
+        "en": "Gorgan",
+        "fa": "گرگان",
+        "ckb": "گورگان",
+        "ar": "جرجان",
+        "latitude": 36.83,
+        "longitude": 54.48,
+        "elevation": 120.605
+      },
+      "HAMEDAN": {
+        "en": "Hamedan",
+        "fa": "همدان",
+        "ckb": "ھەمەدان",
+        "ar": "همدان",
+        "latitude": 34.80,
+        "longitude": 48.52,
+        "elevation": 1902.787
+      },
+      "ILAM": {
+        "en": "Ilam",
+        "fa": "ایلام",
+        "ckb": "ئیلام",
+        "ar": "إيلام",
+        "latitude": 33.38,
+        "longitude": 46.26,
+        "elevation": 1382.518
+      },
+      "KERMAN": {
+        "en": "Kerman",
+        "fa": "کرمان",
+        "ckb": "کرمان",
+        "ar": "كرمان",
+        "latitude": 30.29,
+        "longitude": 57.06,
+        "elevation": 1760.289
+      },
+      "KERMANSHAH": {
+        "en": "Kermanshah",
+        "fa": "کرمانشاه",
+        "ckb": "کرماشان",
+        "ar": "كرمنشاه",
+        "latitude": 34.3142,
+        "longitude": 47.0650,
+        "elevation": 1368.254
+      },
+      "KHORAM_ABAD": {
+        "en": "Khoram Abad",
+        "fa": "خرم‌آباد",
+        "ckb": "خوڕەماوا",
+        "ar": "خرم آباد",
+        "latitude": 33.48,
+        "longitude": 48.35,
+        "elevation": 1179.239
+      },
+      "MASHHAD": {
+        "en": "Mashhad",
+        "fa": "مشهد",
+        "ckb": "مەشھەد",
+        "ar": "مشهد",
+        "latitude": 36.305729,
+        "longitude": 59.578370,
+        "elevation": 939.205
+      },
+      "ORUMIYEH": {
+        "en": "Orumiyeh",
+        "fa": "ارومیه",
+        "ckb": "ورمێ",
+        "ar": "ارومية",
+        "latitude": 37.33,
+        "longitude": 45.04,
+        "elevation": 1942.324
+      },
+      "RASHT": {
+        "en": "Rasht",
+        "fa": "رشت",
+        "ckb": "ڕەشت",
+        "ar": "رشت",
+        "latitude": 37.2794,
+        "longitude": 49.5858,
+        "elevation": -8.209
+      },
+      "SANANDAJ": {
+        "en": "Sanandaj",
+        "fa": "سنندج",
+        "ckb": "سنە",
+        "ar": "سنندج",
+        "latitude": 35.3172,
+        "longitude": 46.9989,
+        "elevation": 1439.104
+      },
+      "SARI": {
+        "en": "Sari",
+        "fa": "ساری",
+        "ckb": "ساری",
+        "ar": "ساري",
+        "latitude": 36.55,
+        "longitude": 53.1,
+        "elevation": 51.106
+      },
+      "SEMNAN": {
+        "en": "Semnan",
+        "fa": "سمنان",
+        "ckb": "سمنان",
+        "ar": "سمنان",
+        "latitude": 35.34,
+        "longitude": 53.23,
+        "elevation": 1145.160
+      },
+      "SHAHREKORD": {
+        "en": "Shahr-e-kord",
+        "fa": "شهرکرد",
+        "ckb": "شاری کورد",
+        "ar": "شهركرد",
+        "latitude": 32.325022,
+        "longitude": 50.864910,
+        "elevation": 2047.091
+      },
+      "SHIRAZ": {
+        "en": "Shiraz",
+        "fa": "شیراز",
+        "ckb": "شیراز",
+        "ar": "شیراز",
+        "latitude": 29.617248,
+        "longitude": 52.543423,
+        "elevation": 1549.642
+      },
+      "TABRIZ": {
+        "en": "Tabriz",
+        "fa": "تبریز",
+        "ckb": "تەورێز",
+        "ar": "تبريز",
+        "latitude": 38.08,
+        "longitude": 46.30,
+        "elevation": 1395.315
+      },
+      "TEHRAN": {
+        "en": "Tehran",
+        "fa": "تهران",
+        "ckb": "تاران",
+        "ar": "طهران",
+        "latitude": 35.68,
+        "longitude": 51.42,
+        "elevation": 1149.266
+      },
+      "YASUJ": {
+        "en": "Yasuj",
+        "fa": "یاسوج",
+        "ckb": "یاسووج",
+        "ar": "ياسوج",
+        "latitude": 30.7167,
+        "longitude": 51.5667,
+        "elevation": 2957.312
+      },
+      "YAZD": {
+        "en": "Yazd",
+        "fa": "یزد",
+        "ckb": "یەزد",
+        "ar": "يزد",
+        "latitude": 31.8972,
+        "longitude": 54.3675,
+        "elevation": 1211.690
+      },
+      "ZAHEDAN": {
+        "en": "Zahedan",
+        "fa": "زاهدان",
+        "ckb": "زاھدان",
+        "ar": "زاهدان",
+        "latitude": 29.5,
+        "longitude": 60.85,
+        "elevation": 1387.511
+      },
+      "ZANJAN": {
+        "en": "Zanjan",
+        "fa": "زنجان",
+        "ckb": "زەنگان",
+        "ar": "زنجان",
+        "latitude": 36.6644,
+        "longitude": 48.4856,
+        "elevation": 1649.065
+      }
+    }
+  },
+  "af": {
+    "en": "Afghanistan",
+    "fa": "افغانستان",
+    "ckb": "ئەفغانستان",
+    "ar": "أفغانستان",
+    "cities": {
+      "BALKH": {
+        "en": "Balkh",
+        "fa": "بلخ",
+        "ckb": "بەلخ",
+        "ar": "بلخ",
+        "latitude": 36.7,
+        "longitude": 67.11,
+        "elevation": 370.751
+      },
+      "BAMYAN": {
+        "en": "Bamyan",
+        "fa": "بامیان",
+        "ckb": "بامیان",
+        "ar": "باميان",
+        "latitude": 34.81,
+        "longitude": 67.81,
+        "elevation": 2531.299
+      },
+      "DAYKUNDI": {
+        "en": "Daykundi",
+        "fa": "دایکندی",
+        "ckb": "دایکوندی",
+        "ar": "دايكندي",
+        "latitude": 33.75,
+        "longitude": 66.25,
+        "elevation": 2234.5
+      },
+      "GHAZNI": {
+        "en": "Ghazni",
+        "fa": "غزنی",
+        "ckb": "غەزنی",
+        "ar": "غزني",
+        "latitude": 33.55,
+        "longitude": 68.41,
+        "elevation": 2190.846
+      },
+      "HELMAND": {
+        "en": "Helmand",
+        "fa": "هلمند",
+        "ckb": "ھێلمەند",
+        "ar": "هلمند",
+        "latitude": 31.58,
+        "longitude": 64.36,
+        "elevation": 778.969
+      },
+      "HERAT": {
+        "en": "Herat",
+        "fa": "هرات",
+        "ckb": "ھەرات",
+        "ar": "هرات",
+        "latitude": 34.34,
+        "longitude": 62.2,
+        "elevation": 922
+      },
+      "KABUL": {
+        "en": "Kabul",
+        "fa": "کابل",
+        "ckb": "کابول",
+        "ar": "كابل",
+        "latitude": 34.53,
+        "longitude": 69.16,
+        "elevation": 1797.550
+      },
+      "KANDAHAR": {
+        "en": "Kandahar",
+        "fa": "قندهار",
+        "ckb": "قەندەھار",
+        "ar": "قندهار",
+        "latitude": 31.61,
+        "longitude": 65.71,
+        "elevation": 1003.473
+      },
+      "KUNDUZ": {
+        "en": "Kunduz",
+        "fa": "قندوز",
+        "ckb": "کوندوز",
+        "ar": "قندوز",
+        "latitude": 36.728,
+        "longitude": 68.868,
+        "elevation": 391
+      },
+      "NANGARHAR": {
+        "en": "Nangarhar",
+        "fa": "ننگرهار",
+        "ckb": "نەنگەرھار",
+        "ar": "ننجرهار",
+        "latitude": 34.43,
+        "longitude": 70.44,
+        "elevation": 576.629
+      }
+    }
+  },
+  "iq": {
+    "en": "Iraq",
+    "fa": "عراق",
+    "ckb": "عێراق",
+    "ar": "العراق",
+    "cities": {
+      "KARBALA": {
+        "en": "Karbala",
+        "fa": "کربلا",
+        "ckb": "کەربەلا",
+        "ar": "كربلاء",
+        "latitude": 32.370,
+        "longitude": 44.020,
+        "elevation": 34.00
+      },
+      "NAJAF": {
+        "en": "Najaf",
+        "fa": "نجف",
+        "ckb": "نەجەف",
+        "ar": "النجف",
+        "latitude": 32,
+        "longitude": 44.20,
+        "elevation": 46.00
+      },
+      "BAGHDAD": {
+        "en": "Baghdad",
+        "fa": "بغداد",
+        "ckb": "بەغدا",
+        "ar": "بغداد",
+        "latitude": 33.325,
+        "longitude": 44.422,
+        "elevation": 38.00
+      },
+      "BASRAH": {
+        "en": "Basrah",
+        "fa": "بصره",
+        "ckb": "بەسرە",
+        "ar": "البصرة",
+        "latitude": 30.50,
+        "longitude": 47.78,
+        "elevation": 5.00
+      },
+      "TIKRIT": {
+        "en": "Tikrit",
+        "fa": "تکریت",
+        "ckb": "سەڵاحەدین",
+        "ar": "تكريت",
+        "latitude": 34.3636,
+        "longitude": 43.4048,
+        "elevation": 114.00
+      },
+      "KIRKUK": {
+        "en": "Kirkuk",
+        "fa": "کرکوک",
+        "ckb": "کەرکووک",
+        "ar": "كركوك",
+        "latitude": 35.46,
+        "longitude": 44.38,
+        "elevation": 341.00
+      },
+      "SULAYMANIYAH": {
+        "en": "Sulaymaniyah",
+        "fa": "سلمانیه",
+        "ckb": "سلێمانی",
+        "ar": "السليمانية",
+        "latitude": 35.55,
+        "longitude": 45.43,
+        "elevation": 837.00
+      },
+      "ERBIL": {
+        "en": "Erbil",
+        "fa": "اربیل",
+        "ckb": "ھەولێر",
+        "ar": "أربيل",
+        "latitude": 36.20,
+        "longitude": 44.01,
+        "elevation": 412.00
+      },
+      "DUHOK": {
+        "en": "Duhok",
+        "fa": "دهوک",
+        "ckb": "دھۆک",
+        "ar": "دهوك",
+        "latitude": 36.86,
+        "longitude": 42.94,
+        "elevation": 532.00
+      },
+      "MOSUL": {
+        "en": "Mosul",
+        "fa": "موصل",
+        "ckb": "مووسڵ",
+        "ar": "الموصل",
+        "latitude": 35.55,
+        "longitude": 45.43,
+        "elevation": 837.00
+      },
+      "ZAKHO": {
+        "en": "Zakho",
+        "fa": "زاخو",
+        "ckb": "زاخۆ",
+        "ar": "زاخو",
+        "latitude": 37.15,
+        "longitude": 42.683,
+        "elevation": 440
+      }
+    }
+  },
+  "tr": {
+    "en": "Turkey",
+    "fa": "ترکیه",
+    "ckb": "تورکیا",
+    "ar": "تركيا",
+    "cities": {
+      "ANKARA": {
+        "en": "Ankara",
+        "fa": "آنکارا",
+        "ckb": "ئەنقەرە",
+        "ar": "أنقرة",
+        "latitude": 39.93,
+        "longitude": 32.85,
+        "elevation": 938
+      },
+      "DIYARBAKIR": {
+        "en": "Diyarbakır",
+        "fa": "دیاربکر",
+        "ckb": "ئامەد",
+        "ar": "ديار بكر",
+        "latitude": 37.91,
+        "longitude": 40.24,
+        "elevation": 675
+      },
+      "ISTANBUL": {
+        "en": "Istanbul",
+        "fa": "استانبول",
+        "ckb": "ئەستەمبوڵ",
+        "ar": "إسطنبول",
+        "latitude": 41.013611,
+        "longitude": 28.955,
+        "elevation": 40
+      },
+      "IZMIR": {
+        "en": "İzmir",
+        "fa": "ازمیر",
+        "ckb": "ئیزمیر",
+        "ar": "إزمير",
+        "latitude": 38.42,
+        "longitude": 27.14,
+        "elevation": 2
+      }
+    }
+  }
+}

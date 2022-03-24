@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_layout2x2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/WidgetTheme"
+    tools:context=".Widget2x2">
+
+    <ImageView
+        android:id="@+id/widget_layout2x2_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="3dp">
+
+        <TextView
+            android:id="@+id/time_2x2"
+            style="@style/WidgetTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:textSize="34sp" />
+
+        <TextView
+            android:id="@+id/date_2x2"
+            style="@style/WidgetTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/owghat_2x2"
+            style="@style/WidgetTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/holiday_2x2"
+            style="@style/WidgetTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:textColor="@color/widget_holiday"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/event_2x2"
+            style="@style/WidgetTextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</FrameLayout>

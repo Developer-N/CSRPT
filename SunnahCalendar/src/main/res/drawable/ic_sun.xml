@@ -1,0 +1,13 @@
+<!-- Mozilla's Emoji, highly modified from https://raw.githubusercontent.com/mozilla/fxemoji/gh-pages/svgs/nature/u2600-sunrays.svg -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#B0EEBB22"
+        android:pathData="m256 44 69-42 36 70 82-4.4-3.7 83 72 37-44 68 44 66-72 39 4.4 81-80-4.2-38 70-70-41-68 42-37-70-82 4.1 4.9-81-71-37 42-70-42-66 71-40-3.7-81 80 4.2 40-71z" />
+    <path
+        android:fillColor="#EEBB22"
+        android:pathData="M63 256A194 194 0 1 1 451 256A194 194 0 1 1 63 256" />
+</vector>

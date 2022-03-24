@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Calendar Navigation items  -->
+    <string name="quran">قرآن</string>
+    <string name="azkar">اذکار</string>
+    <string name="monthly_times">اوقات ماهانه</string>
+    <string name="edit_times">ویرایش اوقات</string>
+    <string name="download_upload">دانلود اوقات</string>
+    <string name="donate">پشتیبانی مالی</string>
+
+    <string name="search">جستجو</string>
+    <string name="available_cities_list">لیست شهرهای در دسترس جهت دانلود اوقات دقیق</string>
+    <string name="city">شهر</string>
+    <string name="update_date">تاریخ بروزرسانی</string>
+
+    <string name="hisnulmuslim">پناهگاه مسلمان</string>
+    <string name="favorite">مورد علاقه</string>
+
+    <string name="apply">اعمال کردن</string>
+    <string name="group_change">تغییرات گروهی</string>
+    <string name="clear_change">پاک کردن تغییرات</string>
+
+    <string name="network_error_title">خطا!</string>
+    <string name="network_error_message">لطفا اتصال اینترنت را بررسی کنید.</string>
+    <string name="str_retray">تلاش مجدد</string>
+
+    <string name="storage_access">دسترسی به حافظه</string>
+    <string name="phone_storage_required">برای دانلود، ذخیره و استفاده از اوقات و اذان ها برنامه احتیاج به دسترسی به حافظه دارد لطفا برای ادامه اجازه را صادر کنید !</string>
+    <string name="available_exact_times">اوقات دقیق محلی برای شهر شما در سرور موجود می باشد!</string>
+    <string name="you_edited">شما برای شهر %s اوقات را ویرایش کردید و می توانید آن را برای ما بفرستید تا در دسترس همه قرار بگیرد.(ترجیحا از طریق تلگرام به ای دی @Developer_N بفرستید.)</string>
+    <string name="are_sure_send_times">از ارسال اوقات مطمئن هستید؟</string>
+    <string name="yes">بله</string>
+    <string name="no">بیخیال</string>
+    <string name="send_times">ارسال اوقات</string>
+    <string name="error_sending_times">خطایی رخ داده! دوباره تلاش کنید.</string>
+    <string name="copy">رونوشت</string>
+    <string name="copied">رونوشت شد!</string>
+
+    <string name="downloading_azkar">در حال دانلود اذکار</string>
+    <string name="download_failed_tray_again">دانلود با شکست مواجه شد! لطفا دوباره تلاش کنید.</string>
+    <string name="downloaded">دانلود تمام شد!</string>
+
+    <string name="enable_edit_times">فعال کردن ویرایش اوقات</string>
+    <string name="date">تاریخ</string>
+    <string name="str_dialog_save">ذخیره تغییرات!</string>
+    <string name="str_dialog_save_message">آیا مطمئن هستید که میخواهید تغییرات انجام شده ذخیره شود؟</string>
+    <string name="saved">تغییرات ذخیره شد!</string>
+    <string name="str_selectAthan">انتخاب اذان</string>
+    <string name="str_from">از</string>
+    <string name="str_to">تا</string>
+    <string name="str_minute">دقیقه</string>
+    <string name="str_forward">به جلو ببر</string>
+    <string name="str_backward">به عقب ببر</string>
+    <string name="error_gedit_data">در وارد کردن اطلاعات دقت کنید!</string>
+    <string name="use_summer_time">برای ویرایش از ساعت رسمی (ساعت تابستانی که از 2 فروردین تا 30 شهریور یک ساعت به جلو برده می شود) استفاده کنید.</string>
+    <string name="edit_not_enabled">حالت ویرایش اوقات غیر فعال است!</string>
+    <string name="str_dialog_clear_edited_title">حذف اوقات ویرایش شده</string>
+    <string name="str_dialog_clear_edited_message">آیا مطمئن هستید می خواهید تمام اوقات ویرایش شده را حذف کنید؟</string>
+    <string name="please_wait">لطفا صبر کنید</string>
+
+    <string name="welcome_please_select_your_city">خوش آمدید، لطفا شهر خود را انتخاب کنید!</string>
+    <string name="next_page">صفحه بعد</string>
+    <string name="previous_page">صفحه قبل</string>
+    <string name="start">شروع</string>
+    <string name="my_city_not_in_list">شهر من در لیست پایین وجود ندارد</string>
+    <string name="custom_city">وارد کردن شهر دلخواه</string>
+    <string name="location_not_detected">موقعیت مکانی به درستی تشخیص داده نشده است!</string>
+    <string name="first_setup_location_message">برنامه جهت آماده سازی تنظیمات برای محاسبه اوقات نماز یک بار نیاز به اطلاعات موقعیت مکانی شما دارد، برای ادامه باید مجوز مربوطه را به برنامه بدهید.
+        \n
+    بعد از اتمام مراحل اولیه و ورود به برنامه می توانید مجوز مربوطه را غیر فعال کنید!
+    </string>
+    <string name="turn_on_location">لطفا موقعیت مکانی خود را روشن کنید.
+        \n
+    بعد از اتمام مراحل اولیه و ورود به برنامه می توانید دوباره آن را خاموش کنید!
+    </string>
+    <string name="open_location_setting">باز کردن تنظیمات</string>
+    <string name="gps_network_not_enabled">جی پی اس فعال نیست</string>
+    <string name="intro1_msg">برنامه قادر به تشخیص نام شهر شما نیست، لطفا نام شهر را دستی وارد کنید!</string>
+
+    <string name="donate_msg">
+        برای به روز آوری امکانات و توسعه حوزه کاری به همت و کمک مالی شما عزیزان نیاز داریم. با هر مقداری که در توان دارید ما را یاری دهید.
+    </string>
+    <string name="custom_donate">مبلغ دلخواه</string>
+    <string name="_50">50 هزار</string>
+    <string name="_20">20 هزار</string>
+    <string name="_10">10 هزار</string>
+    <string name="_5">5 هزار </string>
+
+    <string name="namoo_developer_group">گروه توسعه دهنده نامۆ</string>
+    <string name="srt_info2">با حمایت کانون فرهنگی هنری حضرت محمدﷺ، مسجد حضرت ابوبکر صدیق (رضی الله عنه)، شهرستان سردشت.</string>
+    <string name="str_info_msg">با ارسال اشکالات و پیشنهادات ما را در راستای ارتقای خدماتمان یاری کنید.
+        \n
+        کپی حلال و تبلیغ و نشر برنامه صدقه جاریه است.
+        \n
+    خبرها و آموزش های برنامه را از طریق کانال تلگرام دنبال کنید.
+    </string>
+    <string name="telegram_developer">\@Developer_N</string>
+    <string name="telegram">\@namoo_ir</string>
+    <string name="mail">namoodev@gmail.com</string>
+    <string name="send_direct_message">مستقیم برای ما پیغام بفرستید.</string>
+    <string name="str_typeHere">پیام را اینجا بنویسید…</string>
+    <string name="send_message">ارسال پیام</string>
+    <string name="str_send_msg_error">پیام شما باید حداقل دارای 10 کاراکتر باشد!</string>
+    <string name="telegram_not_installed">برنامه تلگرام نصب نیست!</string>
+    <string name="message_sent">پیام ارسال شد</string>
+    <string name="message_not_sent">!مشکلی در ارسال پیام اتفاق افتاد لطفا دوباره امتحان کنید!</string>
+    <string name="mail_subject">در مورد اوقات شرعی اهل سنت</string>
+    <string name="mail_contect">\n\n\n ارسالی از برنامه اوقات شرعی اهل سنت.</string>
+    <string name="send_mail">ارسال ایمیل</string>
+    <string name="str_changes_title">تغییرات</string>
+    <string name="changes">
+
+        \n----تغییرات نسخه : 10.0.2022----\n
+1.	به روز رسانی تقویم به نسخه ی 7.5 و استفاده از تمام امکانات آن (نسخه ی مناسب سال 1401)\n
+2.	اضافه شدن امکان تغییر شیوه محاسبه اوقات برای شهرهایی که اوقات دقیق آن ها در دسترس نیست.\n
+3.	بهینه شده برای سازگاری با اندروید 12\n
+4.	بهبود دانلود فایل ها\n
+5.	بهبود رابط کاربری\n
+6.	امکان انتخاب اذان های بیشتر برای صبح و همچنین امکان استفاده از صداهای زنگ به جای اذان\n
+7.	بهبود پایداری کلی و رفع بسیاری از مشکلات گزارش شده.\n
+
+
+         \n----تغییرات نسخه : 9.3.2.2021----\n
+1.	رفع مشکل تغییر شهر و چند مشکل گزارش شده دیگر\n
+
+        \n----تغییرات نسخه : 9.3.1.2021----\n
+1.	بروزرسانی تقویم، رفع مشکل و بهبود برنامه\n
+
+        \n----تغییرات نسخه : 9.3.2021----\n
+1.	اضافه شدن امکان تغییر فونت برنامه\n
+2.	اضافه شدن امکان استفاده از صداهای زنگ گوشی برای هشدار قبل از اذان ها\n
+3.	بهبود تنظیمات اذان ها و امکان دسترسی با لمس طولانی آیکن بلندگوی هر اذان در صفحه ی اصلی\n
+4.	امکان تغییر دلخواه رنگ نوشته و پس زمینه ی ویجت اختصاصی مانند بقیه ویجت ها\n
+5.	رفع مشکل غیرفعال نشدن اذان و هشدار برای روز جاری\n
+6.	رفع مشکل و بهبودهای دیگر\n
+
+
+        \n----تغییرات نسخه : 9.2.1.2021----\n
+1.	رفع مشکل بسته شدن برنامه برای کاربرانی که از اوقات دقیق استفاده نمی کنند\n
+
+        \n----تغییرات نسخه : 9.2.2021----\n
+1.	اضافه شدن دوباره قابلیت فعال و غیر فعال کردن اوقات تابستانی\n
+2.	اضافه شدن ویجت سن\n
+3.	امکان حذف اذان های اضافه شده(اگر اذانی که قبلا اضافه کرده اید مشکل دارد آن را حذف و دوباره اضافه کنید)\n
+4.	بهبودهای ظاهری\n
+5.	رفع مشکل و باگ های گزارش شده\n
+
+
+        \n----تغییرات نسخه : 9.1.2021----\n
+1.	تنظیمات بیشتر برای اذان ها(برای هر اذان جداگانه حالت پخش، اذان، هشدار قبل از اذان، میزان صدا و … انتخاب کنید.)\n
+2.	اضافه شدن پوسته های جدید(بنفش، بنفش تیره، نیلی، صورتی، سبز، قهوه ای و آبی)\n
+3.	از این به بعد می توانید فایل های صوتی قرآن را روی کارت حافظه ذخیره کنید.\n
+4.	سه حالت پخش برای قرآن(قرآن و ترجمه، فقط قرآن، فقط ترجمه)\n
+5.	رفع مشکل و باگ های گزارش شده\n
+
+        \n----تغییرات نسخه : 9.0.2020----\n
+1.	اضافه شدن قرآن با امکانات پخش با صدای سیزده قاری و ترجمه فارسی و کوردی، جستجو، شخصی سازی نوع فونت و اندازه متن و …\n
+2.	اضافه شدن رویدادهای سال 1400 به تقویم\n
+3.	رفع مشکل پخش به موقع اذان\n
+4.	بهینه شدن کلی و سازگاری بیشتر برنامه برای اندروید 8 به بالا\n
+5.	بهبودهای ظاهری و رفع مشکلات گزارش شده\n
+
+        \n----تغییرات نسخه : 8.3.2020----\n
+1.	رفع مشکل پخش اذان و بروز نشدن نوار اعلان در اندروید 8 به بالا\n
+2.	دوباره اضافه شدن امکان انتخاب فقه\n
+3.	اضافه شدن امکان عوض کردن رنگ اذان بعدی در ویجت\n
+4.	اضافه شدن امکان پخش اذان در حالت اعلان\n
+5.	بهبود بعضی قسمت ها، رفع مشکلات گزارش شده و چندین باگ دیگر\n
+
+        \n----تغییرات نسخه : 8.2.2020----\n
+1.	رفع مشکل دیر پخش شدن اذان\n
+2.	اضافه شدن اوقات ماهانه\n
+3.	اضافه شدن سوالات متداول و راهنما (قابل دسترس از منوی صفحه اصلی،به مرور تکمیل می شود )\n
+4.	تغییرات کوچک ظاهری و رفع چند مشکل کوچک دیگر\n
+
+
+        \n----تغییرات نسخه : 8.1.2020----\n
+1.	اضافه شدن قابلیت غیر فعال کردن ساعت تابستانی برای اوقات\n
+2.	رفع مشکل ویجت 4 در 2\n
+3.	رفع مشکل تنظیمات و چند باگ دیگر\n
+
+
+\n----تغییرات نسخه : 8.0.2020----\n
+1.	بروز رسانی تقویم برای سال 99 و افزوده شدن امکانات شخصی سازی بیشتر، بهبود پایداری و ظاهر\n
+2.	باز طراحی قسمت ویرایش اوقات برای ساده شدن ویرایش همراه با رفع مشکلات\n
+3.	امکان تنظیم هشدار برای قبل از اذان صبح\n
+4.	امکان دانلود اذان های بیشتر و اضافه کردن اذان دلخواه به برنامه\n
+5.	امکان عوض کردن اذان صبح\n
+6.	از این به بعد به دلیل صحت سنجی اوقات ویرایش شده امکان ارسال تنها از طریق ایمیل و تلگرام وجود دارد.(اگر در نسخه های قبلی اوقات را ویرایش کردید و در ارسال آن مشکل داشتید می توانید از طریق ایمیل یا تلگرام آن ها را ارسال کنید)\n
+7.	از این به بعد اذان فقط در حالت تمام صفحه پخش می شود و در حالت اعلان فقط اعلان نمایش داده می شود.\n
+8.	رفع باگ و بهبودهای دیگر\n
+9.	برای اطلاع از خبرها و آموزش های برنامه در کانال عضو شوید.\n
+
+
+        \n----تغییرات نسخه : 7.2.1.201908----\n
+1.	اضافه شدن امکان تنظیم صدا هنگام پخش اذان در حالت تمام صفحه\n
+2.	رفع مشکل دانلود اوقات دقیق در اندروید 9\n
+3.	بهبود ظاهر برنامه و رفع چند مشکل گزارش شده\n
+4.	رفع باگ های شناسایی شده\n
+
+
+        \n----تغییرات نسخه : 7.2.0.201906----\n
+1.	رفع مشکل تقویم و تعطیلات سال 98\n
+2.	رفع مشکل ویرایش اوقات و سرعت پایین نرم افزار بخصوص قسمت اذکار\n
+3.	رفع چند مشکل گزارش شده ی دیگر، بهبود کلی نرم افزار و افزایش پایداری
+
+
+        \n\n----تغییرات نسخه 7.1.1.201903 :----\n
+1.	رفع باگ 29 اسفند \n
+
+        \n----تغییرات نسخه 7.1.0.201903 :----\n
+1.	بهبود قسمت اذکار (جستجو، صوت اذکار را میتوانید دانلود کنید و بهبودهای گرافیکی و … )\n
+2.	از صفحه ی اصلی میتوانید با ضربه زدن روی آیکن بلندگو اذان ها را فعال و غیر فعال کنید\n
+3.	رفع مشکل ویرایش گروهی اوقات\n
+4.	رفع چند ایراد و بهبود کارایی
+
+
+\n\n----تغییرات نسخه 7.0.3.201901 :----\n
+1.بهبود قبله نما، رفع مشکل و برخی اصلاحات
+
+        \n\n----تغییرات نسخه 7.0.2.201812 :----\n
+1.رفع مشکل دانلود اوقات دقیق و چند مشکل دیگر
+        \n\n
+
+----تغییرات نسخه 7.0.1.201812 :----\n
+1.رفع مشکل
+        \n\n
+
+----تغییرات نسخه 7.0.0.201812 :----\n
+ 1.	تغییرات کلی ظاهر برنامه\n
+ 2.	اضافه شدن ویجت به برنامه\n
+ 3.	آپدیت تقویم و اضافه شدن امکانات جدید\n
+ 4.	اضافه شدن تم\n
+ 5.	رفع مشکل و بهبودهای دیگر…\n
+
+               \n\n
+    ----تغییرات نسخه 6.3.130518:----
+ \n
+ 1. اضافه شدن قبله نما	\n
+ 2. از این به بعد میتوانید اوقات را به صورت گروهی ویرایش کنید.	\n
+ 3. اگر شهر شما در لیست وجود ندارد خیلی راحت در تنظیمات آن را اضافه کنید.	\n
+ 4. امکان غیر فعال کردن پخش اذان هنگامی گه گوشی در حالت سایلنت و یا ویبره قرار دارد.	\n
+ 5. امکان ارسال مستقیم پیام برای ما از داخل برنامه.	\n
+ 6. رفع مشکل پخش به موقع اذان در اندروید 6 به بالا	\n
+ 7. بهبودهای در ظاهر برنامه و رفع چند مشکل دیگر…	\n
+\n\n
+----تغییرات نسخه 6.2.160418 :----
+\n
+ 1. رفع مشکل پخش اذان دلخواه در بعضی دستگاه ها و چند مشکل گزارش شده ی دیگر.
+\n\n
+    ----تغییرات نسخه 6.1.080418 :----
+\n
+ 1. اضافه شدن تعطیلات رسمی ایران و رویدادهای اهل سنت به تقویم\n
+ 2. اضافه شدن قابلیت غیرفعال کردن ساعت تابستانی\n
+ 3. اضافه شدن دعای بعد از اذان\n
+4. بهبود بخش اصلاح اوقات، از این به بعدا اوقات را ویرایش کنید و تنها یک بار  در آخر انجام اصلاحات روی دکمه موجود در منو جهت ثبت تغییرات کلیک کنید(ان شاءالله امکانات بهتر به این قسمت برای سهولت ویرایش اضافه خواهد شد).\n
+ 5. بهبودهای کلی و ظاهر برنامه\n
+ 6. رفع مشکلات و…\n
+    </string>
+
+    <string name="update_available">آپدیت جدید از راه رسید لطفا برنامه را آپدیت کنید!</string>
+    <string name="download">دانلود مستقیم</string>
+    <string name="markets">دانلود از مارکت</string>
+
+    <string name="renew_location">تازه کردن موقعیت</string>
+    <string name="save_location">ذخیره</string>
+    <string name="enter_city_name">نام شهر را وارد کنید!</string>
+
+    <string name="enable">فعال کردن</string>
+    <string name="alert_type">حالت پخش</string>
+    <string name="full_screen">تمام صفحه</string>
+    <string name="notification">پخش در نوار اعلان</string>
+    <string name="notif">اعلان</string>
+    <string name="just_notification">فقط اعلان</string>
+    <string name="select_alarm">انتخاب هشدار</string>
+    <string name="play_alert">پخش هشدار</string>
+    <string name="add_normal_athans">اضافه کردن اذان</string>
+    <string name="add_fajr_athan">اضافه کردن اذان صبح</string>
+    <string name="add_alarm">اضافه کردن صدای هشدار</string>
+    <string name="play_athan_problem">اگر تنظیمات گوشی را از طریق راهنما انجام داده اید و هنوز در پخش به موقع اذان مشکل دارید، متدهای زیر را عوض کنید.( با توجه به تجربه کاربران پیشنهاد می شود برای گوشی های سامسونگ حالت پخش را روی تمام صفحه و متد تمام صفحه را روی متد دوم تنظیم کنید، برای گوشی های شیائومی حالت پخش را روی پخش در نوار اعلان و متد پخش در نوار اعلان را روی متد دوم قرار دهید.)</string>
+    <string name="first_method">متد اول(پیش فرض)</string>
+    <string name="second_method">متد دوم</string>
+    <string name="bfajr">هشدار قبل از اذان صبح</string>
+    <string name="bdhuhr">هشدار قبل از اذان ظهر</string>
+    <string name="basr">هشدار قبل از اذان عصر</string>
+    <string name="bmaghrib">هشدار قبل از اذان مغرب</string>
+    <string name="bisha">هشدار قبل از اذان عشا</string>
+    <string name="select_storage">انتخاب محل ذخیره فایل های صوتی</string>
+    <string name="broadcast_prayer_after_adhan">پخش دعا بعد از اذان</string>
+    <string name="add_online_athan">دانلود اذان های بیشتر</string>
+    <string name="add_local_athan">اضافه کردن اذان دلخواه</string>
+    <string name="play_athan">پخش اذان</string>
+    <string name="reset_athan">اذان پیشفرض</string>
+    <string name="ok">خیلی خب</string>
+    <string name="select_athan_file_title">اذان را انتخاب کنید</string>
+    <string name="alarm_before">هشدار قبل از اذان</string>
+    <string name="enable_alarm_before">فعال یا غیر فعال کردن</string>
+    <string name="select_athan_name">انتخاب اذان</string>
+    <string name="default_fajr_athan_name">العفاسی - صبح</string>
+    <string name="default_alert_before_name">زنگ</string>
+    <string name="add_online_alarm">دانلود هشدار</string>
+    <string name="add_local_alarm">اضافه کردن هشدار دلخواه</string>
+    <string name="default_athan_name">ناصر القطامی</string>
+    <string name="summer_time">اوقات تابستانه</string>
+    <string name="clear_added_athans">پاک کردن اذان و هشدارهای اضافه شده</string>
+
+    <string name="warning">هشدار</string>
+    <string name="all_added_athans_will_cleared">آیا مطمئن هستید می خواهید همه ی اذان ها و هشدارهای اضافه شده را حذف کنید؟</string>
+    <string name="done">انجام شد</string>
+
+
+    <string name="quran_database_not_exist">پایگاه داده قرآن وجود ندارد باید ابتدا آن را دانلود کنید!</string>
+    <string name="size_8mb">حجم دانلود : 8 مگابایت</string>
+    <string name="latest_visited">آخرین بازدید : سوره %s آیه %s</string>
+    <string name="sura_name">نام سوره</string>
+    <string name="aya_count">%s آیه</string>
+    <string name="revelation_order">شماره نزول %s</string>
+    <string name="no_note">هیچ یادداشتی وجود ندارد!</string>
+    <string name="delete">حذف</string>
+    <string name="save">ذخیره</string>
+    <string name="go_to_aya">برو به آیه</string>
+    <string name="your_note">یادداشت شما</string>
+    <string name="no_bookmark">هیچ آیه ای علامت گذاری نشده است!</string>
+    <string name="select_file_for_download">نوع فایل ها برای دانلود را انتخاب کنید:</string>
+    <string name="select_translates">انتخاب ترجمه ها</string>
+    <string name="farsi_translate">ترجمه فارسی</string>
+    <string name="kurdish_translate">ترجمه کوردی</string>
+    <string name="english_transliteration">تلفظ انگلیسی</string>
+    <string name="english_translate">ترجمه انگلیسی</string>
+    <string name="farsi_full_translate">ترجمه کامل فارسی</string>
+    <string name="select_qari_translate">انتخاب قاری و ترجمه برای پخش</string>
+    <string name="arabic_translate">قرآن و ترجمه</string>
+    <string name="just_arabic">فقط قرآن</string>
+    <string name="just_translate">فقط ترجمه</string>
+    <string name="play_type">حالت پخش</string>
+    <string name="arabic_font_setting">تنظیم فونت عربی</string>
+    <string name="english_font_setting">تنظیم فونت انگلیسی</string>
+    <string name="kurdish_font_setting">تنظیم فونت کوردی</string>
+    <string name="farsi_font_setting">تنظیم فونت فارسی</string>
+    <string name="chapter">فهرست</string>
+    <string name="search_the_whole_quran">جستجو در کل قرآن</string>
+    <string name="notes">یادداشت ها</string>
+    <string name="bookmarks">آیه های علامت گذاری شده</string>
+    <string name="download_audios">دانلود فایل های صوتی</string>
+    <string name="create_shortcut">اضافه کردن میانبر</string>
+    <string name="pin_not_supported">دستگاه شما از میانبرهای داخل برنامه ای پشتیبانی نمی کند!</string>
+    <string name="shortcut_created">میانبر اضافه شد!</string>
+    <string name="playing_verse">در حال پخش آیه %s</string>
+    <string name="sura">سوره</string>
+    <string name="aya">آیه</string>
+    <string name="note_saved">یادداشت ذخیره شد</string>
+    <string name="error">خطا!</string>
+    <string name="audio_files_error">فایل های صوتی برای قاری انتخابی و این سوره هنوز دانلود نشده اند!</string>
+    <string name="audio_translate_files_error">فایل های صوتی ترجمه برای این سوره هنوز دانلود نشده اند!</string>
+    <string name="result_found">تعداد %s نتیجه پیدا شد.</string>
+    <string name="search_head">%s آیه %s</string>
+    <string name="alert">هشدار!</string>
+    <string name="save_alert_message">آیا از ثبت تغییرات مطمئن هستید؟</string>
+    <string name="delete_alert_message">آیا از حذف یادداشت مطمئن هستید؟!</string>
+    <string name="download_completed_unzip">دانلود تمام شد! -> در حال استخراج فایل ها …</string>
+    <string name="sort_order">مرتب سازی فهرست</string>
+    <string name="go_to_page">برو به صفحه</string>
+    <string name="go_to_juz">برو به جزء</string>
+    <string name="go_to_hizb">برو به حزب</string>
+    <string name="chapter_sort_dialog_title">نوع ترتیب فهرست</string>
+    <string name="default_sort">پیش فرض</string>
+    <string name="alphabet_sort">الفبا</string>
+    <string name="revelation_sort">نزول</string>
+    <string name="aya_inc_sort">تعداد آیه(صعودی)</string>
+    <string name="aya_dec_sort">تعداد آیه(نزولی)</string>
+    <string name="select_page">انتخاب صفحه</string>
+    <string name="page_out_of_bounds">
+		خطا!!!
+		\n
+		صفحه باید کمتر از 605 باشد.
+	</string>
+    <string name="select_hizb">انتخاب حزب</string>
+    <string name="select_juz">انتخاب جزء</string>
+    <string name="meccan">مکی</string>
+    <string name="medinan">مدنی</string>
+    <string name="download_quran_db">دانلود پایگاه داده قرآن</string>
+    <string name="download_quran_db_description">در حال دانلود پایگاه داده قرآن، لطفا صبر کنید…</string>
+
+    <string name="widget_next_athan_text_color">رنگ‌نوشته‌ اذان بعدی ویجت</string>
+    <string name="select_widgets_next_athan_text_color">انتخاب رنگ دلخواه برای نوشته‌ اذان بعدی ویجت</string>
+    <string name="next_athan">اذان بعدی</string>
+    <string name="till">%1$s تا </string>
+    <string name="rem">%1$s مانده </string>
+
+    <string name="support">پشتیبانی</string>
+    <string name="requset_permision">درخواست مجوز</string>
+    <string name="need_full_screen_permision">برای نمایش اذان در حالت تمام صفحه هنگام استفاده از گوشی باید مجوز لازم را فعال کنید.</string>
+    <string name="schedule_permission_message">برای تنظیم اوقات اذان لازم است مجوز مربوطه را فعال کنید.</string>
+
+    <string name="calculated_time">اوقات محاسبه شده</string>
+    <string name="exact_time">اوقات دقیق محلی</string>
+    <string name="edited_time">اوقات ویرایش شده</string>
+
+    <string name="theme_dark_green">سبز تیره</string>
+    <string name="theme_purple">بنفش</string>
+    <string name="theme_deep_purple">بنفش تیره</string>
+    <string name="theme_indigo">نیلی</string>
+    <string name="theme_pink">صورتی</string>
+    <string name="theme_green">سبز</string>
+    <string name="theme_brown">قهوه ای</string>
+    <string name="theme_nblue">آبی</string>
+
+    <string name="select_font">انتخاب فونت</string>
+    <string name="vazir">وزیر</string>
+
+</resources>

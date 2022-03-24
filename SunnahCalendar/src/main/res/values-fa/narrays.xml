@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="quran_names">
+        <item>ترجمه فارسی</item>
+        <item>ترجمه کوردی</item>
+        <item>قرآن مشاری راشد العفاسی</item>
+        <item>قرآن ماهر المعیقلی</item>
+        <item>قرآن منشاوی(مجود)</item>
+        <item>قرآن منشاوی(مرتل)</item>
+        <item>قرآن ناصر القاطمی</item>
+        <item>قرآن سعد الغامدی</item>
+        <item>قرآن عبدالباسط(مجود)</item>
+        <item>قرآن عبدالباسط(مرتل)</item>
+        <item>قرآن فارس عباد</item>
+        <item>قرآن هانی الرفاعی</item>
+        <item>قرآن العجمی</item>
+        <item>قرآن ابوبکر الشاطری</item>
+        <item>قرآن عبدالرحمن السدیس</item>
+        <item>قرآن عبدالله بصفر</item>
+        <item>قرآن عبدالله عواد الجهنی</item>
+    </string-array>
+</resources>
