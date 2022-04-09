@@ -36,5 +36,3 @@ const val ATHAN_ID = "athan_id"
 
 const val PREF_APP_FONT = "app_font"
 const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
-
-

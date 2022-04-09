@@ -2,17 +2,13 @@ package ir.namoo.quran.ui.fragments
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.text.InputType
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -24,8 +20,6 @@ import android.widget.Filterable
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.SearchView
-import androidx.core.content.getSystemService
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -44,11 +38,15 @@ import com.byagowi.persiancalendar.utils.logException
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import ir.namoo.commons.TAG
+import io.ktor.client.*
+import io.ktor.client.engine.android.*
+import ir.namoo.commons.downloader.DownloadResult
+import ir.namoo.commons.downloader.downloadFile
 import ir.namoo.commons.utils.appPrefsLite
+import ir.namoo.commons.utils.askForStoragePermission
+import ir.namoo.commons.utils.isHaveStoragePermission
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.snackMessage
-import ir.namoo.commons.utils.toastMessage
 import ir.namoo.quran.db.ChapterEntity
 import ir.namoo.quran.db.QuranDB
 import ir.namoo.quran.utils.ACTION_CHANGE_SURA
@@ -61,9 +59,7 @@ import ir.namoo.quran.viewmodels.ChapterViewModel
 import kotlinx.coroutines.launch
 import net.lingala.zip4j.ZipFile
 import java.io.File
-import java.util.*
 import javax.inject.Inject
-import kotlin.concurrent.timer
 
 @AndroidEntryPoint
 class ChapterFragment : Fragment() {
@@ -73,9 +69,6 @@ class ChapterFragment : Fragment() {
     private var isFavShown = false
     private val viewModel: ChapterViewModel by viewModels()
     private lateinit var searchView: SearchView
-    private var downloadId: Long = 0
-    private var downloadProgressTimer: Timer? = null
-    private var downloadCompleteReceiver: BroadcastReceiver? = null
 
     @Inject
     lateinit var db: QuranDB
@@ -91,8 +84,6 @@ class ChapterFragment : Fragment() {
         if (dbFile.exists()) {// db exist and show chapters
             loadChapters()
         } else {// db not exist show download
-            setupViewModel()
-            viewModel.checkDownload()
             binding.downloadLayout.visibility = View.VISIBLE
             binding.txtQuranDownloadSize.text =
                 formatNumber(binding.txtQuranDownloadSize.text.toString())
@@ -103,10 +94,19 @@ class ChapterFragment : Fragment() {
                         requireContext(), com.google.android.material.R.anim.abc_fade_in
                     )
                 )
-                if (isNetworkConnected(requireContext()))
-                    downloadQuranDB()
-                else
-                    snackMessage(it, getString(R.string.network_error_message))
+                if (!isNetworkConnected(requireContext())) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(resources.getString(R.string.network_error_title))
+                        .setMessage(resources.getString(R.string.network_error_message))
+                        .setPositiveButton(resources.getString(R.string.ok)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                } else if (!isHaveStoragePermission(requireActivity()))
+                    askForStoragePermission(requireActivity())
+                else {
+                    download()
+                }
             }
 
         }
@@ -114,48 +114,6 @@ class ChapterFragment : Fragment() {
         binding.appBar.root.hideToolbarBottomShadow()
         return binding.root
     }//end of onCreateView
-
-    private fun setupViewModel() {
-        viewModel.downloadId.observe(requireActivity()) { downloadId ->
-            downloadId ?: return@observe
-            this.downloadId = downloadId
-
-            val downloadManager = requireActivity().getSystemService<DownloadManager>()
-            if (downloadManager == null) {
-                requireContext().toastMessage(getString(R.string.download_failed_tray_again))
-                return@observe
-            }
-
-            val query = DownloadManager.Query().setFilterById(downloadId)
-            downloadManager.query(query).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                    when (cursor.getInt(statusIndex)) {
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            unzip(requireContext())
-                            viewModel.removeDownload()
-                        }
-                        DownloadManager.STATUS_FAILED -> {
-                            binding.downloadLayout.visibility = View.VISIBLE
-                            binding.txtQuranDownloadSize.text =
-                                formatNumber(binding.txtQuranDownloadSize.text.toString())
-                            binding.chapterLayout.visibility = View.GONE
-                        }
-                        DownloadManager.STATUS_PENDING, DownloadManager.STATUS_RUNNING -> {
-                            binding.downloadLayout.visibility = View.VISIBLE
-                            binding.btnQuranDownload.isEnabled = false
-                            binding.txtQuranDownloadSize.text =
-                                formatNumber(binding.txtQuranDownloadSize.text.toString())
-                            binding.chapterLayout.visibility = View.GONE
-                            listenDownloadProgress()
-                        }
-                    }
-                } else {
-                    viewModel.removeDownload()
-                }
-            }
-        }
-    }
 
     @SuppressLint("SdCardPath")
     override fun onResume() {
@@ -521,7 +479,7 @@ class ChapterFragment : Fragment() {
 
     //################################################ Download
     @SuppressLint("SdCardPath")
-    private fun downloadQuranDB() {
+    private fun download() {
         binding.btnQuranDownload.isEnabled = false
         binding.progressQuranDownload.visibility = View.VISIBLE
         File("/data/data/${requireContext().packageName}/databases/quran.zip").apply {
@@ -529,116 +487,23 @@ class ChapterFragment : Fragment() {
                 delete()
         }
         val downloadedFile = File(getQuranDBDownloadFolder(requireContext()), "quran.zip")
-        val request = DownloadManager.Request(DB_LINK.toUri())
-            .setTitle(getString(R.string.download_quran_db))
-            .setDescription(getString(R.string.download_quran_db_description))
-            .setDestinationUri(downloadedFile.toUri())
-
-        val downloadManager = requireActivity().getSystemService<DownloadManager>()
-        if (downloadManager == null) {
-            requireContext().toastMessage(getString(R.string.download_failed_tray_again))
-            return
-        }
-
-        downloadId = downloadManager.enqueue(request)
-        viewModel.addDownload(downloadId)
-
-        listenDownloadProgress()
-    }
-
-    private fun listenDownloadProgress() {
-        downloadCompleteReceiver = DownloadCompleteReceiver()
-        downloadProgressTimer = timer(period = 500) { updateDownloadProgress() }
-        val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        requireActivity().registerReceiver(downloadCompleteReceiver, intentFilter)
-    }
-
-    private inner class DownloadCompleteReceiver : BroadcastReceiver() {
-
-        override fun onReceive(context: Context?, intent: Intent?) {
-            requireActivity().unregisterReceiver(this)
-            downloadCompleteReceiver = null
-
-            downloadProgressTimer?.cancel()
-            downloadProgressTimer = null
-
-            checkDownloadResult()
-        }
-    }
-
-    @SuppressLint("SdCardPath")
-    @Suppress("ConvertToStringTemplate")
-    private fun checkDownloadResult() {
-        binding.btnQuranDownload.isEnabled = true
-        binding.progressQuranDownload.visibility = View.GONE
-
-        val downloadManager = requireActivity().getSystemService<DownloadManager>()
-        if (downloadManager == null) {
-            requireContext().toastMessage(getString(R.string.download_failed_tray_again))
-            return
-        }
-
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        downloadManager.query(query).use { cursor ->
-            if (cursor.moveToNext()) {
-                viewModel.removeDownload()
-
-                val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-
-                when (val status = cursor.getInt(statusIndex)) {
-                    DownloadManager.STATUS_SUCCESSFUL -> {
-                        requireContext().toastMessage(getString(R.string.downloaded))
-                        lifecycleScope.launch {
-                            unzip(requireContext())
-                        }
+        val ktor = HttpClient(Android)
+        lifecycleScope.launch {
+            ktor.downloadFile(downloadedFile, DB_LINK).collect {
+                when (it) {
+                    is DownloadResult.Success -> {
+                        snackMessage(binding.root, getString(R.string.downloaded))
+                        unzip(requireContext())
                     }
-
-                    DownloadManager.STATUS_FAILED -> {
+                    is DownloadResult.Error -> {
                         binding.btnQuranDownload.isEnabled = true
                         binding.progressQuranDownload.visibility = View.GONE
-                        requireContext().toastMessage(getString(R.string.download_failed_tray_again))
-                        val reason = cursor.getInt(reasonIndex)
-                        Log.e(TAG, "error in downloading. reason code: $reason")
+                        snackMessage(binding.root, getString(R.string.download_failed_tray_again))
                     }
-
-                    else -> {
-                        binding.btnQuranDownload.isEnabled = true
-                        binding.progressQuranDownload.visibility = View.GONE
-                        requireContext().toastMessage(getString(R.string.download_failed_tray_again) + status)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun updateDownloadProgress() {
-        val downloadManager = requireActivity().getSystemService<DownloadManager>()
-        if (downloadManager == null) {
-            requireContext().toastMessage(getString(R.string.download_failed_tray_again))
-            return
-        }
-
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        downloadManager.query(query).use { cursor ->
-            if (cursor.moveToNext()) {
-                val totalSizeIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                val bytesDownloadedIndex =
-                    cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-
-                val totalBytes = cursor.getInt(totalSizeIndex)
-                val downloadedBytes = cursor.getInt(bytesDownloadedIndex)
-
-                if (downloadedBytes == totalBytes && totalBytes > 0) {
-                    downloadProgressTimer?.cancel()
-                } else {
-                    requireActivity().runOnUiThread {
-                        val progress = (downloadedBytes.toFloat() / totalBytes * 100).toInt()
-                        if (binding.progressQuranDownload.visibility != View.VISIBLE)
-                            binding.progressQuranDownload.visibility = View.VISIBLE
+                    is DownloadResult.Progress -> {
                         ObjectAnimator.ofInt(
                             binding.progressQuranDownload, "progress",
-                            binding.progressQuranDownload.progress, progress
+                            binding.progressQuranDownload.progress, it.progress
                         ).apply {
                             interpolator = AccelerateDecelerateInterpolator()
                             start()
@@ -648,6 +513,7 @@ class ChapterFragment : Fragment() {
             }
         }
     }
+
 
     @SuppressLint("SdCardPath")
     private fun unzip(context: Context): Boolean = runCatching {
@@ -659,11 +525,5 @@ class ChapterFragment : Fragment() {
         loadChapters()
         true
     }.onFailure(logException).getOrDefault(false)
-
-    override fun onDestroy() {
-        super.onDestroy()
-        downloadProgressTimer?.cancel()
-        downloadCompleteReceiver?.let { requireActivity().unregisterReceiver(it) }
-    }
 
 }//end of ChapterFragment

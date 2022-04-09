@@ -9,7 +9,7 @@ import androidx.fragment.app.FragmentActivity
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.HolidaysTypesDialogBinding
-import com.byagowi.persiancalendar.generated.EventType
+import com.byagowi.persiancalendar.data.EventType
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.utils.EventsRepository

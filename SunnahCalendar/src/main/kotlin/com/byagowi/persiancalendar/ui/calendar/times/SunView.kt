@@ -78,7 +78,7 @@ class SunView @JvmOverloads constructor(
     private val fontSize =
         when {
             context.appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
-                    == SYSTEM_DEFAULT_FONT -> 12.dp
+                ?.contains("Vazir") ?: false -> 12.dp
             language.isArabicScript -> 14.dp
             else -> 11.5.dp
         }

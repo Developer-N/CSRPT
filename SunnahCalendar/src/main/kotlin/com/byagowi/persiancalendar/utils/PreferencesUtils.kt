@@ -23,7 +23,7 @@ import com.byagowi.persiancalendar.PREF_WEEK_START
 import com.byagowi.persiancalendar.entities.CityItem
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Language
-import com.byagowi.persiancalendar.generated.citiesStore
+import com.byagowi.persiancalendar.data.citiesStore
 import com.byagowi.persiancalendar.global.language
 import io.github.persiancalendar.praytimes.Coordinates
 import java.util.*

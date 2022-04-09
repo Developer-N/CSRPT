@@ -22,4 +22,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "CSRPT"
 include(":SunnahCalendar")
-includeBuild("gradlePlugins")

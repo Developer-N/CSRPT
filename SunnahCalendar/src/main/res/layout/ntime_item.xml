@@ -22,12 +22,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_weight="3"
+            android:layout_weight="4"
             android:gravity="center_vertical"
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
             android:textColor="?attr/colorTextSecond"
-            android:textSize="@dimen/text_size_note"
+            android:textSize="12sp"
             app:drawableStartCompat="@drawable/ic_fajr_isha"
             app:drawableTint="?attr/colorIcon"
             tools:text="Time" />
@@ -42,7 +42,7 @@
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
             android:textColor="?attr/colorTextHoliday"
-            android:textSize="@dimen/text_size_description" />
+            android:textSize="12sp" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/time"
@@ -54,7 +54,7 @@
             android:paddingStart="4dp"
             android:paddingEnd="4dp"
             android:textColor="?attr/colorTextNormal"
-            android:textSize="@dimen/text_size_description"
+            android:textSize="12sp"
             tools:text="12:34" />
 
         <androidx.appcompat.widget.AppCompatImageView

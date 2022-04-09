@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
@@ -33,8 +32,8 @@ import ir.namoo.commons.utils.getAthansDirectoryPath
 import ir.namoo.commons.utils.isHaveStoragePermission
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.snackMessage
-import ir.namoo.religiousprayers.downloader.DownloadResult
-import ir.namoo.religiousprayers.downloader.downloadFile
+import ir.namoo.commons.downloader.DownloadResult
+import ir.namoo.commons.downloader.downloadFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

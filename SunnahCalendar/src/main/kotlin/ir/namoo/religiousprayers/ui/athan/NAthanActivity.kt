@@ -14,6 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.telephony.PhoneStateListener
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
@@ -42,6 +43,7 @@ import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getPrayTimeName
 import com.byagowi.persiancalendar.utils.logException
 import dagger.hilt.android.AndroidEntryPoint
+import ir.namoo.commons.TAG
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
@@ -65,13 +67,19 @@ class NAthanActivity : AppCompatActivity() {
     private var originalVolume = -1
     private var isDoaPlayed = false
     private var doaPlayer: MediaPlayer? = null
+    private lateinit var prayerKey: String
+    private var bFajrCount = 0
     private val stopTask = object : Runnable {
         override fun run() = runCatching {
             spentSeconds += 5
             if (ringtone == null || ringtone?.isPlaying == false || spentSeconds > 360 ||
                 (stopAtHalfMinute && spentSeconds > 30)
             ) {
-                if (isDoaPlayed) finish()
+                if (prayerKey == "BFAJR" && bFajrCount < 5 && ringtone?.isPlaying == false) {
+                    ringtone?.play()
+                    bFajrCount++
+                    handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
+                } else if (isDoaPlayed) finish()
                 else playDoa()
             } else handler.postDelayed(
                 this,
@@ -114,14 +122,12 @@ class NAthanActivity : AppCompatActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
         }
-        val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
+        prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
         setting = athanSettingsDB.athanSettingsDAO().getAllAthanSettings()
             .find { prayerKey.contains(it.athanKey) } ?: return
         if (prayerKey.startsWith("B") || !setting.playDoa) isDoaPlayed = true
         val isFajr = prayerKey == FAJR_KEY
         var goMute = false
-
-
 
         getSystemService<AudioManager>()?.let { audioManager ->
             originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)

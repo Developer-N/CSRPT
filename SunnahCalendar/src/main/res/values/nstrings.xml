@@ -106,6 +106,7 @@
     <string name="save_location">Save location</string>
     <string name="enter_city_name">Enter City Name!</string>
 
+    <string name="athan_settings">Athan Settings (Form more setting click on athans)</string>
     <string name="enable">Enable alarm</string>
     <string name="alert_type">Alert Type</string>
     <string name="full_screen">Alert Type</string>
@@ -249,6 +250,7 @@
 
     <string name="select_font">Select font</string>
     <string name="vazir">Vazir</string>
+    <string name="vazir_light">Vazir Light</string>
 
 
 </resources>

@@ -58,8 +58,12 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat() {
 //                }
                 singleSelect(
                     PREF_APP_FONT,
-                    listOf(getString(R.string.theme_default), getString(R.string.vazir)),
-                    listOf("", SYSTEM_DEFAULT_FONT),
+                    listOf(
+                        getString(R.string.theme_default),
+                        getString(R.string.vazir),
+                        getString(R.string.vazir_light)
+                    ),
+                    listOf("", SYSTEM_DEFAULT_FONT, "fonts/Vazirmatn-Light.ttf"),
                     SYSTEM_DEFAULT_FONT,
                     R.string.select_font
                 ) { title(R.string.select_font) }

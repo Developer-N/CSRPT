@@ -54,14 +54,10 @@
                         android:textSize="@dimen/text_size_title"
                         android:textStyle="bold" />
 
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="200dp">
-
                         <androidx.appcompat.widget.AppCompatImageView
                             android:id="@+id/n_icon"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="200dp"
                             android:layout_marginBottom="20dp" />
 
 
@@ -75,7 +71,6 @@
                             android:text="@string/version"
                             android:textColor="?attr/colorTextNormal"
                             android:textSize="@dimen/text_size_description" />
-                    </FrameLayout>
 
                     <!--                    <androidx.appcompat.widget.AppCompatTextView-->
                     <!--                        android:id="@+id/textView_info_2"-->

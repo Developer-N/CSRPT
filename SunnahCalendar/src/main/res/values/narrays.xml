@@ -30,9 +30,11 @@
     <!--############################################## Farsi-->
     <string-array name="farsi_fonts">
         <item>Vazir</item>
+        <item>Vazir Light</item>
     </string-array>
     <string-array name="farsi_fonts_values">
         <item>fonts/Vazir.ttf</item>
+        <item>fonts/Vazirmatn-Light.ttf</item>
     </string-array>
     <!--##############################################end Farsi-->
 

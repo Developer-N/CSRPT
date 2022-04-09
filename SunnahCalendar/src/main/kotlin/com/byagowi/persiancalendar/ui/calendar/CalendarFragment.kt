@@ -218,6 +218,7 @@ class CalendarFragment : Fragment(R.layout.fragment_calendar) {
             )
             setOnLongClickListener {
                 startAthan(requireContext(), ATHANS_LIST.random()/*SUNRISE_KRY*/, null)
+//                startAthan(requireContext(), "BFAJR", null)
                 true
             }
         }

@@ -3,7 +3,7 @@ package com.byagowi.persiancalendar.utils
 import com.byagowi.persiancalendar.entities.CalendarEvent
 import com.byagowi.persiancalendar.entities.CalendarType
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.generated.irregularRecurringEvents
+import com.byagowi.persiancalendar.data.irregularRecurringEvents
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate

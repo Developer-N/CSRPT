@@ -71,13 +71,19 @@ class NAthanNotification : Service() {
     private var isDoaPlayed = false
     private var doaPlayer: MediaPlayer? = null
     private var stopAtHalfMinute = false
+    private lateinit var prayerKey: String
+    private var bFajrCount = 0
     private val stopTask = object : Runnable {
         override fun run() = runCatching {
             spentSeconds += 5
             if (ringtone == null || ringtone?.isPlaying == false || spentSeconds > 360 ||
                 (stopAtHalfMinute && spentSeconds > 30)
             ) {
-                if (!isDoaPlayed) playDoa() else {
+                if (prayerKey == "BFAJR" && bFajrCount < 5 && ringtone?.isPlaying == false) {
+                    ringtone?.play()
+                    bFajrCount++
+                    handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
+                } else if (!isDoaPlayed) playDoa() else {
                 }
             } else {
                 handler.postDelayed(
@@ -118,7 +124,7 @@ class NAthanNotification : Service() {
 
             val notificationChannelId = notificationId.toString()
 
-            val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER)
+            prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER)
                 ?: return super.onStartCommand(intent, flags, startId)
 
             notificationManager = getSystemService()

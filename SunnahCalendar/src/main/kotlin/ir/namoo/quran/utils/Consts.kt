@@ -62,5 +62,3 @@ const val QURAN_NOTIFY_VIEW_PLAYER_RESUME = "notify.view.resume"
 const val QURAN_NOTIFY_VIEW_PLAYER_STOP = "notify.view.stop"
 
 const val ACTION_GO_TO_DOWNLOAD_PAGE = "ir.namoo.quran.go.to.download"
-
-const val PREF_QURAN_DB_DOWNLOAD_REQ_ID = "quran_db_down_req"

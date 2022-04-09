@@ -12,7 +12,6 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "1.6.10"
-    id("io.github.persiancalendar.appbuildplugin") apply true
 }
 
 // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
@@ -22,6 +21,7 @@ val composeSecondaryVersion = "1.1.1"
 val isMinApi21Build = gradle.startParameter.taskNames.any { "minApi21" in it || "MinApi21" in it }
 
 val generatedAppSrcDir = buildDir / "generated" / "source" / "appsrc" / "main"
+val versionNumber = 10100
 android {
     sourceSets {
         getByName("main").kotlin.srcDir(generatedAppSrcDir)
@@ -38,8 +38,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 19 // if (enableFirebaseInNightlyBuilds) 19 else 17
         targetSdk = 31
-        versionCode = 10000
-        versionName = "10.0.2022"
+        versionCode = versionNumber
+        versionName = "10.1.2022"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
@@ -84,7 +84,7 @@ android {
             applicationIdSuffix = ".minApi21"
             dimension = "api"
             minSdk = 21
-            // versionCode = versionNumber + 1
+            versionCode = versionNumber + 1
         }
     }
 
@@ -184,13 +184,13 @@ dependencies {
     debugImplementation("com.android.support:multidex:2.0.0")
 
     minApi21Implementation("androidx.activity:activity-compose:1.4.0")
-    minApi21Implementation("com.google.android.material:compose-theme-adapter:1.1.5")
+    minApi21Implementation("com.google.android.material:compose-theme-adapter:1.1.6")
     val accompanistVersion = "0.23.1"
     minApi21Implementation("com.google.accompanist:accompanist-flowlayout:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     minApi21Implementation("androidx.compose.ui:ui:$composeVersion")
     minApi21Implementation("androidx.compose.material:material:$composeSecondaryVersion")
-    minApi21Implementation("androidx.compose.material3:material3:1.0.0-alpha07")
+    minApi21Implementation("androidx.compose.material3:material3:1.0.0-alpha08")
     minApi21Implementation("androidx.compose.ui:ui-tooling-preview:$composeSecondaryVersion")
     if (isMinApi21Build) {
         implementation("androidx.compose.runtime:runtime:$composeVersion")
@@ -269,8 +269,6 @@ dependencies {
     implementation("com.github.google:flexbox-layout:2.0.1")
 
 }
-
-tasks.named("preBuild").configure { dependsOn(getTasksByName("codegenerators", false)) }
 
 tasks.register("moveToApiFlavors") {
     doLast {

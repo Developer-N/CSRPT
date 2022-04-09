@@ -71,7 +71,7 @@ class SharedDayViewData(
             isArabicDigitSelected -> 18
             context.appPrefs.getString(
                 PREF_APP_FONT, SYSTEM_DEFAULT_FONT
-            ) == SYSTEM_DEFAULT_FONT -> 22
+            )?.contains("Vazir") ?: false -> 22
             else -> 25
         }) / 40
     private val headerTextSize = height * 11 / 40
@@ -125,7 +125,9 @@ class SharedDayViewData(
     }
     val weekDayInitialsTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.textAlign = Paint.Align.CENTER
-        if (context.appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT) == SYSTEM_DEFAULT_FONT)
+        if (context.appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
+                ?.contains("Vazir") == true
+        )
             it.textSize = height * 20 / 45
         else
             it.textSize = height * 20 / 40

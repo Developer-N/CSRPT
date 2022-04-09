@@ -11,19 +11,19 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-<!--        <com.google.android.material.button.MaterialButton-->
-<!--            android:id="@+id/btn_test_athan"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_gravity="center"-->
-<!--            android:text="TEST ATHAN" />-->
+        <!--        <com.google.android.material.button.MaterialButton-->
+        <!--            android:id="@+id/btn_test_athan"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_gravity="center"-->
+        <!--            android:text="TEST ATHAN" />-->
 
-<!--        <com.google.android.material.button.MaterialButton-->
-<!--            android:id="@+id/btn_test_alarm"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_gravity="center"-->
-<!--            android:text="TEST ALARM" />-->
+        <!--        <com.google.android.material.button.MaterialButton-->
+        <!--            android:id="@+id/btn_test_alarm"-->
+        <!--            android:layout_width="wrap_content"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_gravity="center"-->
+        <!--            android:text="TEST ALARM" />-->
 
         <!--########################### start location        -->
         <com.google.android.material.card.MaterialCardView
@@ -121,15 +121,36 @@
 
         </com.google.android.material.card.MaterialCardView>
         <!--########################### end location        -->
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_athans"
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Elevated"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
-            android:visibility="visible"
-            tools:itemCount="6"
-            tools:listitem="@layout/item_athan_setting" />
+            app:cardBackgroundColor="?attr/colorCard">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="5dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:text="@string/athan_settings"
+                    android:textColor="?attr/colorTextSecond" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_athans"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="2dp"
+                    android:visibility="visible"
+                    tools:itemCount="6"
+                    tools:listitem="@layout/item_athan_setting" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.Material3.CardView.Elevated"

@@ -8,7 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -133,11 +136,9 @@ class DownloadFragment : Fragment() {
 
         override fun getItemCount(): Int = chapterList.size
         override fun getItemViewType(position: Int): Int = position
-
         override fun onBindViewHolder(holder: QDownloadViewHolder, position: Int) =
             holder.bind(
-                chapterList[position],
-                position,
+                chapterList[position], position,
                 (binding.spinnerQuranDownloadType.selectedItemPosition * 1000) + position + 1
             )
 
@@ -149,7 +150,6 @@ class DownloadFragment : Fragment() {
             private var downloadProgressTimer: Timer? = null
             private var downloadCompleteReceiver: BroadcastReceiver? = null
 
-
             init {
                 itemBinding.txtDownloadInfo.typeface = Typeface.DEFAULT_BOLD
             }
@@ -158,33 +158,35 @@ class DownloadFragment : Fragment() {
             fun bind(chapter: ChapterEntity, position: Int, downloadID: Int) {
                 itemBinding.txtItemQdSuraName.text =
                     "${formatNumber(position + 1)}: ${chapter.nameArabic}"
-
                 itemBinding.btnItemQdDownload.visibility = View.INVISIBLE
                 itemBinding.btnItemQdDownloadStop.visibility = View.INVISIBLE
                 itemBinding.progressLoadingFileState.visibility = View.VISIBLE
 
                 runCatching {
-                    lifecycleScope.launch(context = Dispatchers.IO) {
-                        itemBinding.btnItemQdDownload.setImageResource(
-                            when {
-                                File(
-                                    getQuranDirectoryInInternal(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
-                                            getAyaFileName(chapter.sura, 1)
-                                ).exists() || File(
-                                    getQuranDirectoryInSD(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
-                                            getAyaFileName(chapter.sura, 1)
-                                ).exists() -> R.drawable.ic_files_ok
-                                else -> R.drawable.ic_files_download
-                            }
-                        )
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val isFileExist = File(
+                            getQuranDirectoryInInternal(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
+                                    getAyaFileName(chapter.sura, 1)
+                        ).exists() || File(
+                            getQuranDirectoryInSD(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition] + "/" +
+                                    getAyaFileName(chapter.sura, 1)
+                        ).exists()
+                        requireActivity().runOnUiThread {
+                            itemBinding.btnItemQdDownload.setImageResource(
+                                if (isFileExist) R.drawable.ic_files_ok
+                                else R.drawable.ic_files_download
+                            )
+                        }
                         val isInProgress = inProgressDownloads.find { f ->
                             f.id == downloadID
                         } != null
                         requireActivity().runOnUiThread {
                             itemBinding.btnItemQdDownload.visibility = View.VISIBLE
                             itemBinding.progressLoadingFileState.visibility = View.INVISIBLE
-                            if (isInProgress)
+                            if (isInProgress) {
                                 itemBinding.btnItemQdDownloadStop.visibility = View.VISIBLE
+                                itemBinding.btnItemQdDownload.visibility = View.INVISIBLE
+                            }
                         }
                     }
                 }.onFailure(logException)//end of check file exist
@@ -301,9 +303,16 @@ class DownloadFragment : Fragment() {
 
                 val url = links[spinnerSelectedPosition] + getSuraFileName(chapter.sura)
                 val request = DownloadManager.Request(url.toUri())
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                     .setTitle(chapter.nameArabic)
                     .setDescription(names[spinnerSelectedPosition])
                     .setDestinationUri(File(downloadFile).toUri())
+                    .setAllowedOverMetered(true)
+                    .setAllowedOverRoaming(true)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    request.setRequiresCharging(false)
+                }
 
                 val downloadManager = requireContext().getSystemService<DownloadManager>()
                 if (downloadManager == null) {
@@ -327,7 +336,7 @@ class DownloadFragment : Fragment() {
                 downloadCompleteReceiver = DownloadCompleteReceiver()
                 downloadProgressTimer = timer(period = 500) { updateDownloadProgress(downloadID) }
                 val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-                requireActivity().registerReceiver(downloadCompleteReceiver, intentFilter)
+                requireContext().registerReceiver(downloadCompleteReceiver, intentFilter)
             }
 
             private inner class DownloadCompleteReceiver : BroadcastReceiver() {
@@ -335,7 +344,7 @@ class DownloadFragment : Fragment() {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     runCatching {
                         if (inProgressDownloads.isNullOrEmpty()) {
-                            requireActivity().unregisterReceiver(this)
+                            requireContext().unregisterReceiver(this)
                             downloadCompleteReceiver = null
 
                             downloadProgressTimer?.cancel()
@@ -369,9 +378,9 @@ class DownloadFragment : Fragment() {
                             when (cursor.getInt(statusIndex)) {
                                 DownloadManager.STATUS_SUCCESSFUL -> {
                                     downloadedMSG.show()
-                                    lifecycleScope.launch {
-                                        unzip(it)
-                                    }
+                                    unzip(it)
+                                    inProgressDownloads.remove(inProgressDownloads.find { f -> f.id == it.id })
+                                    viewModel.removeDownload(it.id)
                                 }
 
                                 DownloadManager.STATUS_FAILED -> {
@@ -385,26 +394,6 @@ class DownloadFragment : Fragment() {
                         }
                     }
                 }
-            }
-
-            private fun unzip(fileDownload: FileDownloadEntity) {
-                requireActivity().runOnUiThread {
-                    kotlin.runCatching {
-                        itemBinding.txtDownloadInfo.text =
-                            getString(R.string.download_completed_unzip)
-                    }.onFailure(logException)
-                }
-                File(fileDownload.downloadFile).let {
-                    if (it.exists()) {
-                        ZipFile(it).extractAll(fileDownload.folderPath)
-                        it.delete()
-                    }
-                }
-                requireActivity().runOnUiThread {
-                    itemBinding.btnItemQdDownloadStop.visibility = View.INVISIBLE
-                    itemBinding.btnItemQdDownload.visibility = View.VISIBLE
-                }
-
             }
 
             @SuppressLint("SetTextI18n")
@@ -430,7 +419,7 @@ class DownloadFragment : Fragment() {
                                 if (downloadedBytes == totalBytes && totalBytes > 0) {
                                     downloadProgressTimer?.cancel()
                                 } else {
-                                    requireContext().run {
+                                    requireActivity().runOnUiThread {
                                         val progress =
                                             (downloadedBytes.toFloat() / totalBytes * 100).toInt()
                                         if (itemBinding.progressItemQuranDownload.visibility != View.VISIBLE) {
@@ -477,6 +466,33 @@ class DownloadFragment : Fragment() {
                     downloadProgressTimer?.cancel()
                     downloadProgressTimer = null
                 }
+            }
+
+            @SuppressLint("NotifyDataSetChanged")
+            private fun unzip(fileDownload: FileDownloadEntity) {
+                runCatching {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        requireActivity().runOnUiThread {
+                            itemBinding.txtDownloadInfo.text =
+                                getString(R.string.download_completed_unzip)
+                        }
+                        File(fileDownload.downloadFile).let {
+                            if (it.exists()) {
+                                ZipFile(it).extractAll(fileDownload.folderPath)
+                                it.delete()
+                            }
+                        }
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            requireActivity().runOnUiThread {
+                                itemBinding.btnItemQdDownloadStop.visibility = View.INVISIBLE
+                                itemBinding.btnItemQdDownload.visibility = View.VISIBLE
+                                visibleDownloadViews(false)
+                                notifyDataSetChanged()
+                            }
+                        }, 1000)
+
+                    }
+                }.onFailure(logException)
             }
 
             fun visibleDownloadViews(visible: Boolean) = requireActivity().runOnUiThread {

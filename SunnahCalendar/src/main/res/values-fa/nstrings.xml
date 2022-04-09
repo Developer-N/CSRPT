@@ -110,6 +110,11 @@
     <string name="send_mail">ارسال ایمیل</string>
     <string name="str_changes_title">تغییرات</string>
     <string name="changes">
+\n----تغییرات نسخه : 10.1.2022----\n
+1.	اضافه شدن فونت وزیر نازک\n
+2.	امکان فعال کردن جداگانه هشدار قبل از اذان ها، رفع مشکل زمان هشدارها، 5 بار تکرار هشدار قبل از اذان صبح\n
+3.	رفع مشکل نشان دادن وضعیت دانلود فایل های صوتی قرآن و بهبود کلی دانلودها\n
+4.	رفع چند مشکل گزارش شده ی دیگر و بهبود رابط کاربری\n
 
         \n----تغییرات نسخه : 10.0.2022----\n
 1.	به روز رسانی تقویم به نسخه ی 7.5 و استفاده از تمام امکانات آن (نسخه ی مناسب سال 1401)\n
@@ -267,6 +272,7 @@
     <string name="save_location">ذخیره</string>
     <string name="enter_city_name">نام شهر را وارد کنید!</string>
 
+    <string name="athan_settings">تنظیمات اذان ها(برای تنظیمات بیشتر روی اذان ها کلیک کنید)</string>
     <string name="enable">فعال کردن</string>
     <string name="alert_type">حالت پخش</string>
     <string name="full_screen">تمام صفحه</string>
@@ -295,7 +301,7 @@
     <string name="ok">خیلی خب</string>
     <string name="select_athan_file_title">اذان را انتخاب کنید</string>
     <string name="alarm_before">هشدار قبل از اذان</string>
-    <string name="enable_alarm_before">فعال یا غیر فعال کردن</string>
+    <string name="enable_alarm_before">فعال کردن هشدار</string>
     <string name="select_athan_name">انتخاب اذان</string>
     <string name="default_fajr_athan_name">العفاسی - صبح</string>
     <string name="default_alert_before_name">زنگ</string>
@@ -408,5 +414,6 @@
 
     <string name="select_font">انتخاب فونت</string>
     <string name="vazir">وزیر</string>
+    <string name="vazir_light">وزیر(نازک)</string>
 
 </resources>

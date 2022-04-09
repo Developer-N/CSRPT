@@ -58,9 +58,3 @@ Require latest stable Android Studio
 
 1. `git clone https://github.com/Developer-N/CSRPT`
 1. Import the project in Android Studio
-
-
-if rebuild project failed use below terminal commands:
-
--`gradlew assembleMinApi19Debug`
--`gradlew assembleMinApi21Debug`

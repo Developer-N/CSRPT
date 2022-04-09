@@ -9,7 +9,6 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
-import android.util.Log
 import androidx.annotation.RawRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
@@ -48,7 +47,6 @@ import ir.namoo.commons.DEFAULT_FULL_SCREEN_METHOD
 import ir.namoo.commons.DEFAULT_NOTIFICATION_METHOD
 import ir.namoo.commons.PREF_FULL_SCREEN_METHOD
 import ir.namoo.commons.PREF_NOTIFICATION_METHOD
-import ir.namoo.commons.TAG
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
@@ -126,14 +124,15 @@ fun getEnabledAlarms(context: Context): Set<String> {
 //        .splitIgnoreEmpty(",")
 //        .toSet()
     val enabledAthans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
-        .getAllAthanSettings().filter { it.state }
+        .getAllAthanSettings()
     return if (enabledAthans.isNullOrEmpty()) emptySet()
     else {
         val result = mutableSetOf<String>()
         for (a in enabledAthans) {
+            if (a.state)
+                result.add(a.athanKey)
             if (a.isBeforeEnabled)
                 result.add("B${a.athanKey}")
-            result.add(a.athanKey)
         }
         result
     }
@@ -166,28 +165,28 @@ fun scheduleAlarms(context: Context) {
                     id = 8
                     Clock.fromMinutesCount(
                         prayTimes.getFromStringId(R.string.dhuhr)
-                            .toMinutes() - athanSettings[0].beforeAlertMinute
+                            .toMinutes() - athanSettings[2].beforeAlertMinute
                     )
                 }
                 "B$ASR_KEY" -> {
                     id = 9
                     Clock.fromMinutesCount(
                         prayTimes.getFromStringId(R.string.asr)
-                            .toMinutes() - athanSettings[0].beforeAlertMinute
+                            .toMinutes() - athanSettings[3].beforeAlertMinute
                     )
                 }
                 "B$MAGHRIB_KEY" -> {
                     id = 10
                     Clock.fromMinutesCount(
                         prayTimes.getFromStringId(R.string.maghrib)
-                            .toMinutes() - athanSettings[0].beforeAlertMinute
+                            .toMinutes() - athanSettings[4].beforeAlertMinute
                     )
                 }
                 "B$ISHA_KEY" -> {
                     id = 11
                     Clock.fromMinutesCount(
                         prayTimes.getFromStringId(R.string.isha)
-                            .toMinutes() - athanSettings[0].beforeAlertMinute
+                            .toMinutes() - athanSettings[5].beforeAlertMinute
                     )
                 }
                 else -> {
@@ -213,12 +212,10 @@ fun scheduleAlarms(context: Context) {
             scheduleAlarm(context, name, time, id)
         else
             scheduleAlarm2(context, name, time, id)
-
     }
 }
 
 private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis: Long, i: Int) {
-    Log.e(TAG, "scheduleAlarm for $alarmTimeName")
     val remainedMillis = timeInMillis - System.currentTimeMillis()
     debugLog("Alarms: $alarmTimeName in ${remainedMillis / 60000} minutes")
     if (remainedMillis < 0 || i == -1) return // Don't set alarm in past
@@ -255,7 +252,6 @@ private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis:
 }
 
 private fun scheduleAlarm2(context: Context, alarmTimeName: String, timeInMillis: Long, i: Int) {
-    Log.e(TAG, "scheduleAlarm2 for $alarmTimeName")
     val remainedMillis = timeInMillis - System.currentTimeMillis()
     debugLog("Alarms: $alarmTimeName in ${remainedMillis / 60000} minutes")
     if (remainedMillis < 0 || i == -1) return // Don't set alarm in past

@@ -5,19 +5,13 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.isHighTextContrastEnabled
 import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.global.secondaryCalendarDigits
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
-import ir.namoo.commons.PREF_APP_FONT
-import ir.namoo.commons.SYSTEM_DEFAULT_FONT
-import ir.namoo.commons.TAG
-import ir.namoo.commons.utils.getAppFont
 import kotlin.math.min
 
 class DayView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
