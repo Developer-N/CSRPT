@@ -1,5 +1,4 @@
 # Calendar + Sunnah Prayer Times
-[![GitHub Actions](https://action-badges.now.sh/Developer-N/CSRPT?workflow=android)](https://github.com/Developer-N/CSRPT/actions)
 <div dir=rtl>
 
 ## تقویم + اوقات شرعی اهل سنت
