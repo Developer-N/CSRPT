@@ -1,334 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="code">glk</string>
-    <string name="app_name">فارسي تقويم</string>
-    <string name="cancel">لغو</string>
-    <string name="widget_name">فارسي تقويم</string>
-    <string name="widget_mini_name">فارسي تقويم (کۊجدانه)</string>
-    <string name="latitude">عرضˇجؤغرافیایي</string>
-    <string name="longitude">طۊلˇجؤغرافیایي</string>
-    <string name="settings">تنظیمات</string>
-    <string name="exit">بيرۊن شؤن</string>
-    <string name="enable_native_digits">عددانأ فارسي نيشان دأن</string>
-    <string name="native_digits">فارسي عددان</string>
-    <string name="showing_clock_on_widget">ساعتˇنيشان دأن ابزارکانˇدۊرۊن</string>
-    <string name="clock_on_widget">ساعت ابزارکˇدۊرۊن</string>
-    <string name="showing_clock_in_24">۲۴ تائي ساعتˈ نيشان دأن</string>
-    <string name="clock_in_24">۲۴ ساعته</string>
-    <string name="about">أنˇوأستي</string>
-    <string name="gpl_logo">گنؤ پروانهٔ جامعˇهمگانی نيشان</string>
-    <string name="date_converter">تبدیلˇتاریخ</string>
-    <string name="widget_text_color">ابزراکˇرنگ‌نيويشتهان</string>
-    <string name="select_widgets_text_color">رنگˇديلبخا ابزارکˇنيويشتهانˇره</string>
-    <string name="notify_date">اعلانˇرا تاودن</string>
-    <string name="enable_notify">تاريخانأ هميشک خبر بده</string>
-    <string name="select_skin">پۊستهˈدؤجين کۊدن</string>
-    <string name="skin">پۊسته</string>
-    <string name="pray_methods">مۊحاسبه شيوهان</string>
-    <string name="pray_methods_calculation">اؤقاتˇشرعي شيوهانأ مۊحاسبه کۊدن</string>
-    <string name="altitude">ارتفاع</string>
-    <string name="altitude_praytime">به متر (ديلبخا)</string>
-    <string name="coordination">مختصات جغرافیایی</string>
-    <string name="gps_location">مؤختصاتˇ فأگيفتن جي‌پي‌اسˇجأ</string>
-    <string name="gps_location_help">أگه أيأ جأ بتأنيد, تنظيماتˇباقي بخشانأ نيازي ني-يه</string>
-    <string name="location">مؤقعیت</string>
-    <string name="location_help">أگه فهرستˇدۊرۊن دۊنبۊ, مؤختصاتˈوارد بۊکۊنيد</string>
-    <string name="showing_iran_time">ابزارکانˇنيشان دأن، نوارˇاعلان ˇبرنامه ایرانˇوختˇمرأ همه جگا، خارجˇايراني-يانˇره</string>
-    <string name="iran_time">ايرانˇوخت</string>
-    <string name="compass">قؤطب‌نما</string>
-    <string name="compass_not_found">قؤطب‌نما حسگر پئدا نؤبؤ</string>
-    <string name="language">زوان</string>
-    <string name="version">نيويشتن %1$s</string>
-    <string name="athan">اذان</string>
-    <string name="athan_alarm_summary">أ نمازانˇره اذان بگه</string>
-    <string name="athan_alarm">اذانان</string>
-    <string name="athan_volume_summary">اذانˇحجمˇصدايأ تنظيم کۊدن</string>
-    <string name="athan_volume">حجمˇصدا</string>
-    <string name="athan_disabled_summary">اذانˇتنظيماتˇرا تأودأنˇره, ئي جگايأ فهرستˇجأدؤجين بۊکۊنيد, يا شيمي مؤقعيتˇمۊشخصاتˈوارد بۊکۊنيد</string>
-    <string name="athan_gap">فاصلهٔ بین اذان واقعی و اذان برنامه</string>
-    <string name="athan_gap_summary">چن دقه به اذان بمانسته, زنگ صدا بۊخۊره</string>
-    <string name="close">دٚوستن</string>
-    <string name="open">واکۊدن</string>
-    <string name="imsak">امساک</string>
-    <string name="fajr">صؤبˇاذان</string>
-    <string name="dhuhr">ظؤهرˇاذان</string>
-    <string name="asr">عصر</string>
-    <string name="maghrib">اذانˇمغرب</string>
-    <string name="isha">عشاء</string>
-    <string name="sunrise">دتاوستن</string>
-    <string name="sunset">مغريب</string>
-    <string name="midnight">نیصفˇشب</string>
-    <string name="owghat">اؤقاتˇشرعي</string>
-    <string name="events">مۊناسبتان</string>
-    <string name="events_summary">چي جۊر مۊناسبتانأ تقويمˇدۊرۊن نيشان بده</string>
-    <string name="today">ايمرۊ</string>
-    <string name="return_to_today">ايمرۊزˈوأگردستن</string>
-    <string name="select_type_date">انتخاب گونهٔ تاریخ</string>
-    <string name="year">سال</string>
-    <string name="month">ماه</string>
-    <string name="day">رۊز</string>
-    <string name="select_year">سالˇدؤجين کۊدن</string>
-    <string name="select_month">مايأ دؤجين کۊدن</string>
-    <string name="select_day">رۊزˈدؤجين کۊدن</string>
-    <string name="date_exception">تاریخˇدۊرۊن ساب بؤبؤ!</string>
-    <string name="in_city_time">به اؤفؤقˇ %1$s</string>
-    <string name="date_copied_clipboard">«%1$s»حافظه دۊرۊنم ذخيره بؤبؤ</string>
-    <string name="stop">بئس</string>
-    <string name="goto_date">برو به تاریخ</string>
-    <string name="go">بۊشۊ</string>
-    <string name="pleasewaitgps">ايپچه بئسيد… اگر ئي دقه پسي نتيجه نيگيفتيد شيمي دزگا جي پي اسˇجأ خاطرجم بيبيد کي تنظيماتˇجأ فعاله. اگر اۊنˇفعال‌سازی کارساز نۊبۊ، احتمالن وا باقي گۊزينهانأ ايمتحان بۊکۊنيد</string>
-    <string name="notify_date_lock_screen">صفه کي قؤفلˈبؤسته أ اعلانانيشان بده</string>
-    <string name="notify_date_lock_screen_summary">فقد اۊ وخته کي مؤحافظتˇگۊشي ره تنظيم ببه کار کۊنه</string>
-    <string name="warn_if_events_not_set">رۊيدادان ؤ مۊناسبتانˇفعالˈکۊدنˇوأسي ؤ هتؤ شيمي مۊهيمˇمۊناسبتانˇره بيشيد تنظيماتˇسروخت</string>
-    <string name="days_distance">فاصله</string>
-    <string name="calendars_priority">کؤيتأ تقويم اول نيشان بدأ ببه</string>
-    <string name="calendars_priority_summary">تقويمˇتنظيم کۊدن ؤ اولویتˇتقويمانˇنيشان دأن یا نيشان ندأن</string>
-    <string name="week_of_year">هفته-يه سال</string>
-    <string name="week_of_year_summary">هفته-يه سال تقويمˇدۊرۊن</string>
-    <string name="accept">تأیید</string>
-    <string name="calendar">تقویم</string>
-    <string name="week_start">شۊرۊىˇهفته</string>
-    <string name="week_start_summary">هفته شۊرۊ بؤنˇدؤجين</string>
-    <string name="week_ends">هفته تعطيلي رۊزان</string>
-    <string name="week_ends_summary">هفته دۊرۊن کؤ رۊزانأ تعطيل نيشان بده</string>
-    <string name="search_in_events">رۊيدادانˇدۊرۊن وامختن</string>
-    <string name="show_device_calendar_events_summary">شخصي رۊيدادانأ نيشان دأن</string>
-    <string name="show_device_calendar_events">شخصي رۊيدادان</string>
-    <string name="add_event">رۊيدادˈعيلاوه کۊدن</string>
-    <string name="device_calendar_does_not_support">دزگا تقويم أ کؤنشˇپۊشتين ني-يه</string>
-    <string name="customize_widget_summary">چه چیزهایی در ویجت‌ها و اعلان نمایش داده شوند</string>
-    <string name="customize_widget">ويجتان ؤ اعلانˈشخصي چاکۊدن</string>
-    <string name="add">عيلاوه کۊدن</string>
-    <string name="which_one_to_show">کؤيتأيأ نيشان بده</string>
-    <string name="notification_athan">اذان به صورت اعلان</string>
-    <string name="enable_notification_athan">اذانˇنيشان دأن ايتأ اعلانˇمانستن ؤ دزگا پرکستن</string>
-    <string name="returned_to_default">وأگردسته پيش فرضˈ</string>
-    <string name="custom_notification_is_set">درخاستي صدا تنظيم بؤبؤ</string>
-    <string name="custom_athan">اذانˇدؤجين کۊدن</string>
-    <string name="default_athan_summary">اذانˇپيش فرضˈوأگردانئن</string>
-    <string name="default_athan">اذانˇپیش‌فرض</string>
-    <string name="abdulbasit">عبدالباسط عبدالصمد</string>
-    <string name="about_license">مۊجوز</string>
-    <string name="about_license_title">برنامه ايجازهان</string>
-    <string name="about_license_sum">مۊجوز GPLv3، ايستفادده بؤبؤسته مۊجوزانˇشرايطˈکي فارسي تقويم ؤ کيتابخانهانˇدۊرۊن ايستفاده بؤبؤسته دأريه-يأ وارسي بۊکۊنيد.</string>
-    <string name="help">راهنما</string>
-    <string name="about_report_bug">گۊزارشˇايشکال</string>
-    <string name="about_report_bug_sum">"أيايم تأنيد باگˇگۊزارش ؤ تازه قابليتانˇدرخاستˇره, گیت‌هابˇدۊرۊن حيساب واکۊنيد "</string>
-    <string name="about_sendMail">رایانامه</string>
-    <string name="about_noClient">رایانامه اۊسه کۊدنˇره برنامه-ئي نصب ني-يه!</string>
-    <string name="about_developers">تؤسعه‌دهندهان</string>
-    <string name="about_support_developers">تؤسعه‌دهنده پۊشتين</string>
-    <string name="about_email_sum">شخصي رايانامهˈ برنامه نيويسˇره اۊسه کۊدن</string>
-    <string name="gps_internet_desc">موقعیت‌یاب لؤطفن (GPS) ؤ اينترنتˈ قبله يا جهتˇجؤغرافيائي يافتنˇوأستي رؤشنˈکۊنيد. برنامه ايتأ جا ره فقد ايدفأ أ دسترسي-يانˈلازيم دأره, ولي أگه شيمي جأ عوضˈبه وا دۊمرتبه اۊنˈتنظيم بۊکۊنيد.</string>
-    <string name="start_of_year_diff">%1$s رۊز (~%2$s هفته یا %3$s ماه) اولˇسال</string>
-    <string name="end_of_year_diff">%1$s رۊز (~%2$s هفته یا %3$s ما) تا آخرˇسال</string>
-    <!-- Sun Info -->
-    <string name="sunriseSunView">دتاوستن</string>
-    <string name="middaySunView">ظؤهر</string>
-    <string name="sunsetSunView">غروب</string>
-    <string name="no_event">أ رۊزˇره مۊناسبت يا رۊيدادي پئدا نؤبؤ.</string>
-    <string name="length_of_day">رۊزˇدۊرۊن</string>
-    <string name="remaining_daylight">باقي بمانسته</string>
-    <string name="n_hours_minutes">%1$sس %2$sد</string>
-    <string name="more">ويشتر</string>
-    <string name="zodiac">بؤرجˇفلکی</string>
-    <string name="capricorn">جَدْی (بۊزˇزأى)</string>
-    <string name="aquarius">دلو (وٚدرٚه)</string>
-    <string name="pisces">حۊت (مائي)</string>
-    <string name="aries">حَمَل (بره)</string>
-    <string name="taurus">ثَور (گاب)</string>
-    <string name="gemini">جَوزا (دۊپیکر)</string>
-    <string name="cancer">سَرَطان (پابۊزگيره)</string>
-    <string name="leo">اسد (شیر)</string>
-    <string name="virgo">سُنبُله (وۊشه)</string>
-    <string name="libra">میزان (ترازۊ)</string>
-    <string name="scorpio">عقرب (کژدم)</string>
-    <string name="sagittarius">سفقَوس (کؤمان)</string>
-    <string name="year_name">سالˇنام</string>
-    <string name="year1">میمۊن</string>
-    <string name="year2">سۊکۊله</string>
-    <string name="year3">سک</string>
-    <string name="year4">خۊک</string>
-    <string name="year5">مۊش</string>
-    <string name="year6">گاو</string>
-    <string name="year7">دۊرگ</string>
-    <string name="year8">خرگۊش</string>
-    <string name="year9">يۊها</string>
-    <string name="year10">لانتي</string>
-    <string name="year11">اسب</string>
-    <string name="year12">گۊسپند</string>
-    <string name="level">تراز</string>
-    <string name="calibrate_compass_summary">أنˇوأستي کي قؤطب-نما سنسؤر بهتر کار بۊکۊنه, مغناطيسي چيزانˇجأ دۊرˈبيد, دزگايأ وأگردانيد ؤ اۊنˈبه سه طرف جۊلؤب ؤ عقب بچرخأنيد.</string>
-    <string name="set_location">أنˇوأستي کي خؤرشيد ؤ ما ؤ قبله مؤقعيتˈ بداريد, تأنيدي شيمي مؤقعيتˈتنظيماتˇدۊرۊن وارد بۊکۊنيد.</string>
-    <string name="moonInScorpio">قمر در عقربˇرۊزان</string>
-    <string name="astronomical_info">اخترشناسي</string>
-    <string name="astronomical_info_summary">ايطلاعاتˇنيشان دأن صورتˇفلکی، سالˇنام ؤ قمر در عقربˇمانستن</string>
-    <string name="islamic_offset">ايسلامي تقويمˇتنظيم</string>
-    <string name="islamic_offset_summary">واگردستن تقويمˇچاکۊدنˇره</string>
-    <string name="pref_widget">ویجت</string>
-    <string name="pref_notification">اعلان</string>
-    <string name="pref_interface">رابط</string>
-    <string name="resume">ايدامه</string>
-    <string name="continue_button">ايدامه</string>
-    <!--Permissions-->
-    <string name="location_access">دس‌فارسˇمؤقعيتˇمکاني</string>
-    <string name="phone_location_required">برنامه أ قسمت دسترسي-يه مکان خأيه, نيويره وا شيمي جؤغرافيائي طۊل ؤ عرضˈ دستي وارد بۊکۊنيد.</string>
-    <string name="calendar_access">دزگا تقويمˈفارسئن</string>
-    <string name="phone_calendar_required">اول وا وهأليد دزگا تقويمˇدۊرۊن بشه, أگه دزگا تقويمˈوهأليد برنامه تأنه شيمي شخصي رۊيدادانأ فارسي تقويمˇدۊرۊن نيشان بده.</string>
-    <!--TalkBack, a11y-->
-    <string name="previous_x">%1$sˇقبل</string>
-    <string name="next_x">%1$sˇبعد</string>
-    <string name="week_days_name_column">سۊتۊن %1$s رۊزانˇجدولˇدۊرۊن</string>
-    <string name="equivalent_to">برابره</string>
-    <string name="holiday_reason">أنˇوأستي تعطيله %1$s</string>
-    <string name="nth_week_of_year">هفته-يه %1$s سال</string>
-    <string name="north">شۊمال</string>
-    <string name="east">شرق</string>
-    <string name="south">جۊنۊب</string>
-    <string name="west">غرب</string>
-    <string name="qibla">قبله</string>
-    <string name="outdated_app">تقویم به‌رۊز ني-يه؛ مؤمکنˇمۊناسبتان ساب ببه</string>
-    <string name="update">به رۊز کۊدن</string>
-    <string name="spring_equinox">لحظه-يه اعتدالˇبهاری ؤ تحویلˇسال %1$s: %2$s</string>
-    <string name="shift_work_settings">شيفتˇکاري-يأ تنظيم کۊدن</string>
-    <string name="ask_user_to_set_location">اؤقاتˇشرعي نيشان دأنˇوأسي شيمي جايأ مالۊم بۊکۊنيد</string>
-    <string name="remove">پاکۊدن</string>
-    <string name="shift_work_starting_date">شيفتˇکاري شۊرۊ بؤن تقويمˇدؤجين بؤبؤسته رۊزˇجأ، %1$s به.</string>
-    <string name="shift_work_starting_date_edit">شيفتˇکاري شۊرۊ بؤن اۊ رۊزˇجأ کي قبلن دؤجين بؤبؤسته بۊ، %1$s خأيه ببه.</string>
-    <string name="shift_work_reset_button">غیرفعال کۊدن یا دۊمرتبه برنامه‌ریزي کۊدن</string>
-    <plurals name="n_minutes">
-        <item quantity="one">%1$s ديقه</item>
-        <item quantity="other">%1$s ديقه</item>
-    </plurals>
-    <plurals name="n_hours">
-        <item quantity="one">%1$s ساعت</item>
-        <item quantity="other">%1$s ساعت</item>
-    </plurals>
-    <string name="spaced_and">" ؤ "</string>
-    <string name="spaced_comma">"، "</string>
-    <string name="spaced_colon">": "</string>
-    <string name="device_info">دزگا ايطلاعات</string>
-    <string name="center_align_widgets_summary">ابزراکانأ وسط‌چین کۊدن ۲×۲ و ۴×۱</string>
-    <string name="center_align_widgets">ويجتˈوسط‌چین کۊدن</string>
-    <string name="n_till">%1$s تا %2$s</string>
-    <plurals name="shift_work_record_title">
-        <item quantity="one">%1$s رۊز %2$s</item>
-        <item quantity="other">%1$s رۊز %2$s</item>
-    </plurals>
-    <string name="recurs">تکرار ببه</string>
-    <string name="am">ق.ظ</string>
-    <string name="pm">ب.ظ</string>
-    <string name="holiday">تعطيلي</string>
-    <string name="shift_work_days_head">طۊل</string>
-    <string name="prefer_linear_date_summary">۱۳۹۰/۱/۱شمسی جأ ايستفاده کۊدن ۱ فرودینˇ۱۳۹۰ جأ ویجت ؤ اعلانˇدۊرۊن</string>
-    <string name="prefer_linear_date">عددي تاريخ</string>
-    <string name="month_overview">أ ما مۊناسبتان</string>
-    <string name="map">Map</string>
-    <string name="ascending_athan_volume">صدای افزایشی اذان</string>
-    <string name="enable_ascending_athan_volume">صدای اذان طی یک دقیقه به حداکثر خود می‌رسد</string>
-    <string name="widget_background_color">رنگ پس‌زمینه ویجت</string>
-    <string name="select_widgets_background_color">انتخاب رنگ دلخواه برای پس‌زمینه ویجت</string>
-    <string name="share">هم‌رسانی</string>
-    <string name="enable_location_services">خدمات موقعیت غیرفعال است، برای استفاده از این ویژگی لطفاً آن را فعال سازید.</string>
-    <string name="widget_age_name">تقویم فارسی (سن)</string>
-    <string name="age_widget_title">عنوان ویجت</string>
-    <string name="select_date">انتخاب تاریخ</string>
-    <plurals name="n_days">
-        <item quantity="one">%1$s رۊز</item>
-        <item quantity="other">%1$s رۊز</item>
-    </plurals>
-    <plurals name="n_months">
-        <item quantity="one">%1$s ما</item>
-        <item quantity="other">%1$s ما</item>
-    </plurals>
-    <plurals name="n_years">
-        <item quantity="one">%1$s سال</item>
-        <item quantity="other">%1$s سال</item>
-    </plurals>
-    <string name="preview">پيشادئن</string>
-    <string name="ignore">چشم‌پوشی</string>
-    <string name="theme_default">سيستم ٚ دؤجين</string>
-    <string name="theme_light">رؤشن</string>
-    <string name="theme_dark">تارکینا</string>
-    <string name="theme_modern">سيويليزه</string>
-    <string name="theme_blue">رۊدبار</string>
-    <string name="theme_black">سیاه</string>
-    <string name="shamsi_calendar">هجري-يه شمسي</string>
-    <string name="islamic_calendar">هجري-يه قمري</string>
-    <string name="gregorian_calendar">میلادي</string>
-    <string name="shamsi_calendar_short">شمسي</string>
-    <string name="islamic_calendar_short">قمري</string>
-    <string name="gregorian_calendar_short">میلادي</string>
-    <string name="shift_work_morning">رۊزکاري</string>
-    <string name="shift_work_off">ايستراحت</string>
-    <string name="shift_work_evening">عصرکاري</string>
-    <string name="shift_work_night">شب‌کاري</string>
-    <string name="method_jafari">دؤنزه ايمامي شیعه، لوا أنجۊمن، قؤم</string>
-    <string name="method_mwl">ايسلام ٚ جهاني ايتحادیه، عربستانˇسۊعۊدي</string>
-    <string name="method_isna">شۊمالي آمریکای ٚ ايسلامي جامعه</string>
-    <string name="method_egypt">مصر ٚ عۊمۊمي وارسي-سانˇسربس</string>
-    <string name="method_makkah">مککه، اؤمّ‌القری دانشگا</string>
-    <string name="method_karachi">کراچي، ايسلامي دانشانˇدانشگا</string>
-    <string name="method_tehran">تهران ٚ دانشگا، ژئؤفیزیک ٚ انجؤمن</string>
-    <string name="iran_holidays">ايرانˇتعطيلي-يان</string>
-    <string name="iran_ancient">ایرانˇباستانˇمۊناسبتان</string>
-    <string name="iran_others">ايرانˇ باقي مۊناسبتان</string>
-    <string name="international">بین‌المللی ؤ جهاني مۊناسبتان</string>
-    <string name="afghanistan_holidays">افغانستانˇ رؤخصتي-يان</string>
-    <string name="afghanistan_others">افغانستانˇباقي مۊناسبتان</string>
-    <string name="iran_official_events">مرکز تقویم دانشگاه تهران، رسمی</string>
-    <string name="afghanistan_events">افغانستان</string>
-    <string name="other_holidays">سایر</string>
-    <string name="view_source">مشاهده منبع</string>
-    <string name="widget_customization_other_calendars">باقي تقويمان ويجتˇدۊرۊن ۴×۱ و ۲×۲</string>
-    <string name="widget_customization_non_holiday_events">جغرزˇتعطيلي مۊناسبتان ویجتˇدۊرۊن ۲×۲ ؤ اعلانˇدۊرۊن</string>
-    <string name="widget_customization_owghat">اؤقات شرعي ویجتˇدۊرۊن ۲×۲ ؤ اعلانˇدۊرۊن (أگه تنظيم ببه)</string>
-    <string name="widget_customization_owghat_location">مکان در کنار اؤقات شرعي ویجتˇدۊرۊن ۲×۲ ؤ اعلانˇدۊرۊن (أگه تنظيم ببه)</string>
-    <string name="farvardin">فروردین</string>
-    <string name="ordibehesht">اؤردیبهشت</string>
-    <string name="khordad">خؤرداد</string>
-    <string name="tir">تیر</string>
-    <string name="mordad">مۊرداد</string>
-    <string name="shahrivar">شاریور</string>
-    <string name="mehr">مهر</string>
-    <string name="aban">آبان</string>
-    <string name="azar">آذر</string>
-    <string name="dey">دی</string>
-    <string name="bahman">بهمن</string>
-    <string name="esfand">ايسفند</string>
-    <string name="muharram">مُحَرَّم</string>
-    <string name="safar">صَفَر</string>
-    <string name="rabi_al_awwal">ربيع الأول</string>
-    <string name="rabi_al_thani">ربیع الثاني</string>
-    <string name="jumada_al_awwal">جمادي الأولى</string>
-    <string name="jumada_al_thani">جمادي الثانية</string>
-    <string name="rajab">رجب</string>
-    <string name="shaban">شعبان</string>
-    <string name="ramadan">رمضان</string>
-    <string name="shawwal">شوال</string>
-    <string name="dhu_al_qidah">ذؤ القعده</string>
-    <string name="dhu_al_hijjah">ذؤ الحجه</string>
-    <string name="january">ژانویه</string>
-    <string name="february">فوریه</string>
-    <string name="march">مارس</string>
-    <string name="april">آوریل</string>
-    <string name="may">مه</string>
-    <string name="june">ژۊئن</string>
-    <string name="july">ژۊئیه</string>
-    <string name="august">اۊت</string>
-    <string name="september">سپتامبر</string>
-    <string name="october">اؤکتؤبر</string>
-    <string name="november">نؤوامبر</string>
-    <string name="december">دسامبر</string>
-    <string name="saturday">شمبه</string>
-    <string name="sunday">یکشمبه</string>
-    <string name="monday">دۊشمبه</string>
-    <string name="tuesday">سه شمبه</string>
-    <string name="wednesday">چارشمبه</string>
-    <string name="thursday">پئن شمبه</string>
-    <string name="friday">جۊما</string>
-    <string name="sun_view">خورشیدنما</string>
-    <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
-    <string name="country_emoji">🇮🇷</string>
-    <string name="nepal">نپال</string>
-</resources>

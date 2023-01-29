@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="widget_background">@android:color/system_accent2_50</color>
+    <color name="widget_divider">@android:color/system_accent2_200</color>
+    <color name="widget_refresh_icon_color">@android:color/system_neutral2_700</color>
+
+    <style name="WidgetTheme" parent="@android:style/Theme.DeviceDefault.DayNight" />
+
+    <style name="WidgetTextStyle" />
+
+    <style name="DynamicLightTheme" parent="ModernTheme">
+        <item name="colorAccent">@android:color/system_accent1_800</item>
+        <item name="colorMonthsBackground">@android:color/system_accent1_50</item>
+        <item name="android:navigationBarColor">@android:color/system_neutral1_10</item>
+        <item name="navigationBarColor">@android:color/system_accent1_50</item>
+        <item name="colorPrimary">@android:color/system_accent3_800</item>
+        <item name="colorPrimaryDark">@android:color/system_accent1_50</item>
+        <item name="colorCard">@android:color/system_accent1_10</item>
+        <item name="coloredTabTextColor">@android:color/system_accent1_1000</item>
+        <item name="coloredTabBackground">@android:color/system_accent1_50</item>
+        <item name="coloredTabIndicatorColor">@android:color/system_accent1_600</item>
+        <item name="colorMonthSwitch">@android:color/system_accent3_600</item>
+        <item name="colorDrawerBackground">@android:color/system_accent1_10</item>
+        <item name="colorDrawerIcon">@android:color/system_accent1_900</item>
+        <item name="colorTextToday">@android:color/system_accent3_900</item>
+        <item name="colorCurrentDay">@android:color/system_accent1_600</item>
+        <item name="colorTextDayCurrent">@android:color/system_accent1_0</item>
+        <item name="colorHoliday">@android:color/system_accent1_400</item>
+        <item name="colorTextHoliday">@android:color/system_accent1_400</item>
+        <item name="colorSelectDay">@android:color/system_accent2_100</item>
+        <item name="colorTextDaySelected">@android:color/system_accent2_900</item>
+        <item name="colorAppointment">@android:color/system_accent1_400</item>
+    </style>
+
+    <style name="DynamicDarkTheme" parent="BlackTheme">
+        <item name="colorAccent">@android:color/system_accent1_100</item>
+        <item name="colorMonthsBackground">@android:color/system_neutral1_800</item>
+        <item name="navigationBarColor">@android:color/system_neutral1_800</item>
+        <item name="colorPrimary">@android:color/system_accent3_200</item>
+        <item name="colorPrimaryDark">@android:color/system_neutral1_800</item>
+        <item name="colorCard">@android:color/system_neutral1_900</item>
+        <item name="coloredTabTextColor">@android:color/system_accent1_50</item>
+        <item name="coloredTabBackground">@android:color/system_neutral1_800</item>
+        <item name="coloredTabIndicatorColor">@android:color/system_accent1_300</item>
+        <item name="colorMonthSwitch">@android:color/system_accent1_50</item>
+        <item name="colorDrawerBackground">@android:color/system_neutral1_900</item>
+        <item name="colorDrawerIcon">@android:color/system_accent1_100</item>
+        <item name="colorTextToday">@android:color/system_accent3_100</item>
+        <item name="colorCurrentDay">@android:color/system_accent1_200</item>
+        <item name="colorTextDayCurrent">@android:color/system_accent1_1000</item>
+        <item name="colorHoliday">@android:color/system_accent1_100</item>
+        <item name="colorTextHoliday">@android:color/system_accent1_100</item>
+        <item name="colorSelectDay">@android:color/system_accent2_300</item>
+        <item name="colorTextDaySelected">@android:color/system_accent2_50</item>
+        <item name="colorAppointment">@android:color/system_accent1_300</item>
+    </style>
+
+    <style name="DynamicBlackTheme" parent="BlackTheme">
+        <item name="colorAccent">@android:color/system_accent1_100</item>
+        <item name="colorMonthsBackground">@android:color/system_neutral1_1000</item>
+        <item name="navigationBarColor">@android:color/system_neutral1_1000</item>
+        <item name="colorPrimary">@android:color/system_accent3_200</item>
+        <item name="colorPrimaryDark">@android:color/system_neutral1_1000</item>
+        <item name="colorCard">@android:color/system_neutral1_1000</item>
+        <item name="coloredTabTextColor">@android:color/system_accent1_50</item>
+        <item name="coloredTabBackground">@android:color/system_neutral1_1000</item>
+        <item name="coloredTabIndicatorColor">@android:color/system_accent1_300</item>
+        <item name="colorMonthSwitch">@android:color/system_accent1_50</item>
+        <item name="colorDrawerBackground">@android:color/system_neutral1_1000</item>
+        <item name="colorDrawerIcon">@android:color/system_accent1_100</item>
+        <item name="colorTextToday">@android:color/system_accent3_100</item>
+        <item name="colorCurrentDay">@android:color/system_accent1_200</item>
+        <item name="colorTextDayCurrent">@android:color/system_accent1_1000</item>
+        <item name="colorHoliday">@android:color/system_accent1_100</item>
+        <item name="colorTextHoliday">@android:color/system_accent1_100</item>
+        <item name="colorSelectDay">@android:color/system_accent2_300</item>
+        <item name="colorTextDaySelected">@android:color/system_accent2_50</item>
+        <item name="colorAppointment">@android:color/system_accent1_300</item>
+    </style>
+
+    <style name="AlertDialogThemeBlurSupportedOverlay">
+        <item name="materialAlertDialogTheme">@style/AlertDialogThemeBlurSupported</item>
+    </style>
+
+    <style name="AlertDialogThemeBlurSupported" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:windowBlurBehindEnabled">true</item>
+        <item name="android:windowBlurBehindRadius">12dp</item>
+        <item name="android:backgroundDimAmount">0</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <!-- TODO: Apparently can't be applied with material alert dialog but it had transparency so
+                   make it work again
+          <item name="android:windowBackground">@drawable/dialog_background</item>
+          <item name="android:windowBackgroundBlurRadius">8dp</item>
+        -->
+    </style>
+
+</resources>

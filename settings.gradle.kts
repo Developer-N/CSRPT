@@ -4,13 +4,6 @@ pluginManagement {
         google()
         mavenCentral()
     }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "dagger.hilt.android.plugin") {
-                useModule("com.google.dagger:hilt-android-gradle-plugin:2.41")
-            }
-        }
-    }
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -20,5 +13,5 @@ dependencyResolutionManagement {
         maven("https://jitpack.io")
     }
 }
-rootProject.name = "CSRPT"
-include(":SunnahCalendar")
+rootProject.name = "SunnahCalendar2022"
+include(":PersianCalendar")

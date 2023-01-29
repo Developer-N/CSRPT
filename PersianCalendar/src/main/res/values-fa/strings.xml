@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="code">fa</string>
+    <string name="app_name">تقویم + اوقات شرعی اهل سنت</string>
+    <string name="cancel">لغو</string>
+    <string name="widget_name">تقویم + اوقات شرعی اهل سنت</string>
+    <string name="widget_mini_name">تقویم + اوقات شرعی اهل سنت (کوچک)</string>
+    <string name="latitude">عرض جغرافیایی</string>
+    <string name="longitude">طول جغرافیایی</string>
+    <string name="settings">تنظیمات</string>
+    <string name="exit">خروج</string>
+    <string name="enable_native_digits">نمایش رقم‌ها به فارسی</string>
+    <string name="native_digits">رقم‌های فارسی</string>
+    <string name="showing_clock_on_widget">نمایش ساعت در ویجت‌ها</string>
+    <string name="clock_on_widget">ساعت در ویجت</string>
+    <string name="showing_clock_in_24">نمایش ساعت به صورت ۲۴تایی</string>
+    <string name="clock_in_24">۲۴ ساعته</string>
+    <string name="about">درباره</string>
+    <string name="gpl_logo">نشان پروانهٔ جامع همگانی گنو</string>
+    <string name="date_converter">تبدیل تاریخ</string>
+    <string name="widget_text_color">رنگ نوشته‌های ویجت</string>
+    <string name="select_widgets_text_color">انتخاب رنگ دلخواه برای نوشته‌های ویجت</string>
+    <string name="notify_date">فعال کردن اعلان</string>
+    <string name="enable_notify">اعلان همیشگی برای تاریخ‌ها</string>
+    <string name="select_skin">انتخاب پوسته</string>
+    <string name="skin">پوسته</string>
+    <string name="pray_methods">شیوه‌های محاسبه</string>
+    <string name="pray_methods_calculation">شیوه‌های محاسبهٔ اوقات شرعی</string>
+    <string name="altitude">ارتفاع</string>
+    <string name="altitude_praytime">به متر (اختیاری)</string>
+    <string name="coordination">مختصات جغرافیایی</string>
+    <string name="gps_location">دریافت مختصات از جی‌پی‌اس</string>
+    <string name="gps_location_help">اگر از این طریق ممکن باشد، نیازی به سایر تنظیمات این بخش نیست</string>
+    <string name="location">موقعیت</string>
+    <string name="location_help">اگر در فهرست نبود، مختصات را در زیر وارد کنید</string>
+    <string name="showing_iran_time">نمایش ویجت، نوار اعلان و برنامه به وقت ایران در همه جا، مناسب ایرانیان خارج</string>
+    <string name="iran_time">وقت ایران</string>
+    <string name="compass">قطب‌نما</string>
+    <string name="compass_not_found">ظاهراً دستگاه شما دارای سنسور قطب‌نما نیست</string>
+    <string name="language">زبان</string>
+    <string name="version">نگارش %1$s</string>
+    <string name="athan">اذان</string>
+    <string name="athan_alarm_summary">برای این نمازها اذان گفته شود</string>
+    <string name="athan_alarm">اذان‌ها</string>
+    <string name="athan_volume_summary">تنظیم حجم صدای اذان</string>
+    <string name="athan_volume">حجم صدا</string>
+    <string name="athan_disabled_summary">برای فعال کردن تنظیمات اذان ابتدا مکان را تنظیم کنید</string>
+    <string name="athan_gap">فاصلهٔ بین اذان واقعی و اذان برنامه</string>
+    <string name="athan_gap_summary">چند دقیقه پیش از اذان، هشدار به صدا در آورده شود</string>
+    <string name="close">بستن</string>
+    <string name="open">گشودن</string>
+    <string name="imsak">امساک</string>
+    <string name="fajr">اذان صبح</string>
+    <string name="dhuhr">اذان ظهر</string>
+    <string name="asr">اذان عصر</string>
+    <string name="maghrib">اذان مغرب</string>
+    <string name="isha">اذان عشاء</string>
+    <string name="sunrise">طلوع</string>
+    <string name="sunset">غروب</string>
+    <string name="midnight">نیمه‌شب</string>
+    <string name="owghat">اوقات شرعی</string>
+    <string name="events">مناسبت‌ها</string>
+    <string name="events_summary">چه نوع مناسبت‌هایی در تقویم نمایش داده شود</string>
+    <string name="today">امروز</string>
+    <string name="return_to_today">بازگشت به امروز</string>
+    <string name="select_type_date">انتخاب گونهٔ تاریخ</string>
+    <string name="year">سال</string>
+    <string name="month">ماه</string>
+    <string name="day">روز</string>
+    <string name="select_year">انتخاب سال</string>
+    <string name="select_month">انتخاب ماه</string>
+    <string name="select_day">انتخاب روز</string>
+    <string name="date_exception">تاریخ وارد شده اشتباه است.</string>
+    <string name="in_city_time">به افق %1$s</string>
+    <string name="date_copied_clipboard">«%1$s» به حافظه رونوشت شد.</string>
+    <string name="stop">توقف</string>
+    <string name="goto_date">برو به تاریخ</string>
+    <string name="go">برو</string>
+    <string name="pleasewaitgps">کمی درنگ کنید… اگر پس از یک دقیقه نتیجه‌ای حاصل نشد مطمئن شوید که جی‌پی‌اس دستگاه از تنظیمات فعال است. اگر فعال‌سازی آن کارساز نبود، احتمالاً باید گزینه‌های دیگر را بیازمایید</string>
+    <string name="notify_date_lock_screen">نمایش اعلان در قفل صفحه</string>
+    <string name="notify_date_lock_screen_summary">فقط هنگامی که شیوه‌ای برای محافظت از گوشی تنظیم شده باشد کار می‌کند.</string>
+    <string name="warn_if_events_not_set">جهت فعال کردن رویدادها و مناسبت‌ها و نیز انتخاب مناسبت‌های مورد نظرتان به تنظیمات مراجعه کنید</string>
+    <string name="days_distance">فاصله</string>
+    <string name="calendars_priority">اولویت نمایش تقویم‌ها</string>
+    <string name="calendars_priority_summary">تنظیم تقویم اصلی و اولویت نمایش یا عدم نمایش تقویم‌ها</string>
+    <string name="week_of_year">هفتهٔ سال</string>
+    <string name="week_of_year_summary">نمایش هفتهٔ سال در صفحهٔ تقویم</string>
+    <string name="accept">تأیید</string>
+    <string name="calendar">تقویم</string>
+    <string name="week_start">شروع هفته</string>
+    <string name="week_start_summary">انتخاب شروع هفته</string>
+    <string name="week_ends">روزهای تعطیل هفته</string>
+    <string name="week_ends_summary">چه روزهایی در هفته تعطیل نمایش داده شوند</string>
+    <string name="search_in_events">جستجو در رویدادها</string>
+    <string name="show_device_calendar_events_summary">نمایش رویدادهای شخصی</string>
+    <string name="show_device_calendar_events">رویدادهای شخصی</string>
+    <string name="add_event">افزودن رویداد</string>
+    <string name="device_calendar_does_not_support">تقویم دستگاه از این کنش پشتیبانی نمی‌کند</string>
+    <string name="customize_widget_summary">چه چیزهایی در ویجت‌ها و اعلان نمایش داده شوند</string>
+    <string name="customize_widget">شخصی‌سازی ویجت‌ها و اعلان</string>
+    <string name="add">افزودن</string>
+    <string name="which_one_to_show">کدام یک نمایش داده شود</string>
+    <string name="notification_athan">اذان به صورت اعلان</string>
+    <string name="enable_notification_athan">نمایش اذان به‌عنوان یک اعلان و لرزش دستگاه</string>
+    <string name="returned_to_default">به پیش‌فرض برگردانده شد</string>
+    <string name="custom_notification_is_set">صدای درخواستی تنظیم شد</string>
+    <string name="custom_athan">انتخاب اذان</string>
+    <string name="default_athan_summary">بازگردانی به اذان پیش‌فرض</string>
+    <string name="default_athan">صدای پیش‌فرض</string>
+    <string name="abdulbasit">عبدالباسط عبدالصمد</string>
+    <string name="licenses">مجوز</string>
+    <string name="about_license_title">مجوزهای برنامه</string>
+    <string name="about_license_sum">مجوز GPLv3، شرایط مجوزهای استفاده شده در تقویم فارسی و کتابخانه‌های استفاده شده را بررسی کنید.</string>
+    <string name="help">راهنما</string>
+    <string name="about_report_bug">گزارش اشکال</string>
+    <string name="about_report_bug_sum">راه ترجیحی برای گزارش باگ و درخواست قابلیت‌های جدید، نیازمند حسابی در گیت‌هاب</string>
+    <string name="about_sendMail">رایانامه</string>
+    <string name="about_noClient">برنامه‌ای جهت ارسال رایانامه نصب نیست</string>
+    <string name="about_developers">توسعه‌دهندگان (ترتیب تصادفی)</string>
+    <string name="about_support_developers">پشتیبانی از توسعه‌دهنده</string>
+    <string name="about_email_sum">ارسال رایانامهٔ شخصی برای نویسنده‌های برنامه برای موارد پاسخ داده نشده در راهنما</string>
+    <string name="gps_internet_desc">لطفاً موقعیت‌یاب (GPS) و اینترنت را برای یافتن جهت قبله یا جهت جغرافیایی روشن نمایید.
+\n
+\nبرنامه تنها یک‌بار برای یک مکان نیاز به این دسترسی‌ها دارد، اما در صورتی که مکان شما تغییر کند دوباره نیازمند تنظیم است.</string>
+    <string name="start_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) از ابتدای سال</string>
+    <string name="end_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) تا انتهای سال</string>
+    <!-- Sun Info -->
+    <string name="sunriseSunView">طلوع</string>
+    <string name="middaySunView">ظهر</string>
+    <string name="sunsetSunView">غروب</string>
+    <string name="no_event">مناسبت یا رویدادی برای این روز یافت نشد.</string>
+    <string name="length_of_day">طول روز</string>
+    <string name="remaining_daylight">باقی‌مانده</string>
+    <string name="n_hours_minutes">%1$sس %2$sد</string>
+    <string name="more">بیشتر</string>
+    <string name="zodiac">برج فلکی</string>
+    <string name="capricorn">جَدْی (بزغاله)</string>
+    <string name="aquarius">دلو (آبریز)</string>
+    <string name="pisces">حوت (ماهی)</string>
+    <string name="aries">حَمَل (بره)</string>
+    <string name="taurus">ثَور (گاو)</string>
+    <string name="gemini">جَوزا (دوپیکر)</string>
+    <string name="cancer">سَرَطان (خرچنگ)</string>
+    <string name="leo">اسد (شیر)</string>
+    <string name="virgo">سُنبُله (خوشه)</string>
+    <string name="libra">میزان (ترازو)</string>
+    <string name="scorpio">عقرب (کژدم)</string>
+    <string name="sagittarius">سفقَوس (کمان)</string>
+    <string name="year_name">نام سال</string>
+    <string name="animal_year_name_monkey">میمون</string>
+    <string name="animal_year_name_rooster">خروس</string>
+    <string name="animal_year_name_dog">سگ</string>
+    <string name="animal_year_name_pig">خوک</string>
+    <string name="animal_year_name_rat">موش</string>
+    <string name="animal_year_name_ox">گاو</string>
+    <string name="animal_year_name_tiger">ببر</string>
+    <string name="animal_year_name_rabbit">خرگوش</string>
+    <string name="animal_year_name_dragon">اژدها</string>
+    <string name="animal_year_name_snake">مار</string>
+    <string name="animal_year_name_horse">اسب</string>
+    <string name="animal_year_name_goat">گوسفند</string>
+    <string name="level">تراز</string>
+    <string name="calibrate_compass_summary">جهت عملکرد دقیق‌تر سنسور قطب‌نما، از اشیاء مغناطیسی دور شوید، دستگاه را برگردانید و آن را روی سه محور به جلو و عقب بچرخانید.</string>
+    <string name="set_location">برای داشتن موقعیت خورشید و ماه، و جهت قبله می‌توانید موقعیت خود را در بخش تنظیمات وارد نمایید.</string>
+    <string name="moonInScorpio">ایام قمر در عقرب</string>
+    <string name="astronomy">ستاره‌شناسی</string>
+    <string name="astronomical_info_summary">نمایش اطلاعاتی مانند صورت فلکی، نام سال و قمر در عقرب</string>
+    <string name="islamic_offset">تنظیم تقویم اسلامی</string>
+    <string name="islamic_offset_summary">بازگشت برای اصلاح تقویم</string>
+    <string name="pref_widget">ویجت</string>
+    <string name="pref_notification">اعلان</string>
+    <string name="pref_interface">رابط</string>
+    <string name="resume">ادامه</string>
+    <string name="continue_button">ادامه</string>
+    <!--Permissions-->
+    <string name="location_access">دسترسی به موقعیت مکانی</string>
+    <string name="phone_location_required">این بخش از برنامه نیازمند گرفتن دسترسی مکان است، در غیر این‌صورت می‌بایست طول و عرض جفرافیایی خود را به صورت دستی وارد کنید.</string>
+    <string name="calendar_access">دسترسی به تقویم دستگاه</string>
+    <string name="phone_calendar_required">ابتدا باید مجوز دسترسی به تقویم دستگاه را بدهید، اگر اجازه دسترسی به تقویم دستگاه دهید برنامه می‌تواند رویدادهای شخصی شما را در تقویم فارسی نمایش دهد.</string>
+    <string name="previous_x">%1$s قبل</string>
+    <string name="next_x">%1$s بعد</string>
+    <string name="week_days_name_column">ستون %1$s در جدول روزها</string>
+    <string name="equivalent_to">برابر با</string>
+    <string name="holiday_reason">تعطیل به مناسبت %1$s</string>
+    <string name="nth_week_of_year">هفتهٔ %1$s سال</string>
+    <string name="north">شمال</string>
+    <string name="east">شرق</string>
+    <string name="south">جنوب</string>
+    <string name="west">غرب</string>
+    <string name="qibla">قبله</string>
+    <string name="outdated_app">تقویم به‌روز نیست؛ مناسبت‌ها ممکن است نادرست باشد</string>
+    <string name="update">بروزرسانی</string>
+    <string name="spring_equinox">لحظه اعتدال بهاری و تحویل سال %1$s: %2$s</string>
+    <string name="shift_work_settings">تنظیم شیفت‌کاری</string>
+    <string name="ask_user_to_set_location">برای نمایش صحیح این بخش مکان خود را در تنظیمات انتخاب نمایید</string>
+    <string name="remove">حذف</string>
+    <string name="shift_work_starting_date">شروع شیفت‌کاری از روز انتخاب‌شده در تقویم، %1$s خواهد بود.</string>
+    <string name="shift_work_starting_date_edit">شروع شیفت‌کاری از روز تعیین‌شده‌ در قبل، %1$s خواهد بود.</string>
+    <string name="shift_work_reset_button">غیرفعال‌سازی یا برنامه‌ریزی مجدد</string>
+    <plurals name="n_minutes">
+        <item quantity="one">%1$s دقیقه</item>
+        <item quantity="other">%1$s دقیقه</item>
+    </plurals>
+    <plurals name="n_hours">
+        <item quantity="one">%1$s ساعت</item>
+        <item quantity="other">%1$s ساعت</item>
+    </plurals>
+    <string name="spaced_and">" و "</string>
+    <string name="spaced_comma">"، "</string>
+    <string name="spaced_colon">": "</string>
+    <string name="device_information">اطلاعات دستگاه</string>
+    <string name="center_align_widgets_summary">وسط‌چین کردن ویجت‌های ۲×۲ و ۴×۱</string>
+    <string name="center_align_widgets">وسط‌چین کردن ویجت</string>
+    <string name="n_till">%1$s تا %2$s</string>
+    <plurals name="shift_work_record_title">
+        <item quantity="one">یک روز %2$s</item>
+        <item quantity="other">%1$s روز %2$s</item>
+    </plurals>
+    <string name="recurs">تکرار شود</string>
+    <string name="am">ق.ظ</string>
+    <string name="pm">ب.ظ</string>
+    <string name="holiday">تعطیل</string>
+    <string name="shift_work_days_head">طول</string>
+    <string name="prefer_linear_date_summary">استفاده از ۱۳۹۰/۱/۱ شمسی به جای ۱ فرودین ۱۳۹۰ در ویجت و اعلان</string>
+    <string name="prefer_linear_date">نمایش تاریخ به صورت عددی</string>
+    <string name="month_overview">مناسبت‌های ماه</string>
+    <string name="map">نقشه</string>
+    <string name="ascending_athan_volume">صدای افزایشی اذان</string>
+    <string name="enable_ascending_athan_volume">صدای اذان طی یک دقیقه به حداکثر خود می‌رسد</string>
+    <string name="widget_background_color">رنگ پس‌زمینه ویجت</string>
+    <string name="select_widgets_background_color">انتخاب رنگ دلخواه برای پس‌زمینه ویجت</string>
+    <string name="share">هم‌رسانی</string>
+    <string name="enable_location_services">خدمات موقعیت غیرفعال است، برای استفاده از این ویژگی لطفاً آن را فعال سازید.</string>
+    <string name="widget_age_name">تقویم + اوقات شرعی اهل سنت (سن)</string>
+    <string name="select_date">انتخاب تاریخ</string>
+    <string name="age_widget_title">عنوان ویجت</string>
+    <plurals name="n_days">
+        <item quantity="one">%1$s روز</item>
+        <item quantity="other">%1$s روز</item>
+    </plurals>
+    <plurals name="n_months">
+        <item quantity="one">%1$s ماه</item>
+        <item quantity="other">%1$s ماه</item>
+    </plurals>
+    <plurals name="n_years">
+        <item quantity="one">%1$s سال</item>
+        <item quantity="other">%1$s سال</item>
+    </plurals>
+    <string name="preview">پیش‌نمایش</string>
+    <string name="ignore">نادیده گرفتن</string>
+    <string name="theme_default">پیش‌فرض دستگاه</string>
+    <string name="theme_light">فیروزه ای</string>
+    <string name="theme_dark">تاریک</string>
+    <string name="theme_modern">مدرن</string>
+    <string name="theme_aqua">رودبار</string>
+    <string name="theme_black">مشکی</string>
+    <string name="shamsi_calendar">هجری شمسی</string>
+    <string name="islamic_calendar">هجری قمری</string>
+    <string name="gregorian_calendar">میلادی</string>
+    <string name="shamsi_calendar_short">شمسی</string>
+    <string name="islamic_calendar_short">قمری</string>
+    <string name="gregorian_calendar_short">میلادی</string>
+    <string name="shift_work_morning">روزکاری</string>
+    <string name="shift_work_off">استراحت</string>
+    <string name="shift_work_evening">عصرکاری</string>
+    <string name="shift_work_night">شب‌کاری</string>
+    <string name="method_jafari">شیعهٔ دوازده امامی، انجمن لوا، قم</string>
+    <string name="method_mwl">اتّحادیهٔ جهانی اسلام، عربستان سعودی</string>
+    <string name="method_isna">جامعهٔ اسلامی آمریکای شمالی</string>
+    <string name="method_egypt">مرجع عمومی تحقیقات مصر</string>
+    <string name="method_makkah">دانشگاه امّ‌القریٰ، مکه</string>
+    <string name="method_karachi">دانشگاه علوم اسلامی، کراچی</string>
+    <string name="method_tehran">انجمن ژئوفیزیک، دانشگاه تهران</string>
+    <string name="iran_holidays">تعطیلات در ایران</string>
+    <string name="iran_ancient">مناسبت‌های ایران باستان</string>
+    <string name="iran_others">سایر مناسبت‌های ایران</string>
+    <string name="international">مناسبت‌های بین‌المللی و جهانی</string>
+    <string name="afghanistan_holidays">رخصتی‌های افغانستان</string>
+    <string name="afghanistan_others">سایر مناسبت‌های افغانستان</string>
+    <string name="iran_official_events">مرکز تقویم دانشگاه تهران، رسمی</string>
+    <string name="afghanistan_events">افغانستان</string>
+    <string name="other_holidays">سایر</string>
+    <string name="view_source">مشاهده منبع</string>
+    <string name="widget_customization_other_calendars">سایر تقویم‌ها در ویجت ۴×۱ و ۲×۲</string>
+    <string name="widget_customization_non_holiday_events">مناسبت‌های غیر تعطیل در ویجت ۲×۲ و اعلان</string>
+    <string name="widget_customization_owghat">اوقات شرعی در ویجت و اعلان (در صورت تنظیم بودن)</string>
+    <string name="widget_customization_owghat_location">مکان در کنار اوقات شرعی در ویجت ۲×۲ و اعلان (در صورت تنظیم بودن)</string>
+    <string name="farvardin">فروردین</string>
+    <string name="ordibehesht">اردیبهشت</string>
+    <string name="khordad">خرداد</string>
+    <string name="tir">تیر</string>
+    <string name="mordad">مرداد</string>
+    <string name="shahrivar">شهریور</string>
+    <string name="mehr">مهر</string>
+    <string name="aban">آبان</string>
+    <string name="azar">آذر</string>
+    <string name="dey">دی</string>
+    <string name="bahman">بهمن</string>
+    <string name="esfand">اسفند</string>
+    <string name="muharram">مُحَرَّم</string>
+    <string name="safar">صَفَر</string>
+    <string name="rabi_al_awwal">ربیع‌الاول</string>
+    <string name="rabi_al_thani">ربیع‌الثانی</string>
+    <string name="jumada_al_awwal">جمادى‌الاولى</string>
+    <string name="jumada_al_thani">جمادی‌الثانیه</string>
+    <string name="rajab">رجب</string>
+    <string name="shaban">شعبان</string>
+    <string name="ramadan">رمضان</string>
+    <string name="shawwal">شوال</string>
+    <string name="dhu_al_qidah">ذی‌القعده</string>
+    <string name="dhu_al_hijjah">ذی‌الحجه</string>
+    <string name="january">ژانویه</string>
+    <string name="february">فوریه</string>
+    <string name="march">مارس</string>
+    <string name="april">آوریل</string>
+    <string name="may">مه</string>
+    <string name="june">ژوئن</string>
+    <string name="july">ژوئیه</string>
+    <string name="august">اوت</string>
+    <string name="september">سپتامبر</string>
+    <string name="october">اکتبر</string>
+    <string name="november">نوامبر</string>
+    <string name="december">دسامبر</string>
+    <string name="saturday">شنبه</string>
+    <string name="sunday">یکشنبه</string>
+    <string name="monday">دوشنبه</string>
+    <string name="tuesday">سه‌شنبه</string>
+    <string name="wednesday">چهارشنبه</string>
+    <string name="thursday">پنجشنبه</string>
+    <string name="friday">جمعه</string>
+    <string name="sun_view">خورشیدنما</string>
+    <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
+    <string name="enable_new_interface">فعال‌سازی ظاهر جدید</string>
+    <string name="are_you_sure">آیا اطمینان دارید؟</string>
+    <string name="month_pray_times">اوقات شرعی ماه</string>
+    <string name="high_latitudes_method">شیوهٔ عرض‌های جغرافیایی بالا</string>
+    <string name="high_latitudes_night_middle">نیمهٔ شب</string>
+    <string name="high_latitudes_angle_based">بر پایهٔ زاویه</string>
+    <string name="high_latitudes_one_seventh">یک‌هفتم</string>
+    <string name="none">هیچ‌کدام</string>
+    <string name="show_sun_and_moon_path_in_24_hours">نمایش مسیر ماه و خورشید در ۲۴ ساعت آینده</string>
+    <string name="widget_prefer_system_colors">پیروی از رنگ‌بندی سیستم در ویجت‌ها</string>
+    <string name="country_emoji">🇮🇷</string>
+    <string name="nepali_calendar">نپالی</string>
+    <string name="nepali_calendar_short">نپالی</string>
+    <string name="show_secondary_calendar">نمایش تقویم ثانویه</string>
+    <string name="season">فصل</string>
+    <string name="nepal">نپال</string>
+    <string name="solar_eclipse">خورشیدگرفتگی</string>
+    <string name="lunar_eclipse">ماه‌گرفتگی</string>
+    <string name="summer">تابستان</string>
+    <string name="autumn">پاییز</string>
+    <string name="winter">زمستان</string>
+    <string name="spring">بهار</string>
+    <string name="mercury">عطارد</string>
+    <string name="venus">زهره</string>
+    <string name="earth">زمین</string>
+    <string name="mars">مریخ</string>
+    <string name="jupiter">مشتری</string>
+    <string name="saturn">زحل</string>
+    <string name="uranus">اورانوس</string>
+    <string name="neptune">نپتون</string>
+    <string name="pluto">پلوتون</string>
+    <string name="sun">خورشید</string>
+    <string name="moon">ماه</string>
+    <string name="tropical">اعتدالی</string>
+    <string name="calculator">حسابگر</string>
+    <string name="chinese_calendar">تقویم چینی</string>
+    <string name="chinese">چینی</string>
+    <string name="live_wallpaper_settings">تنظیمات کاغذ دیواری زنده</string>
+    <string name="screensaver_settings">تنظیمات محافظ صفحهٔ نمایش</string>
+    <string name="enable_notification">مایلید اعلان تاریخ برنامه فعال شود؟</string>
+    <string name="add_quick_settings_tile">افزودن کاشی تنظیمات سریع</string>
+    <string name="true_north">شمال حقیقی</string>
+    <string name="lock">قفل</string>
+</resources>

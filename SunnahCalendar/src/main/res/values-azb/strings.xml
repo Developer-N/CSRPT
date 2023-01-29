@@ -1,340 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="code">azb</string>
-    <string name="app_name">فارسجا تقویم</string>
-    <string name="cancel">لغو</string>
-    <string name="widget_name">فارسجا تقویم</string>
-    <string name="widget_mini_name">فارسجا تقویم (بالاجا)</string>
-    <string name="latitude">جغرافیایی ائنلم</string>
-    <string name="longitude">جغرافیایی بوْیلام</string>
-    <string name="settings">تنظیم‌لر</string>
-    <string name="exit">چیخیش</string>
-    <string name="enable_native_digits">سایلاری فارسجا گؤستر</string>
-    <string name="native_digits">فارسجا سایلار</string>
-    <string name="showing_clock_on_widget">ساعاتی ویجت‌ده گؤستر</string>
-    <string name="clock_on_widget">ساعات ویجت‌ده</string>
-    <string name="showing_clock_in_24">ساعاتی ۲۴‌لۆک گؤستر</string>
-    <string name="clock_in_24">۲۴ ساعات</string>
-    <string name="about">حاقیندا</string>
-    <string name="gpl_logo">جی‌‌پی‌ال لوگوسو</string>
-    <string name="date_converter">تاریخ چئویرمک</string>
-    <string name="widget_text_color">ویجت‌ین یازی رنگ‌لری</string>
-    <string name="select_widgets_text_color">ویجت‌لره یازی رنگ‌لری سئچمک</string>
-    <string name="notify_date">اعلان گؤستر</string>
-    <string name="enable_notify">تاریخ اعلانی قالارلی گؤسترمک</string>
-    <string name="select_skin">آرا اۆز سئچمک</string>
-    <string name="skin">قابیق</string>
-    <string name="pray_methods">حسابلاما مرجعی</string>
-    <string name="pray_methods_calculation">شرعی اوقات‌ین مرجع‌ین تعیین ائتمک</string>
-    <string name="altitude">ائنلم</string>
-    <string name="altitude_praytime">متیر (ایستدینیز)</string>
-    <string name="coordination">جوگرافی مختصاتلار</string>
-    <string name="gps_location">جی‌پی‌اس‌دن مختصات آلماق</string>
-    <string name="gps_location_help">اوتوماتیک تنظیم اؤلور موقعیت‌ینیز</string>
-    <string name="location">شهر</string>
-    <string name="location_help">لیست‌ده اولمازسا مختصات داخیل ادین</string>
-    <string name="showing_iran_time">ویجت گؤستریشی، اعلان چوبوغو و ایران واختینا هر یئرده، خاریج‌دکی ایرانلی‌لارا اویقون‌دور</string>
-    <string name="iran_time">ایران واختی</string>
-    <string name="compass">قطب‌نما</string>
-    <string name="compass_not_found">قطب‌نما سنسورو تاپیلمادی</string>
-    <string name="language">دیل</string>
-    <string name="version">نسخه %1$s</string>
-    <string name="athan">اذان</string>
-    <string name="athan_alarm_summary">بو نامازلارا اذان دئیل‌سین</string>
-    <string name="athan_alarm">اذان‌لار</string>
-    <string name="athan_volume_summary">اذان سسی تنظیم‌لری</string>
-    <string name="athan_volume">سس</string>
-    <string name="athan_disabled_summary">اذان تنظیم اولماق اۆچون مکان داخیل ادین</string>
-    <string name="athan_gap">واقعی اذان‌لا برنامه اذان‌ین مصافه‌سی</string>
-    <string name="athan_gap_summary">اذان‌دان نچه دقیقه قاباق، اعلان سس‌لن‌سین</string>
-    <string name="close">باغلاماق</string>
-    <string name="open">آچماق</string>
-    <string name="imsak">امساک</string>
-    <string name="fajr">صۆبح اذانی</string>
-    <string name="dhuhr">گۆن‌اورتا اذانی</string>
-    <string name="asr">آخشام اذانی</string>
-    <string name="maghrib">گۆن‌باتما اذانی</string>
-    <string name="isha">ایشا اذانی</string>
-    <string name="sunrise">گۆن چیخما</string>
-    <string name="sunset">گۆن باتما</string>
-    <string name="midnight">گئجه یاریسی</string>
-    <string name="owghat">شرعی اوقات</string>
-    <string name="events">موناسیبت‌لر</string>
-    <string name="events_summary">هانگی موناسیبت‌لر تقویم‌ده گؤستریل‌سین</string>
-    <string name="today">بوگۆن</string>
-    <string name="return_to_today">بوگونه گئت</string>
-    <string name="select_type_date">تقویم سئچ</string>
-    <string name="year">ایل</string>
-    <string name="month">آی</string>
-    <string name="day">گۆن</string>
-    <string name="select_year">ایل سئچ</string>
-    <string name="select_month">آی سئچ</string>
-    <string name="select_day">گۆن سئچ</string>
-    <string name="date_exception">بو تاریخ یانلیشدیر!</string>
-    <string name="in_city_time">افق %1$s</string>
-    <string name="date_copied_clipboard">«%1$s» حافیظه‌یه یازیلدی</string>
-    <string name="stop">ساخلاندی</string>
-    <string name="goto_date">بو تاریخه گئت</string>
-    <string name="go">گئت</string>
-    <string name="pleasewaitgps">بیرآز دایانین... بیر دقیقه سونرا نتیجه اولمازسا، جی‌پی‌اس‌ین آچیق اولماسین‌دان مطمئن اولون. اونو آچماق دا یارارسیز اولسا، گمان‌کی باشقا سئچنئک‌لری تست ائتملی‌سینیز.</string>
-    <string name="notify_date_lock_screen">اعلان‌لاری کلیدلی صفحه‌ده گؤستر</string>
-    <string name="notify_date_lock_screen_summary">سیستم‌ده تنظیم اولسا ایشلیئر</string>
-    <string name="warn_if_events_not_set">موناسیبت‌لری فعال ائتمک اۆچون تنظیماتا گئدین</string>
-    <string name="days_distance">سۆره: %1$s گۆن (~%2$s ایل و %3$s آی و %4$s گۆن)</string>
-    <string name="calendars_priority">تقویم‌لرین گؤستریش اولویتی</string>
-    <string name="calendars_priority_summary">اساس تقویم‌ین تنظیمی و تقویم‌لرین گؤسترمک یا گؤرستممک اولویت‌لری</string>
-    <string name="week_of_year">ایل‌ین هفته‌سی</string>
-    <string name="week_of_year_summary">ایل‌ین هفته‌سین تقویم‌ده گؤسترمک</string>
-    <string name="accept">تأیید</string>
-    <string name="calendar">تقویم</string>
-    <string name="week_start">هفته‌ باشلانقیجی</string>
-    <string name="week_start_summary">هفته‌نین باشلانقیجی خولاصه‌سی</string>
-    <string name="week_ends">هفته تعطیل‌لری</string>
-    <string name="week_ends_summary">هفته‌نین تعطیل گؤستری‌لن گۆن‌لری</string>
-    <string name="search_in_events">اولای‌لاردا آختار</string>
-    <string name="show_device_calendar_events_summary">شخصی اولای گؤستر</string>
-    <string name="show_device_calendar_events">شخصی اولای‌لار</string>
-    <string name="add_event">اولای آرتیر</string>
-    <string name="device_calendar_does_not_support">سیستم‌ئزین تقویمی بونو دستک‌لمیر</string>
-    <string name="customize_widget_summary">اعلان‌لاردا و ویجت‌ده گؤستریلن‌لر</string>
-    <string name="customize_widget">اعلان‌لاری و ویجتی شخصی ائتمک</string>
-    <string name="add">آرتیر</string>
-    <string name="which_one_to_show">هانگی گؤستریل‌سین</string>
-    <string name="notification_athan">اذانی اعلان ائله</string>
-    <string name="enable_notification_athan">اذانی اعلان ائتمک و وسیله‌نین تیترئتمکی</string>
-    <string name="returned_to_default">ایلک حالته دؤندۆ</string>
-    <string name="custom_notification_is_set">ایستدیگ‌ین سس تنظیم اولدو</string>
-    <string name="custom_athan">اذان سئچ‌یمی</string>
-    <string name="default_athan_summary">اذانی ایلک حالته دؤند‌رمک</string>
-    <string name="default_athan">ایلک اذان</string>
-    <string name="abdulbasit">عبدالباسط عبدالصمد</string>
-    <string name="about_license">مؤجویزلر</string>
-    <string name="about_license_title">برنامه‌نین مؤجویزلری</string>
-    <string name="about_license_sum">مؤجویز GPLv3، کیتاب‌خانا مؤجویزلرین شرایط‌ین بررسی ائلین</string>
-    <string name="help">یاردیم</string>
-    <string name="about_report_bug">خطالاری بیلدیرین</string>
-    <string name="about_report_bug_sum">خطالاری بیلدیرمک اوچون بوردا یازین</string>
-    <string name="about_sendMail">ایمیل</string>
-    <string name="about_noClient">!ایمیله گوره برنامه یوخدور</string>
-    <string name="about_developers">گلیشتیر‌ن‌لر حاقیندا</string>
-    <string name="about_support_developers">گلیشتیر‌ن‌لری دستک‌لئین</string>
-    <string name="about_email_sum">شخصی ایمیل برنامه صاحیب‌ینه گؤندرمک</string>
-    <string name="gps_internet_desc">اینترنت و جی‌پی‌اس‌ی آچیق بیراخین، برنامه هر مکاندا بیر کئز بو اریشیم‌لره احتیاجی اولاجاق‌دیر، مکانیز دئیش‌یلن دورومدا یئنی‌دن تنظیم گرکلی‌دیر</string>
-    <string name="start_of_year_diff">%1$s گۆن (~%2$s هفته یا %3$s آی) ایل‌ین باشیندان</string>
-    <string name="end_of_year_diff">%1$s گۆن (~%2$s هفته یا %3$s آی) ایل‌ین سونونا</string>
-    <!-- Sun Info -->
-    <string name="sunriseSunView">گۆن چیخان</string>
-    <string name="middaySunView">گۆن اورتا</string>
-    <string name="sunsetSunView">گۆن باتان</string>
-    <string name="no_event">موناسیبت یوخدور</string>
-    <string name="length_of_day">گۆن سۆره‌سی</string>
-    <string name="remaining_daylight">قالان</string>
-    <string name="n_hours_minutes">%1$sس %2$sد</string>
-    <string name="more">چوخ</string>
-    <string name="zodiac">اولدوزلار شکیلی</string>
-    <string name="capricorn">اوغلاق</string>
-    <string name="aquarius">قووا</string>
-    <string name="pisces">بالیق‌لار</string>
-    <string name="aries">قوچ</string>
-    <string name="taurus">بوغا</string>
-    <string name="gemini">ائکیزلر</string>
-    <string name="cancer">یئنگئچ</string>
-    <string name="leo">آسلان</string>
-    <string name="virgo">باشاق</string>
-    <string name="libra">ترازی</string>
-    <string name="scorpio">عقرب</string>
-    <string name="sagittarius">یای</string>
-    <string name="year_name">ایل آدی</string>
-    <string name="year1">مئیمون</string>
-    <string name="year2">خوروز</string>
-    <string name="year3">ایت</string>
-    <string name="year4">دوموز</string>
-    <string name="year5">سیچان</string>
-    <string name="year6">اینک</string>
-    <string name="year7">قاپلان</string>
-    <string name="year8">دوشان</string>
-    <string name="year9">اژد‌ها</string>
-    <string name="year10">ایلان</string>
-    <string name="year11">آت</string>
-    <string name="year12">قویون</string>
-    <string name="level">تاراز</string>
-    <string name="calibrate_compass_summary">وسیله‌نین دوز عملکردینه‌گوره مغناطیس سنسورلاردان اوزاق توتون و بیر کئز دولانین</string>
-    <string name="set_location">آی و گۆنو گؤسترمک اۆچون موقعیت تنظیم ائلین.</string>
-    <string name="moonInScorpio">عقربه‌دکی آی گون‌لری</string>
-    <string name="astronomical_info">آسترونومیا حاقیندا معلومات</string>
-    <string name="astronomical_info_summary">آسترونومیا ایطلاعات‌ین گؤسترمک</string>
-    <string name="islamic_offset">ایسلامی تقویم‌ین تنظیم ائتمک</string>
-    <string name="islamic_offset_summary">تقویم‌ین ایصلاحینا قاییت‌ماق</string>
-    <string name="pref_widget">ویجت</string>
-    <string name="pref_notification">اعلان</string>
-    <string name="pref_interface">آرا اۆز</string>
-    <string name="resume">داوام</string>
-    <string name="continue_button">داوام</string>
-    <!--Permissions-->
-    <string name="location_access">مکان قونومونا ایجازه</string>
-    <string name="phone_location_required">برنامه‌نین بوراسی مکان قونومونا ایجازه ایستر یوخسا اؤزونوز موقعیت ورین</string>
-    <string name="calendar_access">وسیله‌زین تقویم‌ینه ایجازه ایستر</string>
-    <string name="phone_calendar_required">اول‌جه وسیله تقویمی‌نه داخیل اولماق اوچون ایجازه ورملی‌سینیز، اگر بو ایجازه وریلسه، برنامه شخصی اولای‌لاردا تقویم‌ده گؤستره بیلر</string>
-    <string name="previous_x">قاباق‌کی %1$s</string>
-    <string name="next_x">سونراکی %1$s</string>
-    <string name="week_days_name_column">ستون %1$s گۆن‌لرین جدول‌ینده</string>
-    <string name="equivalent_to">برابردی</string>
-    <string name="holiday_reason">تعطیل بو موناسیبته %1$s</string>
-    <string name="nth_week_of_year">هفته‌سی %1$s ایل</string>
-    <string name="north">قوزئی</string>
-    <string name="east">دوغو</string>
-    <string name="south">گۆنئی</string>
-    <string name="west">باتی</string>
-    <string name="qibla">قیبله</string>
-    <string name="outdated_app">تقویم آپدیت دئیل؛ موناسیبت‌لرین دوغرو اولماماق ایمکانی وار</string>
-    <string name="update">آپدیت</string>
-    <string name="spring_equinox">یئنی ایلین تحویل لحظه‌سی %1$s: %2$s</string>
-    <string name="shift_work_settings">ایشلمه شیفت‌ین تنظیمی</string>
-    <string name="ask_user_to_set_location">شرعی اوقات‌ین گؤستریش‌ینه موقعیت‌یزی تنظیم ائدین</string>
-    <string name="remove">سیل</string>
-    <string name="shift_work_starting_date">ایش شیفتی‌نین باشلانق‌یجی تقویم‌ده، %1$s سئچ‌یلن گۆندن اولاجاق‌دیر.</string>
-    <string name="shift_work_starting_date_edit">ایش شیفتی، %1$s سئچ‌یلن گۆندن قاباق اولاجاقدیر.</string>
-    <string name="shift_work_reset_button">ائتکی‌سیزلشتیرمک یادا یئنی‌دن تنظیم ائتمک</string>
-    <plurals name="n_minutes">
-        <item quantity="one">%1$s دقیقه</item>
-        <item quantity="other">%1$s دقیقه</item>
-    </plurals>
-    <plurals name="n_hours">
-        <item quantity="one">%1$s ساعات</item>
-        <item quantity="other">%1$s ساعات</item>
-    </plurals>
-    <string name="spaced_and">" و "</string>
-    <string name="spaced_comma">"، "</string>
-    <string name="spaced_colon">": "</string>
-    <string name="device_info">وسیله‌نین اطلاعاتی</string>
-    <string name="center_align_widgets_summary">ویجتی آرادا سالماق ۲×۲ و ۴×۱</string>
-    <string name="center_align_widgets">ویجتی آرادا سالماق</string>
-    <string name="n_till">%1$s تا %2$s</string>
-    <plurals name="shift_work_record_title">
-        <item quantity="one">%1$s گۆن %2$s</item>
-        <item quantity="other">%1$s گۆن %2$s</item>
-    </plurals>
-    <string name="recurs">تکرار اولسون</string>
-    <string name="am">گ.ق</string>
-    <string name="pm">گ.س</string>
-    <string name="holiday">تعطیل</string>
-    <string name="shift_work_days_head">اوزانلیق</string>
-    <string name="prefer_linear_date_summary">ویجت و اعلاندا ۱ فروردین ۱۳۹۰ یئرینه، ۱۳۹۰/۱/۱ ایشلد</string>
-    <string name="prefer_linear_date">ترجیهن تاریخ‌ین عددی گؤسترمکی</string>
-    <string name="month_overview">آی‌ین خصوصی گۆن‌لری</string>
-    <string name="map">نقشه</string>
-    <string name="ascending_athan_volume">اذان سسی چوخالما</string>
-    <string name="enable_ascending_athan_volume">اذان سسی بیر دقیقه بویوندا ان‌چوخ اولسون</string>
-    <string name="widget_background_color">ویجت‌ین آرخا رنگی</string>
-    <string name="select_widgets_background_color">ویجی آرخاسینا ایستدینیز رنگی سئچین</string>
-    <string name="share">پایلاش</string>
-    <string name="enable_location_services">لوکئیشن سرویسی آچیق دئیل، لطفا بو قابلیت اۆچون اونو آچین</string>
-    <string name="widget_age_name">فارسجا تقویم (یاش)</string>
-    <string name="age_widget_title">عنوان ویجت</string>
-    <string name="select_date">انتخاب تاریخ</string>
-    <plurals name="n_days">
-        <item quantity="one">%1$s گۆن</item>
-        <item quantity="other">%1$s گۆن</item>
-    </plurals>
-    <plurals name="n_months">
-        <item quantity="one">%1$s آی</item>
-        <item quantity="other">%1$s آی</item>
-    </plurals>
-    <plurals name="n_years">
-        <item quantity="one">%1$s ایل</item>
-        <item quantity="other">%1$s ایل</item>
-    </plurals>
-    <string name="preview">سیناق گؤستریش</string>
-    <string name="ignore">خبردارلیقلارا</string>
-    <!--Theme-->
-    <string name="theme_default">سیستم سِچیمی</string>
-    <string name="theme_light">ایشیق</string>
-    <string name="theme_dark">توخ</string>
-    <string name="theme_modern">معاصیر</string>
-    <string name="theme_blue">آراز</string>
-    <string name="theme_black">قارا</string>
-    <!--Calendars-->
-    <string name="shamsi_calendar">گونش تقویمی</string>
-    <string name="islamic_calendar">هیجری تقویمی</string>
-    <string name="gregorian_calendar">میلادی تقویمی</string>
-    <string name="shamsi_calendar_short">گونش</string>
-    <string name="islamic_calendar_short">هیجری</string>
-    <string name="gregorian_calendar_short">میلادی</string>
-    <!--Shift Work-->
-    <string name="shift_work_morning">ایش گونو</string>
-    <string name="shift_work_off">ایستراحت گونو</string>
-    <string name="shift_work_evening">آخشام‌لار</string>
-    <string name="shift_work_night">گئجه‌لر</string>
-    <!--Pray Time Calculation Methods-->
-    <string name="method_jafari">اون‌ایکی ایماملی شیعه‌لری، لوا انجمنی، قم</string>
-    <string name="method_mwl">ایسلام بین‌الخالق بیرلیگی، عربیستان سعودی</string>
-    <string name="method_isna">قوزئی آمریکا ایسلام اهالی‌سی</string>
-    <string name="method_egypt">میصر مدنیت مرکزی</string>
-    <string name="method_makkah">مکه ام‌القرا بیلیم‌یوردو</string>
-    <string name="method_karachi">کراچی ایسلام بیلیم‌یوردو</string>
-    <string name="method_tehran">تهران ژئوفیزیک بیلیم‌یوردو</string>
-    <!--Events-->
-    <string name="iran_holidays">ایران خصوصی گون‌لری</string>
-    <string name="iran_ancient">ایران تاریخی خصوصی گون‌لری</string>
-    <string name="iran_others">ایران دیگر خصوصی گون‌لری</string>
-    <string name="international">بین‌الخالق خصوصی گون‌لری</string>
-    <string name="afghanistan_holidays">افغانیستان خصوصی گون‌لری</string>
-    <string name="afghanistan_others">افغانیستان دیگر خصوصی گون‌لری</string>
-    <string name="iran_official_events">مرکز تقویم دانشگاه تهران، رسمی</string>
-    <string name="afghanistan_events">افغانستان</string>
-    <string name="other_holidays">سایر</string>
-    <string name="view_source">مشاهده منبع</string>
-    <!--Widget customizations-->
-    <string name="widget_customization_other_calendars">دیگر تقویم‌لر ویجت‌ده ۴×۱ و ۲×۲</string>
-    <string name="widget_customization_non_holiday_events">تعطیل‌سیز گون‌لری ویجت ۲×۲ و اعلان</string>
-    <string name="widget_customization_owghat">شرعی واخت‌لار ویجت‌ده ۲×۲ و اعلان (اگر تنظیم اولسا)</string>
-    <string name="widget_customization_owghat_location">مکان، شرعی واخت‌لار یانین‌دا ویجت‌ده ۲×۲ و اعلان (اگر تنظیم اولسا)</string>
-    <string name="farvardin">فروردین</string>
-    <string name="ordibehesht">اوردیبهشت</string>
-    <string name="khordad">خورداد</string>
-    <string name="tir">تیر</string>
-    <string name="mordad">مورداد</string>
-    <string name="shahrivar">شهریور</string>
-    <string name="mehr">مهر</string>
-    <string name="aban">آبان</string>
-    <string name="azar">آذر</string>
-    <string name="dey">دی</string>
-    <string name="bahman">بهمن</string>
-    <string name="esfand">اسفند</string>
-    <string name="muharram">موحررم</string>
-    <string name="safar">صفر</string>
-    <string name="rabi_al_awwal">ربيع الاوول</string>
-    <string name="rabi_al_thani">ربيع الآخیر</string>
-    <string name="jumada_al_awwal">جمادى الاوول</string>
-    <string name="jumada_al_thani">جمادى الآخیر</string>
-    <string name="rajab">رجب</string>
-    <string name="shaban">شعبان</string>
-    <string name="ramadan">رمضان</string>
-    <string name="shawwal">شوال</string>
-    <string name="dhu_al_qidah">ذیقعده</string>
-    <string name="dhu_al_hijjah">ذیحججه</string>
-    <string name="january">ژانویه</string>
-    <string name="february">فوریه</string>
-    <string name="march">مارس</string>
-    <string name="april">آوریل</string>
-    <string name="may">مئی</string>
-    <string name="june">ژوئن</string>
-    <string name="july">ژوئیه</string>
-    <string name="august">آقوست</string>
-    <string name="september">سپتامبر</string>
-    <string name="october">اوْکتوبر</string>
-    <string name="november">نوْوامبر</string>
-    <string name="december">دسامبر</string>
-    <string name="saturday">يئل‌گونو</string>
-    <string name="sunday">سۆدگونو</string>
-    <string name="monday">دۇزگونو</string>
-    <string name="tuesday">آراگون</string>
-    <string name="wednesday">اوْدگونو</string>
-    <string name="thursday">سۇگونو</string>
-    <string name="friday">آینی‌گون</string>
-    <string name="sun_view">خورشیدنما</string>
-    <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
-    <string name="country_emoji">🇮🇷</string>
-    <string name="nepal">نپال</string>
-    <string name="calculator">ماشین حساب</string>
-</resources>

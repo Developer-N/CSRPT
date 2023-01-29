@@ -28,7 +28,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 
 ## License
 
-Copyright (C) 2018-2022  Namoo Developer Group 
+Copyright (C) 2018-2023  Namoo Developer Group 
 
 This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by 

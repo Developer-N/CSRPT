@@ -1,0 +1,853 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+
+    <attr name="navigationBarColor" format="reference" />
+    <attr name="colorMonthsBackground" format="reference" />
+    <attr name="colorCard" format="reference" />
+    <attr name="colorAppointment" format="reference" />
+    <attr name="colorBackground" format="reference" />
+    <attr name="colorTextPrimary" format="reference" />
+    <attr name="colorIcon" format="reference" />
+    <attr name="colorTextNormal" format="reference" />
+    <attr name="colorTextSecond" format="reference" />
+    <attr name="colorTextHoliday" format="reference" />
+    <attr name="colorHoliday" format="reference" />
+    <attr name="colorTextDrawer" format="reference" />
+    <attr name="colorTextDay" format="reference" />
+    <attr name="colorTextToday" format="reference" />
+    <attr name="colorTextDayName" format="reference" />
+    <attr name="colorMonthSwitch" format="reference" />
+    <attr name="colorTextAthan" format="reference" />
+    <attr name="colorDivider" format="reference" />
+    <attr name="colorCurrentDay" format="reference" />
+    <attr name="colorTextDayCurrent" format="reference" />
+    <attr name="colorSelectDay" format="reference" />
+    <attr name="colorEventIndicator" format="reference" />
+    <attr name="colorDrawerBackground" format="reference" />
+    <attr name="colorDrawerSelect" format="reference" />
+    <attr name="colorDrawerIcon" format="reference" />
+    <attr name="coloredTabBackground" format="reference" />
+    <attr name="coloredTabTextColor" format="reference" />
+    <attr name="normalTabTextColor" format="reference" />
+    <attr name="appToolbarTheme" format="reference" />
+    <attr name="appToolbarPopupTheme" format="reference" />
+    <attr name="menuIconColor" format="reference" />
+    <attr name="dragIconColor" format="reference" />
+    <attr name="coloredTabIndicatorColor" format="reference" />
+    <attr name="colorTextDaySelected" format="reference" />
+    <attr name="dialogBackgroundColor" format="color" />
+    <attr name="colorWarning" format="reference" />
+
+    <!-- its v31 version is more interesting -->
+    <style name="WidgetTheme" />
+
+    <!-- its v31 version is more interesting -->
+    <color name="widget_background">@android:color/transparent</color>
+
+    <style name="AlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog" />
+
+    <style name="BottomSheetAppearance">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/common_radius</item>
+        <item name="cornerSizeTopRight">@dimen/common_radius</item>
+    </style>
+
+    <style name="BottomSheetStyle" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="shapeAppearance">@style/BottomSheetAppearance</item>
+    </style>
+
+    <style name="BottomSheetDialogTheme" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+    </style>
+
+    <style name="SplashScreenTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowTranslucentStatus" tools:targetApi="lollipop">true</item>
+        <item name="android:windowTranslucentNavigation" tools:targetApi="lollipop">true</item>
+        <item name="android:windowSplashscreenContent" tools:targetApi="o"> @drawable/app_splash
+        </item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">
+            @drawable/app_icon_animated
+        </item>
+        <item name="android:windowSplashScreenAnimationDuration" tools:targetApi="s">1000</item>
+        <!-- Set Android 5 recent apps tab color https://stackoverflow.com/q/26899820 -->
+        <item name="colorPrimary">@color/cyan_primary</item>
+    </style>
+
+    <style name="BaseDarkTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimaryContainer">@color/primary_container_dark</item>
+        <item name="colorSecondaryContainer">@color/secondary_container_dark</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="materialAlertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="appToolbarTheme">@style/ThemeOverlay.Material3.Dark</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorDark</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorDark</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorDark</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorDark</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorDark</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorDark</item>
+        <item name="appToolbarPopupTheme">@style/ThemeOverlay.Material3.Dark</item>
+        <item name="dialogBackgroundColor">#70606060</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">
+            @android:color/transparent
+        </item>
+        <item name="colorWarning">@color/color_warning_dark</item>
+    </style>
+
+    <style name="BaseLightTheme" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimaryContainer">@color/primary_container_light</item>
+        <item name="colorSecondaryContainer">@color/secondary_container_light</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="materialAlertDialogTheme">@style/AlertDialogTheme</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="appToolbarTheme">@style/ThemeOverlay.Material3.Dark</item>
+        <item name="android:typeface">sans</item>
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+        <item name="SunViewHorizonColor">@color/sViewHorizonColorLight</item>
+        <item name="SunViewTimelineColor">@color/sViewTimelineColorLight</item>
+        <item name="SunViewTaglineColor">@color/sViewTaglineColorLight</item>
+        <item name="SunViewSunriseTextColor">@color/sViewSunriseTextColorLight</item>
+        <item name="SunViewMiddayTextColor">@color/sViewMiddayTextColorLight</item>
+        <item name="SunViewSunsetTextColor">@color/sViewSunsetTextColorLight</item>
+        <item name="appToolbarPopupTheme">@style/ThemeOverlay.Material3.Light</item>
+        <item name="dialogBackgroundColor">#C0FFFFFF</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">
+            @android:color/transparent
+        </item>
+        <item name="colorWarning">@color/color_warning_light</item>
+    </style>
+
+    <!-- Their actual definition is in v31/styles.xml -->
+    <style name="DynamicLightTheme" parent="LightTheme" />
+
+    <style name="DynamicDarkTheme" parent="DarkTheme" />
+
+    <style name="DynamicBlackTheme" parent="DarkTheme" />
+
+    <style name="DarkTheme" parent="BaseDarkTheme">
+        <item name="android:windowBackground">@color/dark_primary</item>
+
+        <item name="colorMonthsBackground">@color/dark_primary</item>
+        <item name="colorPrimary">@color/dark_accent</item>
+        <item name="colorPrimaryDark">@color/dark_primary_dark</item>
+        <item name="colorAccent">@color/dark_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/dark_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/dark_primary</item>
+
+        <item name="colorCard">@color/dark_card_background</item>
+        <item name="colorBackground">@color/dark_background</item>
+        <item name="colorTextPrimary">@color/dark_text_primary</item>
+        <item name="colorIcon">@color/dark_icon</item>
+        <item name="colorTextNormal">@color/dark_text_normal</item>
+        <item name="colorTextSecond">@color/dark_text_second</item>
+        <item name="colorTextHoliday">@color/dark_text_holiday</item>
+        <item name="colorHoliday">@color/dark_holiday</item>
+        <item name="colorTextDrawer">@color/dark_text_drawer</item>
+        <item name="colorTextDay">@color/dark_text_day</item>
+        <item name="colorTextDayCurrent">@color/dark_text_day</item>
+        <item name="colorTextToday">@color/dark_text_today</item>
+        <item name="colorTextDayName">@color/dark_text_day_name</item>
+        <item name="colorTextAthan">@color/dark_text_athan</item>
+        <item name="colorDivider">@color/dark_divider</item>
+        <item name="colorCurrentDay">@color/dark_current_day</item>
+        <item name="colorSelectDay">@color/dark_select_day</item>
+        <item name="colorEventIndicator">@color/dark_event_indicator</item>
+        <item name="colorDrawerBackground">@color/dark_drawer_background</item>
+        <item name="colorDrawerSelect">@color/dark_drawer_select</item>
+        <item name="colorDrawerIcon">@color/dark_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/dark_month_switch</item>
+
+        <item name="android:textColor">@color/dark_text_normal</item>
+
+        <item name="coloredTabBackground">@color/dark_card_background</item>
+        <item name="coloredTabTextColor">@color/dark_accent</item>
+        <item name="normalTabTextColor">@color/tab_background_select_dark</item>
+
+        <item name="menuIconColor">@color/dark_menu_icon_color</item>
+        <item name="dragIconColor">@color/dark_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/dark_accent</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+    </style>
+
+    <style name="BlackTheme" parent="BaseDarkTheme">
+        <item name="android:windowBackground">@color/black_primary</item>
+
+        <item name="colorMonthsBackground">@color/black_primary</item>
+        <item name="colorPrimary">@color/black_accent</item>
+        <item name="colorPrimaryDark">@color/black_primary_dark</item>
+        <item name="colorAccent">@color/black_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/black_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/black_primary</item>
+
+        <item name="colorCard">@color/black_card_background</item>
+        <item name="colorBackground">@color/black_background</item>
+        <item name="colorTextPrimary">@color/black_text_primary</item>
+        <item name="colorIcon">@color/black_icon</item>
+        <item name="colorTextNormal">@color/black_text_normal</item>
+        <item name="colorTextSecond">@color/black_text_second</item>
+        <item name="colorTextHoliday">@color/black_text_holiday</item>
+        <item name="colorHoliday">@color/black_holiday</item>
+        <item name="colorTextDrawer">@color/black_text_drawer</item>
+        <item name="colorTextDay">@color/black_text_day</item>
+        <item name="colorTextDayCurrent">@color/black_text_day</item>
+        <item name="colorTextToday">@color/black_text_today</item>
+        <item name="colorTextDayName">@color/black_text_day_name</item>
+        <item name="colorTextAthan">@color/black_text_athan</item>
+        <item name="colorDivider">@color/black_divider</item>
+        <item name="colorCurrentDay">@color/black_current_day</item>
+        <item name="colorSelectDay">@color/black_select_day</item>
+        <item name="colorEventIndicator">@color/black_event_indicator</item>
+        <item name="colorDrawerBackground">@color/black_drawer_background</item>
+        <item name="colorDrawerSelect">@color/black_drawer_select</item>
+        <item name="colorDrawerIcon">@color/black_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/black_month_switch</item>
+
+        <item name="android:textColor">@color/black_text_normal</item>
+
+        <item name="coloredTabBackground">@color/black_card_background</item>
+        <item name="coloredTabTextColor">@color/black_accent</item>
+        <item name="normalTabTextColor">@color/tab_background_select_dark</item>
+
+        <item name="menuIconColor">@color/black_menu_icon_color</item>
+        <item name="dragIconColor">@color/black_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/black_accent</item>
+        <item name="colorTextDaySelected">@color/black_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+    </style>
+
+    <style name="DarkGreenTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/light_primary</item>
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorPrimaryDark">@color/light_primary_dark</item>
+        <item name="colorAccent">@color/light_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/light_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/light_primary</item>
+
+        <item name="colorCard">@color/light_card_background</item>
+        <item name="colorBackground">@color/light_background</item>
+        <item name="colorTextPrimary">@color/light_text_primary</item>
+        <item name="colorIcon">@color/light_icon</item>
+        <item name="colorTextNormal">@color/light_text_normal</item>
+        <item name="colorTextSecond">@color/light_text_second</item>
+        <item name="colorTextHoliday">@color/light_text_holiday</item>
+        <item name="colorHoliday">@color/light_holiday</item>
+        <item name="colorTextDrawer">@color/light_text_drawer</item>
+        <item name="colorTextDay">@color/light_text_day</item>
+        <item name="colorTextDayCurrent">@color/light_text_day</item>
+        <item name="colorTextToday">@color/light_text_today</item>
+        <item name="colorTextDayName">@color/light_text_day_name</item>
+        <item name="colorTextAthan">@color/light_text_athan</item>
+        <item name="colorDivider">@color/light_divider</item>
+        <item name="colorCurrentDay">@color/light_current_day</item>
+        <item name="colorSelectDay">@color/light_select_day</item>
+        <item name="colorEventIndicator">@color/light_event_indicator</item>
+        <item name="colorDrawerBackground">@color/light_drawer_background</item>
+        <item name="colorDrawerSelect">@color/light_drawer_select</item>
+        <item name="colorDrawerIcon">@color/light_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/light_month_switch</item>
+
+        <item name="android:textColor">@color/light_text_normal</item>
+
+        <item name="coloredTabBackground">@color/light_accent</item>
+        <item name="coloredTabTextColor">@color/light_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/light_menu_icon_color</item>
+        <item name="dragIconColor">@color/light_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/light_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+    </style>
+
+    <style name="AquaTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@drawable/blue_shade_background</item>
+        <item name="colorPrimary">@color/blue_primary</item>
+        <item name="colorPrimaryDark">@color/blue_primary</item>
+        <item name="colorAccent">@color/blue_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/blue_icon_drawer
+        </item>
+        <item name="navigationBarColor">@color/blue_primary</item>
+        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">false</item>
+
+        <item name="colorCard">@color/blue_card_background</item>
+        <item name="colorBackground">@color/blue_background</item>
+        <item name="colorTextPrimary">@color/blue_text_primary</item>
+        <item name="colorIcon">@color/blue_icon</item>
+        <item name="colorTextNormal">@color/blue_text_normal</item>
+        <item name="colorTextSecond">@color/blue_text_second</item>
+        <item name="colorTextHoliday">@color/blue_text_holiday</item>
+        <item name="colorHoliday">@color/blue_holiday</item>
+        <item name="colorTextDrawer">@color/blue_text_drawer</item>
+        <item name="colorTextDay">@color/blue_text_day</item>
+        <item name="colorTextDayCurrent">@color/blue_text_day</item>
+        <item name="colorTextToday">@color/blue_text_today</item>
+        <item name="colorTextDayName">@color/blue_text_day_name</item>
+        <item name="colorTextAthan">@color/blue_text_athan</item>
+        <item name="colorDivider">@color/blue_divider</item>
+        <item name="colorCurrentDay">@color/blue_current_day</item>
+        <item name="colorSelectDay">@color/blue_select_day</item>
+        <item name="colorEventIndicator">@color/blue_event_indicator</item>
+        <item name="colorDrawerBackground">@color/blue_drawer_background</item>
+        <item name="colorDrawerSelect">@color/blue_drawer_select</item>
+        <item name="colorDrawerIcon">@color/blue_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/blue_month_switch</item>
+
+        <item name="android:textColor">@color/blue_text_normal</item>
+
+        <item name="coloredTabBackground">@color/blue_primary</item>
+        <item name="coloredTabTextColor">@color/blue_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/blue_menu_icon_color</item>
+        <item name="dragIconColor">@color/blue_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/blue_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+    </style>
+
+    <style name="ModernTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/modern_primary</item>
+        <item name="colorPrimary">@color/modern_accent</item>
+        <item name="colorPrimaryDark">@color/modern_primary</item>
+        <item name="colorAccent">@color/modern_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/modern_primary
+        </item>
+        <item name="navigationBarColor">@color/modern_primary</item>
+        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">true</item>
+
+        <item name="colorCard">@color/modern_card_background</item>
+        <item name="colorBackground">@color/modern_background</item>
+        <item name="colorTextPrimary">@color/modern_text_primary</item>
+        <item name="colorIcon">@color/modern_icon</item>
+        <item name="colorTextNormal">@color/modern_text_normal</item>
+        <item name="colorTextSecond">@color/modern_text_second</item>
+        <item name="colorTextHoliday">@color/modern_text_holiday</item>
+        <item name="colorHoliday">@color/modern_holiday</item>
+        <item name="colorTextDrawer">@color/modern_text_drawer</item>
+        <item name="colorTextDay">@color/modern_text_day</item>
+        <item name="colorTextDayCurrent">@color/modern_text_day</item>
+        <item name="colorTextToday">@color/modern_text_today</item>
+        <item name="colorTextDayName">@color/modern_text_day_name</item>
+        <item name="colorTextAthan">@color/modern_text_athan</item>
+        <item name="colorDivider">@color/modern_divider</item>
+        <item name="colorCurrentDay">@color/modern_current_day</item>
+        <item name="colorSelectDay">@color/modern_select_day</item>
+        <item name="colorEventIndicator">@color/modern_event_indicator</item>
+        <item name="colorDrawerBackground">@color/modern_drawer_background</item>
+        <item name="colorDrawerSelect">@color/modern_drawer_select</item>
+        <item name="colorDrawerIcon">@color/modern_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/modern_month_switch</item>>
+
+        <item name="android:textColor">@color/modern_text_normal</item>
+
+        <item name="coloredTabBackground">@color/modern_card_background</item>
+        <item name="coloredTabTextColor">@color/tab_background_select</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/modern_menu_icon_color</item>
+        <item name="dragIconColor">@color/modern_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/modern_accent</item>
+        <item name="colorTextDaySelected">@color/modern_text_normal</item>
+        <item name="colorAppointment">@color/modern_accent</item>
+
+        <item name="android:windowLightStatusBar" tools:ignore="NewApi">true</item>
+        <item name="appToolbarTheme">@style/ThemeOverlay.Material3.Light</item>
+    </style>
+
+    <style name="AthanTheme" parent="ModernTheme">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentNavigation" tools:ignore="NewApi">true</item>
+        <item name="android:navigationBarColor" tools:ignore="NewApi">@android:color/white</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+
+    <!-- But in v31/styles.xml it is overridden to not have shadow -->
+    <style name="WidgetTextStyle" parent="ShadowTextStyle" />
+
+    <style name="ShadowTextStyle">
+        <item name="android:paddingLeft">1dp</item>
+        <item name="android:paddingBottom">1dp</item>
+        <item name="android:textColor">#ffffffff</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">1</item>
+        <item name="fontFamily">sans-serif</item>
+    </style>
+
+    <style name="AboutCard">
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_marginRight">5dp</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="TabLayout" parent="Widget.Material3.TabLayout">
+        <item name="tabIndicatorColor">?attr/colorAccent</item>
+        <item name="tabIndicatorHeight">3dp</item>
+        <item name="android:textSize">@dimen/text_size_title</item>
+        <item name="tabIconTint">?attr/colorTextSecond</item>
+        <item name="tabTextAppearance">@style/TabTextAppearance</item>
+        <item name="tabBackground">?attr/colorCard</item>
+        <item name="tabTextColor">?attr/normalTabTextColor</item>
+    </style>
+
+    <style name="TabLayoutColored" parent="Widget.Material3.TabLayout.OnSurface">
+        <item name="tabIndicatorColor">?attr/coloredTabIndicatorColor</item>
+        <item name="tabTextAppearance">@style/TabTextAppearance</item>
+        <item name="tabBackground">?attr/coloredTabBackground</item>
+        <item name="tabTextColor">?attr/coloredTabTextColor</item>
+    </style>
+
+    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+        <!--<item name="textAllCaps">false</item>-->
+        <item name="android:letterSpacing" tools:targetApi="lollipop">0</item>
+    </style>
+
+    <!-- Transparent background for BottomSheetDialog, https://stackoverflow.com/a/50645769 -->
+    <style name="TransparentBottomSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/TransparentBottomSheetDialogStyle</item>
+    </style>
+
+    <style name="TransparentBottomSheetDialogStyle" parent="Widget.Design.BottomSheet.Modal">
+        <!-- "background" isn't enough here apparently -->
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="astronomyChip">
+        <item name="ensureMinTouchTargetSize">false</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="chipSpacingVertical">0dp</item>
+        <item name="chipMinHeight">26dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:clickable">false</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="chipStrokeColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Don't apply auto size to sun and moon text as it causes text get smaller and smaller -->
+    <style name="astronomyChipCaptionAutoSize">
+        <item name="android:maxLines">1</item>
+        <item name="autoSizeMinTextSize">8dp</item>
+        <item name="autoSizeTextType">uniform</item>
+    </style>
+
+    <style name="AppOutlinedButton" parent="Widget.Material3.Button.OutlinedButton" />
+
+    <style name="AppTextButton" parent="Widget.Material3.Button.TextButton" />
+
+    <style name="AppChipChoice" parent="Widget.Material3.Chip.Assist" />
+
+    <style name="AppTextInputLayoutFilledBox" parent="Widget.Material3.TextInputLayout.FilledBox" />
+
+    <style name="AppTextInputLayoutOutlinedBox" parent="Widget.Material3.TextInputLayout.OutlinedBox" />
+
+    <style name="AppTextInputLayoutFilledBoxDenseExposedDropdownMenu" parent="Widget.Material3.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu" />
+
+    <!--   NThemes-->
+    <style name="ToolbarThemeWhite" parent="@style/ThemeOverlay.Material3.Dark">
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+    </style>
+
+    <style name="LightTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/cyan_primary</item>
+        <item name="colorPrimary">@color/cyan_primary</item>
+        <item name="colorPrimaryDark">@color/cyan_primary_dark</item>
+        <item name="colorAccent">@color/cyan_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/cyan_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/cyan_primary</item>
+
+        <item name="colorCard">@color/cyan_card_background</item>
+        <item name="colorBackground">@color/cyan_background</item>
+        <item name="colorTextPrimary">@color/cyan_text_primary</item>
+        <item name="colorIcon">@color/cyan_icon</item>
+        <item name="colorTextNormal">@color/cyan_text_normal</item>
+        <item name="colorTextSecond">@color/cyan_text_second</item>
+        <item name="colorTextHoliday">@color/cyan_text_holiday</item>
+        <item name="colorHoliday">@color/cyan_holiday</item>
+        <item name="colorTextDrawer">@color/cyan_text_drawer</item>
+        <item name="colorTextDay">@color/cyan_text_day</item>
+        <item name="colorTextDayCurrent">@color/cyan_text_day</item>
+        <item name="colorTextToday">@color/cyan_text_today</item>
+        <item name="colorTextDayName">@color/cyan_text_day_name</item>
+        <item name="colorTextAthan">@color/cyan_text_athan</item>
+        <item name="colorDivider">@color/cyan_divider</item>
+        <item name="colorCurrentDay">@color/cyan_current_day</item>
+        <item name="colorSelectDay">@color/cyan_select_day</item>
+        <item name="colorEventIndicator">@color/cyan_event_indicator</item>
+        <item name="colorDrawerBackground">@color/cyan_drawer_background</item>
+        <item name="colorDrawerSelect">@color/cyan_drawer_select</item>
+        <item name="colorDrawerIcon">@color/cyan_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/cyan_month_switch</item>
+
+        <item name="android:textColor">@color/cyan_text_normal</item>
+
+        <item name="coloredTabBackground">@color/cyan_accent</item>
+        <item name="coloredTabTextColor">@color/cyan_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/cyan_menu_icon_color</item>
+        <item name="dragIconColor">@color/cyan_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/cyan_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="PurpleTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/purple_primary</item>
+        <item name="colorPrimary">@color/purple_primary</item>
+        <item name="colorPrimaryDark">@color/purple_primary_dark</item>
+        <item name="colorAccent">@color/purple_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/purple_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/purple_primary</item>
+
+        <item name="colorCard">@color/purple_card_background</item>
+        <item name="colorBackground">@color/purple_background</item>
+        <item name="colorTextPrimary">@color/purple_text_primary</item>
+        <item name="colorIcon">@color/purple_icon</item>
+        <item name="colorTextNormal">@color/purple_text_normal</item>
+        <item name="colorTextSecond">@color/purple_text_second</item>
+        <item name="colorTextHoliday">@color/purple_text_holiday</item>
+        <item name="colorHoliday">@color/purple_holiday</item>
+        <item name="colorTextDrawer">@color/purple_text_drawer</item>
+        <item name="colorTextDay">@color/purple_text_day</item>
+        <item name="colorTextDayCurrent">@color/purple_text_day</item>
+        <item name="colorTextToday">@color/purple_text_today</item>
+        <item name="colorTextDayName">@color/purple_text_day_name</item>
+        <item name="colorTextAthan">@color/purple_text_athan</item>
+        <item name="colorDivider">@color/purple_divider</item>
+        <item name="colorCurrentDay">@color/purple_current_day</item>
+        <item name="colorSelectDay">@color/purple_select_day</item>
+        <item name="colorEventIndicator">@color/purple_event_indicator</item>
+        <item name="colorDrawerBackground">@color/purple_drawer_background</item>
+        <item name="colorDrawerSelect">@color/purple_drawer_select</item>
+        <item name="colorDrawerIcon">@color/purple_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/purple_month_switch</item>
+
+        <item name="android:textColor">@color/purple_text_normal</item>
+
+        <item name="coloredTabBackground">@color/purple_accent</item>
+        <item name="coloredTabTextColor">@color/purple_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/purple_menu_icon_color</item>
+        <item name="dragIconColor">@color/purple_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/purple_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="DeepPurpleTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/deep_purple_primary</item>
+        <item name="colorPrimary">@color/deep_purple_primary</item>
+        <item name="colorPrimaryDark">@color/deep_purple_primary_dark</item>
+        <item name="colorAccent">@color/deep_purple_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/deep_purple_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/deep_purple_primary</item>
+
+        <item name="colorCard">@color/deep_purple_card_background</item>
+        <item name="colorBackground">@color/deep_purple_background</item>
+        <item name="colorTextPrimary">@color/deep_purple_text_primary</item>
+        <item name="colorIcon">@color/deep_purple_icon</item>
+        <item name="colorTextNormal">@color/deep_purple_text_normal</item>
+        <item name="colorTextSecond">@color/deep_purple_text_second</item>
+        <item name="colorTextHoliday">@color/deep_purple_text_holiday</item>
+        <item name="colorHoliday">@color/deep_purple_holiday</item>
+        <item name="colorTextDrawer">@color/deep_purple_text_drawer</item>
+        <item name="colorTextDay">@color/deep_purple_text_day</item>
+        <item name="colorTextDayCurrent">@color/deep_purple_text_day</item>
+        <item name="colorTextToday">@color/deep_purple_text_today</item>
+        <item name="colorTextDayName">@color/deep_purple_text_day_name</item>
+        <item name="colorTextAthan">@color/deep_purple_text_athan</item>
+        <item name="colorDivider">@color/deep_purple_divider</item>
+        <item name="colorCurrentDay">@color/deep_purple_current_day</item>
+        <item name="colorSelectDay">@color/deep_purple_select_day</item>
+        <item name="colorEventIndicator">@color/deep_purple_event_indicator</item>
+        <item name="colorDrawerBackground">@color/deep_purple_drawer_background</item>
+        <item name="colorDrawerSelect">@color/deep_purple_drawer_select</item>
+        <item name="colorDrawerIcon">@color/deep_purple_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/deep_purple_month_switch</item>
+
+        <item name="android:textColor">@color/deep_purple_text_normal</item>
+
+        <item name="coloredTabBackground">@color/deep_purple_accent</item>
+        <item name="coloredTabTextColor">@color/deep_purple_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/deep_purple_menu_icon_color</item>
+        <item name="dragIconColor">@color/deep_purple_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/deep_purple_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="IndigoTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/indigo_primary</item>
+        <item name="colorPrimary">@color/indigo_primary</item>
+        <item name="colorPrimaryDark">@color/indigo_primary_dark</item>
+        <item name="colorAccent">@color/indigo_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/indigo_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/indigo_primary</item>
+
+        <item name="colorCard">@color/indigo_card_background</item>
+        <item name="colorBackground">@color/indigo_background</item>
+        <item name="colorTextPrimary">@color/indigo_text_primary</item>
+        <item name="colorIcon">@color/indigo_icon</item>
+        <item name="colorTextNormal">@color/indigo_text_normal</item>
+        <item name="colorTextSecond">@color/indigo_text_second</item>
+        <item name="colorTextHoliday">@color/indigo_text_holiday</item>
+        <item name="colorHoliday">@color/indigo_holiday</item>
+        <item name="colorTextDrawer">@color/indigo_text_drawer</item>
+        <item name="colorTextDay">@color/indigo_text_day</item>
+        <item name="colorTextDayCurrent">@color/indigo_text_day</item>
+        <item name="colorTextToday">@color/indigo_text_today</item>
+        <item name="colorTextDayName">@color/indigo_text_day_name</item>
+        <item name="colorTextAthan">@color/indigo_text_athan</item>
+        <item name="colorDivider">@color/indigo_divider</item>
+        <item name="colorCurrentDay">@color/indigo_current_day</item>
+        <item name="colorSelectDay">@color/indigo_select_day</item>
+        <item name="colorEventIndicator">@color/indigo_event_indicator</item>
+        <item name="colorDrawerBackground">@color/indigo_drawer_background</item>
+        <item name="colorDrawerSelect">@color/indigo_drawer_select</item>
+        <item name="colorDrawerIcon">@color/indigo_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/indigo_month_switch</item>
+
+        <item name="android:textColor">@color/indigo_text_normal</item>
+
+        <item name="coloredTabBackground">@color/indigo_accent</item>
+        <item name="coloredTabTextColor">@color/indigo_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/indigo_menu_icon_color</item>
+        <item name="dragIconColor">@color/indigo_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/indigo_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="PinkTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/pink_primary</item>
+        <item name="colorPrimary">@color/pink_primary</item>
+        <item name="colorPrimaryDark">@color/pink_primary_dark</item>
+        <item name="colorAccent">@color/pink_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/pink_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/pink_primary</item>
+
+        <item name="colorCard">@color/pink_card_background</item>
+        <item name="colorBackground">@color/pink_background</item>
+        <item name="colorTextPrimary">@color/pink_text_primary</item>
+        <item name="colorIcon">@color/pink_icon</item>
+        <item name="colorTextNormal">@color/pink_text_normal</item>
+        <item name="colorTextSecond">@color/pink_text_second</item>
+        <item name="colorTextHoliday">@color/pink_text_holiday</item>
+        <item name="colorHoliday">@color/pink_holiday</item>
+        <item name="colorTextDrawer">@color/pink_text_drawer</item>
+        <item name="colorTextDay">@color/pink_text_day</item>
+        <item name="colorTextDayCurrent">@color/pink_text_day</item>
+        <item name="colorTextToday">@color/pink_text_today</item>
+        <item name="colorTextDayName">@color/pink_text_day_name</item>
+        <item name="colorTextAthan">@color/pink_text_athan</item>
+        <item name="colorDivider">@color/pink_divider</item>
+        <item name="colorCurrentDay">@color/pink_current_day</item>
+        <item name="colorSelectDay">@color/pink_select_day</item>
+        <item name="colorEventIndicator">@color/pink_event_indicator</item>
+        <item name="colorDrawerBackground">@color/pink_drawer_background</item>
+        <item name="colorDrawerSelect">@color/pink_drawer_select</item>
+        <item name="colorDrawerIcon">@color/pink_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/pink_month_switch</item>
+
+        <item name="android:textColor">@color/pink_text_normal</item>
+
+        <item name="coloredTabBackground">@color/pink_accent</item>
+        <item name="coloredTabTextColor">@color/pink_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/pink_menu_icon_color</item>
+        <item name="dragIconColor">@color/pink_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/pink_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="GreenTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/green_primary</item>
+        <item name="colorPrimary">@color/green_primary</item>
+        <item name="colorPrimaryDark">@color/green_primary_dark</item>
+        <item name="colorAccent">@color/green_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/green_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/green_primary</item>
+
+        <item name="colorCard">@color/green_card_background</item>
+        <item name="colorBackground">@color/green_background</item>
+        <item name="colorTextPrimary">@color/green_text_primary</item>
+        <item name="colorIcon">@color/green_icon</item>
+        <item name="colorTextNormal">@color/green_text_normal</item>
+        <item name="colorTextSecond">@color/green_text_second</item>
+        <item name="colorTextHoliday">@color/green_text_holiday</item>
+        <item name="colorHoliday">@color/green_holiday</item>
+        <item name="colorTextDrawer">@color/green_text_drawer</item>
+        <item name="colorTextDay">@color/green_text_day</item>
+        <item name="colorTextDayCurrent">@color/green_text_day</item>
+        <item name="colorTextToday">@color/green_text_today</item>
+        <item name="colorTextDayName">@color/green_text_day_name</item>
+        <item name="colorTextAthan">@color/green_text_athan</item>
+        <item name="colorDivider">@color/green_divider</item>
+        <item name="colorCurrentDay">@color/green_current_day</item>
+        <item name="colorSelectDay">@color/green_select_day</item>
+        <item name="colorEventIndicator">@color/green_event_indicator</item>
+        <item name="colorDrawerBackground">@color/green_drawer_background</item>
+        <item name="colorDrawerSelect">@color/green_drawer_select</item>
+        <item name="colorDrawerIcon">@color/green_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/green_month_switch</item>
+
+        <item name="android:textColor">@color/green_text_normal</item>
+
+        <item name="coloredTabBackground">@color/green_accent</item>
+        <item name="coloredTabTextColor">@color/green_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/green_menu_icon_color</item>
+        <item name="dragIconColor">@color/green_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/green_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="BrownTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/brown_primary</item>
+        <item name="colorPrimary">@color/brown_primary</item>
+        <item name="colorPrimaryDark">@color/brown_primary_dark</item>
+        <item name="colorAccent">@color/brown_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/brown_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/brown_primary</item>
+
+        <item name="colorCard">@color/brown_card_background</item>
+        <item name="colorBackground">@color/brown_background</item>
+        <item name="colorTextPrimary">@color/brown_text_primary</item>
+        <item name="colorIcon">@color/brown_icon</item>
+        <item name="colorTextNormal">@color/brown_text_normal</item>
+        <item name="colorTextSecond">@color/brown_text_second</item>
+        <item name="colorTextHoliday">@color/brown_text_holiday</item>
+        <item name="colorHoliday">@color/brown_holiday</item>
+        <item name="colorTextDrawer">@color/brown_text_drawer</item>
+        <item name="colorTextDay">@color/brown_text_day</item>
+        <item name="colorTextDayCurrent">@color/brown_text_day</item>
+        <item name="colorTextToday">@color/brown_text_today</item>
+        <item name="colorTextDayName">@color/brown_text_day_name</item>
+        <item name="colorTextAthan">@color/brown_text_athan</item>
+        <item name="colorDivider">@color/brown_divider</item>
+        <item name="colorCurrentDay">@color/brown_current_day</item>
+        <item name="colorSelectDay">@color/brown_select_day</item>
+        <item name="colorEventIndicator">@color/brown_event_indicator</item>
+        <item name="colorDrawerBackground">@color/brown_drawer_background</item>
+        <item name="colorDrawerSelect">@color/brown_drawer_select</item>
+        <item name="colorDrawerIcon">@color/brown_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/brown_month_switch</item>
+
+        <item name="android:textColor">@color/brown_text_normal</item>
+
+        <item name="coloredTabBackground">@color/brown_accent</item>
+        <item name="coloredTabTextColor">@color/brown_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/brown_menu_icon_color</item>
+        <item name="dragIconColor">@color/brown_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/brown_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+    <style name="NewBlueTheme" parent="BaseLightTheme">
+        <item name="colorMonthsBackground">@color/new_blue_primary</item>
+        <item name="colorPrimary">@color/new_blue_primary</item>
+        <item name="colorPrimaryDark">@color/new_blue_primary_dark</item>
+        <item name="colorAccent">@color/new_blue_accent</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">
+            @color/new_blue_primary_dark
+        </item>
+        <item name="navigationBarColor">@color/new_blue_primary</item>
+
+        <item name="colorCard">@color/new_blue_card_background</item>
+        <item name="colorBackground">@color/new_blue_background</item>
+        <item name="colorTextPrimary">@color/new_blue_text_primary</item>
+        <item name="colorIcon">@color/new_blue_icon</item>
+        <item name="colorTextNormal">@color/new_blue_text_normal</item>
+        <item name="colorTextSecond">@color/new_blue_text_second</item>
+        <item name="colorTextHoliday">@color/new_blue_text_holiday</item>
+        <item name="colorHoliday">@color/new_blue_holiday</item>
+        <item name="colorTextDrawer">@color/new_blue_text_drawer</item>
+        <item name="colorTextDay">@color/new_blue_text_day</item>
+        <item name="colorTextDayCurrent">@color/new_blue_text_day</item>
+        <item name="colorTextToday">@color/new_blue_text_today</item>
+        <item name="colorTextDayName">@color/new_blue_text_day_name</item>
+        <item name="colorTextAthan">@color/new_blue_text_athan</item>
+        <item name="colorDivider">@color/new_blue_divider</item>
+        <item name="colorCurrentDay">@color/new_blue_current_day</item>
+        <item name="colorSelectDay">@color/new_blue_select_day</item>
+        <item name="colorEventIndicator">@color/new_blue_event_indicator</item>
+        <item name="colorDrawerBackground">@color/new_blue_drawer_background</item>
+        <item name="colorDrawerSelect">@color/new_blue_drawer_select</item>
+        <item name="colorDrawerIcon">@color/new_blue_icon_drawer</item>
+        <item name="colorMonthSwitch">@color/new_blue_month_switch</item>
+
+        <item name="android:textColor">@color/new_blue_text_normal</item>
+
+        <item name="coloredTabBackground">@color/new_blue_accent</item>
+        <item name="coloredTabTextColor">@color/new_blue_card_background</item>
+        <item name="normalTabTextColor">@color/tab_background_select</item>
+
+        <item name="menuIconColor">@color/new_blue_menu_icon_color</item>
+        <item name="dragIconColor">@color/new_blue_drag_icon_color</item>
+        <item name="coloredTabIndicatorColor">@color/new_blue_background</item>
+        <item name="colorTextDaySelected">@color/dark_primary</item>
+        <item name="colorAppointment">@color/dark_accent</item>
+        <item name="appToolbarTheme">@style/ToolbarThemeWhite</item>
+    </style>
+
+
+</resources>
