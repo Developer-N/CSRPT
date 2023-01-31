@@ -41,8 +41,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
         targetSdk = 33
-        versionCode = 10300
-        versionName = "10.3.2023"
+        versionCode = 10310
+        versionName = "10.3.1.2023"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true

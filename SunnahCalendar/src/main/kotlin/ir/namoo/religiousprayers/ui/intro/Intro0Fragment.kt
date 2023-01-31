@@ -35,10 +35,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ir.namoo.commons.PREF_FIRST_START
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.LocationsDB
+import ir.namoo.commons.model.PrayTimesModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.repository.asDataState
-import ir.namoo.commons.service.PrayTimesService
 import ir.namoo.commons.utils.hideKeyBoard
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.modelToDBTimes
@@ -51,8 +51,6 @@ import org.koin.android.ext.android.inject
 class Intro0Fragment : Fragment() {
     private lateinit var binding: FragmentIntro0Binding
     private val adapter = AAdapter()
-
-    private val prayTimesService: PrayTimesService by inject()
 
     private val downloadedPrayTimesDAO: DownloadedPrayTimesDAO by inject()
 
@@ -110,13 +108,13 @@ class Intro0Fragment : Fragment() {
         } else {
             lifecycleScope.launch {
                 if (locationsDB.countryDAO().getAllCountries().isEmpty()) {
-                    locationsDB.countryDAO().insert(prayTimesService.getAllCountries())
+                    locationsDB.countryDAO().insert(prayTimeRepository.getAllCountries())
                 }
                 if (locationsDB.provinceDAO().getAllProvinces().isEmpty()) {
-                    locationsDB.provinceDAO().insert(prayTimesService.getAllProvinces())
+                    locationsDB.provinceDAO().insert(prayTimeRepository.getAllProvinces())
                 }
                 if (locationsDB.cityDAO().getAllCity().isEmpty()) {
-                    locationsDB.cityDAO().insert(prayTimesService.getAllCities())
+                    locationsDB.cityDAO().insert(prayTimeRepository.getAllCities())
                 }
                 prayTimeRepository.getAddedCities().collect {
                     when (it.asDataState()) {
@@ -256,19 +254,42 @@ class Intro0Fragment : Fragment() {
                     itemBinding.btnDownload.visibility = View.INVISIBLE
                     runCatching {
                         lifecycleScope.launch {
-                            val prayTimes = prayTimesService.getPrayTimesFor(city.id)
-                            downloadedPrayTimesDAO.clearDownloadFor(prayTimes.first().id)
-                            downloadedPrayTimesDAO.insertToDownload(modelToDBTimes(prayTimes))
-                            val c = locationsDB.cityDAO().getCity(prayTimes.first().cityID)
-                            requireContext().appPrefs.edit {
-                                putString(PREF_GEOCODED_CITYNAME, c.name)
-                                putString(PREF_LATITUDE, c.latitude.toString())
-                                putString(PREF_LONGITUDE, c.longitude.toString())
-                                putString(PREF_SELECTED_LOCATION, "")
-                                putBoolean(PREF_FIRST_START, false)
+                            prayTimeRepository.getPrayTimeFor(city.id).collect {
+                                when (it.asDataState()) {
+                                    is DataState.Error -> {
+                                        itemBinding.progressItemAvailable.visibility = View.GONE
+                                        itemBinding.btnDownload.visibility = View.VISIBLE
+                                        updateView()
+                                    }
+                                    DataState.Loading -> {}
+                                    is DataState.Success -> {
+                                        val prayTimes =
+                                            (it.asDataState() as DataState.Success<List<PrayTimesModel>>).data
+                                        downloadedPrayTimesDAO.clearDownloadFor(prayTimes.first().id)
+                                        downloadedPrayTimesDAO.insertToDownload(
+                                            modelToDBTimes(
+                                                prayTimes
+                                            )
+                                        )
+                                        val c =
+                                            locationsDB.cityDAO().getCity(prayTimes.first().cityID)
+                                        requireContext().appPrefs.edit {
+                                            putString(PREF_GEOCODED_CITYNAME, c.name)
+                                            putString(PREF_LATITUDE, c.latitude.toString())
+                                            putString(PREF_LONGITUDE, c.longitude.toString())
+                                            putString(PREF_SELECTED_LOCATION, "")
+                                            putBoolean(PREF_FIRST_START, false)
+                                        }
+                                        startActivity(
+                                            Intent(
+                                                requireContext(),
+                                                MainActivity::class.java
+                                            )
+                                        )
+                                        requireActivity().finish()
+                                    }
+                                }
                             }
-                            startActivity(Intent(requireContext(), MainActivity::class.java))
-                            requireActivity().finish()
                         }
                     }.onFailure {
                         itemBinding.progressItemAvailable.visibility = View.GONE

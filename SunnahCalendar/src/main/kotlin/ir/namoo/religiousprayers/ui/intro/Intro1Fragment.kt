@@ -48,12 +48,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ir.namoo.commons.PREF_FIRST_START
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.LocationsDB
-import ir.namoo.commons.service.PrayTimesService
+import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.hideKeyBoard
 import ir.namoo.religiousprayers.ui.IntroActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -81,26 +82,26 @@ class Intro1Fragment : Fragment() {
 
     private val locationsDB: LocationsDB by inject()
 
-    private val prayTimesService: PrayTimesService by inject()
+    private val prayTimeRepository: PrayTimeRepository = get()
 
     @SuppressLint("PrivateResource")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentIntro1Binding.inflate(inflater, container, false)
-        lifecycleScope.launchWhenStarted {
-            if (locationsDB.countryDAO().getAllCountries().isNullOrEmpty()) {
-                locationsDB.countryDAO().insert(prayTimesService.getAllCountries())
+        lifecycleScope.launch {
+            if (locationsDB.countryDAO().getAllCountries().isEmpty()) {
+                locationsDB.countryDAO().insert(prayTimeRepository.getAllCountries())
             }
-            if (locationsDB.provinceDAO().getAllProvinces().isNullOrEmpty()) {
-                locationsDB.provinceDAO().insert(prayTimesService.getAllProvinces())
+            if (locationsDB.provinceDAO().getAllProvinces().isEmpty()) {
+                locationsDB.provinceDAO().insert(prayTimeRepository.getAllProvinces())
             }
-            if (locationsDB.cityDAO().getAllCity().isNullOrEmpty()) {
-                locationsDB.cityDAO().insert(prayTimesService.getAllCities())
+            if (locationsDB.cityDAO().getAllCity().isEmpty()) {
+                locationsDB.cityDAO().insert(prayTimeRepository.getAllCities())
             }
             allCities = locationsDB.cityDAO().getAllCity()
         }
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             withContext(Dispatchers.Main) {
                 val animation =
                     AnimationUtils.loadAnimation(context, androidx.appcompat.R.anim.abc_fade_in)

@@ -14,6 +14,7 @@ import com.byagowi.persiancalendar.PREF_SELECTED_LOCATION
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.model.CityModel
+import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.PrayTimesModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
@@ -25,7 +26,8 @@ import kotlinx.coroutines.launch
 
 class DownloadPrayTimesViewModel constructor(
     private val prayTimesRepository: PrayTimeRepository,
-    private val downloadedPrayTimesDAO: DownloadedPrayTimesDAO
+    private val downloadedPrayTimesDAO: DownloadedPrayTimesDAO,
+    private val locationsDB: LocationsDB
 ) : ViewModel() {
 
     var serverCitiesList by mutableStateOf((listOf<CityModel>()))
@@ -82,6 +84,11 @@ class DownloadPrayTimesViewModel constructor(
     fun download(city: CityModel, context: Context) {
         viewModelScope.launch {
             runCatching {
+                if (locationsDB.cityDAO().getAllCity().find { it.id == city.id } == null) {
+                    locationsDB.countryDAO().insert(prayTimesRepository.getAllCountries())
+                    locationsDB.provinceDAO().insert(prayTimesRepository.getAllProvinces())
+                    locationsDB.cityDAO().insert(prayTimesRepository.getAllCities())
+                }
                 val index = serverCitiesList.indexOf(city)
                 citiesState[index].isDownloading = true
                 prayTimesRepository.getPrayTimeFor(city.id).collect {

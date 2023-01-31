@@ -6,6 +6,10 @@ import kotlinx.coroutines.flow.flow
 
 class PrayTimeRepository constructor(private var prayTimeService: PrayTimesService) {
 
+    suspend fun getAllCountries() = prayTimeService.getAllCountries()
+    suspend fun getAllProvinces() = prayTimeService.getAllProvinces()
+    suspend fun getAllCities() = prayTimeService.getAllCities()
+
     suspend fun getAddedCities() = flow {
         runCatching {
             emit(DataResult.Success(prayTimeService.getAddedCities()))

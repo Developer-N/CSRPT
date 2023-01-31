@@ -76,7 +76,7 @@ val koinModule = module {
     viewModel { DownloadViewModel(get(), get()) }
     viewModel { AzkarViewModel(get()) }
     viewModel { AzkarActivityViewModel(get()) }
-    viewModel { DownloadPrayTimesViewModel(get(), get()) }
+    viewModel { DownloadPrayTimesViewModel(get(), get(), get()) }
     viewModel { EditViewModel(get()) }
     viewModel { MonthlyViewModel() }
 
