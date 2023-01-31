@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven("https://jitpack.io")
     }
 }
-rootProject.name = "SunnahCalendar2022"
-include(":PersianCalendar")
+rootProject.name = "CSRPT"
+include(":SunnahCalendar")

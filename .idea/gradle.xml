@@ -11,7 +11,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/PersianCalendar" />
+            <option value="$PROJECT_DIR$/SunnahCalendar" />
           </set>
         </option>
       </GradleProjectSettings>
