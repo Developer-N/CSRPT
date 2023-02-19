@@ -109,6 +109,13 @@
     <string name="str_changes_title">تغییرات</string>
     <string name="changes">
 
+        \n----تغییرات نسخه : 10.4.2023----\n
+    1. اضافه شدن قابلیت سایلنت کردن خودکار گوشی هنگام اذان ها برای مدت دلخواه بر حسب دقیقه\n
+    2. رفع مشکل پخش اذان در حالت تمام صفحه\n
+    3. رفع مشکل قطع نشدن صدای اذان در حالت پخش در نوار اعلان\n
+    4. رفع مشکل ویجت 4 در 1\n
+    5. رفع چند مشکل و باگ گزارش شده دیگر و بهبود کارایی\n
+
         \n----تغییرات نسخه : 10.3.1.2023----\n
 1.	رفع مشکل جزئی در دانلود اوقات\n
 
@@ -296,7 +303,7 @@
     <string name="add_normal_athans">اضافه کردن اذان</string>
     <string name="add_fajr_athan">اضافه کردن اذان صبح</string>
     <string name="add_alarm">اضافه کردن صدای هشدار</string>
-    <string name="play_athan_problem">اگر تنظیمات گوشی را از طریق راهنما انجام داده اید و هنوز در پخش به موقع اذان مشکل دارید، متدهای زیر را عوض کنید.( با توجه به تجربه کاربران پیشنهاد می شود برای گوشی های سامسونگ حالت پخش را روی تمام صفحه و متد تمام صفحه را روی متد دوم تنظیم کنید، برای گوشی های شیائومی حالت پخش را روی پخش در نوار اعلان و متد پخش در نوار اعلان را روی متد دوم قرار دهید.)</string>
+    <string name="play_athan_problem">اگر تنظیمات گوشی را از طریق راهنما انجام داده اید و هنوز در پخش به موقع اذان مشکل دارید، متدهای زیر را عوض کنید.</string>
     <string name="first_method">متد اول(پیش فرض)</string>
     <string name="second_method">متد دوم</string>
     <string name="bfajr">هشدار قبل از اذان صبح</string>
@@ -320,6 +327,8 @@
     <string name="alarm_before">هشدار قبل از اذان</string>
     <string name="enable_alarm_before">فعال کردن هشدار</string>
     <string name="alarm_after">هشدار بعد از اذان</string>
+    <string name="silent_after">سایلنت کردن گوشی بعد از اذان برای مدت مشخص(بر حسب دقیقه)</string>
+    <string name="enable_silent">فعال کردن</string>
     <string name="enable_alarm_after">فعال کردن هشدار</string>
     <string name="select_athan_name">انتخاب اذان</string>
     <string name="default_fajr_athan_name">العفاسی - صبح</string>
@@ -415,6 +424,7 @@
 
     <string name="support">پشتیبانی</string>
     <string name="requset_permision">درخواست مجوز</string>
+    <string name="modify_audio_settings">برای سایلنت کردن گوشی بعد از اذان باید مجوز تغییر تنظیمات را به برنامه بدهید.</string>
     <string name="need_full_screen_permision">برای نمایش اذان در حالت تمام صفحه هنگام استفاده از گوشی باید مجوز لازم را فعال کنید.</string>
     <string name="schedule_permission_message">برای تنظیم اوقات اذان لازم است مجوز مربوطه را فعال کنید.</string>
 
@@ -444,5 +454,7 @@
     <string name="morning_azkar">ذکرهای صبحگاهی</string>
     <string name="evening_azkar">ذکرهای شامگاهی</string>
     <string name="for_read_azkar_tap">زمان خواندن %s فرا رسیده جهت خواندن آن ها روی این اعلان ضربه بزنید.</string>
+
+    <string name="post_notification_permission_message">برای نمایش اعلان ها در اندروید 13 به بالا باید مجوز نمایش اعلان را به برنامه بدهید!</string>
 
 </resources>

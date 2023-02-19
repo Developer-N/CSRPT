@@ -233,14 +233,31 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }.onFailure(logException)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-            if (!alarmManager.canScheduleExactAlarms()) MaterialAlertDialogBuilder(this).apply {
+            val alarmManager = getSystemService<AlarmManager>()
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms())
+                MaterialAlertDialogBuilder(this).apply {
+                    setTitle(R.string.requset_permision)
+                    setMessage(R.string.schedule_permission_message)
+                    setPositiveButton(R.string.ok) { _, _ ->
+                        startActivity(Intent().apply {
+                            action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                        })
+                    }
+                    setNegativeButton(R.string.cancel) { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    show()
+                }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            MaterialAlertDialogBuilder(this).apply {
                 setTitle(R.string.requset_permision)
-                setMessage(R.string.schedule_permission_message)
+                setMessage(R.string.post_notification_permission_message)
                 setPositiveButton(R.string.ok) { _, _ ->
-                    startActivity(Intent().apply {
-                        action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
-                    })
+                    askForPostNotificationPermission()
                 }
                 setNegativeButton(R.string.cancel) { dialog, _ ->
                     dialog.dismiss()

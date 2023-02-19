@@ -56,7 +56,7 @@ class DownloadPrayTimesViewModel constructor(
                         }
                         is DataState.Success -> {
                             serverCitiesList =
-                                (it.asDataState() as DataState.Success<List<CityModel>>).data
+                                (it.asDataState() as DataState.Success<List<CityModel>>).data.sortedBy { city -> city.name }
                             downloadCitiesID = downloadedPrayTimesDAO.getCities()
                             citiesState = mutableListOf<CityItemState>().apply {
                                 for (c in serverCitiesList) add(CityItemState().apply {

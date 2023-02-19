@@ -2,6 +2,8 @@ package ir.namoo.religiousprayers.ui.edit
 
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,9 +13,11 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.annotation.AttrRes
+import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.FragmentEditBinding
 import com.byagowi.persiancalendar.entities.Jdn
@@ -46,6 +50,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.io.File
 
 class EditFragment : Fragment() {
     private lateinit var binding: FragmentEditBinding
@@ -55,10 +60,9 @@ class EditFragment : Fragment() {
 
     private val prayTimesDB: PrayTimesDB by inject()
 
+    @SuppressLint("SdCardPath")
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentEditBinding.inflate(inflater, container, false)
 
@@ -74,8 +78,7 @@ class EditFragment : Fragment() {
                             requireContext(),
                             getString(R.string.edit_not_enabled),
                             Toast.LENGTH_LONG
-                        )
-                            .show()
+                        ).show()
                     } else {
                         MaterialAlertDialogBuilder(requireContext()).apply {
                             setTitle(getString(R.string.str_dialog_save))
@@ -83,16 +86,29 @@ class EditFragment : Fragment() {
                             setPositiveButton(R.string.yes) { _, _ ->
                                 updateDB()
                                 Toast.makeText(
-                                    requireContext(),
-                                    getString(R.string.saved),
-                                    Toast.LENGTH_LONG
-                                )
-                                    .show()
+                                    requireContext(), getString(R.string.saved), Toast.LENGTH_LONG
+                                ).show()
                             }
                             setNegativeButton(R.string.no) { dialog, _ -> dialog.dismiss() }
                             show()
                         }
                     }
+                }
+            }
+            toolbar.menu.add(R.string.send_times).also {
+                it.onClick {
+                    val dbFile = File(requireContext().getDatabasePath("sunnah_db").path)
+                    val uri = FileProvider.getUriForFile(
+                        requireContext(), "${BuildConfig.APPLICATION_ID}.provider", dbFile
+                    )
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/octet_stream"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val chooserIntent =
+                        Intent.createChooser(shareIntent, getString(R.string.send_times))
+                    requireContext().startActivity(chooserIntent)
                 }
             }
             toolbar.menu.add(R.string.group_change).also {
@@ -103,8 +119,7 @@ class EditFragment : Fragment() {
                             requireContext(),
                             getString(R.string.edit_not_enabled),
                             Toast.LENGTH_LONG
-                        )
-                            .show()
+                        ).show()
                     } else {
                         val dialog = GEditDialog()
                         dialog.show(childFragmentManager, GEditDialog::class.java.name)
@@ -119,8 +134,7 @@ class EditFragment : Fragment() {
                             requireContext(),
                             getString(R.string.edit_not_enabled),
                             Toast.LENGTH_LONG
-                        )
-                            .show()
+                        ).show()
                     } else {
                         MaterialAlertDialogBuilder(requireContext()).apply {
                             setTitle(getString(R.string.str_dialog_clear_edited_title))
@@ -138,7 +152,6 @@ class EditFragment : Fragment() {
                     }
                 }
             }
-
         }
         binding.appBar.root.hideToolbarBottomShadow()
         binding.progressEdit.max = 366
@@ -189,24 +202,24 @@ class EditFragment : Fragment() {
                 animateVisibility(binding.progressEdit, true)
                 binding.switchEnableEdit.isEnabled = false
             }
-            if (!(prayTimesDB.prayTimes().getAllEdited() != null &&
-                        prayTimesDB.prayTimes().getAllEdited()?.isEmpty() == false)
+            if (!(prayTimesDB.prayTimes().getAllEdited() != null && prayTimesDB.prayTimes()
+                    .getAllEdited()?.isEmpty() == false)
             ) {
                 val times = calAll()
                 val forEdits = arrayListOf<EditedPrayTimesEntity>()
                 var id = 1
                 for (t in times) {
                     if (t != null) {
-                        val temp =
-                            EditedPrayTimesEntity(
-                                id, id,
-                                t.getFromStringId(R.string.fajr).toFormattedString(),
-                                t.getFromStringId(R.string.sunrise).toFormattedString(),
-                                t.getFromStringId(R.string.dhuhr).toFormattedString(),
-                                t.getFromStringId(R.string.asr).toFormattedString(),
-                                t.getFromStringId(R.string.maghrib).toFormattedString(),
-                                t.getFromStringId(R.string.isha).toFormattedString()
-                            )
+                        val temp = EditedPrayTimesEntity(
+                            id,
+                            id,
+                            t.getFromStringId(R.string.fajr).toFormattedString(),
+                            t.getFromStringId(R.string.sunrise).toFormattedString(),
+                            t.getFromStringId(R.string.dhuhr).toFormattedString(),
+                            t.getFromStringId(R.string.asr).toFormattedString(),
+                            t.getFromStringId(R.string.maghrib).toFormattedString(),
+                            t.getFromStringId(R.string.isha).toFormattedString()
+                        )
                         id++
                         forEdits.add(temp)
                     }
@@ -258,44 +271,44 @@ class EditFragment : Fragment() {
                                 binding.pickerIshaMinute.value = time.isha.split(":")[1].toInt()
                             }
                             if (originalTime != null && time != null) {
-                                if (originalTime.fajr != time.fajr)
-                                    changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
-                                else
-                                    changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+                                if (originalTime.fajr != time.fajr) changeCardBackgroundColor(
+                                    binding.cardFajr,
+                                    R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
 
-                                if (originalTime.sunrise != time.sunrise)
-                                    changeCardBackgroundColor(
-                                        binding.cardSunrise,
-                                        R.attr.colorWarning
-                                    )
-                                else
-                                    changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
+                                if (originalTime.sunrise != time.sunrise) changeCardBackgroundColor(
+                                    binding.cardSunrise, R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(
+                                    binding.cardSunrise,
+                                    R.attr.colorCard
+                                )
 
-                                if (originalTime.dhuhr != time.dhuhr)
-                                    changeCardBackgroundColor(
-                                        binding.cardDhuhr,
-                                        R.attr.colorWarning
-                                    )
-                                else
-                                    changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+                                if (originalTime.dhuhr != time.dhuhr) changeCardBackgroundColor(
+                                    binding.cardDhuhr, R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
 
-                                if (originalTime.asr != time.asr)
-                                    changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
-                                else
-                                    changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+                                if (originalTime.asr != time.asr) changeCardBackgroundColor(
+                                    binding.cardAsr,
+                                    R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
 
-                                if (originalTime.maghrib != time.maghrib)
-                                    changeCardBackgroundColor(
-                                        binding.cardMaghrib,
-                                        R.attr.colorWarning
-                                    )
-                                else
-                                    changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
+                                if (originalTime.maghrib != time.maghrib) changeCardBackgroundColor(
+                                    binding.cardMaghrib, R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(
+                                    binding.cardMaghrib,
+                                    R.attr.colorCard
+                                )
 
-                                if (originalTime.isha != time.isha)
-                                    changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
-                                else
-                                    changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+                                if (originalTime.isha != time.isha) changeCardBackgroundColor(
+                                    binding.cardIsha,
+                                    R.attr.colorWarning
+                                )
+                                else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
                             }
                         }
                     }
@@ -317,14 +330,16 @@ class EditFragment : Fragment() {
             val persianDate = PersianDate(PersianDate(civilDate.toJdn()).year, month, day)
             val date = CivilDate(persianDate.toJdn())
             var time = coordinates?.calculatePrayTimes(Jdn(date).toJavaCalendar())
-            if (!requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, true) && i in 2..185)
-                time = fixSummerTimes(time, true)
+            if (!requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, true) && i in 2..185) time =
+                fixSummerTimes(time, true)
             res.add(time)
             lifecycleScope.launch {
                 withContext(Dispatchers.Main) {
                     binding.progressEdit.isIndeterminate = false
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                        binding.progressEdit.setProgress(i, true)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) binding.progressEdit.setProgress(
+                        i,
+                        true
+                    )
                     else binding.progressEdit.progress = i
                 }
             }
@@ -397,10 +412,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.fajr,
                     originalTimes.find { it.dayNumber == day }?.fajr
                 )
-            )
-                changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
 
         }
         binding.pickerFajrHour.setOnValueChangedListener { _, _, newVal ->
@@ -410,10 +423,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.fajr,
                     originalTimes.find { it.dayNumber == day }?.fajr
                 )
-            )
-                changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
         }
 
         binding.pickerSunriseMinute.setOnValueChangedListener { _, _, newVal ->
@@ -424,10 +435,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.sunrise,
                     originalTimes.find { it.dayNumber == day }?.sunrise
                 )
-            )
-                changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
         }
         binding.pickerSunriseHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -437,10 +446,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.sunrise,
                     originalTimes.find { it.dayNumber == day }?.sunrise
                 )
-            )
-                changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
         }
 
         binding.pickerDhuhrMinute.setOnValueChangedListener { _, _, newVal ->
@@ -450,10 +457,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.dhuhr,
                     originalTimes.find { it.dayNumber == day }?.dhuhr
                 )
-            )
-                changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
         }
         binding.pickerDhuhrHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -462,10 +467,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.dhuhr,
                     originalTimes.find { it.dayNumber == day }?.dhuhr
                 )
-            )
-                changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
         }
 
         binding.pickerAsrMinute.setOnValueChangedListener { _, _, newVal ->
@@ -475,10 +478,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.asr,
                     originalTimes.find { it.dayNumber == day }?.asr
                 )
-            )
-                changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
         }
         binding.pickerAsrHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -487,10 +488,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.asr,
                     originalTimes.find { it.dayNumber == day }?.asr
                 )
-            )
-                changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
 
         }
 
@@ -502,10 +501,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.maghrib,
                     originalTimes.find { it.dayNumber == day }?.maghrib
                 )
-            )
-                changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
         }
         binding.pickerMaghribHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -515,10 +512,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.maghrib,
                     originalTimes.find { it.dayNumber == day }?.maghrib
                 )
-            )
-                changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
         }
 
         binding.pickerIshaMinute.setOnValueChangedListener { _, _, newVal ->
@@ -528,10 +523,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.isha,
                     originalTimes.find { it.dayNumber == day }?.isha
                 )
-            )
-                changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
         }
         binding.pickerIshaHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -540,10 +533,8 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.isha,
                     originalTimes.find { it.dayNumber == day }?.isha
                 )
-            )
-                changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
-            else
-                changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
+            else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
         }
 
     }//end of initPickers
@@ -583,8 +574,11 @@ class EditFragment : Fragment() {
 
     private fun changeCardBackgroundColor(card: MaterialCardView, @AttrRes color: Int) {
         ObjectAnimator.ofObject(
-            card, "cardBackgroundColor", ArgbEvaluator(),
-            card.cardBackgroundColor.defaultColor, requireContext().resolveColor(color)
+            card,
+            "cardBackgroundColor",
+            ArgbEvaluator(),
+            card.cardBackgroundColor.defaultColor,
+            requireContext().resolveColor(color)
         ).apply {
             duration = 300
             interpolator = AccelerateDecelerateInterpolator()

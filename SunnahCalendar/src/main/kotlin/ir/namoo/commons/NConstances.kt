@@ -34,11 +34,11 @@ const val DEFAULT_FULL_SCREEN_METHOD = 1
 const val REQ_CODE_PICK_ATHAN_FILE = 1
 const val REQ_CODE_PICK_ALARM_FILE = 2
 
-const val STORAGE_PERMISSION_REQUEST_CODE = 24
-
 const val FILE_PICKER_REQUEST_CODE = "req_code"
 
 const val ATHAN_ID = "athan_id"
 
 const val PREF_APP_FONT = "app_font"
 const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
+
+const val PREF_ORIGINAL_RINGER_MODE = "pref_original_ringer_mode"

@@ -15,8 +15,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.telephony.PhoneStateListener
-import android.telephony.TelephonyManager
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -33,6 +31,7 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
@@ -52,7 +51,7 @@ import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-private const val ACTION_STOP = "ir.namoo.owghateshareisardasht.ACTION_STOP"
+private const val ACTION_STOP = "ir.namoo.religiousprayers.ACTION_STOP"
 
 class NAthanNotification : Service() {
 
@@ -71,6 +70,7 @@ class NAthanNotification : Service() {
     private var doaPlayer: MediaPlayer? = null
     private var stopAtHalfMinute = false
     private lateinit var prayerKey: String
+    private val preventPhoneCallIntervention = PreventPhoneCallIntervention(::onDestroy)
     private var bFajrCount = 0
     private val stopTask = object : Runnable {
         override fun run() = runCatching {
@@ -81,6 +81,7 @@ class NAthanNotification : Service() {
                     bFajrCount++
                     handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
                 } else if (!isDoaPlayed) playDoa() else {
+                    //Do Nothing
                 }
             } else {
                 handler.postDelayed(
@@ -100,14 +101,6 @@ class NAthanNotification : Service() {
         }
     }
 
-    private var phoneStateListener: PhoneStateListener? = object : PhoneStateListener() {
-        override fun onCallStateChanged(state: Int, incomingNumber: String) {
-            if (state == TelephonyManager.CALL_STATE_RINGING || state == TelephonyManager.CALL_STATE_OFFHOOK) {
-                stopSelf()
-            }
-        }
-    }
-
     override fun onBind(intent: Intent): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -117,7 +110,6 @@ class NAthanNotification : Service() {
             return super.onStartCommand(intent, flags, startId)
         } else {
             applyAppLanguage(this)
-
 
             val notificationChannelId = notificationId.toString()
 
@@ -184,7 +176,8 @@ class NAthanNotification : Service() {
             )
 
             val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
-            notificationBuilder.setAutoCancel(true).setWhen(System.currentTimeMillis())
+            notificationBuilder.setOngoing(true).setWhen(System.currentTimeMillis())
+                .setSilent(setting.playType != 2)//silent if not just notification
                 .setSmallIcon(R.mipmap.ic_launcher).setContentTitle(title).setContentText(subtitle)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -206,6 +199,7 @@ class NAthanNotification : Service() {
             }
 
             startForeground(notificationId, notificationBuilder.build())
+            preventPhoneCallIntervention.startListener(this)
             //########################################################## Play Athan
             if (setting.playType == 1) {
                 val isFajr = prayerKey == FAJR_KEY
@@ -238,18 +232,13 @@ class NAthanNotification : Service() {
                 }.onFailure(logException)
                 handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
                 if (setting.isAscending) handler.post(ascendVolume)
-                runCatching {
-                    getSystemService<TelephonyManager>()?.listen(
-                        phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE
-                    )
-                }.onFailure(logException)
+
             }
             return super.onStartCommand(intent, flags, startId)
         }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         notificationManager?.cancel(notificationId)
         if (originalVolume != -1) getSystemService<AudioManager>()?.setStreamVolume(
             AudioManager.STREAM_ALARM, originalVolume, 0
@@ -257,15 +246,8 @@ class NAthanNotification : Service() {
         if (alreadyStopped) return
         alreadyStopped = true
 
-        runCatching {
-            getSystemService<TelephonyManager>()?.listen(
-                phoneStateListener, PhoneStateListener.LISTEN_NONE
-            )
-            phoneStateListener = null
-        }.onFailure(logException)
-
         ringtone?.stop()
-
+        preventPhoneCallIntervention.stopListener()
         runCatching {
             if (doaPlayer != null) if (doaPlayer!!.isPlaying) {
                 doaPlayer!!.release()
@@ -275,6 +257,7 @@ class NAthanNotification : Service() {
 
         if (setting.isAscending) handler.removeCallbacks(ascendVolume)
         handler.removeCallbacks(stopTask)
+        super.onDestroy()
     }
 
     private fun playDoa() {

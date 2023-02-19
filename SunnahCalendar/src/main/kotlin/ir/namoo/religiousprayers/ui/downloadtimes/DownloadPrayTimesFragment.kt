@@ -40,7 +40,6 @@ import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.isNetworkConnected
-import ir.namoo.religiousprayers.ui.shared.CityItemUIElement
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import org.koin.android.ext.android.get

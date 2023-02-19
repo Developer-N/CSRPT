@@ -1,11 +1,15 @@
 package ir.namoo.religiousprayers.ui
 
+import android.app.NotificationManager
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
 import android.view.animation.AnimationUtils
@@ -24,6 +28,7 @@ import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.scheduleAlarms
 import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import ir.namoo.commons.ATHAN_ID
 import ir.namoo.commons.model.AthanDB
@@ -111,6 +116,7 @@ class AthanSettingActivity : AppCompatActivity() {
                     binding.switchDoa.visibility = View.GONE
                     binding.beforeLayout.visibility = View.GONE
                     binding.afterLayout.visibility = View.GONE
+                    binding.silentLayout.visibility = View.GONE
                     binding.txtSelectAthanTitle.visibility = View.GONE
                     binding.selectAthanLayout.visibility = View.GONE
                     binding.btnAthanPlay.visibility = View.GONE
@@ -192,6 +198,39 @@ class AthanSettingActivity : AppCompatActivity() {
             if (athanSetting.afterAlertMinute >= binding.numberPickerAlarmAfter.minValue && athanSetting.afterAlertMinute <= binding.numberPickerAlarmAfter.maxValue) athanSetting.afterAlertMinute else 10
         binding.numberPickerAlarmAfter.setOnValueChangedListener { picker, _, _ ->
             athanSetting.afterAlertMinute = picker.value
+            athanSettingsDB.athanSettingsDAO().update(athanSetting)
+        }
+        //######################################## Silent
+        binding.switchSilent.isChecked = athanSetting.isSilentEnabled
+        binding.switchSilent.setOnClickListener {
+            binding.switchSilent.isChecked =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getSystemService<NotificationManager>()?.isNotificationPolicyAccessGranted != true) {
+                    MaterialAlertDialogBuilder(this).apply {
+                        setTitle(R.string.requset_permision)
+                        setMessage(R.string.modify_audio_settings)
+                        setPositiveButton(R.string.ok) { _, _ ->
+                            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                            startActivity(intent)
+                        }
+                        setNegativeButton((R.string.cancel)) { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        show()
+                    }
+                    false
+                } else {
+                    athanSetting.isSilentEnabled = !athanSetting.isSilentEnabled
+                    athanSettingsDB.athanSettingsDAO().update(athanSetting)
+                    athanSetting.isSilentEnabled
+                }
+        }
+        //######################################## Silent minute
+        binding.numberPickerSilent.minValue = 10
+        binding.numberPickerSilent.maxValue = 60
+        binding.numberPickerSilent.value =
+            if (athanSetting.silentMinute >= binding.numberPickerSilent.minValue && athanSetting.silentMinute <= binding.numberPickerSilent.maxValue) athanSetting.silentMinute else 10
+        binding.numberPickerSilent.setOnValueChangedListener { picker, _, _ ->
+            athanSetting.silentMinute = picker.value
             athanSettingsDB.athanSettingsDAO().update(athanSetting)
         }
         //######################################## isAscending

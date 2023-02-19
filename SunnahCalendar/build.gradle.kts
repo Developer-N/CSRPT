@@ -12,11 +12,11 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("plugin.serialization") version "1.8.10"
 }
 
 // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-val composeCompilerVersion = "1.3.2"
+val composeCompilerVersion = "1.4.2"
 val composeVersion = "1.3.3"
 
 val isMinApi21Build = gradle.startParameter.taskNames.any { "minApi21" in it || "MinApi21" in it }
@@ -28,7 +28,7 @@ android {
     }
 
     compileSdk = 33
-    buildToolsVersion = "33.0.1"
+    buildToolsVersion = "33.0.2"
 
     buildFeatures {
         viewBinding = true
@@ -41,8 +41,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
         targetSdk = 33
-        versionCode = 10310
-        versionName = "10.3.1.2023"
+        versionCode = 10401
+        versionName = "10.4.2023"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
@@ -148,7 +148,7 @@ dependencies {
     // https://github.com/cosinekitty/astronomy/releases/tag/v2.1.0
     implementation("com.github.cosinekitty:astronomy:v2.1.8")
 
-    implementation("androidx.appcompat:appcompat:1.6.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.preference:preference-ktx:1.2.0")
     implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation("androidx.cardview:cardview:1.0.0")
@@ -156,7 +156,7 @@ dependencies {
     implementation("androidx.dynamicanimation:dynamicanimation:1.0.0")
     implementation("com.google.android.material:material:1.8.0")
 
-    val navVersion = "2.5.1"
+    val navVersion = "2.5.3"
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
     implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
     androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
@@ -168,9 +168,9 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
 
-    implementation("androidx.browser:browser:1.4.0")
+    implementation("androidx.browser:browser:1.5.0")
 
-    implementation("androidx.work:work-runtime-ktx:2.7.1")
+    implementation("androidx.work:work-runtime-ktx:2.8.0")
 
     val coroutinesVersion = "1.6.4"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
@@ -184,13 +184,12 @@ dependencies {
     debugImplementation("androidx.multidex:multidex:2.0.1")
 
     minApi21Implementation("androidx.activity:activity-compose:1.6.1")
-    minApi21Implementation("com.google.android.material:compose-theme-adapter-3:1.1.1")
     val accompanistVersion = "0.28.0"
     minApi21Implementation("com.google.accompanist:accompanist-flowlayout:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-themeadapter-material3:$accompanistVersion")
     minApi21Implementation("androidx.compose.ui:ui:$composeVersion")
-    minApi21Implementation("androidx.compose.material3:material3:1.1.0-alpha04")
+    minApi21Implementation("androidx.compose.material3:material3:1.1.0-alpha06")
     minApi21Implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     minApi21Implementation("androidx.compose.animation:animation-graphics:$composeVersion")
     implementation("androidx.compose.runtime:runtime:$composeVersion")
@@ -209,7 +208,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
 
-    testImplementation("org.mockito:mockito-core:5.0.0")
+    testImplementation("org.mockito:mockito-core:5.1.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
 
     testImplementation("com.google.truth:truth:1.1.3")
@@ -219,16 +218,16 @@ dependencies {
     androidTestImplementation("androidx.test:rules:$androidTestVersion")
     androidTestImplementation("androidx.test:core-ktx:$androidTestVersion")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    val espressoVersion = "3.4.0"
+    val espressoVersion = "3.5.1"
     androidTestImplementation("androidx.test.espresso:espresso-contrib:$espressoVersion")
     androidTestImplementation("androidx.test.espresso:espresso-core:$espressoVersion")
 
     // Koin main features for Android
-    implementation("io.insert-koin:koin-android:3.3.2")
+    implementation("io.insert-koin:koin-android:3.3.3")
     // Koin Jetpack WorkManager
-    implementation("io.insert-koin:koin-androidx-workmanager:3.3.2")
+    implementation("io.insert-koin:koin-androidx-workmanager:3.3.3")
     // Koin Navigation Graph
-    implementation("io.insert-koin:koin-androidx-navigation:3.3.2")
+    implementation("io.insert-koin:koin-androidx-navigation:3.3.3")
     // Koin Jetpack Compose
     implementation("io.insert-koin:koin-androidx-compose:3.4.1")
     // Koin Koin for Ktor
@@ -237,12 +236,13 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:3.3.0")
 
     //Ktor
-    implementation("io.ktor:ktor-client-core:2.2.2")
-    implementation("io.ktor:ktor-client-content-negotiation:2.2.2")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.2.2")
-    implementation("io.ktor:ktor-client-logging:2.2.2")
-    implementation("io.ktor:ktor-client-okhttp:2.2.2")
-    implementation("io.ktor:ktor-client-android:2.2.2")
+    val ktorVersion = "2.2.2"
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    implementation("io.ktor:ktor-client-android:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.4.5")
 
     //Json Serialization
@@ -272,7 +272,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.6")
 
     //Reflection
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.22")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.10")
 
     //Zip jar file
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar", "*.jar"))))
@@ -309,5 +309,11 @@ tasks.register("mergeWeblate") {
             "git remote update weblate",
             "git merge weblate/main",
         ).forEach { println(it.execute().text) }
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }

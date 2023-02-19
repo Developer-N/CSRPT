@@ -62,7 +62,6 @@ class IntroActivity : AppCompatActivity() {
                 putString(PREF_PRAY_TIME_METHOD, CalculationMethod.Karachi.name)
                 putBoolean(PREF_ASR_HANAFI_JURISTIC, false)
                 putBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, true)
-                putBoolean(PREF_ASTRONOMICAL_FEATURES, true)
                 putBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true)
                 putBoolean(PREF_WIDGET_IN_24, true)
                 putInt(LAST_CHOSEN_TAB_KEY, 2)
@@ -81,15 +80,14 @@ class IntroActivity : AppCompatActivity() {
             if (!File(getAthansDirectoryPath(this@IntroActivity)).exists())
                 File(getAthansDirectoryPath(this@IntroActivity)).mkdirs()
         } else {
+            //remove default astronomic wronged set!
+            if (!appPrefs.getBoolean("is_astronomic_removed", false))
+                appPrefs.edit {
+                    putBoolean(PREF_ASTRONOMICAL_FEATURES, false)
+                    putBoolean("is_astronomic_removed", true)
+                }
             startActivity(Intent(this@IntroActivity, MainActivity::class.java))
             finish()
-
-//            binding = ActivityIntroBinding.inflate(layoutInflater).apply {
-//                setContentView(root)
-//            }
-//
-//            binding.introPager.adapter = IntroPagerAdapter(this@IntroActivity)
-//            binding.introPager.isUserInputEnabled = false
         }
 
     }//end of onCreate

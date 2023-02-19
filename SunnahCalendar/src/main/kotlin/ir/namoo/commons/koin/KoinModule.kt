@@ -66,7 +66,7 @@ val koinModule = module {
         }
     }
 
-    // viewmodel
+    // viewModels
     viewModel { SuraViewModel(get()) }
     viewModel { BookmarkViewModel(get()) }
     viewModel { ChapterViewModel(get()) }

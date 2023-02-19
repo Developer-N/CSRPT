@@ -3,18 +3,17 @@ package ir.namoo.religiousprayers.ui.athan
 
 import android.annotation.SuppressLint
 import android.app.KeyguardManager
+import android.app.NotificationManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.Ringtone
 import android.media.RingtoneManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.telephony.PhoneStateListener
-import android.telephony.TelephonyManager
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.ASR_KEY
@@ -30,6 +29,7 @@ import com.byagowi.persiancalendar.databinding.ActivityNathanBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
@@ -45,8 +45,11 @@ import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
 import ir.namoo.commons.utils.getDefaultDOAUri
+import ir.namoo.commons.utils.turnScreenOffAndKeyguardOn
+import ir.namoo.commons.utils.turnScreenOnAndKeyguardOff
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import org.koin.android.ext.android.inject
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class NAthanActivity : AppCompatActivity() {
@@ -60,10 +63,12 @@ class NAthanActivity : AppCompatActivity() {
     private var alreadyStopped = false
     private var spentSeconds = 0
     private var originalVolume = -1
+    private val preventPhoneCallIntervention = PreventPhoneCallIntervention(::stop)
     private var isDoaPlayed = false
     private var doaPlayer: MediaPlayer? = null
     private lateinit var prayerKey: String
     private var bFajrCount = 0
+    private lateinit var startDate: Date
     private val stopTask = object : Runnable {
         override fun run() = runCatching {
             spentSeconds += 5
@@ -94,25 +99,22 @@ class NAthanActivity : AppCompatActivity() {
         }
     }
 
-    private var phoneStateListener: PhoneStateListener? = object : PhoneStateListener() {
-        override fun onCallStateChanged(state: Int, incomingNumber: String) {
-            if (state == TelephonyManager.CALL_STATE_RINGING || state == TelephonyManager.CALL_STATE_OFFHOOK) {
-                stop()
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
+        turnScreenOffAndKeyguardOn()
         if (originalVolume != -1) getSystemService<AudioManager>()
             ?.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
+        runCatching {
+            getSystemService<NotificationManager>()?.cancel(2024)
+        }.onFailure(logException)
     }
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
+        startDate = Date(System.currentTimeMillis())
+        turnScreenOnAndKeyguardOff()
         Theme.apply(this)
         super.onCreate(savedInstanceState)
-
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
         prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
@@ -154,22 +156,6 @@ class NAthanActivity : AppCompatActivity() {
 
         applyAppLanguage(this)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-            getSystemService<KeyguardManager>()?.requestDismissKeyguard(this, null)
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
-            )
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-            )
-        }
         var prayTimes = coordinates?.calculatePrayTimes()
         prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
         ActivityNathanBinding.inflate(layoutInflater).apply {
@@ -193,37 +179,43 @@ class NAthanActivity : AppCompatActivity() {
         handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
 
         if (setting.isAscending) handler.post(ascendVolume)
-
-        runCatching {
-            getSystemService<TelephonyManager>()?.listen(
-                phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE
-            )
-        }.onFailure(logException)
+        preventPhoneCallIntervention.startListener(this)
+        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (!hasFocus) stop()
-    }
+//    override fun onWindowFocusChanged(hasFocus: Boolean) {
+//        super.onWindowFocusChanged(hasFocus)
+//        if (!hasFocus && isLockedAndPassed30Second()) stop()
+//    }
 
     override fun onPause() {
         super.onPause()
-        stop()
+        if (isLockedAndPassed30Second())
+            stop()
     }
+
+    private fun isLockedAndPassed30Second(): Boolean {
+        val keyguardManager = getSystemService<KeyguardManager>() ?: return true
+        val nowDate = Date(System.currentTimeMillis())
+        val diffInSecond = TimeUnit.MILLISECONDS.toSeconds(nowDate.time - startDate.time)
+        return if (!keyguardManager.isKeyguardLocked)
+            true
+        else diffInSecond > 30
+    }
+
+    private val onBackPressedCallback: OnBackPressedCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                stop()
+            }
+        }
 
     private fun stop() {
         if (alreadyStopped) return
         alreadyStopped = true
 
-        runCatching {
-            getSystemService<TelephonyManager>()?.listen(
-                phoneStateListener, PhoneStateListener.LISTEN_NONE
-            )
-            phoneStateListener = null
-        }.onFailure(logException)
-
         ringtone?.stop()
-
+        preventPhoneCallIntervention.stopListener()
         runCatching {
             if (doaPlayer != null)
                 if (doaPlayer!!.isPlaying) {

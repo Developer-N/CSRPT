@@ -44,6 +44,7 @@ import com.byagowi.persiancalendar.NWidget
 import com.byagowi.persiancalendar.OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.OWGHAT_KEY
 import com.byagowi.persiancalendar.OWGHAT_LOCATION_KEY
+import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_SELECTED_DATE_AGE_WIDGET
 import com.byagowi.persiancalendar.PREF_SELECTED_WIDGET_BACKGROUND_COLOR
 import com.byagowi.persiancalendar.PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
@@ -97,9 +98,7 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.ShapeAppearancePathProvider
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.commons.utils.createBitmapFromView
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
-import ir.namoo.religiousprayers.ui.widget.NWidgetView
 import java.util.*
 import kotlin.math.min
 
@@ -213,6 +212,9 @@ fun update(context: Context, updateDate: Boolean) {
         updateFromRemoteViews<WidgetMoon>(context) { width, height, _ ->
             createMoonRemoteViews(context, width, height)
         }
+        updateFromRemoteViews<NWidget>(context) { width, height, _ ->
+            createNRemoteViews(context, width, height, nowClock, prayTimes)
+        }
     }
 //    val next = prayTimes.getNextOwghatTimeId(nowClock)
 //    val timeClock = prayTimes.getFromStringId(next)
@@ -275,18 +277,6 @@ private inline fun <reified T> AppWidgetManager.updateFromRemoteViews(
                 Toast.LENGTH_LONG
             ).show()
         }
-        //region NWidget
-        runCatching {
-            val nWidget = ComponentName(context, NWidget::class.java)
-            if (context.resources.configuration.orientation == ORIENTATION_PORTRAIT)
-                if (getAppWidgetIds(nWidget)?.isNotEmpty() == true)
-                    RemoteViews(context.packageName, R.layout.n_widget).apply {
-                        val view = NWidgetView(context)
-                        setImageViewBitmap(R.id.widget_image, createBitmapFromView(view))
-                        setOnClickPendingIntent(R.id.widget_image, context.launchAppPendingIntent())
-                        updateAppWidget(nWidget, this)
-                    }
-        }.onFailure(logException)
     }
 }
 
@@ -652,6 +642,67 @@ private fun create4x2RemoteViews(
     setEventsInWidget(context, jdn, remoteViews, R.id.holiday_4x2, R.id.event_4x2)
 
     remoteViews.setOnClickPendingIntent(R.id.widget_layout4x2, context.launchAppPendingIntent())
+    return remoteViews
+}
+
+private fun createNRemoteViews(
+    context: Context, width: Int, height: Int, nowClock: Clock, prayTimes: PrayTimes?
+): RemoteViews {
+    val title = "${context.resources.getString(R.string.today)} :" +
+            " ${dayTitleSummary(Jdn.today(), Jdn.today().toCalendar(mainCalendar))}" +
+            " - ${context.appPrefs.getString(PREF_GEOCODED_CITYNAME, "")}"
+
+    val remoteViews = RemoteViews(context.packageName, R.layout.n_widget)
+    remoteViews.setRoundBackground(R.id.n_widget_background, width, height)
+    remoteViews.setDirection(R.id.n_widget_layout, context)
+
+    remoteViews.setupForegroundTextColors(
+        R.id.textPlaceholder4owghat_3_4x2, R.id.textPlaceholder4owghat_1_4x2,
+        R.id.textPlaceholder4owghat_15_4x2, R.id.textPlaceholder4owghat_4_4x2,
+        R.id.textPlaceholder4owghat_2_4x2, R.id.textPlaceholder4owghat_5_4x2,
+        R.id.n_widget_title
+    )
+
+    remoteViews.setTextViewText(R.id.n_widget_title, title)
+
+    prayTimes ?: return remoteViews
+
+    val owghats = listOf(
+        R.id.textPlaceholder4owghat_1_4x2, R.id.textPlaceholder4owghat_15_4x2,
+        R.id.textPlaceholder4owghat_2_4x2, R.id.textPlaceholder4owghat_3_4x2,
+        R.id.textPlaceholder4owghat_4_4x2, R.id.textPlaceholder4owghat_5_4x2
+    ).zip(
+        if (calculationMethod.isJafari) listOf(
+            R.string.fajr, R.string.sunrise,
+            R.string.dhuhr, R.string.maghrib,
+            R.string.midnight
+        ) else listOf(
+            R.string.fajr, R.string.sunrise, R.string.dhuhr,
+            R.string.asr, R.string.maghrib,
+            R.string.isha
+        )
+    ) { textHolderViewId, owghatStringId ->
+        val timeClock = prayTimes.getFromStringId(owghatStringId)
+        remoteViews.setTextViewText(
+            textHolderViewId, context.getString(owghatStringId) + "\n" +
+                    timeClock.toFormattedString(printAmPm = false)
+        )
+        remoteViews.setupForegroundTextColors(textHolderViewId)
+        Triple(textHolderViewId, owghatStringId, timeClock)
+    }
+    val (nextViewId, _, _) = owghats.firstOrNull { (_, _, timeClock) ->
+        timeClock.toMinutes() > nowClock.toMinutes()
+    } ?: owghats[0]
+    if (prefersWidgetsDynamicColors) {
+        remoteViews.setDynamicTextColor(nextViewId, android.R.attr.colorAccent)
+    } else {
+        val color = context.appPrefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
+            ?.let(Color::parseColor)
+            ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+        remoteViews.setTextColor(nextViewId, color)
+    }
+
+    remoteViews.setOnClickPendingIntent(R.id.n_widget_layout, context.launchAppPendingIntent())
     return remoteViews
 }
 

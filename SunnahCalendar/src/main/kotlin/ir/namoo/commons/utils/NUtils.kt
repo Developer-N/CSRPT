@@ -2,6 +2,7 @@ package ir.namoo.commons.utils
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -12,13 +13,16 @@ import android.graphics.Canvas
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
+import android.os.Build
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.DHUHR_KEY
@@ -49,9 +53,7 @@ val Number.nsp: Float get() = this.toFloat() * Resources.getSystem().displayMetr
 
 fun String.numbersOf(): String {
     val res = StringBuilder()
-    for (c in this)
-        if (c.isDigit())
-            res.append(c)
+    for (c in this) if (c.isDigit()) res.append(c)
     return res.toString()
 }
 
@@ -101,8 +103,7 @@ fun isNetworkConnected(context: Context): Boolean {
 }
 
 fun hideKeyBoard(view: View) {
-    val imm =
-        view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as (InputMethodManager)
+    val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as (InputMethodManager)
     imm.hideSoftInputFromWindow(view.windowToken, 0)
 }
 
@@ -136,8 +137,7 @@ fun Context.toastMessage(msg: String) {
 
 fun createBitmapFromView3(v: View): Bitmap {
     v.layoutParams = LinearLayoutCompat.LayoutParams(
-        LinearLayoutCompat.LayoutParams.MATCH_PARENT,
-        LinearLayoutCompat.LayoutParams.WRAP_CONTENT
+        LinearLayoutCompat.LayoutParams.MATCH_PARENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT
     )
     v.measure(
         View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
@@ -145,9 +145,7 @@ fun createBitmapFromView3(v: View): Bitmap {
     )
     v.layout(0, 0, v.measuredWidth, v.measuredHeight)
     val bitmap = Bitmap.createBitmap(
-        v.measuredWidth,
-        v.measuredHeight,
-        Bitmap.Config.ARGB_8888
+        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
     )
 
     val c = Canvas(bitmap)
@@ -162,8 +160,7 @@ fun animateVisibility(view: View, visible: Boolean) {
     if (view.alpha == targetAlpha) return
     view.visibility = View.VISIBLE
     val anim = view.animate().alpha(targetAlpha)
-    if (!visible)
-        anim.withEndAction { view.visibility = View.GONE }
+    if (!visible) anim.withEndAction { view.visibility = View.GONE }
 }
 
 fun getDayMonthForDayOfYear(day: Int): String {
@@ -278,10 +275,8 @@ fun timeToDouble(time: String): Double {
     val hour = time.split(":")[0].toInt()
     val minute = time.split(":")[1].toInt()
     val ashari = (minute * 100) / 60
-    return if (minute < 6)
-        "$hour.0$ashari".toDouble()
-    else
-        "$hour.$ashari".toDouble()
+    return if (minute < 6) "$hour.0$ashari".toDouble()
+    else "$hour.$ashari".toDouble()
 }
 
 fun getAthansDirectoryPath(context: Context): String =
@@ -298,41 +293,41 @@ fun isPackageInstalled(packageName: String, packageManager: PackageManager): Boo
 fun Activity.openUrlInCustomTab(url: String) {
     CustomTabsIntent.Builder().build().apply {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (isPackageInstalled("com.android.chrome", packageManager))
-            intent.setPackage("com.android.chrome")
+        if (isPackageInstalled(
+                "com.android.chrome",
+                packageManager
+            )
+        ) intent.setPackage("com.android.chrome")
     }.launchUrl(this, Uri.parse(url))
 }
 
 fun modelToDBTimes(models: List<PrayTimesModel>): List<DownloadedPrayTimesEntity> {
     val res = mutableListOf<DownloadedPrayTimesEntity>()
-    for (m in models)
-        res.add(
-            DownloadedPrayTimesEntity(
-                m.id,
-                m.day,
-                m.fajr,
-                m.sunrise,
-                m.dhuhr,
-                m.asr,
-                m.asrHanafi,
-                m.maghrib,
-                m.isha,
-                m.cityID,
-                m.created_at,
-                m.updated_at
-            )
+    for (m in models) res.add(
+        DownloadedPrayTimesEntity(
+            m.id,
+            m.day,
+            m.fajr,
+            m.sunrise,
+            m.dhuhr,
+            m.asr,
+            m.asrHanafi,
+            m.maghrib,
+            m.isha,
+            m.cityID,
+            m.created_at,
+            m.updated_at
         )
+    )
     return res
 }
 
 @SuppressLint("SimpleDateFormat")
 fun formatServerDate(serverDate: String): String {
     var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(serverDate)
-    if (date == null)
-        date = Date()
+    if (date == null) date = Date()
     return formatDate(
-        Jdn(date.toJavaCalendar().toCivilDate().toJdn())
-            .toCalendar(mainCalendar)
+        Jdn(date.toJavaCalendar().toCivilDate().toJdn()).toCalendar(mainCalendar)
     )
 }
 
@@ -340,8 +335,7 @@ fun getFileNameFromLink(link: String): String =
     link.substring(link.lastIndexOf('/') + 1, link.length)
 
 fun createAthansSettingDB(context: Context) {
-    val athanSettingDB =
-        AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+    val athanSettingDB = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
     if (athanSettingDB.getAllAthanSettings().isEmpty()) {
         athanSettingDB.insert(
             AthanSetting(
@@ -353,6 +347,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -369,6 +365,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -385,6 +383,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -401,6 +401,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -417,6 +419,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -433,6 +437,8 @@ fun createAthansSettingDB(context: Context) {
                 beforeAlertMinute = 10,
                 isAfterEnabled = false,
                 afterAlertMinute = 10,
+                isSilentEnabled = false,
+                silentMinute = 20,
                 isAscending = false,
                 athanVolume = 1,
                 athanURI = "",
@@ -471,26 +477,21 @@ fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
 ).toUri()
 
 fun getAthanUri(setting: AthanSetting, key: String, context: Context): Uri {
-    return if (key.startsWith("B") || (key.startsWith("A") && key != ASR_KEY) || key == "SUNRISE")
-        if (setting.alertURI == "")
-            getDefaultAlertUri(context)
-        else
-            setting.alertURI.toUri()
-    else
-        if (setting.athanURI == "")
-            when (setting.athanKey) {
-                "FAJR" -> getDefaultFajrAthanUri(context)
-                "SUNRISE" -> getDefaultAlertUri(context)
-                else -> getDefaultAthanUri(context)
-            }
-        else
-            setting.athanURI.toUri()
+    return if (key.startsWith("B") || (key.startsWith("A") && key != ASR_KEY) || key == "SUNRISE") if (setting.alertURI == "") getDefaultAlertUri(
+        context
+    )
+    else setting.alertURI.toUri()
+    else if (setting.athanURI == "") when (setting.athanKey) {
+        "FAJR" -> getDefaultFajrAthanUri(context)
+        "SUNRISE" -> getDefaultAlertUri(context)
+        else -> getDefaultAthanUri(context)
+    }
+    else setting.athanURI.toUri()
 }
 
 fun createBitmapFromView(v: View): Bitmap {
     v.layoutParams = RelativeLayout.LayoutParams(
-        RelativeLayout.LayoutParams.WRAP_CONTENT,
-        RelativeLayout.LayoutParams.WRAP_CONTENT
+        RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT
     )
     v.measure(
         View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
@@ -498,9 +499,7 @@ fun createBitmapFromView(v: View): Bitmap {
     )
     v.layout(0, 0, v.measuredWidth, v.measuredHeight)
     val bitmap = Bitmap.createBitmap(
-        v.measuredWidth,
-        v.measuredHeight,
-        Bitmap.Config.ARGB_8888
+        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
     )
 
     val c = Canvas(bitmap)
@@ -516,9 +515,7 @@ fun createBitmapFromView2(v: View): Bitmap {
     )
     v.layout(0, 0, v.measuredWidth, v.measuredHeight)
     val bitmap = Bitmap.createBitmap(
-        v.measuredWidth,
-        v.measuredHeight,
-        Bitmap.Config.ARGB_8888
+        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
     )
 
     val c = Canvas(bitmap)
@@ -552,4 +549,65 @@ fun String.smartTruncate(length: Int): String {
         builder.append("...")
     }
     return builder.toString()
+}
+
+
+//@RequiresApi(Build.VERSION_CODES.Q)
+//fun Activity.askFullScreenPermission() {
+//    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.USE_FULL_SCREEN_INTENT)
+//        != PackageManager.PERMISSION_GRANTED
+//    ) MaterialAlertDialogBuilder(this).apply {
+//        setTitle(R.string.requset_permision)
+//        setMessage(R.string.need_full_screen_permision)
+//        setPositiveButton(R.string.ok) { _, _ ->
+//            requestPermissions(arrayOf(Manifest.permission.USE_FULL_SCREEN_INTENT), 23)
+//        }
+//        setNegativeButton(R.string.cancel) { dialog, _ ->
+//            dialog.dismiss()
+//        }
+//        show()
+//    }
+//}
+
+fun Activity.turnScreenOnAndKeyguardOff() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        )
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        getSystemService<KeyguardManager>()?.requestDismissKeyguard(this, null)
+    }
+}
+
+fun Activity.turnScreenOffAndKeyguardOn() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        setShowWhenLocked(false)
+        setTurnScreenOn(false)
+        window.clearFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        window.clearFlags(
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        )
+    }
 }

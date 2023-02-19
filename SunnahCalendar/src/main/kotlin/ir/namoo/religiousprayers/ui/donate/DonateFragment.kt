@@ -39,15 +39,10 @@ class DonateFragment : AppCompatDialogFragment() {
 
 
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            BottomSheetDialog(requireContext()).apply {
-                setContentView(binding.root)
-                create()
-            }
-        else MaterialAlertDialogBuilder(requireContext()).apply {
-            setView(binding.root)
-            setCustomTitle(null)
-        }.create()
+        return BottomSheetDialog(requireContext()).apply {
+            setContentView(binding.root)
+            create()
+        }
     }
 
     private fun openDonateUrl(url: String?) {

@@ -17,12 +17,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:ignore="LeanbackUsesWifi" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:ignore="LeanbackUsesWifi" />
     <uses-permission android:name="android.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -124,15 +130,17 @@
 
         <activity
             android:name="ir.namoo.religiousprayers.ui.athan.NAthanActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:directBootAware="true"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
             android:showForAllUsers="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
+            android:taskAffinity=""
             android:theme="@style/AthanTheme"
-            android:turnScreenOn="true" />
+            android:turnScreenOn="true"
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity android:name="ir.namoo.religiousprayers.ui.azkar.AzkarActivity" />
 
@@ -303,7 +311,7 @@
                 android:resource="@xml/ptwidget_info" />
             <meta-data
                 android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.preferences.agewidget.WidgetAgeConfigureActivity" />
+                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
         <receiver
             android:name=".WidgetMap"

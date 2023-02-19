@@ -1,4 +1,4 @@
-package ir.namoo.religiousprayers.ui.shared
+package ir.namoo.religiousprayers.ui.downloadtimes
 
 import android.graphics.Typeface
 import androidx.compose.animation.AnimatedVisibility
@@ -29,7 +29,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import ir.namoo.commons.model.CityModel
-import ir.namoo.religiousprayers.ui.downloadtimes.CityItemState
 
 @Composable
 fun CityItemUIElement(
@@ -92,7 +91,7 @@ fun CityItemUIElement(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .weight(1f)
-                        .size(30.dp)
+                        .size(26.dp)
                 )
             }
             AnimatedVisibility(visible = !cityItemState.isDownloading) {

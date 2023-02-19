@@ -11,12 +11,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!--        <com.google.android.material.button.MaterialButton-->
-        <!--            android:id="@+id/btn_test_athan"-->
-        <!--            android:layout_width="wrap_content"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:layout_gravity="center"-->
-        <!--            android:text="TEST ATHAN" />-->
+<!--                <com.google.android.material.button.MaterialButton-->
+<!--                    android:id="@+id/btn_test"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_gravity="center"-->
+<!--                    android:text="TEST" />-->
 
         <!--        <com.google.android.material.button.MaterialButton-->
         <!--            android:id="@+id/btn_test_alarm"-->

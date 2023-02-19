@@ -15,6 +15,7 @@ class EditViewModel constructor(private val prayTimesDB: PrayTimesDB) : ViewMode
     init {
         viewModelScope.launch {
             _timeList.value = prayTimesDB.prayTimes().getAllEdited()
+            prayTimesDB.close()
         }
     }
 

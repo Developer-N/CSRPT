@@ -18,5 +18,7 @@
     <root-path
         name="external_files"
         path="/storage/" />
-
+    <database-path
+        name="databases"
+        path="." />
 </paths>

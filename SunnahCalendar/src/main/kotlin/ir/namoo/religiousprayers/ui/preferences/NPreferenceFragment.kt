@@ -61,6 +61,7 @@ import ir.namoo.commons.utils.snackMessage
 import ir.namoo.religiousprayers.ui.AthanSettingActivity
 import ir.namoo.religiousprayers.ui.shared.ShapedAdapter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.File
@@ -85,8 +86,13 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentNPrefsBinding.inflate(layoutInflater, container, false)
-//        binding.btnTestAthan.setOnClickListener {
-//            startAthan(requireContext(), DHUHR_KEY, null)
+//        binding.btnTest.setOnClickListener {
+////            val audioManager = requireContext().getSystemService<AudioManager>()
+////            audioManager?.let {
+////                it.ringerMode = if (it.ringerMode == AudioManager.RINGER_MODE_NORMAL)
+////                    AudioManager.RINGER_MODE_VIBRATE else AudioManager.RINGER_MODE_NORMAL
+////            }
+//            startAthan(requireContext(), "S_$ASR_KEY", null)
 //        }
 //        binding.btnTestAlarm.setOnClickListener {
 //            startAthan(requireContext(), "B$DHUHR_KEY", null)
@@ -345,7 +351,7 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
                 true
             } else false
         }
-        lifecycleScope.launchWhenCreated {
+        lifecycleScope.launch {
             val names = mutableListOf<String>()
             val allCities = locationsDB.cityDAO().getAllCity()
             for (c in allCities)

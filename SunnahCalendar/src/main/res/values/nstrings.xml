@@ -141,6 +141,8 @@
     <string name="alarm_before">Alarm before</string>
     <string name="enable_alarm_before">Enable or Disable</string>
     <string name="alarm_after">Alarm after</string>
+    <string name="silent_after">Silent phone after athan for selected minute</string>
+    <string name="enable_silent">Enable Silent</string>
     <string name="enable_alarm_after">Enable or Disable</string>
     <string name="select_athan_name">Select athan</string>
     <string name="default_fajr_athan_name">Mishary AlAfasy Fajr</string>
@@ -237,6 +239,7 @@
 
     <string name="support">Support</string>
     <string name="requset_permision">Request Permission</string>
+    <string name="modify_audio_settings">For change phone audio setting you need to grant permission.</string>
     <string name="need_full_screen_permision">For show full screen athan notification need grant permission.</string>
     <string name="schedule_permission_message">For schedule athan need grant permission.</string>
 
@@ -267,5 +270,7 @@
     <string name="morning_azkar">Remembrance In the morning</string>
     <string name="evening_azkar">Remembrance In the evening</string>
     <string name="for_read_azkar_tap">It\'s time to read %s For read azkar tap</string>
+
+    <string name="post_notification_permission_message">For show notification application need you to allow permission.</string>
 
 </resources>

@@ -36,6 +36,10 @@ data class AthanSetting(
     var isAfterEnabled: Boolean,
     @ColumnInfo(name = "after_minute")
     var afterAlertMinute: Int,
+    @ColumnInfo(name = "is_silent_enabled")
+    var isSilentEnabled: Boolean,
+    @ColumnInfo(name = "silent_minute")
+    var silentMinute: Int,
     @ColumnInfo(name = "is_ascending")
     var isAscending: Boolean,
     @ColumnInfo(name = "athan_volume")
@@ -68,7 +72,7 @@ interface AthanSettingsDAO {
     fun delete(athanSetting: AthanSetting)
 }
 
-@Database(entities = [AthanSetting::class], version = 6, exportSchema = false)
+@Database(entities = [AthanSetting::class], version = 7, exportSchema = false)
 abstract class AthanSettingsDB : RoomDatabase() {
     abstract fun athanSettingsDAO(): AthanSettingsDAO
 
@@ -79,7 +83,7 @@ abstract class AthanSettingsDB : RoomDatabase() {
                 val ins = Room.databaseBuilder(
                     applicationContext,
                     AthanSettingsDB::class.java, "athan_settings.db"
-                ).addMigrations(MIGRATION_5_6).fallbackToDestructiveMigration()
+                ).addMigrations(MIGRATION_5_6, Migration_6_7).fallbackToDestructiveMigration()
                     .allowMainThreadQueries().build()
                 instance = ins
                 ins
@@ -90,6 +94,12 @@ abstract class AthanSettingsDB : RoomDatabase() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE athans_settings ADD COLUMN is_after_enabled INTEGER NOT NULL DEFAULT 0")
                 database.execSQL("ALTER TABLE athans_settings ADD COLUMN after_minute INTEGER NOT NULL DEFAULT 10")
+            }
+        }
+        private val Migration_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE athans_settings ADD COLUMN is_silent_enabled INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE athans_settings ADD COLUMN silent_minute INTEGER NOT NULL DEFAULT 20")
             }
         }
     }
