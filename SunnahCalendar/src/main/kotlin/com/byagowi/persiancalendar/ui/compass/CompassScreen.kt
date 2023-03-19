@@ -151,7 +151,7 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
 
         binding.appBar.toolbar.let { toolbar ->
             toolbar.setTitle(R.string.compass)
-            toolbar.subtitle = view.context.appPrefs.cityName ?: coordinates?.run {
+            toolbar.subtitle = view.context.appPrefs.cityName ?: coordinates.value?.run {
                 formatCoordinateISO6709(latitude, longitude, elevation.takeIf { it != 0.0 })
             }
             toolbar.setupMenuNavigation()
@@ -185,7 +185,7 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
 
         binding.fab.setOnClickListener { stopCompass(!stopped) }
 
-        if (coordinates != null) {
+        if (coordinates.value != null) {
             binding.appBar.toolbar.menu.add(R.string.show_sun_and_moon_path_in_24_hours).also {
                 it.icon =
                     binding.appBar.toolbar.context.getCompatDrawable(R.drawable.ic_in_24_hours)
@@ -318,7 +318,10 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
             )
             if (BuildConfig.DEVELOPMENT)
                 Toast.makeText(context, "dev: orientation", Toast.LENGTH_LONG).show()
-            if (coordinates == null) showLongSnackbar(R.string.set_location, Snackbar.LENGTH_SHORT)
+            if (coordinates.value == null) showLongSnackbar(
+                R.string.set_location,
+                Snackbar.LENGTH_SHORT
+            )
         } else if (accelerometerSensor != null && magnetometerSensor != null) {
             sensorManager.registerListener(
                 accelerometerMagneticSensorListener, accelerometerSensor,
@@ -330,7 +333,8 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
             )
             if (BuildConfig.DEVELOPMENT)
                 Toast.makeText(context, "dev: acc+magnet", Toast.LENGTH_LONG).show()
-            if (coordinates == null) showLongSnackbar(R.string.set_location, Snackbar.LENGTH_SHORT)
+            if (coordinates.value == null)
+                showLongSnackbar(R.string.set_location, Snackbar.LENGTH_SHORT)
         } else {
             showLongSnackbar(R.string.compass_not_found, Snackbar.LENGTH_SHORT)
             sensorNotFound = true

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.utils.showComposeDialog
+import com.google.accompanist.themeadapter.material3.Mdc3Theme
 
 fun showEmailDialog(activity: FragmentActivity) =
     showComposeDialog(activity) { EmailAlertDialog(it) }
@@ -64,4 +64,4 @@ private fun EmailAlertDialog(closeDialog: () -> Unit) {
 
 @Preview
 @Composable
-private fun EmailAlertDialogPreview() = MaterialTheme { EmailAlertDialog {} }
+private fun EmailAlertDialogPreview() = Mdc3Theme { EmailAlertDialog {} }

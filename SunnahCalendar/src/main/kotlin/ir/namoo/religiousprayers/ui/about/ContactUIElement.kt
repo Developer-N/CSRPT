@@ -72,7 +72,7 @@ fun ContactsButtons(
                             modifier = Modifier.size(24.dp)
                         )
                     },
-                    elevation = AssistChipDefaults.elevatedAssistChipElevation(defaultElevation = 2.dp),
+                    elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = cardColor,
                         labelColor = textColor,
@@ -92,7 +92,7 @@ fun ContactsButtons(
                             modifier = Modifier.size(24.dp)
                         )
                     },
-                    elevation = AssistChipDefaults.elevatedAssistChipElevation(defaultElevation = 2.dp),
+                    elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = cardColor,
                         labelColor = textColor,
@@ -112,7 +112,7 @@ fun ContactsButtons(
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                elevation = AssistChipDefaults.elevatedAssistChipElevation(defaultElevation = 2.dp),
+                elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
                 colors = AssistChipDefaults.assistChipColors(
                     containerColor = cardColor,
                     labelColor = textColor,

@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 fun scheduleAzkars(context: Context) {
-    var prayTimes: PrayTimes = coordinates?.calculatePrayTimes() ?: return
+    var prayTimes: PrayTimes = coordinates.value?.calculatePrayTimes() ?: return
     PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())?.let {
         prayTimes = it
     }
@@ -119,7 +119,7 @@ class AzkarWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
 }
 
 private var lastAzkarName = ""
-private var lastAzkarJdn: Jdn? = null
+private var lastAzkarJdn: Int = 0
 fun startAzkar(context: Context, name: String, intendedTime: Long?) {
     debugLog("Azkar: startAzkar for $name")
     if (intendedTime == null) return startAzkarBody(context, name)
@@ -128,7 +128,7 @@ fun startAzkar(context: Context, name: String, intendedTime: Long?) {
 
     // If at the of being is disabled by user, skip
     if (!context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false)) return
-    val today = Jdn.today()
+    val today = Jdn.today().toJavaCalendar()[Calendar.DAY_OF_YEAR]
     if (lastAzkarJdn == today && lastAzkarName == name) return
     lastAzkarJdn = today; lastAzkarName = name
     startAzkarBody(context, name)
@@ -138,6 +138,7 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
     debugLog("Azkar: startAzkarBody for $name")
 
     runCatching {
+        @Suppress("Deprecation")
         context.getSystemService<PowerManager>()?.newWakeLock(
             PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
             "SunnahCalendar:azkar"

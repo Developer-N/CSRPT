@@ -698,6 +698,10 @@ public val persianEvents: List<CalendarRecord> = listOf(
     type = EventType.Iran, isHoliday = false, month = 6, day = 31
   ),
   CalendarRecord(
+    title = "روز بزرگداشت شهدای منا",
+    type = EventType.Iran, isHoliday = false, month = 7, day = 2
+  ),
+  CalendarRecord(
     title = "روز سرباز",
     type = EventType.Iran, isHoliday = false, month = 7, day = 4
   ),
@@ -1460,10 +1464,6 @@ public val islamicEvents: List<CalendarRecord> = listOf(
     type = EventType.Iran, isHoliday = false, month = 2, day = 27
   ),
   CalendarRecord(
-    title = "روز بزرگداشت شهدای منا",
-    type = EventType.Iran, isHoliday = false, month = 2, day = 27
-  ),
-  CalendarRecord(
     title = "رحلت حضرت رسول اکرم (ص) (۱۱ ه‍.ق) – شهادت حضرت امام حسن مجتبی (ع) (۵۰ ه‍.ق)",
     type = EventType.Iran, isHoliday = true, month = 2, day = 28
   ),
@@ -1705,7 +1705,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
     type = EventType.Iran, isHoliday = false, month = 12, day = 15
   ),
   CalendarRecord(
-    title = "تعطیلات رسمی ایران(غدیر)",
+    title = "تعطیلات رسمی ایران (غدیر)",
     type = EventType.Iran, isHoliday = true, month = 12, day = 18
   ),
   CalendarRecord(
@@ -2152,12 +2152,16 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
     type = EventType.International, isHoliday = false, month = 10, day = 1
   ),
   CalendarRecord(
-    title = "روز جهانی دختر",
-    type = EventType.International, isHoliday = false, month = 10, day = 11
+    title = "روز جهانی معلم",
+    type = EventType.International, isHoliday = false, month = 10, day = 5
   ),
   CalendarRecord(
-    title = "روز جهانی حقوق بشر",
+    title = "روز جهانی بهداشت روان",
     type = EventType.International, isHoliday = false, month = 10, day = 10
+  ),
+  CalendarRecord(
+    title = "روز جهانی دختران",
+    type = EventType.International, isHoliday = false, month = 10, day = 11
   ),
   CalendarRecord(
     title = "روز جهانی هنر",

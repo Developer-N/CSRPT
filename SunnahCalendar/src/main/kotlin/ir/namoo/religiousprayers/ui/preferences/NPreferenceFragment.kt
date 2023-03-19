@@ -1,8 +1,10 @@
 package ir.namoo.religiousprayers.ui.preferences
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -12,6 +14,7 @@ import android.view.animation.AnimationUtils
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -40,6 +43,7 @@ import io.github.persiancalendar.praytimes.CalculationMethod
 import ir.namoo.commons.ATHAN_ID
 import ir.namoo.commons.DEFAULT_FULL_SCREEN_METHOD
 import ir.namoo.commons.DEFAULT_NOTIFICATION_METHOD
+import ir.namoo.commons.DEFAULT_SUMMER_TIME
 import ir.namoo.commons.FILE_PICKER_REQUEST_CODE
 import ir.namoo.commons.PREF_FULL_SCREEN_METHOD
 import ir.namoo.commons.PREF_NOTIFICATION_METHOD
@@ -66,6 +70,8 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.abs
+import kotlin.random.Random
 
 class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var binding: FragmentNPrefsBinding
@@ -86,6 +92,26 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentNPrefsBinding.inflate(layoutInflater, container, false)
+
+        var isAthanNotificationEnable = false
+        athanSettingsDB.athanSettingsDAO().getAllAthanSettings().forEach {
+            if (it.state) isAthanNotificationEnable = true
+        }
+        if (isAthanNotificationEnable && ActivityCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.READ_PHONE_STATE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            binding.cardPhoneStatePermission.visibility = View.VISIBLE
+            binding.cardPhoneStatePermission.setOnClickListener {
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.READ_PHONE_STATE),
+                    Random.nextInt(2000)
+                )
+                binding.cardPhoneStatePermission.visibility = View.GONE
+            }
+        }
+
 //        binding.btnTest.setOnClickListener {
 ////            val audioManager = requireContext().getSystemService<AudioManager>()
 ////            audioManager?.let {
@@ -109,7 +135,7 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
         }
 
         binding.switchSummerTime.isChecked =
-            requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, true)
+            requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME)
 
         binding.switchSummerTime.setOnClickListener {
             requireContext().appPrefs.edit {

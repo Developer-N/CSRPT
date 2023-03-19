@@ -3,7 +3,6 @@ package com.byagowi.persiancalendar.ui.utils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,6 +14,7 @@ import androidx.core.view.minusAssign
 import androidx.fragment.app.FragmentActivity
 import com.byagowi.persiancalendar.databinding.FragmentComposeBinding
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
+import com.google.accompanist.themeadapter.material3.Mdc3Theme
 
 fun showComposeDialog(
     activity: FragmentActivity,
@@ -24,7 +24,7 @@ fun showComposeDialog(
     decorView.addView(ComposeView(activity).also { composeView ->
         composeView.setContent {
             var isDialogOpen by remember { mutableStateOf(true) }
-            if (isDialogOpen) MaterialTheme { dialog { isDialogOpen = false } }
+            if (isDialogOpen) Mdc3Theme { dialog { isDialogOpen = false } }
             else decorView.post { decorView -= composeView }
         }
     })
@@ -43,7 +43,7 @@ private fun createComposeView(
     composeView.layoutParams = ViewGroup.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
     )
-    composeView.setContent { MaterialTheme { Surface { content(setTitle, setSubtitle) } } }
+    composeView.setContent { Mdc3Theme { Surface { content(setTitle, setSubtitle) } } }
     binding.root.addView(composeView)
     return binding.root
 }

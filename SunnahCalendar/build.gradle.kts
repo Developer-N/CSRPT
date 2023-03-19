@@ -7,7 +7,7 @@ val Process.text: String? get() = ProcessGroovyMethods.getText(this)
 plugins {
     id("com.android.application")
     kotlin("android")
-    kotlin("kapt")
+    id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -16,7 +16,7 @@ plugins {
 }
 
 // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-val composeCompilerVersion = "1.4.2"
+val composeCompilerVersion = "1.4.3"
 val composeVersion = "1.3.3"
 
 val isMinApi21Build = gradle.startParameter.taskNames.any { "minApi21" in it || "MinApi21" in it }
@@ -39,10 +39,10 @@ android {
 
     defaultConfig {
         applicationId = "ir.namoo.religiousprayers"
-        minSdk = 21
+        minSdk = 21 // if (enableFirebaseInNightlyBuilds) 19 else 17
         targetSdk = 33
-        versionCode = 10401
-        versionName = "10.4.2023"
+        versionCode = 10500
+        versionName = "10.5.2023"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
@@ -146,15 +146,15 @@ dependencies {
     implementation("com.github.persian-calendar:calculator:0827f0fbcad2ffa8559f05dcc82002f1dac1464b")
 
     // https://github.com/cosinekitty/astronomy/releases/tag/v2.1.0
-    implementation("com.github.cosinekitty:astronomy:v2.1.8")
+    implementation("com.github.cosinekitty:astronomy:v2.1.17")
 
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.preference:preference-ktx:1.2.0")
-    implementation("androidx.recyclerview:recyclerview:1.2.1")
+    implementation("androidx.recyclerview:recyclerview:1.3.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
     implementation("androidx.dynamicanimation:dynamicanimation:1.0.0")
-    implementation("com.google.android.material:material:1.8.0")
+    implementation("com.google.android.material:material:1.9.0-beta01")
 
     val navVersion = "2.5.3"
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
@@ -166,7 +166,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:$fragmentVersion")
     debugImplementation("androidx.fragment:fragment-testing:$fragmentVersion")
     implementation("androidx.activity:activity-ktx:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
 
     implementation("androidx.browser:browser:1.5.0")
 
@@ -189,7 +189,7 @@ dependencies {
     minApi21Implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-themeadapter-material3:$accompanistVersion")
     minApi21Implementation("androidx.compose.ui:ui:$composeVersion")
-    minApi21Implementation("androidx.compose.material3:material3:1.1.0-alpha06")
+    minApi21Implementation("androidx.compose.material3:material3:1.1.0-alpha08")
     minApi21Implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     minApi21Implementation("androidx.compose.animation:animation-graphics:$composeVersion")
     implementation("androidx.compose.runtime:runtime:$composeVersion")
@@ -208,7 +208,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
 
-    testImplementation("org.mockito:mockito-core:5.1.1")
+    testImplementation("org.mockito:mockito-core:5.2.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
 
     testImplementation("com.google.truth:truth:1.1.3")
@@ -218,7 +218,7 @@ dependencies {
     androidTestImplementation("androidx.test:rules:$androidTestVersion")
     androidTestImplementation("androidx.test:core-ktx:$androidTestVersion")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    val espressoVersion = "3.5.1"
+    val espressoVersion = "3.4.0"
     androidTestImplementation("androidx.test.espresso:espresso-contrib:$espressoVersion")
     androidTestImplementation("androidx.test.espresso:espresso-core:$espressoVersion")
 
@@ -246,11 +246,11 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.5")
 
     //Json Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 
     //room
     implementation("androidx.room:room-runtime:2.5.0")
-    kapt("androidx.room:room-compiler:2.5.0")
+    ksp("androidx.room:room-compiler:2.5.0")
     implementation("androidx.room:room-ktx:2.5.0")
 
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
@@ -260,7 +260,7 @@ dependencies {
 
     //FireBase
     implementation("com.google.firebase:firebase-core:21.1.1")
-    implementation("com.google.firebase:firebase-crashlytics-ktx:18.3.3")
+    implementation("com.google.firebase:firebase-crashlytics-ktx:18.3.5")
     implementation("com.google.firebase:firebase-analytics-ktx:21.2.0")
     implementation("com.google.firebase:firebase-inappmessaging-display-ktx:20.3.0")
 

@@ -59,7 +59,7 @@ import ir.namoo.commons.BASE_API_URL
 import ir.namoo.commons.NAVIGATE_TO_DOWNLOAD_FRAGMENT
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.PREF_LAST_UPDATE_CHECK
-import ir.namoo.commons.model.LocationsDB
+import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.UpdateModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
@@ -71,7 +71,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.get
-import org.koin.android.ext.android.inject
 import kotlin.math.roundToInt
 
 
@@ -95,7 +94,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private val quranID = 6236
 
     private val prayTimeRepository: PrayTimeRepository = get()
-    private val locationsDB: LocationsDB by inject()
+    private val athanSettings: AthanSettingsDB = get()
 
     private val receiverUD = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -127,9 +126,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
         ensureDirectionality()
 
-        if (enableNewInterface &&
-            getSystemService<ActivityManager>()?.isLowRamDevice == false
-        ) {
+        if (enableNewInterface && getSystemService<ActivityManager>()?.isLowRamDevice == false) {
             window?.makeWallpaperTransparency()
             binding.root.fitsSystemWindows = false
             binding.root.background = MaterialShapeDrawable().also {
@@ -194,7 +191,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         val persian = creationDateJdn.toPersianCalendar()
         run {
             val header = NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0))
-            val season = Season.fromPersianCalendar(persian, coordinates)
+            val season = Season.fromPersianCalendar(persian, coordinates.value)
 //            header.seasonImage.setImageResource(season.imageId)
             header.seasonImage.contentDescription = getString(season.nameStringId)
             header.seasonImage.setImageResource(run {
@@ -234,24 +231,26 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = getSystemService<AlarmManager>()
-            if (alarmManager != null && !alarmManager.canScheduleExactAlarms())
-                MaterialAlertDialogBuilder(this).apply {
-                    setTitle(R.string.requset_permision)
-                    setMessage(R.string.schedule_permission_message)
-                    setPositiveButton(R.string.ok) { _, _ ->
-                        startActivity(Intent().apply {
-                            action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
-                        })
-                    }
-                    setNegativeButton(R.string.cancel) { dialog, _ ->
-                        dialog.dismiss()
-                    }
-                    show()
+            if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) MaterialAlertDialogBuilder(
+                this
+            ).apply {
+                setTitle(R.string.requset_permision)
+                setMessage(R.string.schedule_permission_message)
+                setPositiveButton(R.string.ok) { _, _ ->
+                    startActivity(Intent().apply {
+                        action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                    })
                 }
+                setNegativeButton(R.string.cancel) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                show()
+            }
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             MaterialAlertDialogBuilder(this).apply {
                 setTitle(R.string.requset_permision)
@@ -264,6 +263,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
                 show()
             }
+        }
+        lifecycleScope.launch {
+            checkAndAskPhoneStatePermission(athanSettings)
         }
     }
 
@@ -303,16 +305,14 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun navigateTo(@IdRes id: Int) {
-        navHostFragment?.navController?.navigate(
-            id, null, navOptions {
-                anim {
-                    enter = R.anim.nav_enter_anim
-                    exit = R.anim.nav_exit_anim
-                    popEnter = R.anim.nav_enter_anim
-                    popExit = R.anim.nav_exit_anim
-                }
+        navHostFragment?.navController?.navigate(id, null, navOptions {
+            anim {
+                enter = R.anim.nav_enter_anim
+                exit = R.anim.nav_exit_anim
+                popEnter = R.anim.nav_enter_anim
+                popExit = R.anim.nav_exit_anim
             }
-        )
+        })
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
@@ -329,8 +329,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             PREF_ISLAMIC_OFFSET ->
                 prefs.edit { putJdn(PREF_ISLAMIC_OFFSET_SET_DATE, Jdn.today()) }
             PREF_SHOW_DEVICE_CALENDAR_EVENTS -> {
-                if (prefs.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, true) &&
-                    ActivityCompat.checkSelfPermission(
+                if (prefs.getBoolean(
+                        PREF_SHOW_DEVICE_CALENDAR_EVENTS,
+                        true
+                    ) && ActivityCompat.checkSelfPermission(
                         this, Manifest.permission.READ_CALENDAR
                     ) != PackageManager.PERMISSION_GRANTED
                 ) askForCalendarPermission()
@@ -369,8 +371,9 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, isGranted) }
                 if (isGranted) {
                     val navController = navHostFragment?.navController
-                    if (navController?.currentDestination?.id == R.id.calendar)
-                        navController.navigateSafe(CalendarScreenDirections.navigateToSelf())
+                    if (navController?.currentDestination?.id == R.id.calendar) navController.navigateSafe(
+                        CalendarScreenDirections.navigateToSelf()
+                    )
                 }
             }
             POST_NOTIFICATION_PERMISSION_REQUEST_CODE -> {
@@ -407,10 +410,10 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     // Checking for the ancient "menu" key
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = when (keyCode) {
         KeyEvent.KEYCODE_MENU -> {
-            if (binding.root.isDrawerOpen(GravityCompat.START))
-                binding.root.closeDrawer(GravityCompat.START)
-            else
-                binding.root.openDrawer(GravityCompat.START)
+            if (binding.root.isDrawerOpen(GravityCompat.START)) binding.root.closeDrawer(
+                GravityCompat.START
+            )
+            else binding.root.openDrawer(GravityCompat.START)
             true
         }
         else -> super.onKeyDown(keyCode, event)
@@ -542,7 +545,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private fun checkForUpdate() {
         lifecycleScope.launch(Dispatchers.IO) {
-            prayTimeRepository.getLastUpdateInfo().collect() { result ->
+            prayTimeRepository.getLastUpdateInfo().collect { result ->
                 when (result.asDataState()) {
                     is DataState.Error -> {}
                     DataState.Loading -> {}

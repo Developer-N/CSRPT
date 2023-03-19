@@ -37,7 +37,7 @@ class MonthlyViewModel : ViewModel() {
                 val persianDate = PersianDate(PersianDate(civilDate.toJdn()).year, monthNumber, day)
                 val date = CivilDate(persianDate.toJdn())
                 var prayTimes: PrayTimes? =
-                    coordinates?.calculatePrayTimes(Jdn(date).toJavaCalendar())
+                    coordinates.value?.calculatePrayTimes(Jdn(date).toJavaCalendar())
                 prayTimes = PrayTimeProvider(context).nReplace(prayTimes, Jdn(date))
                 prayTimes?.let { times.add(it) }
             }

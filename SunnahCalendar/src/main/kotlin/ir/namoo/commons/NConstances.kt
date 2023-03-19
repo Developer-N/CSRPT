@@ -12,6 +12,7 @@ const val NAVIGATE_TO_DOWNLOAD_FRAGMENT = "ir.namoo.srp.download"
 
 const val PREF_ENABLE_EDIT = "enable_edit"
 const val PREF_SUMMER_TIME = "summer_time"
+const val DEFAULT_SUMMER_TIME = false
 const val PREF_FIRST_START = "first_start"
 
 const val PREF_LAST_INSTALL_SEND_TIME = "last_install_time"
@@ -42,3 +43,5 @@ const val PREF_APP_FONT = "app_font"
 const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
 
 const val PREF_ORIGINAL_RINGER_MODE = "pref_original_ringer_mode"
+
+const val PREF_PHONE_STATE_PERMISSION = "is_phone_state_permission_showed"

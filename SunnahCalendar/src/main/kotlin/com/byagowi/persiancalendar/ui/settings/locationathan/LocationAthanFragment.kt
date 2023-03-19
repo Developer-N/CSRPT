@@ -187,7 +187,7 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
         val context = context ?: return
         sharedPreferences ?: return
         updateStoredPreference(context) // So vital to have this to have updated preferences here
-        athanPreferenceCategory?.forEach { it.isVisible = coordinates != null }
+        athanPreferenceCategory?.forEach { it.isVisible = coordinates.value != null }
         asrCalculationHanafiJuristicPreference?.isVisible = !calculationMethod.isJafari
         highLatitudesMethodPreference?.isVisible = enableHighLatitudesConfiguration
 
@@ -203,11 +203,13 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
         val cityName = sharedPreferences.cityName
         selectedLocationPreference?.summary = cityName ?: context.getString(R.string.location_help)
         athanPreferenceCategory?.setSummary(
-            if (coordinates == null) R.string.athan_disabled_summary else R.string.empty
+            if (coordinates.value == null) R.string.athan_disabled_summary else R.string.empty
         )
         coordinatesPreference?.isEnabled = cityName == null
-        coordinatesPreference?.summary = coordinates
+        coordinatesPreference?.summary = coordinates.value
             ?.run { formatCoordinateISO6709(latitude, longitude, elevation.takeIf { it != .0 }) }
-        athanPreferenceCategory?.forEach { it.isVisible = it.isVisible && coordinates != null }
+        athanPreferenceCategory?.forEach {
+            it.isVisible = it.isVisible && coordinates.value != null
+        }
     }
 }

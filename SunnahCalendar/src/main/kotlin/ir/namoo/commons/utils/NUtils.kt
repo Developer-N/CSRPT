@@ -1,5 +1,6 @@
 package ir.namoo.commons.utils
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.KeyguardManager
@@ -22,6 +23,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.ASR_KEY
@@ -39,8 +42,10 @@ import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toJavaCalendar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.praytimes.PrayTimes
+import ir.namoo.commons.PREF_PHONE_STATE_PERMISSION
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.PrayTimesModel
@@ -283,9 +288,17 @@ fun getAthansDirectoryPath(context: Context): String =
     context.getExternalFilesDir("athans")?.absolutePath ?: ""
 
 
-fun isPackageInstalled(packageName: String, packageManager: PackageManager): Boolean {
+fun isPackageInstalled(
+    packageName: String, packageManager: PackageManager, flags: Int = 0
+): Boolean {
     return runCatching {
-        packageManager.getPackageInfo(packageName, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(
+                packageName, PackageManager.PackageInfoFlags.of(flags.toLong())
+            )
+        } else {
+            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, flags)
+        }
         true
     }.onFailure(logException).getOrDefault(false)
 }
@@ -294,8 +307,7 @@ fun Activity.openUrlInCustomTab(url: String) {
     CustomTabsIntent.Builder().build().apply {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (isPackageInstalled(
-                "com.android.chrome",
-                packageManager
+                "com.android.chrome", packageManager
             )
         ) intent.setPackage("com.android.chrome")
     }.launchUrl(this, Uri.parse(url))
@@ -574,17 +586,11 @@ fun Activity.turnScreenOnAndKeyguardOff() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
     } else {
-        @Suppress("DEPRECATION")
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        @Suppress("DEPRECATION") window.addFlags(
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -597,17 +603,39 @@ fun Activity.turnScreenOffAndKeyguardOn() {
         setShowWhenLocked(false)
         setTurnScreenOn(false)
         window.clearFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
     } else {
-        @Suppress("DEPRECATION")
-        window.clearFlags(
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
+        @Suppress("DEPRECATION") window.clearFlags(
+            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
+    }
+}
+
+fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
+    val settings = athanSettings.athanSettingsDAO().getAllAthanSettings()
+    var isAthanNotificationEnable = false
+    settings.forEach {
+        if (it.state) isAthanNotificationEnable = true
+    }
+    if (isAthanNotificationEnable && !appPrefsLite.getBoolean(
+            PREF_PHONE_STATE_PERMISSION,
+            false
+        ) && ActivityCompat.checkSelfPermission(
+            this, Manifest.permission.READ_PHONE_STATE
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        MaterialAlertDialogBuilder(this).setTitle(getString(R.string.requset_permision))
+            .setMessage(getString(R.string.phone_state_permission_message))
+            .setPositiveButton(R.string.ok) { _, _ ->
+                ActivityCompat.requestPermissions(
+                    this, arrayOf(Manifest.permission.READ_PHONE_STATE), 1
+                )
+            }.setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+        appPrefsLite.edit {
+            putBoolean(PREF_PHONE_STATE_PERMISSION, true)
+        }
     }
 }

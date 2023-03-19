@@ -64,6 +64,7 @@ import com.byagowi.persiancalendar.databinding.FragmentCalendarBinding
 import com.byagowi.persiancalendar.databinding.OwghatTabContentBinding
 import com.byagowi.persiancalendar.databinding.OwghatTabPlaceholderBinding
 import com.byagowi.persiancalendar.entities.CalendarEvent
+import com.byagowi.persiancalendar.entities.CalendarType
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.entities.EventsStore
@@ -105,6 +106,7 @@ import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.calendarType
 import com.byagowi.persiancalendar.utils.cityName
 import com.byagowi.persiancalendar.utils.dayTitleSummary
+import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.formatTitle
 import com.byagowi.persiancalendar.utils.getA11yDaySummary
@@ -185,7 +187,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
 
     private fun enableOwghatTab(context: Context): Boolean {
         val appPrefs = context.appPrefs
-        return coordinates != null || // if coordinates is set, should be shown
+        return coordinates.value != null || // if coordinates is set, should be shown
                 (language.isPersian && // The placeholder isn't translated to other languages
                         // The user is already dismissed the third tab
                         !appPrefs.getBoolean(PREF_DISABLE_OWGHAT, false) &&
@@ -206,7 +208,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
 
     @SuppressLint("SetTextI18n")
     private fun createOwghatTab(inflater: LayoutInflater, container: ViewGroup?): View {
-        coordinates ?: return createOwghatTabPlaceholder(inflater, container)
+        coordinates.value ?: return createOwghatTabPlaceholder(inflater, container)
         val binding = OwghatTabContentBinding.inflate(inflater, container, false)
 
         binding.root.setOnClickListener {
@@ -604,7 +606,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
     }
 
     private fun setOwghat(owghatBinding: OwghatTabContentBinding, jdn: Jdn, isToday: Boolean) {
-        val coordinates = coordinates ?: return
+        val coordinates = coordinates.value ?: return
 
         val date = jdn.toJavaCalendar()
         var prayTimes = coordinates.calculatePrayTimes(date)
@@ -723,7 +725,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
                 showMonthOverviewDialog(activity ?: return@onClick, viewModel.selectedMonth.value)
             }
         }
-        if (coordinates != null) {
+        if (coordinates.value != null) {
             toolbar.menu.add(R.string.month_pray_times).also {
                 it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
                 it.onClick {
@@ -758,7 +760,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
     }
 
     private fun createOwghatHtmlReport(date: AbstractDate): String = createHTML().html {
-        val coordinates = coordinates ?: return@html
+        val coordinates = coordinates.value ?: return@html
         attributes["lang"] = language.language
         attributes["dir"] = if (resources.isRtl) "rtl" else "ltr"
         head {
@@ -825,7 +827,7 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
 
     private fun shareOwghat() {
         val jdn = viewModel.selectedDay
-        var prayTimes = coordinates?.calculatePrayTimes(jdn.value.toJavaCalendar())
+        var prayTimes = coordinates.value?.calculatePrayTimes(jdn.value.toJavaCalendar())
         prayTimes = PrayTimeProvider(requireContext()).nReplace(prayTimes, jdn.value) ?: return
         val cityName = requireContext().appPrefs.cityName
         val dayLength = Clock.fromMinutesCount(
@@ -836,7 +838,10 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
             "\uD83D\uDD4C ${getString(R.string.owghat)} $cityName  \uD83D\uDD4C \r\n" +
                     "\uD83D\uDDD3 ${
                         dayTitleSummary(jdn.value, jdn.value.toCalendar(mainCalendar))
-                    } \r\n" +
+                    } \r\n\uD83D\uDDD3 ${
+                        formatDate(jdn.value.toCalendar(CalendarType.ISLAMIC))
+                    }" +
+                    "\r\n" +
                     "${getString(R.string.fajr)} : ${
                         formatNumber(prayTimes.getFromStringId(R.string.fajr).toFormattedString())
                     }\r\n" +
@@ -935,7 +940,8 @@ class CalendarScreen : Fragment(R.layout.fragment_calendar) {
                     )
                     if (viewModel.selectedDay.value != Jdn.today()) {
                         val jdn = viewModel.selectedDay
-                        var prayTimes = coordinates?.calculatePrayTimes(jdn.value.toJavaCalendar())
+                        var prayTimes =
+                            coordinates.value?.calculatePrayTimes(jdn.value.toJavaCalendar())
                         prayTimes =
                             PrayTimeProvider(requireContext()).nReplace(prayTimes, jdn.value)
                                 ?: return

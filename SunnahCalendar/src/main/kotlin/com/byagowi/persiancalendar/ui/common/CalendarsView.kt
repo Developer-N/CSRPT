@@ -7,11 +7,13 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
+import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.CalendarsViewBinding
 import com.byagowi.persiancalendar.entities.CalendarType
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.isForcedIranTimeEnabled
 import com.byagowi.persiancalendar.global.language
@@ -120,13 +122,20 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
         if (mainCalendar == chosenCalendarType && chosenCalendarType == CalendarType.SHAMSI) {
             if (date.month == 12 && date.dayOfMonth >= 20 || date.month == 1 && date.dayOfMonth == 1) {
                 val addition = if (date.month == 12) 1 else 0
+                val equinoxYear = date.year + addition
+                val calendar = Date(
+                    seasons(jdn.toGregorianCalendar().year).marchEquinox
+                        .toMillisecondsSince1970()
+                ).toJavaCalendar()
                 equinox = context.getString(
                     R.string.spring_equinox,
-                    formatNumber(date.year + addition),
-                    Date(
-                        seasons(jdn.toGregorianCalendar().year).marchEquinox
-                            .toMillisecondsSince1970()
-                    ).toJavaCalendar().formatDateAndTime()
+                    formatNumber(equinoxYear),
+                    // TODO: to be removed soon
+                    // Special case 1402's equinox due to confusion of 12:54 am for users
+                    if (equinoxYear == 1402 && calendar.timeZone.id == IRAN_TIMEZONE_ID
+                        && language == Language.FA)
+                        formatNumber("00:54 بامداد، 1 فروردین 1402")
+                    else calendar.formatDateAndTime()
                 )
             }
         }

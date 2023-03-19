@@ -73,6 +73,8 @@ import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinates
 import io.github.persiancalendar.praytimes.HighLatitudesMethod
 import ir.namoo.commons.utils.createAthansSettingDB
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 private val monthNameEmptyList = List(12) { "" }
 var persianMonths = monthNameEmptyList
@@ -114,8 +116,8 @@ var language = Language.FA
     private set
 var easternGregorianArabicMonths = false
     private set
-var coordinates: Coordinates? = null
-    private set
+private val coordinates_ = MutableStateFlow<Coordinates?>(null)
+val coordinates: StateFlow<Coordinates?> = coordinates_
 var enabledCalendars = listOf(CalendarType.SHAMSI, CalendarType.GREGORIAN, CalendarType.ISLAMIC)
     private set
 val mainCalendar inline get() = enabledCalendars.getOrNull(0) ?: CalendarType.SHAMSI
@@ -256,7 +258,7 @@ fun updateStoredPreference(context: Context) {
         else prefs.getString(PREF_HIGH_LATITUDES_METHOD, null) ?: DEFAULT_HIGH_LATITUDES_METHOD
     )
 
-    coordinates = prefs.storedCity?.coordinates ?: run {
+    coordinates_.value = prefs.storedCity?.coordinates ?: run {
         listOf(PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE)
             .map { prefs.getString(it, null)?.toDoubleOrNull() ?: .0 }
             .takeIf { coords -> coords.any { it != .0 } } // if all were zero preference isn't set yet
@@ -344,4 +346,9 @@ fun updateStoredPreference(context: Context) {
             it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean
         }
     }.onFailure(logException).getOrNull() ?: false
+}
+
+// A very special case to trig coordinates mechanism in saveLocation
+fun overrideCoordinatesGlobalVariable(coordinates: Coordinates) {
+    coordinates_.value = coordinates
 }

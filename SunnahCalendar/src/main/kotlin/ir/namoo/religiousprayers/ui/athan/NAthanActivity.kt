@@ -9,9 +9,12 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -99,6 +102,7 @@ class NAthanActivity : AppCompatActivity() {
         }
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
         turnScreenOffAndKeyguardOn()
@@ -110,7 +114,26 @@ class NAthanActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
+    @Suppress("Deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
+        runCatching {
+            val telephonyManager = getSystemService<TelephonyManager>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                telephonyManager?.registerTelephonyCallback(mainExecutor,
+                    object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                        override fun onCallStateChanged(state: Int) {
+                            when (state) {
+                                TelephonyManager.CALL_STATE_IDLE -> {}
+                                else -> finish()
+                            }
+                        }
+                    })
+            } else if (telephonyManager?.callState != TelephonyManager.CALL_STATE_IDLE)
+                finish()
+            else {
+                //do nothing
+            }
+        }.onFailure(logException)
         startDate = Date(System.currentTimeMillis())
         turnScreenOnAndKeyguardOff()
         Theme.apply(this)
@@ -156,7 +179,7 @@ class NAthanActivity : AppCompatActivity() {
 
         applyAppLanguage(this)
 
-        var prayTimes = coordinates?.calculatePrayTimes()
+        var prayTimes = coordinates.value?.calculatePrayTimes()
         prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
         ActivityNathanBinding.inflate(layoutInflater).apply {
             setContentView(root)

@@ -3,7 +3,6 @@
 package com.byagowi.persiancalendar.ui.compass
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
@@ -13,14 +12,18 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.withRotation
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EarthPosition
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.QIBLA_LATITUDE
+import com.byagowi.persiancalendar.QIBLA_LONGITUDE
 import com.byagowi.persiancalendar.ui.common.AngleDisplay
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.sp
 import com.byagowi.persiancalendar.utils.toObserver
@@ -84,14 +87,15 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
         it.strokeWidth = 1.dp
         it.pathEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
     }
-    private val kaaba = BitmapFactory.decodeResource(resources, R.drawable.kaaba)
+    private val kaaba = context.getCompatDrawable(R.drawable.kaaba)
+        .toBitmap(32.dp.toInt(), 32.dp.toInt())
 
     private var cx = 0f
     private var cy = 0f // Center of Compass (cx, cy)
     private var radius = 0f // radius of Compass dial
     private var r = 0f // radius of Sun and Moon
 
-    private val observer = coordinates?.toObserver()
+    private val observer = coordinates.value?.toObserver()
     private var astronomyState = observer?.let { AstronomyState(it, GregorianCalendar()) }
 
     private val fullDay = Clock(24, 0).toMinutes().toFloat()
@@ -105,8 +109,9 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
         invalidate()
     }
 
-    val qiblaHeading = coordinates?.run {
-        EarthPosition(latitude, longitude).toEarthHeading(EarthPosition(21.422522, 39.826181))
+    val qiblaHeading = coordinates.value?.run {
+        val qibla = EarthPosition(QIBLA_LATITUDE, QIBLA_LONGITUDE)
+        EarthPosition(latitude, longitude).toEarthHeading(qibla)
     }
     var isShowQibla = true
         set(value) {
@@ -163,7 +168,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
         canvas.withRotation(-trueNorth, cx, cy) {
             drawDial()
             drawPath(northwardShapePath, northArrowPaint)
-            if (coordinates != null) {
+            if (coordinates.value != null) {
                 drawMoon()
                 drawSun()
                 drawQibla()

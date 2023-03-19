@@ -10,6 +10,7 @@ import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.PrayTimes
+import ir.namoo.commons.DEFAULT_SUMMER_TIME
 import ir.namoo.commons.PREF_ENABLE_EDIT
 import ir.namoo.commons.PREF_SUMMER_TIME
 import ir.namoo.commons.model.LocationsDB
@@ -49,48 +50,94 @@ class PrayTimeProvider constructor(private val context: Context) {
                     prayTimes
                 }
             }
-            if (context.appPrefs.getBoolean(PREF_SUMMER_TIME, true) || dayNumber !in 2..185) result
-            else deleteSummerTime(result)
+            if (ptFrom == 0 && context.appPrefs.getBoolean(
+                    PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME
+                ) && dayNumber in 2..185
+            ) result.addSummerTime()
+            else if (ptFrom == 0 ||
+                context.appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME)
+                || dayNumber !in 2..185
+            ) result
+            else result.deleteSummerTime()
         }.onFailure(logException).getOrElse { prayTimes }
     }
 
-    private fun deleteSummerTime(times: PrayTimes): PrayTimes {
-        val imsak = times.javaClass.getDeclaredField("imsak").apply { isAccessible = true }
-        val fajr = times.javaClass.getDeclaredField("fajr").apply { isAccessible = true }
-        val sunrise = times.javaClass.getDeclaredField("sunrise").apply { isAccessible = true }
-        val dhuhr = times.javaClass.getDeclaredField("dhuhr").apply { isAccessible = true }
-        val asr = times.javaClass.getDeclaredField("asr").apply { isAccessible = true }
-        val sunset = times.javaClass.getDeclaredField("sunset").apply { isAccessible = true }
-        val maghrib = times.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
-        val isha = times.javaClass.getDeclaredField("isha").apply { isAccessible = true }
+    private fun PrayTimes.deleteSummerTime(): PrayTimes {
+        val imsak = this.javaClass.getDeclaredField("imsak").apply { isAccessible = true }
+        val fajr = this.javaClass.getDeclaredField("fajr").apply { isAccessible = true }
+        val sunrise = this.javaClass.getDeclaredField("sunrise").apply { isAccessible = true }
+        val dhuhr = this.javaClass.getDeclaredField("dhuhr").apply { isAccessible = true }
+        val asr = this.javaClass.getDeclaredField("asr").apply { isAccessible = true }
+        val sunset = this.javaClass.getDeclaredField("sunset").apply { isAccessible = true }
+        val maghrib = this.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
+        val isha = this.javaClass.getDeclaredField("isha").apply { isAccessible = true }
 
         imsak.set(
-            times, (Clock.fromHoursFraction(times.imsak).apply {
+            this, (Clock.fromHoursFraction(this.imsak).apply {
                 hours -= 1
             }).toHoursFraction()
         )
-        fajr.set(times, (Clock.fromHoursFraction(times.fajr).apply {
+        fajr.set(this, (Clock.fromHoursFraction(this.fajr).apply {
             hours -= 1
         }).toHoursFraction())
-        sunrise.set(times, (Clock.fromHoursFraction(times.sunrise).apply {
+        sunrise.set(this, (Clock.fromHoursFraction(this.sunrise).apply {
             hours -= 1
         }).toHoursFraction())
-        dhuhr.set(times, (Clock.fromHoursFraction(times.dhuhr).apply {
+        dhuhr.set(this, (Clock.fromHoursFraction(this.dhuhr).apply {
             hours -= 1
         }).toHoursFraction())
-        asr.set(times, (Clock.fromHoursFraction(times.asr).apply {
+        asr.set(this, (Clock.fromHoursFraction(this.asr).apply {
             hours -= 1
         }).toHoursFraction())
-        sunset.set(times, (Clock.fromHoursFraction(times.sunset).apply {
+        sunset.set(this, (Clock.fromHoursFraction(this.sunset).apply {
             hours -= 1
         }).toHoursFraction())
-        maghrib.set(times, (Clock.fromHoursFraction(times.maghrib).apply {
+        maghrib.set(this, (Clock.fromHoursFraction(this.maghrib).apply {
             hours -= 1
         }).toHoursFraction())
-        isha.set(times, (Clock.fromHoursFraction(times.isha).apply {
+        isha.set(this, (Clock.fromHoursFraction(this.isha).apply {
             hours -= 1
         }).toHoursFraction())
-        return times
+        return this
+    }
+
+    private fun PrayTimes.addSummerTime(): PrayTimes {
+        val imsak = this.javaClass.getDeclaredField("imsak").apply { isAccessible = true }
+        val fajr = this.javaClass.getDeclaredField("fajr").apply { isAccessible = true }
+        val sunrise = this.javaClass.getDeclaredField("sunrise").apply { isAccessible = true }
+        val dhuhr = this.javaClass.getDeclaredField("dhuhr").apply { isAccessible = true }
+        val asr = this.javaClass.getDeclaredField("asr").apply { isAccessible = true }
+        val sunset = this.javaClass.getDeclaredField("sunset").apply { isAccessible = true }
+        val maghrib = this.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
+        val isha = this.javaClass.getDeclaredField("isha").apply { isAccessible = true }
+
+        imsak.set(
+            this, (Clock.fromHoursFraction(this.imsak).apply {
+                hours += 1
+            }).toHoursFraction()
+        )
+        fajr.set(this, (Clock.fromHoursFraction(this.fajr).apply {
+            hours += 1
+        }).toHoursFraction())
+        sunrise.set(this, (Clock.fromHoursFraction(this.sunrise).apply {
+            hours += 1
+        }).toHoursFraction())
+        dhuhr.set(this, (Clock.fromHoursFraction(this.dhuhr).apply {
+            hours += 1
+        }).toHoursFraction())
+        asr.set(this, (Clock.fromHoursFraction(this.asr).apply {
+            hours += 1
+        }).toHoursFraction())
+        sunset.set(this, (Clock.fromHoursFraction(this.sunset).apply {
+            hours += 1
+        }).toHoursFraction())
+        maghrib.set(this, (Clock.fromHoursFraction(this.maghrib).apply {
+            hours += 1
+        }).toHoursFraction())
+        isha.set(this, (Clock.fromHoursFraction(this.isha).apply {
+            hours += 1
+        }).toHoursFraction())
+        return this
     }
 
     // TODO check this for correctly run
@@ -118,12 +165,10 @@ class PrayTimeProvider constructor(private val context: Context) {
         sunrise.set(prayTimes, exactTimes.toDouble(exactTimes.sunrise))
         dhuhr.set(prayTimes, exactTimes.toDouble(exactTimes.dhuhr))
         if (asrMethod == AsrMethod.Standard && exactTimes.asr != "00:00:00") asr.set(
-            prayTimes,
-            exactTimes.toDouble(exactTimes.asr)
+            prayTimes, exactTimes.toDouble(exactTimes.asr)
         )
         else if (asrMethod == AsrMethod.Hanafi && exactTimes.asrHanafi != "00:00:00") asr.set(
-            prayTimes,
-            exactTimes.toDouble(exactTimes.asrHanafi)
+            prayTimes, exactTimes.toDouble(exactTimes.asrHanafi)
         )
         else ptFrom = 3
         sunset.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))

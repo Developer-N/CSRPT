@@ -11,12 +11,49 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-<!--                <com.google.android.material.button.MaterialButton-->
-<!--                    android:id="@+id/btn_test"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:text="TEST" />-->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_phone_state_permission"
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="?attr/colorCard">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:layout_weight="5"
+                    android:padding="4dp"
+                    android:text="@string/phone_state_permission_message"
+                    android:textColor="?attr/colorTextNormal" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    app:srcCompat="@drawable/baseline_warning_24"
+                    app:tint="?attr/colorWarning" />
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--                <com.google.android.material.button.MaterialButton-->
+        <!--                    android:id="@+id/btn_test"-->
+        <!--                    android:layout_width="wrap_content"-->
+        <!--                    android:layout_height="wrap_content"-->
+        <!--                    android:layout_gravity="center"-->
+        <!--                    android:text="TEST" />-->
 
         <!--        <com.google.android.material.button.MaterialButton-->
         <!--            android:id="@+id/btn_test_alarm"-->

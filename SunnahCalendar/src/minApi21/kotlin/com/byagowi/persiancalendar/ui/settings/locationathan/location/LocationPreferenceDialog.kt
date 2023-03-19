@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import com.byagowi.persiancalendar.ui.utils.showComposeDialog
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.saveCity
 import com.byagowi.persiancalendar.utils.sortCityNames
+import com.google.accompanist.themeadapter.material3.Mdc3Theme
 
 fun showLocationPreferenceDialog(activity: FragmentActivity) =
     showComposeDialog(activity) { LocationPreferenceDialog(it) { showProvinceDialog(activity) } }
@@ -85,4 +85,4 @@ private fun LocationPreferenceDialog(closeDialog: () -> Unit, onMoreButtonClick:
 
 @Preview
 @Composable
-private fun LocationPreferenceDialogPreview() = MaterialTheme { LocationPreferenceDialog({}, {}) }
+private fun LocationPreferenceDialogPreview() = Mdc3Theme { LocationPreferenceDialog({}, {}) }

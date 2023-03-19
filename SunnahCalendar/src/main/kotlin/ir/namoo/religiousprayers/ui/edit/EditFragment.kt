@@ -36,6 +36,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.PrayTimes
+import ir.namoo.commons.DEFAULT_SUMMER_TIME
 import ir.namoo.commons.PREF_ENABLE_EDIT
 import ir.namoo.commons.PREF_SUMMER_TIME
 import ir.namoo.commons.utils.animateVisibility
@@ -329,8 +330,8 @@ class EditFragment : Fragment() {
             val day = str.split("/")[1].toInt()
             val persianDate = PersianDate(PersianDate(civilDate.toJdn()).year, month, day)
             val date = CivilDate(persianDate.toJdn())
-            var time = coordinates?.calculatePrayTimes(Jdn(date).toJavaCalendar())
-            if (!requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, true) && i in 2..185) time =
+            var time = coordinates.value?.calculatePrayTimes(Jdn(date).toJavaCalendar())
+            if (!requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME) && i in 2..185) time =
                 fixSummerTimes(time, true)
             res.add(time)
             lifecycleScope.launch {

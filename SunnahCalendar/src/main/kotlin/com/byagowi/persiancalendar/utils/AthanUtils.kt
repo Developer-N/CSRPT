@@ -13,6 +13,7 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
+import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RawRes
 import androidx.annotation.StringRes
@@ -88,7 +89,10 @@ private var lastAthanKey = ""
 private var lastAthanJdn: Jdn? = null
 fun startAthan(context: Context, prayTimeKey: String, intendedTime: Long?) {
     debugLog("Alarms: startAthan for $prayTimeKey")
-    if (intendedTime == null || prayTimeKey.startsWith("SS_")) return startAthanBody(context, prayTimeKey)
+    if (intendedTime == null || prayTimeKey.startsWith("SS_")) return startAthanBody(
+        context,
+        prayTimeKey
+    )
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return
 
@@ -116,22 +120,26 @@ private fun startAthanBody(context: Context, prayTimeKey: String) = runCatching 
         .getAllAthanSettings().find { prayTimeKey.contains(it.athanKey) } ?: return@runCatching
     when {
         prayTimeKey.startsWith("SS_") -> {
-            context.getSystemService<AudioManager>()?.let { audioManager ->
-                audioManager.ringerMode = context.appPrefsLite.getInt(
-                    PREF_ORIGINAL_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL
-                )
+            runCatching {
+                context.getSystemService<AudioManager>()?.let { audioManager ->
+                    audioManager.ringerMode = context.appPrefsLite.getInt(
+                        PREF_ORIGINAL_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL
+                    )
+                }
             }
         }
         prayTimeKey.startsWith("S_") -> {
-            context.getSystemService<AudioManager>()?.let { audioManager ->
-                context.appPrefsLite.edit {
-                    putInt(PREF_ORIGINAL_RINGER_MODE, audioManager.ringerMode)
+            runCatching {
+                context.getSystemService<AudioManager>()?.let { audioManager ->
+                    context.appPrefsLite.edit {
+                        putInt(PREF_ORIGINAL_RINGER_MODE, audioManager.ringerMode)
+                    }
+                    audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                    val time = Calendar.getInstance().also {
+                        it.add(Calendar.MINUTE, setting.silentMinute)
+                    }
+                    scheduleAlarm(context, "S$prayTimeKey", time.timeInMillis, 22)
                 }
-                audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-                val time = Calendar.getInstance().also {
-                    it.add(Calendar.MINUTE, setting.silentMinute)
-                }
-                scheduleAlarm(context, "S$prayTimeKey", time.timeInMillis, 22)
             }
         }
         setting.playType != 0 -> {
@@ -164,7 +172,7 @@ private fun startAthanBody(context: Context, prayTimeKey: String) = runCatching 
                     )
                 }"
 
-                var prayTimes = coordinates?.calculatePrayTimes()
+                var prayTimes = coordinates.value?.calculatePrayTimes()
                 prayTimes = PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())
                 val subtitle = when (prayTimeKey) {
                     FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
@@ -209,7 +217,7 @@ private fun startAthanBody(context: Context, prayTimeKey: String) = runCatching 
 }.onFailure(logException).let {}
 
 fun getEnabledAlarms(context: Context): Set<String> {
-//    if (coordinates == null) return emptySet()
+//    if (coordinates.value == null) return emptySet()
 //    return (context.appPrefs.getString(PREF_ATHAN_ALARM, null)?.trim() ?: return emptySet())
 //        .splitIgnoreEmpty(",")
 //        .toSet()
@@ -234,7 +242,7 @@ fun scheduleAlarms(context: Context) {
         ?: .0) * 60.0 * 1000.0).toLong()
     val athanSettings = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
-    var prayTimes = coordinates?.calculatePrayTimes() ?: return
+    var prayTimes = coordinates.value?.calculatePrayTimes() ?: return
     prayTimes = PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())!!
     // convert spacedComma separated string to a set
     enabledAlarms.forEachIndexed { _, name ->

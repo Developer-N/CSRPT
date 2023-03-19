@@ -16,7 +16,6 @@ import android.text.SpannableString
 import android.text.style.ReplacementSpan
 import android.text.util.Linkify
 import android.view.View
-import android.widget.Toast
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import androidx.core.os.postDelayed
@@ -99,24 +98,24 @@ ${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
                 return BitmapDrawable(view.context.resources, bitmap)
             }
             listOf(
-                "GPLv3" to view.context.getCompatDrawable(R.drawable.ic_info),
-                KotlinVersion.CURRENT.toString() to createTextIcon("Kotlin"),
-                "API ${Build.VERSION.SDK_INT}" to
-                        view.context.getCompatDrawable(R.drawable.ic_motorcycle)
-            ).mapIndexed { i, (title, icon) ->
-                // Easter egg testing dialog
-                var clickCount = 0
-                it.add(title).setIcon(icon).onClick {
-                    val activity = activity ?: return@onClick
-                    when (++clickCount % 10) {
-                        0 -> listOf(
-                            ::showPeriodicTableDialog,
-                            ::showSpringDemoDialog,
-                            ::showFlingDemoDialog,
-                        )[i](activity)
-                        9 -> Toast.makeText(activity, "One more to go!", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                Triple(
+                    "GPLv3",
+                    view.context.getCompatDrawable(R.drawable.ic_info),
+                    ::showShaderSandboxDialog
+                ),
+                Triple(
+                    KotlinVersion.CURRENT.toString(),
+                    createTextIcon("Kotlin"),
+                    ::showSpringDemoDialog
+                ),
+                Triple(
+                    "API ${Build.VERSION.SDK_INT}",
+                    view.context.getCompatDrawable(R.drawable.ic_motorcycle),
+                    ::showFlingDemoDialog
+                ),
+            ).forEach { (title, icon, dialog) ->
+                val easterEggController = EasterEggController(dialog)
+                it.add(title).setIcon(icon).onClick { easterEggController.handleClick(activity) }
             }
         }
 

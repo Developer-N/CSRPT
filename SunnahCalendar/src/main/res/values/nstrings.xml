@@ -273,4 +273,6 @@
 
     <string name="post_notification_permission_message">For show notification application need you to allow permission.</string>
 
+    <string name="phone_state_permission_message">For prevent play athan while phone in calling app need read phone state permission.</string>
+
 </resources>

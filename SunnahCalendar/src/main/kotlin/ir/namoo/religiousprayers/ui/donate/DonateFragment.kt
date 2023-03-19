@@ -3,13 +3,11 @@ package ir.namoo.religiousprayers.ui.donate
 import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.browser.customtabs.CustomTabsIntent
 import com.byagowi.persiancalendar.databinding.DonateLayoutBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ir.namoo.commons.utils.isPackageInstalled
 
 class DonateFragment : AppCompatDialogFragment() {
@@ -36,8 +34,6 @@ class DonateFragment : AppCompatDialogFragment() {
             val url = "https://zarinp.al/371441"
             openDonateUrl(url)
         }
-
-
 
         return BottomSheetDialog(requireContext()).apply {
             setContentView(binding.root)

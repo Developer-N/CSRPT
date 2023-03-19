@@ -94,7 +94,7 @@ class AthanNotification : Service() {
             if (cityName == null) prayTimeName
             else "$prayTimeName$spacedComma${getString(R.string.in_city_time, cityName)}"
 
-        var prayTimes = coordinates?.calculatePrayTimes()
+        var prayTimes = coordinates.value?.calculatePrayTimes()
         prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
         val subtitle = when (athanKey) {
             FAJR_KEY -> listOf(R.string.sunrise)

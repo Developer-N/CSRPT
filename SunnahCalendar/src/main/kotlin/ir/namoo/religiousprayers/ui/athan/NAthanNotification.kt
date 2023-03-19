@@ -15,6 +15,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.telephony.TelephonyCallback
+import android.telephony.TelephonyManager
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -103,8 +105,27 @@ class NAthanNotification : Service() {
 
     override fun onBind(intent: Intent): IBinder? = null
 
+    @Suppress("Deprecation")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent ?: return super.onStartCommand(intent, flags, startId)
+        runCatching {
+            val telephonyManager = getSystemService<TelephonyManager>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                telephonyManager?.registerTelephonyCallback(mainExecutor,
+                    object : TelephonyCallback(), TelephonyCallback.CallStateListener {
+                        override fun onCallStateChanged(state: Int) {
+                            when (state) {
+                                TelephonyManager.CALL_STATE_IDLE -> {}
+                                else -> stopSelf()
+                            }
+                        }
+                    })
+            } else if (telephonyManager?.callState != TelephonyManager.CALL_STATE_IDLE)
+                stopSelf()
+            else {
+                //do nothing
+            }
+        }.onFailure(logException)
         if (intent.action?.equals(ACTION_STOP) == true) {
             stopSelf()
             return super.onStartCommand(intent, flags, startId)
@@ -153,7 +174,7 @@ class NAthanNotification : Service() {
             val title = if (cityName == null) prayTimeName
             else "$prayTimeName$spacedComma${getString(R.string.in_city_time, cityName)}"
 
-            var prayTimes = coordinates?.calculatePrayTimes()
+            var prayTimes = coordinates.value?.calculatePrayTimes()
             prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
             val subtitle = when (prayerKey) {
                 FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
