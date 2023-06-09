@@ -32,8 +32,7 @@ class DownloadPrayTimesViewModel constructor(
 
     var serverCitiesList by mutableStateOf((listOf<CityModel>()))
         private set
-    var downloadCitiesID by mutableStateOf(listOf<Int>())
-        private set
+    private var downloadCitiesID by mutableStateOf(listOf<Int>())
     var isLoading by mutableStateOf(true)
         private set
     var citiesState by mutableStateOf(listOf<CityItemState>())
@@ -44,6 +43,7 @@ class DownloadPrayTimesViewModel constructor(
 
     fun loadAddedCities() {
         runCatching {
+            isLoading = true
             getCitiesJob?.cancel()
             getCitiesJob = viewModelScope.launch {
                 prayTimesRepository.getAddedCities().collect {
@@ -51,9 +51,11 @@ class DownloadPrayTimesViewModel constructor(
                         is DataState.Error -> {
                             isLoading = false
                         }
+
                         DataState.Loading -> {
                             isLoading = true
                         }
+
                         is DataState.Success -> {
                             serverCitiesList =
                                 (it.asDataState() as DataState.Success<List<CityModel>>).data.sortedBy { city -> city.name }
@@ -96,9 +98,11 @@ class DownloadPrayTimesViewModel constructor(
                         is DataState.Error -> {
                             citiesState[index].isDownloading = false
                         }
+
                         DataState.Loading -> {
                             citiesState[index].isDownloading = true
                         }
+
                         is DataState.Success -> {
                             downloadedPrayTimesDAO.clearDownloadFor(city.id)
                             downloadedPrayTimesDAO.insertToDownload(

@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.settings
 
 import android.app.StatusBarManager
+import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.drawable.Icon
@@ -9,18 +10,26 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.Px
+import androidx.annotation.StyleRes
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -28,18 +37,18 @@ import androidx.work.WorkManager
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.LOG_TAG
 import com.byagowi.persiancalendar.PREF_HAS_EVER_VISITED
-import com.byagowi.persiancalendar.PREF_NEW_INTERFACE
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentSettingsBinding
 import com.byagowi.persiancalendar.databinding.NumericBinding
-import com.byagowi.persiancalendar.global.enableNewInterface
+import com.byagowi.persiancalendar.databinding.SettingsScreenBinding
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.PersianCalendarTileService
+import com.byagowi.persiancalendar.ui.about.showCarouselDialog
 import com.byagowi.persiancalendar.ui.about.showIconsDemoDialog
 import com.byagowi.persiancalendar.ui.about.showTypographyDemoDialog
 import com.byagowi.persiancalendar.ui.settings.interfacecalendar.InterfaceCalendarFragment
 import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetNotificationFragment
-import com.byagowi.persiancalendar.ui.utils.canEnableNewInterface
+import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.onClick
@@ -50,6 +59,7 @@ import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.byagowi.persiancalendar.variants.debugLog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import ir.namoo.religiousprayers.ui.preferences.NPreferenceFragment
@@ -60,17 +70,15 @@ import java.util.concurrent.TimeUnit
  * MEHDIMYADI
  */
 
-class SettingsScreen : Fragment(R.layout.fragment_settings) {
+class SettingsScreen : Fragment(R.layout.settings_screen) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentSettingsBinding.bind(view)
+        val binding = SettingsScreenBinding.bind(view)
         binding.appBar.root.hideToolbarBottomShadow()
-        binding.appBar.toolbar.let { toolbar ->
-            toolbar.setTitle(R.string.settings)
-            toolbar.setupMenuNavigation()
-            setupMenu(toolbar, binding, layoutInflater)
-        }
+        binding.appBar.toolbar.setTitle(R.string.settings)
+        binding.appBar.toolbar.setupMenuNavigation()
+        setupMenu(binding.appBar.toolbar, binding, layoutInflater)
 
         val args by navArgs<SettingsScreenArgs>()
         val viewModel by viewModels<SettingsViewModel>()
@@ -81,8 +89,8 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
             override fun onTabReselected(tab: TabLayout.Tab?) = Unit
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                tab?.position?.also(viewModel::changeSelectedTab)
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                viewModel.changeSelectedTab(tab.position)
             }
         })
         binding.viewPager.adapter = object : FragmentStateAdapter(this) {
@@ -95,19 +103,45 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
         }
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, i ->
             tab.text = tabs[i].second.joinToString(getString(R.string.spaced_and)) { getString(it) }
-            tab.setIcon(
-                when (i) {
-                    0 -> R.drawable.ic_location
-                    1 -> R.drawable.ic_calendar
-                    2 -> R.drawable.ic_widgets
-                    else -> R.drawable.ic_location
-                }
-            )
         }.attach()
         view.post {
             binding.viewPager.setCurrentItem(initiallySelectedTab, true)
             view.context.appPrefs.edit { putBoolean(PREF_HAS_EVER_VISITED, true) }
         }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.appBar.root) { appBar, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            appBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            windowInsets
+        }
+
+        @StyleRes var shape = R.style.shapeAppearanceTopCornerLarge
+        @Px var pad = 0
+        if (language.isArabicScript) {
+            shape = R.style.shapeAppearanceTopCornerExtraLarge
+            pad = (8 * resources.dp).toInt()
+        }
+        binding.viewPager.updatePadding(left = pad, right = pad)
+        binding.roundnessFrame.shapeAppearanceModel =
+            ShapeAppearanceModel.builder(binding.root.context, shape, 0).build()
+    }
+
+    companion object {
+        fun insetsFix(recyclerView: RecyclerView): RecyclerView {
+            ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { _, windowInsets ->
+                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                recyclerView.updatePadding(bottom = insets.bottom)
+                windowInsets
+            }
+            return recyclerView
+        }
+
+        const val PREF_DESTINATION = "DESTINATION"
+        const val INTERFACE_CALENDAR_TAB = 1
+        const val WIDGET_NOTIFICATION_TAB = 2
+        const val LOCATION_ATHAN_TAB = 0
     }
 
     private val tabs = listOf(
@@ -117,26 +151,13 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
 //        ::LocationAthanFragment to listOf(R.string.location, R.string.athan)
     )
 
-    companion object {
-        const val PREF_DESTINATION = "DESTINATION"
-        const val INTERFACE_CALENDAR_TAB = 1
-        const val WIDGET_NOTIFICATION_TAB = 2
-        const val LOCATION_ATHAN_TAB = 0
-    }
-
     // Development only functionalities
     private fun setupMenu(
-        toolbar: Toolbar, binding: FragmentSettingsBinding, inflater: LayoutInflater
+        toolbar: Toolbar, binding: SettingsScreenBinding, inflater: LayoutInflater
     ) {
         toolbar.menu.add(R.string.live_wallpaper_settings).onClick {
-            runCatching {
-                startActivity(
-                    Intent(Intent.ACTION_MAIN).setClassName(
-                        "com.android.wallpaper.livepicker",
-                        "com.android.wallpaper.livepicker.LiveWallpaperActivity"
-                    )
-                )
-            }.onFailure(logException).getOrNull().debugAssertNotNull
+            runCatching { startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)) }
+                .onFailure(logException).getOrNull().debugAssertNotNull
         }
         toolbar.menu.add(R.string.screensaver_settings).onClick {
             runCatching { startActivity(Intent(Settings.ACTION_DREAM_SETTINGS)) }
@@ -161,16 +182,6 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
         // Rest are development features
         if (!BuildConfig.DEVELOPMENT) return
         val activity = activity ?: return
-        if (canEnableNewInterface) {
-            toolbar.menu.add(R.string.enable_new_interface).also {
-                it.isCheckable = true
-                it.isChecked = enableNewInterface
-            }.onClick {
-                binding.root.context.appPrefs.edit {
-                    putBoolean(PREF_NEW_INTERFACE, !enableNewInterface)
-                }
-            }
-        }
         toolbar.menu.add("Static vs generated icons").onClick { showIconsDemoDialog(activity) }
         toolbar.menu.add("Typography").onClick { showTypographyDemoDialog(activity) }
         toolbar.menu.add("Clear preferences store and exit").onClick {
@@ -200,7 +211,8 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
                 }
                 .show()
         }
-        fun viewCommandResult(command: String) = MaterialAlertDialogBuilder(activity).also {
+        fun viewCommandResult(command: String) {
+            val dialogBuilder = MaterialAlertDialogBuilder(activity)
             val result = Runtime.getRuntime().exec(command).inputStream.bufferedReader().readText()
             val button = ImageButton(activity).also { button ->
                 button.setImageDrawable(activity.getCompatDrawable(R.drawable.ic_baseline_share))
@@ -208,13 +220,13 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
                     activity.shareTextFile(result, "log.txt", "text/plain")
                 }
             }
-            it.setCustomTitle(
+            dialogBuilder.setCustomTitle(
                 LinearLayout(activity).also {
                     it.layoutDirection = View.LAYOUT_DIRECTION_LTR
                     it.addView(button)
                 }
             )
-            it.setView(
+            dialogBuilder.setView(
                 ScrollView(context).also { scrollView ->
                     scrollView.addView(TextView(context).also {
                         it.text = result
@@ -224,7 +236,8 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
                     scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
                 }
             )
-        }.show().let {}
+            dialogBuilder.show()
+        }
         toolbar.menu.addSubMenu("Log Viewer").also {
             it.add("Filtered").onClick {
                 viewCommandResult("logcat -v raw -t 500 *:S $LOG_TAG:V AndroidRuntime:E")
@@ -240,13 +253,15 @@ class SettingsScreen : Fragment(R.layout.fragment_settings) {
             // https://stackoverflow.com/a/23112947
             runCatching {
                 startActivity(
-                    Intent(Intent.ACTION_MAIN)
-                        .setClassName(
-                            "com.android.systemui",
-                            "com.android.systemui.Somnambulator"
-                        )
+                    Intent(Intent.ACTION_MAIN).setClassName(
+                        "com.android.systemui",
+                        "com.android.systemui.Somnambulator"
+                    )
                 )
             }.onFailure(logException).getOrNull().debugAssertNotNull
+        }
+        toolbar.menu.add("Start Carousel").onClick {
+            showCarouselDialog(activity)
         }
     }
 }

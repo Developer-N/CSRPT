@@ -1,36 +1,49 @@
 package com.byagowi.persiancalendar.ui.settings.locationathan
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.media.RingtoneManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.forEach
+import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.DEFAULT_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.DEFAULT_HIGH_LATITUDES_METHOD
 import com.byagowi.persiancalendar.DEFAULT_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.DEFAULT_PRAY_TIME_METHOD
+import com.byagowi.persiancalendar.EN_DASH
+import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION
 import com.byagowi.persiancalendar.PREF_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ATHAN_NAME
 import com.byagowi.persiancalendar.PREF_ATHAN_URI
 import com.byagowi.persiancalendar.PREF_HIGH_LATITUDES_METHOD
+import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
 import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.global.updateStoredPreference
+import com.byagowi.persiancalendar.ui.settings.SettingsScreen
 import com.byagowi.persiancalendar.ui.settings.build
 import com.byagowi.persiancalendar.ui.settings.clickable
 import com.byagowi.persiancalendar.ui.settings.locationathan.athan.showAthanGapDialog
@@ -46,18 +59,21 @@ import com.byagowi.persiancalendar.ui.settings.singleSelect
 import com.byagowi.persiancalendar.ui.settings.summary
 import com.byagowi.persiancalendar.ui.settings.switch
 import com.byagowi.persiancalendar.ui.settings.title
+import com.byagowi.persiancalendar.ui.utils.askForPostNotificationPermission
+import com.byagowi.persiancalendar.ui.utils.considerSystemBarsInsets
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.cityName
 import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
 import com.byagowi.persiancalendar.utils.formatCoordinateISO6709
 import com.byagowi.persiancalendar.utils.titleStringId
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.HighLatitudesMethod
+import io.github.persiancalendar.praytimes.MidnightMethod
 
 class LocationAthanFragment : PreferenceFragmentCompat(),
     SharedPreferences.OnSharedPreferenceChangeListener {
-
     private val defaultAthanName get() = context?.getString(R.string.default_athan) ?: ""
 
     private var coordinatesPreference: Preference? = null
@@ -68,6 +84,8 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
     private var highLatitudesMethodPreference: Preference? = null
     private var ascendingAthanVolumePreference: Preference? = null
     private var athanVolumeDialogPreference: Preference? = null
+    private var midnightMethodSelectPreference: Preference? = null
+    private var notificationAthanSwitchPreference: SwitchPreferenceCompat? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val activity = activity ?: return
@@ -129,6 +147,22 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
                     title(R.string.notification_athan)
                     summary(R.string.enable_notification_athan)
                     disableDependentsState = true
+                    setOnPreferenceChangeListener { _, _ ->
+                        isChecked = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            ActivityCompat.checkSelfPermission(
+                                activity, Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            activity.askForPostNotificationPermission(
+                                POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION
+                            )
+                            false
+                        } else {
+                            !isChecked
+                        }
+                        false
+                    }
+                    this@LocationAthanFragment.notificationAthanSwitchPreference = this
                 }
                 switch(PREF_ASCENDING_ATHAN_VOLUME, DEFAULT_ASCENDING_ATHAN_VOLUME) {
                     title(R.string.ascending_athan_volume)
@@ -140,12 +174,72 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
                     summary(R.string.athan_volume_summary)
                     athanVolumeDialogPreference = this
                 }
+                clickable(
+                    onClick = {
+                        val methodsToShow = enumValues<MidnightMethod>()
+                            .filter { !it.isJafariOnly || calculationMethod.isJafari }
+                        val entryValues = listOf("DEFAULT") + methodsToShow.map { it.name }
+                        val entries = listOf(midnightDefaultTitle()) +
+                                methodsToShow.map(::midnightMethodToString)
+                        MaterialAlertDialogBuilder(context)
+                            .setTitle(R.string.midnight)
+                            .setNegativeButton(R.string.cancel, null)
+                            .setSingleChoiceItems(
+                                entries.toTypedArray(),
+                                entryValues.indexOf(
+                                    context.appPrefs.getString(PREF_MIDNIGHT_METHOD, null)
+                                        ?: "DEFAULT"
+                                )
+                            ) { dialog, which ->
+                                context.appPrefs.edit {
+                                    if (which == 0) remove(PREF_MIDNIGHT_METHOD)
+                                    else putString(PREF_MIDNIGHT_METHOD, entryValues[which])
+                                }
+                                midnightMethodSelectPreference?.summary = entries[which]
+                                dialog.dismiss()
+                            }
+                            .show()
+                    }
+                ) {
+                    this@LocationAthanFragment.midnightMethodSelectPreference = this
+                    setTitle(R.string.midnight)
+                    setMidnightMethodPreferenceSummary()
+                }
             }
         }
 
         val appPrefs = activity.appPrefs
         onSharedPreferenceChanged(appPrefs, null)
         appPrefs.registerOnSharedPreferenceChangeListener(this)
+    }
+
+    private fun midnightDefaultTitle(): String {
+        return getString(calculationMethod.titleStringId) + spacedComma +
+                midnightMethodToString(calculationMethod.defaultMidnight)
+    }
+
+    private fun setMidnightMethodPreferenceSummary() {
+        val context = context ?: return
+        midnightMethodSelectPreference?.summary =
+            context.appPrefs.getString(PREF_MIDNIGHT_METHOD, null)
+                ?.let { midnightMethodToString(MidnightMethod.valueOf(it)) }
+                ?: midnightDefaultTitle()
+    }
+
+    private fun midnightMethodToString(method: MidnightMethod): String {
+        return when (method) {
+            MidnightMethod.MidSunsetToSunrise ->
+                listOf(R.string.sunset, R.string.sunrise)
+
+            MidnightMethod.MidSunsetToFajr ->
+                listOf(R.string.sunset, R.string.fajr)
+
+            MidnightMethod.MidMaghribToSunrise ->
+                listOf(R.string.maghrib, R.string.sunrise)
+
+            MidnightMethod.MidMaghribToFajr ->
+                listOf(R.string.maghrib, R.string.fajr)
+        }.joinToString(EN_DASH) { getString(it) }
     }
 
     private class PickRingtoneContract : ActivityResultContract<Unit, String?>() {
@@ -179,7 +273,8 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
             putString(PREF_ATHAN_URI, uri)
         }
         view?.let {
-            Snackbar.make(it, R.string.custom_notification_is_set, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(it, R.string.custom_notification_is_set, Snackbar.LENGTH_SHORT)
+                .also { snackBar -> snackBar.considerSystemBarsInsets() }.show()
         }
     }
 
@@ -205,11 +300,19 @@ class LocationAthanFragment : PreferenceFragmentCompat(),
         athanPreferenceCategory?.setSummary(
             if (coordinates.value == null) R.string.athan_disabled_summary else R.string.empty
         )
-        coordinatesPreference?.isEnabled = cityName == null
         coordinatesPreference?.summary = coordinates.value
             ?.run { formatCoordinateISO6709(latitude, longitude, elevation.takeIf { it != .0 }) }
         athanPreferenceCategory?.forEach {
             it.isVisible = it.isVisible && coordinates.value != null
         }
+        setMidnightMethodPreferenceSummary()
+        if (key == PREF_NOTIFICATION_ATHAN)
+            notificationAthanSwitchPreference?.isChecked =
+                sharedPreferences.getBoolean(PREF_NOTIFICATION_ATHAN, DEFAULT_NOTIFICATION_ATHAN)
     }
+
+    override fun onCreateRecyclerView(
+        inflater: LayoutInflater, parent: ViewGroup, savedInstanceState: Bundle?
+    ): RecyclerView =
+        SettingsScreen.insetsFix(super.onCreateRecyclerView(inflater, parent, savedInstanceState))
 }

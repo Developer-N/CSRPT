@@ -15,13 +15,13 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withRotation
+import com.byagowi.persiancalendar.QIBLA_LATITUDE
+import com.byagowi.persiancalendar.QIBLA_LONGITUDE
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.EarthPosition
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.mainCalendar
-import com.byagowi.persiancalendar.QIBLA_LATITUDE
-import com.byagowi.persiancalendar.QIBLA_LONGITUDE
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
@@ -51,7 +51,7 @@ import io.github.cosinekitty.astronomy.rotationEqdHor
 import io.github.cosinekitty.astronomy.rotationEqjEqd
 import io.github.cosinekitty.astronomy.searchRiseSet
 import io.github.persiancalendar.praytimes.Coordinates
-import java.util.*
+import java.util.GregorianCalendar
 import kotlin.math.absoluteValue
 import kotlin.math.acos
 import kotlin.math.atan2
@@ -111,6 +111,8 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
         context.getCompatDrawable(R.drawable.kaaba)
     }
 
+    var markersScale = 1f
+
     private fun drawMask(canvas: Canvas, matrixScale: Float) {
         when (currentMapType) {
             MapType.None -> Unit
@@ -118,14 +120,22 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 canvas.drawBitmap(maskMap, null, mapRect, null)
                 val scale = mapWidth / maskMap.width
                 solarDraw.simpleMoon(
-                    canvas, maskMoonX * scale, maskMoonY * scale, mapWidth * .02f * matrixScale
+                    canvas,
+                    maskMoonX * scale,
+                    maskMoonY * scale,
+                    mapWidth * .02f * matrixScale * markersScale
                 )
                 solarDraw.sun(
-                    canvas, maskSunX * scale, maskSunY * scale, mapWidth * .025f * matrixScale
+                    canvas,
+                    maskSunX * scale,
+                    maskSunY * scale,
+                    mapWidth * .025f * matrixScale * markersScale
                 )
             }
+
             MapType.MagneticInclination, MapType.MagneticDeclination, MapType.MagneticFieldStrength ->
                 canvas.drawBitmap(maskMap, null, mapRect, null)
+
             MapType.TimeZones -> canvas.drawPath(timezones, miscPaint)
             MapType.TectonicPlates -> canvas.drawPath(tectonicPlates, miscPaint)
             MapType.Yallop, MapType.Odeh ->
@@ -152,6 +162,7 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 maskMap.eraseColor(Color.TRANSPARENT)
                 writeDayNightMask(timeInMillis)
             }
+
             MapType.MagneticFieldStrength,
             MapType.MagneticDeclination,
             MapType.MagneticInclination -> {
@@ -159,6 +170,7 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 maskMap.eraseColor(Color.TRANSPARENT)
                 writeMagneticMap(timeInMillis, mapType)
             }
+
             MapType.Yallop, MapType.Odeh -> {
                 maskFormattedTime = formatDate(
                     Jdn(maskDateSink.toCivilDate()).toCalendar(mainCalendar),
@@ -167,6 +179,7 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 maskMapCrescentVisibility.eraseColor(Color.TRANSPARENT)
                 writeCrescentVisibilityMap(maskDateSink, mapType)
             }
+
             else -> Unit
         }
     }
@@ -248,8 +261,8 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
     private fun writeCrescentVisibilityMap(date: GregorianCalendar, mapType: MapType) {
         val isYallop = mapType == MapType.Yallop
         val baseTime = Time(
-            date[Calendar.YEAR], date[Calendar.MONTH] + 1,
-            date[Calendar.DAY_OF_MONTH] + 1, 0, 0, .0
+            date[GregorianCalendar.YEAR], date[GregorianCalendar.MONTH] + 1,
+            date[GregorianCalendar.DAY_OF_MONTH] + 1, 0, 0, .0
         )
         // Source https://github.com/crescent-moon-visibility/crescent-moon-visibility
         (0 until 360 / maskMapMoonScaleDown).forEach { x ->
@@ -355,20 +368,21 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
     private val foregroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = mapForegroundColor ?: 0xFFFBF8E5.toInt()
     }
+    private val dp = context.resources.dp
     private val miscPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 5.dp
+        strokeWidth = 5 * dp
         color = mapForegroundColor ?: 0x80393CC4.toInt()
     }
-    private val matrixValues = FloatArray(9)
+    private val matrixProperties = FloatArray(9)
 
     fun draw(
         canvas: Canvas, matrix: Matrix,
         displayLocation: Boolean, directPathDestination: Coordinates?, displayGrid: Boolean
     ) {
-        matrix.getValues(matrixValues)
+        matrix.getValues(matrixProperties)
         // prevents sun/moon/pin unnecessary scale
-        val scaleBack = 1 / matrixValues[Matrix.MSCALE_X] / 5
+        val scaleBack = 1 / matrixProperties[Matrix.MSCALE_X] / 5
         canvas.withMatrix(matrix) {
             drawRect(mapRect, backgroundPaint)
             drawPath(mapPath, foregroundPaint)
@@ -388,9 +402,9 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 val userX = (coordinates.longitude.toFloat() + 180) * mapScaleFactor
                 val userY = (90 - coordinates.latitude.toFloat()) * mapScaleFactor
                 pinDrawable.setBounds(
-                    (userX - 240 * scaleBack / 2).roundToInt(),
-                    (userY - 220 * scaleBack).roundToInt(),
-                    (userX + 240 * scaleBack / 2).roundToInt(),
+                    (userX - 240 * markersScale * scaleBack / 2).roundToInt(),
+                    (userY - 220 * markersScale * scaleBack).roundToInt(),
+                    (userX + 240 * markersScale * scaleBack / 2).roundToInt(),
                     userY.toInt()
                 )
                 pinDrawable.draw(this)
@@ -423,7 +437,7 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                 ).toFloat() + if (centerPlus1.first < center.first) 180 else 0
                 val heading = from.toEarthHeading(to)
                 withRotation(textDegree, center.first, center.second) {
-                    drawText(heading.km, center.first, center.second - 2.dp, textPaint)
+                    drawText(heading.km, center.first, center.second - 2 * dp, textPaint)
                 }
             }
             if (displayGrid) {

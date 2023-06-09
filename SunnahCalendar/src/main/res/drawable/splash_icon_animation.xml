@@ -3,7 +3,7 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     xmlns:tools="http://schemas.android.com/tools"
     android:drawable="@drawable/splash_icon"
-    tools:ignore="NewApi">
+    tools:targetApi="lollipop">
     <target android:name="shadow_clipper">
         <aapt:attr name="android:animation">
             <objectAnimator

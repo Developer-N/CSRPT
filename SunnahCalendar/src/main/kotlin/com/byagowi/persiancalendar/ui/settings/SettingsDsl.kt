@@ -67,16 +67,15 @@ inline fun PreferenceCategory.singleSelect(
                     dialog.dismiss()
                 }
                 .show()
-        },
-        block = {
-            preference = this
-            if (summaryResId != null) setSummary(summaryResId)
-            else summary = entries[entryValues.indexOf(
-                context.appPrefs.getString(key, null) ?: defaultValue
-            )]
-            block()
         }
-    )
+    ) {
+        preference = this
+        if (summaryResId != null) setSummary(summaryResId)
+        else summary = entries[entryValues.indexOf(
+            context.appPrefs.getString(key, null) ?: defaultValue
+        )]
+        block()
+    }
 }
 
 @SettingsDsl

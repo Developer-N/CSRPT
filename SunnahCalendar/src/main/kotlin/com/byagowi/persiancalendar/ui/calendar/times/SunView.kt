@@ -12,6 +12,7 @@ import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withClip
 import androidx.core.graphics.withScale
 import com.byagowi.persiancalendar.R
@@ -22,17 +23,16 @@ import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.utils.appPrefs
-import io.github.cosinekitty.astronomy.Aberration
-import io.github.cosinekitty.astronomy.Body
 import io.github.cosinekitty.astronomy.Ecliptic
+import io.github.cosinekitty.astronomy.Spherical
 import io.github.cosinekitty.astronomy.Time
-import io.github.cosinekitty.astronomy.equatorialToEcliptic
-import io.github.cosinekitty.astronomy.geoVector
+import io.github.cosinekitty.astronomy.eclipticGeoMoon
+import io.github.cosinekitty.astronomy.sunPosition
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.SYSTEM_DEFAULT_FONT
 import ir.namoo.commons.utils.getAppFont
-import java.util.*
+import java.util.GregorianCalendar
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sqrt
@@ -48,16 +48,28 @@ class SunView @JvmOverloads constructor(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val dayPaint =
         Paint(Paint.ANTI_ALIAS_FLAG).also { it.style = Paint.Style.FILL_AND_STROKE }
-    private val horizonColor = textColor ?: context.resolveColor(R.attr.SunViewHorizonColor)
-    private val timelineColor = textColor ?: context.resolveColor(R.attr.SunViewTimelineColor)
-    private val taggingColor = textColor ?: context.resolveColor(R.attr.SunViewTaglineColor)
-    private val nightColor = ContextCompat.getColor(context, R.color.sViewNightColor)
-    private val dayColor = ContextCompat.getColor(context, R.color.sViewDayColor)
-    private val daySecondColor = ContextCompat.getColor(context, R.color.sViewDaySecondColor)
-    private val sunriseTextColor = textColor ?: context.resolveColor(R.attr.SunViewSunriseTextColor)
-    private val middayTextColor = textColor ?: context.resolveColor(R.attr.SunViewMiddayTextColor)
-    private val sunsetTextColor = textColor ?: context.resolveColor(R.attr.SunViewSunsetTextColor)
-    private val colorTextSecond = textColor ?: context.resolveColor(R.attr.colorTextSecond)
+    private val linesColor = ColorUtils.setAlphaComponent(
+        textColor ?: context.resolveColor(com.google.android.material.R.attr.colorControlNormal),
+        0x60
+    )
+    private val isInWidgetRender = textColor != null
+    private val nightColor =
+        if (isInWidgetRender) ContextCompat.getColor(context, R.color.sun_view_widget_night_color)
+        else context.resolveColor(R.attr.sunViewNightColor)
+    private val dayColor =
+        if (isInWidgetRender) ContextCompat.getColor(context, R.color.sun_view_widget_day_color)
+        else context.resolveColor(R.attr.sunViewDayColor)
+    private val midDayColor =
+        if (isInWidgetRender) ContextCompat.getColor(context, R.color.sun_view_widget_midday_color)
+        else context.resolveColor(R.attr.sunViewMidDayColor)
+    private val sunriseTextColor =
+        textColor ?: ContextCompat.getColor(context, R.color.sun_view_sunrise_text_color)
+    private val middayTextColor =
+        textColor ?: ContextCompat.getColor(context, R.color.sun_view_midday_text_color)
+    private val sunsetTextColor =
+        textColor ?: ContextCompat.getColor(context, R.color.sun_view_sunset_text_color)
+    private val textColorSecondary =
+        textColor ?: context.resolveColor(android.R.attr.textColorSecondary)
 
     internal var width: Int = 0
     internal var height: Int = 0
@@ -76,19 +88,20 @@ class SunView @JvmOverloads constructor(
             invalidate()
         }
     private var sun: Ecliptic? = null
-    private var moon: Ecliptic? = null
+    private var moon: Spherical? = null
     private val fontSize =
         when {
             context.appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
-                ?.contains("Vazir") ?: false -> 12.dp
-            language.isArabicScript -> 14.dp
-            else -> 11.5.dp
-        }
+                ?.contains("Vazir") ?: false -> 12f
+
+            language.isArabicScript -> 14f
+            else -> 11.5f
+        } * resources.dp
 
     fun setTime(date: GregorianCalendar) {
         val time = Time.fromMillisecondsSince1970(date.time.time)
-        sun = equatorialToEcliptic(geoVector(Body.Sun, time, Aberration.Corrected))
-        moon = equatorialToEcliptic(geoVector(Body.Moon, time, Aberration.Corrected))
+        sun = sunPosition(time)
+        moon = eclipticGeoMoon(time)
         invalidate()
     }
 
@@ -99,7 +112,7 @@ class SunView @JvmOverloads constructor(
         height = h - 18
 
         dayPaint.shader = LinearGradient(
-            width * .17f, 0f, width / 2f, 0f, dayColor, daySecondColor,
+            width * .17f, 0f, width / 2f, 0f, dayColor, midDayColor,
             Shader.TileMode.MIRROR
         )
 
@@ -129,7 +142,7 @@ class SunView @JvmOverloads constructor(
     }
 
     // A home-screen widget with background has some roundness that is taken care by a passed path
-    val clippingPath = Path()
+    var clippingPath = Path()
 
     private fun mainDraw(canvas: Canvas) {
         val width = width
@@ -154,19 +167,13 @@ class SunView @JvmOverloads constructor(
             paint.also {
                 it.strokeWidth = 3f
                 it.style = Paint.Style.STROKE
-                it.color = timelineColor
+                it.color = linesColor
             }
             drawPath(curvePath, paint)
-
             // draw horizon line
-            paint.color = horizonColor
             drawLine(0f, height * .75f, width.toFloat(), height * .75f, paint)
-
             // draw sunset and sunrise tag line indicator
-            paint.also {
-                it.color = taggingColor
-                it.strokeWidth = 2f
-            }
+            paint.strokeWidth = 2f
             drawLine(width * .17f, height * .3f, width * .17f, height * .7f, paint)
             drawLine(width * .83f, height * .3f, width * .83f, height * .7f, paint)
             drawLine(width / 2f, height * .7f, width / 2f, height * .8f, paint)
@@ -209,7 +216,7 @@ class SunView @JvmOverloads constructor(
             it.textAlign = Paint.Align.CENTER
             it.strokeWidth = 0f
             it.style = Paint.Style.FILL
-            it.color = colorTextSecond
+            it.color = textColorSecondary
         }
         canvas.drawText(
             dayLengthString, width * if (isRtl) .70f else .30f, height * .94f, paint
@@ -232,7 +239,7 @@ class SunView @JvmOverloads constructor(
         val maghrib = Clock.fromHoursFraction(prayTimes.maghrib).toMinutes().toFloat()
         val sunrise = Clock.fromHoursFraction(prayTimes.sunrise).toMinutes().toFloat()
         val fajr = Clock.fromHoursFraction(prayTimes.fajr).toMinutes().toFloat()
-        val now = Clock(Calendar.getInstance(Locale.getDefault())).toMinutes().toFloat()
+        val now = Clock(GregorianCalendar()).toMinutes().toFloat()
 
         fun Float.safeDiv(other: Float) = if (other == 0f) 0f else this / other
         current = when {
@@ -243,7 +250,7 @@ class SunView @JvmOverloads constructor(
 
         val dayLength = Clock.fromMinutesCount((maghrib - fajr).toInt())
         val remaining = Clock.fromMinutesCount(
-            if (now > sunset || now < sunrise) 0 else (sunset - now).toInt()
+            if (now > maghrib || now < fajr) 0 else (maghrib - now).toInt()
         )
         dayLengthString = context.getString(R.string.length_of_day) + spacedColon +
                 dayLength.asRemainingTime(resources, short = true)
@@ -260,7 +267,7 @@ class SunView @JvmOverloads constructor(
     fun startAnimate() {
         initiate()
         // "current" has the final value after #initiate() call, let's animate from zero to it.
-        ValueAnimator.ofFloat(0F, current).also {
+        ValueAnimator.ofFloat(0f, current).also {
             it.duration = 1500L
             it.interpolator = DecelerateInterpolator()
             it.addUpdateListener(this)
@@ -273,7 +280,7 @@ class SunView @JvmOverloads constructor(
     }
 
     override fun onAnimationUpdate(valueAnimator: ValueAnimator) {
-        current = valueAnimator.animatedValue as Float
+        current = valueAnimator.animatedValue as? Float ?: 0f
         invalidate()
     }
 

@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
 import android.view.animation.AnticipateOvershootInterpolator
@@ -30,7 +29,11 @@ import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
@@ -39,8 +42,10 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ActivitySuraViewBinding
 import com.byagowi.persiancalendar.databinding.ItemAyaBinding
 import com.byagowi.persiancalendar.entities.Theme
+import com.byagowi.persiancalendar.ui.utils.SystemBarsTransparency
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
@@ -116,8 +121,7 @@ class SuraViewActivity : AppCompatActivity() {
         override fun onReceive(p0: Context?, p1: Intent?) {
             if (p1 != null) {
                 val aya = p1.extras?.getInt("aya") ?: 1
-                p1.extras?.get("action")?.let {
-                    it as String
+                p1.extras?.getString("action")?.let {
                     when (it) {
                         QURAN_NOTIFY_VIEW_PLAYER_PLAY -> {
                             isPlaying = true
@@ -151,14 +155,17 @@ class SuraViewActivity : AppCompatActivity() {
                                 formatNumber(String.format(getString(R.string.playing_verse), aya))
                             binding.btnQuranPause.setImageResource(R.drawable.ic_baseline_pause_circle_filled)
                         }
+
                         QURAN_NOTIFY_VIEW_PLAYER_PAUSE -> {
                             isPlaying = false
                             binding.btnQuranPause.setImageResource(R.drawable.ic_baseline_play_circle_filled)
                         }
+
                         QURAN_NOTIFY_VIEW_PLAYER_RESUME -> {
                             isPlaying = true
                             binding.btnQuranPause.setImageResource(R.drawable.ic_baseline_pause_circle_filled)
                         }
+
                         QURAN_NOTIFY_VIEW_PLAYER_STOP -> {
                             isPlaying = false
                             if (binding.cardQuranPalayer.isVisible) {
@@ -197,16 +204,28 @@ class SuraViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Theme.apply(this)
         applyAppLanguage(this)
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
         super.onCreate(savedInstanceState)
+        transparentSystemBars()
         initQuranUtils(this, appPrefsLite)
         overrideFont("SANS_SERIF", getAppFont(applicationContext))
         binding = ActivitySuraViewBinding.inflate(layoutInflater).apply {
             setContentView(root)
         }
         applyAppLanguage(this)
-
+        binding.appBar.root.hideToolbarBottomShadow()
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            SystemBarsTransparency(this@SuraViewActivity)
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
         sura = intent.extras!!.getInt("sura")
         val aya = intent.extras!!.getInt("aya")
         chapter = db.chaptersDao().getChapter1(sura)
@@ -276,20 +295,16 @@ class SuraViewActivity : AppCompatActivity() {
         }
 
         setupMenu(binding.appBar.toolbar)
-        binding.appBar.root.hideToolbarBottomShadow()
         startPlayerService()
         registerReceiver(playerReceiver, IntentFilter(QURAN_VIEW_PLAYER_ACTION))
     }//end of onCreate
 
-    override fun onSupportNavigateUp(): Boolean {
-        onBackPressed()
-        return true
-    }
 
     private fun setupMenu(toolbar: MaterialToolbar) {
         toolbar.navigationIcon =
             AppCompatResources.getDrawable(this, R.drawable.ic_baseline_arrow_back_24)
-        toolbar.setNavigationOnClickListener { onBackPressed() }
+        toolbar.setNavigationIconTint(resolveColor(R.attr.colorOnAppBar))
+        toolbar.setNavigationOnClickListener { finish() }
         toolbar.title = chapter.nameArabic
         toolbar.subtitle = formatNumber(chapter.ayaCount!!)
         val searchView = SearchView(toolbar.context).also { searchView = it }
@@ -299,7 +314,7 @@ class SuraViewActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText != null && newText.isNotEmpty() && isDigit(newText)) {
+                if (!newText.isNullOrEmpty() && isDigit(newText)) {
                     (binding.suraRecycler.layoutManager!! as LinearLayoutManager).scrollToPositionWithOffset(
                         newText.toInt() - 1, 0
                     )
@@ -318,11 +333,6 @@ class SuraViewActivity : AppCompatActivity() {
         super.onResume()
         applyAppLanguage(this)
     }
-
-    private fun setTitleAndSubtitle(title: String, subtitle: String): Unit = supportActionBar?.let {
-        it.title = title
-        it.subtitle = subtitle
-    } ?: Unit
 
     override fun onDestroy() {
         super.onDestroy()

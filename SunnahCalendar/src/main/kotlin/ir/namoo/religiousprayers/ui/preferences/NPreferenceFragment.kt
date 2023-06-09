@@ -2,10 +2,14 @@ package ir.namoo.religiousprayers.ui.preferences
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -70,7 +74,6 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.abs
 import kotlin.random.Random
 
 class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -454,14 +457,19 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
                 when (athanSetting.athanKey) {
                     "FAJR" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.fajr)
+
                     "SUNRISE" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.sunrise)
+
                     "DHUHR" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.dhuhr)
+
                     "ASR" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.asr)
+
                     "MAGHRIB" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.maghrib)
+
                     "ISHA" ->
                         itemBinding.itemAthanSettingTitle.text = getString(R.string.isha)
                 }
@@ -470,6 +478,26 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
                     athanSetting.state = itemBinding.itemAthanSettingState.isChecked
                     athanSettingsDB.athanSettingsDAO().update(athanSetting)
                     scheduleAlarms(requireContext())
+                    if (athanSetting.state && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                        !Settings.canDrawOverlays(requireContext())
+                    ) {
+                        MaterialAlertDialogBuilder(requireContext()).apply {
+                            setTitle(getString(R.string.requset_permision))
+                            setMessage(getString(R.string.need_full_screen_permision))
+                            setPositiveButton(R.string.ok) { _: DialogInterface, _: Int ->
+                                startActivity(
+                                    Intent(
+                                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        Uri.parse("package:" + requireContext().packageName)
+                                    )
+                                )
+                            }
+                            setNegativeButton(R.string.cancel) { dialog: DialogInterface, _: Int ->
+                                dialog.cancel()
+                            }
+                            show()
+                        }
+                    }
                 }
                 itemBinding.root.setOnClickListener {
                     athanSettingLauncher.launch(

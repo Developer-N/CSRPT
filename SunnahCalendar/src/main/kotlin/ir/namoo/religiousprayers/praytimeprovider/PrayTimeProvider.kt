@@ -1,6 +1,7 @@
 package ir.namoo.religiousprayers.praytimeprovider
 
 import android.content.Context
+import android.util.Log
 import com.byagowi.persiancalendar.DEFAULT_CITY
 import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.entities.Clock
@@ -32,7 +33,7 @@ class PrayTimeProvider constructor(private val context: Context) {
     fun nReplace(prayTimes: PrayTimes?, jdn: Jdn): PrayTimes? {
         prayTimes ?: return null
         return runCatching {
-            val persianCalendar = jdn.toPersianCalendar()
+            val persianCalendar = jdn.toPersianDate()
             val dayNumber = getDayNum(persianCalendar.month, persianCalendar.dayOfMonth)
             val cityName =
                 context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY

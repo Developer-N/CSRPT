@@ -2,13 +2,20 @@ package com.byagowi.persiancalendar.ui.settings.interfacecalendar
 
 import android.Manifest
 import android.animation.ValueAnimator
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
+import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.DEFAULT_ISLAMIC_OFFSET
+import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
@@ -18,9 +25,11 @@ import com.byagowi.persiancalendar.PREF_LOCAL_DIGITS
 import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
 import com.byagowi.persiancalendar.PREF_SHOW_WEEK_OF_YEAR_NUMBER
 import com.byagowi.persiancalendar.PREF_THEME
+import com.byagowi.persiancalendar.PREF_THEME_GRADIENT
 import com.byagowi.persiancalendar.PREF_WEEK_ENDS
 import com.byagowi.persiancalendar.PREF_WEEK_START
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.databinding.ColorGradientSwitchBinding
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.weekDays
@@ -38,6 +47,7 @@ import com.byagowi.persiancalendar.ui.utils.askForCalendarPermission
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.isIslamicOffsetExpired
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.SYSTEM_DEFAULT_FONT
 
@@ -68,19 +78,14 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat() {
                     SYSTEM_DEFAULT_FONT,
                     R.string.select_font
                 ) { title(R.string.select_font) }
-                singleSelect(
-                    PREF_THEME,
-                    enumValues<Theme>().map { getString(it.title) },
-                    enumValues<Theme>().map { it.key },
-                    Theme.SYSTEM_DEFAULT.key,
-                    R.string.select_skin
-                ) { title(R.string.select_skin) }
                 switch(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false) {
                     if (language.isArabic) {
                         title = "السنة الميلادية بالاسماء الشرقية"
                         summary = "كانون الثاني، شباط، آذار، …"
                     } else isVisible = false
                 }
+                themeSelect()
+                // TODO: To be integrated into the language selection dialog one day
                 switch(PREF_LOCAL_DIGITS, true) {
                     title(R.string.native_digits)
                     summary(R.string.enable_native_digits)
@@ -97,7 +102,7 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat() {
                 switch(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false) {
                     title(R.string.show_device_calendar_events)
                     summary(R.string.show_device_calendar_events_summary)
-                    setOnPreferenceChangeListener { _, _ ->
+                    this.setOnPreferenceChangeListener { _, _ ->
                         isChecked = if (ActivityCompat.checkSelfPermission(
                                 activity, Manifest.permission.READ_CALENDAR
                             ) != PackageManager.PERMISSION_GRANTED
@@ -118,7 +123,7 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat() {
                             it.duration = 3000L
                             it.interpolator = AccelerateDecelerateInterpolator()
                             it.addUpdateListener { value ->
-                                view.rotation = value.animatedValue as Float
+                                view.rotation = value.animatedValue as? Float ?: 0f
                             }
                         }.start()
                     })
@@ -161,4 +166,51 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat() {
             }
         }
     }
+
+    private fun PreferenceCategory.themeSelect() {
+        val entries = enumValues<Theme>().map { getString(it.title) }
+        val entryValues = enumValues<Theme>().map { it.key }
+        var preference: Preference? = null
+        clickable(
+            onClick = {
+                val currentValue = entryValues.indexOf(
+                    context.appPrefs.getString(PREF_THEME, null) ?: Theme.SYSTEM_DEFAULT.key
+                )
+                val dialog = MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.select_skin)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setSingleChoiceItems(entries.toTypedArray(), currentValue) { dialog, which ->
+                        context.appPrefs.edit { putString(PREF_THEME, entryValues[which]) }
+                        preference?.summary = entries[which]
+                        dialog.dismiss()
+                    }
+                    .show()
+
+                val activity = activity ?: return@clickable
+                if (!Theme.supportsGradient(activity)) return@clickable
+                val binding = ColorGradientSwitchBinding.inflate(activity.layoutInflater)
+                (dialog.getButton(DialogInterface.BUTTON_NEGATIVE)?.parent as? ViewGroup)
+                    ?.addView(binding.root, 0)
+                if (activity.appPrefs.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT))
+                    binding.button.isChecked = true
+                binding.label.setOnClickListener {
+                    binding.button.isChecked = !binding.button.isChecked
+                }
+                binding.button.setOnCheckedChangeListener { _, isChecked ->
+                    activity.appPrefs.edit { putBoolean(PREF_THEME_GRADIENT, isChecked) }
+                }
+            }
+        ) {
+            preference = this
+            summary = entries[entryValues.indexOf(
+                context.appPrefs.getString(key, null) ?: Theme.SYSTEM_DEFAULT.key
+            )]
+            title(R.string.select_skin)
+        }
+    }
+
+    override fun onCreateRecyclerView(
+        inflater: LayoutInflater, parent: ViewGroup, savedInstanceState: Bundle?
+    ): RecyclerView =
+        SettingsScreen.insetsFix(super.onCreateRecyclerView(inflater, parent, savedInstanceState))
 }

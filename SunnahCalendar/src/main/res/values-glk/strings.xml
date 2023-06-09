@@ -95,7 +95,7 @@
     <string name="show_device_calendar_events_summary">شخصي رۊيدادانأ نيشان دأن</string>
     <string name="show_device_calendar_events">شخصي رۊيدادان</string>
     <string name="add_event">رۊيدادˈعيلاوه کۊدن</string>
-    <string name="device_calendar_does_not_support">دزگا تقويم أ کؤنشˇپۊشتين ني-يه</string>
+    <string name="device_does_not_support">دزگا تقويم أ کؤنشˇپۊشتين ني-يه</string>
     <string name="customize_widget_summary">چه چیزهایی در ویجت‌ها و اعلان نمایش داده شوند</string>
     <string name="customize_widget">ويجتان ؤ اعلانˈشخصي چاکۊدن</string>
     <string name="add">عيلاوه کۊدن</string>
@@ -205,6 +205,7 @@
         <item quantity="other">%1$s ساعت</item>
     </plurals>
     <string name="spaced_and">" ؤ "</string>
+    <string name="spaced_or">" یا "</string>
     <string name="spaced_comma">"، "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">دزگا ايطلاعات</string>
@@ -327,6 +328,13 @@
     <string name="wednesday">چارشمبه</string>
     <string name="thursday">پئن شمبه</string>
     <string name="friday">جۊما</string>
+    <string name="saturday_short">ش</string>
+    <string name="sunday_short">ی</string>
+    <string name="monday_short">د</string>
+    <string name="tuesday_short">س</string>
+    <string name="wednesday_short">چ</string>
+    <string name="thursday_short">پ</string>
+    <string name="friday_short">ج</string>
     <string name="sun_view">خورشیدنما</string>
     <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
     <string name="country_emoji">🇮🇷</string>

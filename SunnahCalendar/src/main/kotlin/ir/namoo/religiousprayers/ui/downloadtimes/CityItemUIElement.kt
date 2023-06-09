@@ -35,7 +35,6 @@ fun CityItemUIElement(
     city: CityModel,
     searchText: String,
     typeface: Typeface,
-    textColor: Color,
     cardColor: Color,
     iconColor: Color,
     cityItemState: CityItemState,
@@ -46,7 +45,7 @@ fun CityItemUIElement(
             .padding(8.dp, 2.dp)
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(1.dp)
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
             AnimatedVisibility(visible = cityItemState.isSelected) {
@@ -76,15 +75,13 @@ fun CityItemUIElement(
             Text(
                 text = cityName,
                 modifier = Modifier.weight(4f),
-                fontFamily = FontFamily(typeface),
-                color = textColor
+                fontFamily = FontFamily(typeface)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = city.lastUpdate,
                 modifier = Modifier.weight(4f),
-                fontFamily = FontFamily(typeface),
-                color = textColor
+                fontFamily = FontFamily(typeface)
             )
             Spacer(modifier = Modifier.width(4.dp))
             AnimatedVisibility(visible = cityItemState.isDownloading) {

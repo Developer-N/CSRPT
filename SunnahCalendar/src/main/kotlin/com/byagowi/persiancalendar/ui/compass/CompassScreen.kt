@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.Surface
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
@@ -18,17 +19,22 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.PREF_SHOW_QIBLA_IN_COMPASS
 import com.byagowi.persiancalendar.PREF_TRUE_NORTH_IN_COMPASS
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentCompassBinding
+import com.byagowi.persiancalendar.databinding.CompassScreenBinding
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.ui.utils.SensorEventAnnouncer
+import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
@@ -40,17 +46,17 @@ import com.byagowi.persiancalendar.utils.formatCoordinateISO6709
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.google.android.material.slider.Slider
 import com.google.android.material.snackbar.Snackbar
-import java.util.*
+import java.util.GregorianCalendar
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
  * Compass/Qibla activity
  */
-class CompassScreen : Fragment(R.layout.fragment_compass) {
+class CompassScreen : Fragment(R.layout.compass_screen) {
 
     private var stopped = false
-    private var binding: FragmentCompassBinding? = null
+    private var binding: CompassScreenBinding? = null
     private var sensorManager: SensorManager? = null
     private var orientationSensor: Sensor? = null
     private var accelerometerSensor: Sensor? = null
@@ -146,16 +152,14 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentCompassBinding.bind(view)
+        val binding = CompassScreenBinding.bind(view)
         this.binding = binding
 
-        binding.appBar.toolbar.let { toolbar ->
-            toolbar.setTitle(R.string.compass)
-            toolbar.subtitle = view.context.appPrefs.cityName ?: coordinates.value?.run {
-                formatCoordinateISO6709(latitude, longitude, elevation.takeIf { it != 0.0 })
-            }
-            toolbar.setupMenuNavigation()
+        binding.appBar.toolbar.setTitle(R.string.compass)
+        binding.appBar.toolbar.subtitle = view.context.appPrefs.cityName ?: coordinates.value?.run {
+            formatCoordinateISO6709(latitude, longitude, elevation.takeIf { it != 0.0 })
         }
+        binding.appBar.toolbar.setupMenuNavigation()
 
         binding.bottomAppbar.menu.add(R.string.level).also {
             it.icon = binding.bottomAppbar.context.getCompatDrawable(R.drawable.ic_level)
@@ -238,12 +242,12 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
         binding.timeSlider.valueTo = 24f
         binding.timeSlider.setLabelFormatter {
             val time = GregorianCalendar()
-            time.add(Calendar.MINUTE, (it * 60f).roundToInt())
+            time.add(GregorianCalendar.MINUTE, (it * 60f).roundToInt())
             Clock(time).toBasicFormatString()
         }
         binding.timeSlider.addOnChangeListener { slider, value, fromUser ->
             val time = GregorianCalendar()
-            time.add(Calendar.MINUTE, (value * 60f).roundToInt())
+            time.add(GregorianCalendar.MINUTE, (value * 60f).roundToInt())
             binding.appBar.toolbar.title =
                 if (value == 0f || fromUser) slider.resources.getString(R.string.compass)
                 else Clock(time).toBasicFormatString()
@@ -260,6 +264,21 @@ class CompassScreen : Fragment(R.layout.fragment_compass) {
                 stopAnimator = true
             }
         })
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            binding.bottomAppbar.updatePadding(bottom = insets.bottom)
+            binding.fab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = insets.bottom / 2
+            }
+            binding.compassView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = insets.bottom + (75 * resources.dp).toInt()
+            }
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
     private fun stopCompass(stop: Boolean) {

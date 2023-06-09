@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <include
         android:id="@+id/app_bar"
         layout="@layout/app_bar" />
 
-
-    <androidx.compose.ui.platform.ComposeView
-        android:id="@+id/azkar_chapter"
+    <com.google.android.material.carousel.MaskableFrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:shapeAppearance="@style/shapeAppearanceTopCornerExtraLarge">
 
-</androidx.appcompat.widget.LinearLayoutCompat>
+        <FrameLayout
+            android:id="@id/content_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorSurface">
+
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/azkar_chapter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </FrameLayout>
+    </com.google.android.material.carousel.MaskableFrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

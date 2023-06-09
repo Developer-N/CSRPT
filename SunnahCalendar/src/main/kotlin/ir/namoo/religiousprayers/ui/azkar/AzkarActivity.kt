@@ -10,8 +10,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedVisibility
@@ -21,6 +21,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ActivityAzkarBinding
 import com.byagowi.persiancalendar.entities.Language
@@ -29,12 +33,12 @@ import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.onClick
 import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.logException
 import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import ir.namoo.commons.DEFAULT_AZKAR_LANG
 import ir.namoo.commons.PREF_AZKAR_LANG
@@ -43,39 +47,41 @@ import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.snackMessage
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
-import org.koin.android.ext.android.get
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 
 class AzkarActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAzkarBinding
 
-    private val azkarActivityViewModel: AzkarActivityViewModel = get()
+    private val azkarActivityViewModel: AzkarActivityViewModel by viewModel()
     private lateinit var fileLocation: String
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Theme.apply(this)
         applyAppLanguage(this)
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
         findViewById<View>(android.R.id.content).transitionName = "shared_element_container"
         setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
-        window.sharedElementEnterTransition = MaterialContainerTransform().apply {
-            addTarget(android.R.id.content)
-            duration = 300L
-        }
-        window.sharedElementReturnTransition = MaterialContainerTransform().apply {
-            addTarget(android.R.id.content)
-            duration = 250L
-        }
+        window.sharedElementsUseOverlay = true
         super.onCreate(savedInstanceState)
+        transparentSystemBars()
 
         binding = ActivityAzkarBinding.inflate(layoutInflater).apply {
             setContentView(root)
         }
+
         setupMenu(binding.appBar.toolbar)
         binding.appBar.root.hideToolbarBottomShadow()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.composeView.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
 
         val chapterID = intent.extras?.getInt("chapterID") ?: -1
         if (chapterID == -1) finish()
@@ -91,9 +97,9 @@ class AzkarActivity : AppCompatActivity() {
         binding.composeView.setContent {
             Mdc3Theme {
                 val appFont = remember { getAppFont(this@AzkarActivity) }
-                val normalTextColor = remember { Color(resolveColor(R.attr.colorTextNormal)) }
-                val iconColor = remember { Color(resolveColor(R.attr.colorIcon)) }
-                val cardColor = remember { Color(resolveColor(R.attr.colorCard)) }
+                val iconColor = remember { Color(resolveColor(android.R.attr.colorAccent)) }
+                val cardColor =
+                    remember { Color(resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
                 val state = rememberLazyListState()
                 if (!azkarActivityViewModel.isLoading) binding.appBar.toolbar.title =
                     when (azkarActivityViewModel.azkarLang) {
@@ -103,7 +109,7 @@ class AzkarActivity : AppCompatActivity() {
                     }
                 Column {
                     AnimatedVisibility(visible = azkarActivityViewModel.isLoading) {
-                        LoadingUIElement(typeface = appFont, normalTextColor = normalTextColor)
+                        LoadingUIElement(typeface = appFont)
                     }
                     LazyColumn(state = state) {
                         if (azkarActivityViewModel.azkarItems.isNotEmpty() && azkarActivityViewModel.azkarReferences.isNotEmpty() && azkarActivityViewModel.itemsState.isNotEmpty()) items(
@@ -119,7 +125,6 @@ class AzkarActivity : AppCompatActivity() {
                                 )],
                                 lang = azkarActivityViewModel.azkarLang,
                                 cardColor = cardColor,
-                                textColor = normalTextColor,
                                 iconColor = iconColor,
                                 typeface = appFont,
                                 arabicTypeface = arabicFont,
@@ -162,6 +167,7 @@ class AzkarActivity : AppCompatActivity() {
     private fun setupMenu(toolbar: MaterialToolbar) {
         toolbar.navigationIcon =
             AppCompatResources.getDrawable(this, R.drawable.ic_baseline_arrow_back_24)
+        toolbar.setNavigationIconTint(resolveColor(R.attr.colorOnAppBar))
         toolbar.setNavigationOnClickListener { finish() }
         toolbar.menu.add(R.string.share)?.also {
             it.icon = binding.appBar.toolbar.context.getCompatDrawable(R.drawable.ic_share)

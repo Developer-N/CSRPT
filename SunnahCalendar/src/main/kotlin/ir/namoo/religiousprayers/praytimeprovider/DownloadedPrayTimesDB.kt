@@ -83,7 +83,7 @@ interface DownloadedPrayTimesDAO {
 
     @Query("delete from DownloadedPrayTimes where city_id=:cityID")
     suspend fun clearDownloadFor(cityID: Int)
-
+    
     @Insert(onConflict = REPLACE)
     suspend fun insertToDownload(prayTimes: List<DownloadedPrayTimesEntity>)
 

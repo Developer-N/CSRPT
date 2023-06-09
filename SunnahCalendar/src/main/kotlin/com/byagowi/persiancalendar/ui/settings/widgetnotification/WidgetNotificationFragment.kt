@@ -5,16 +5,21 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.TwoStatePreference
+import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.DEFAULT_NOTIFY_DATE
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_CUSTOMIZATIONS
+import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.NON_HOLIDAYS_EVENTS_KEY
 import com.byagowi.persiancalendar.OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.OWGHAT_KEY
 import com.byagowi.persiancalendar.OWGHAT_LOCATION_KEY
+import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION
 import com.byagowi.persiancalendar.PREF_CENTER_ALIGN_WIDGETS
 import com.byagowi.persiancalendar.PREF_IRAN_TIME
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE
@@ -32,6 +37,7 @@ import com.byagowi.persiancalendar.entities.CalendarType
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.ui.settings.SettingsScreen
 import com.byagowi.persiancalendar.ui.settings.build
 import com.byagowi.persiancalendar.ui.settings.clickable
 import com.byagowi.persiancalendar.ui.settings.common.showColorPickerDialog
@@ -42,6 +48,7 @@ import com.byagowi.persiancalendar.ui.settings.switch
 import com.byagowi.persiancalendar.ui.settings.title
 import com.byagowi.persiancalendar.ui.utils.askForPostNotificationPermission
 import com.byagowi.persiancalendar.utils.appPrefs
+import java.util.TimeZone
 
 // Consider that it is used both in MainActivity and WidgetConfigurationActivity
 class WidgetNotificationFragment : PreferenceFragmentCompat(),
@@ -69,7 +76,9 @@ class WidgetNotificationFragment : PreferenceFragmentCompat(),
                                 activity, Manifest.permission.POST_NOTIFICATIONS
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
-                            activity.askForPostNotificationPermission()
+                            activity.askForPostNotificationPermission(
+                                POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION
+                            )
                             false
                         } else {
                             !isChecked
@@ -85,10 +94,13 @@ class WidgetNotificationFragment : PreferenceFragmentCompat(),
                 }
             }
             section(R.string.pref_widget) {
+                val isIranTimeVisible =
+                    (language.showIranTimeOption || mainCalendar == CalendarType.SHAMSI) &&
+                            TimeZone.getDefault().id != IRAN_TIMEZONE_ID
                 // Mark the rest of options as advanced
-                initialExpandedChildrenCount = 6
+                initialExpandedChildrenCount = 6 - if (isIranTimeVisible) 0 else 1
                 switch(PREF_WIDGETS_PREFER_SYSTEM_COLORS, Theme.isDynamicColor(activity.appPrefs)) {
-                    title(R.string.widget_prefer_system_colors)
+                    title(R.string.widget_prefer_device_colors)
                     isVisible = Theme.isDynamicColor(activity.appPrefs)
                 }
                 clickable(onClick = {
@@ -131,7 +143,7 @@ class WidgetNotificationFragment : PreferenceFragmentCompat(),
                 switch(PREF_IRAN_TIME, false) {
                     title(R.string.iran_time)
                     summary(R.string.showing_iran_time)
-                    isVisible = language.showIranTimeOption || mainCalendar == CalendarType.SHAMSI
+                    isVisible = isIranTimeVisible
                 }
                 val widgetCustomizations = listOf(
                     OTHER_CALENDARS_KEY to R.string.widget_customization_other_calendars,
@@ -169,6 +181,11 @@ class WidgetNotificationFragment : PreferenceFragmentCompat(),
             widgetBackgroundColorPreferences?.isVisible = !prefersSystemColors
         }
     }
+
+    override fun onCreateRecyclerView(
+        inflater: LayoutInflater, parent: ViewGroup, savedInstanceState: Bundle?
+    ): RecyclerView =
+        SettingsScreen.insetsFix(super.onCreateRecyclerView(inflater, parent, savedInstanceState))
 
     companion object {
         const val IS_WIDGETS_CONFIGURATION = "IS_WIDGETS_CONFIGURATION"

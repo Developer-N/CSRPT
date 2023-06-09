@@ -47,7 +47,6 @@ fun ZikrChapterUI(
     typeface: Typeface,
     cardColor: Color,
     iconColor: Color,
-    normalTextColor: Color,
     onFavClick: (zkr: AzkarChapter) -> Unit,
     onCardClick: (id: Int) -> Unit
 ) {
@@ -58,7 +57,7 @@ fun ZikrChapterUI(
             .clickable { onCardClick(zikr.id) },
         colors = CardDefaults.cardColors(containerColor = cardColor),
         shape = CardDefaults.elevatedShape,
-        elevation = CardDefaults.elevatedCardElevation()
+        elevation = CardDefaults.cardElevation(1.dp)
     ) {
         Row(
             modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically
@@ -92,7 +91,6 @@ fun ZikrChapterUI(
                 modifier = Modifier
                     .weight(8f)
                     .padding(4.dp),
-                color = normalTextColor,
                 text = txt,
                 fontFamily = FontFamily(typeface)
             )

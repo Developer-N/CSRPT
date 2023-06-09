@@ -25,6 +25,7 @@
     </plurals>
     <string name="shift_work_reset_button">Désactiver ou reprogrammer</string>
     <string name="spaced_and">" et "</string>
+    <string name="spaced_or">" ou "</string>
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
     <plurals name="n_hours">
@@ -189,7 +190,7 @@
     <string name="goto_date">Aller à la date</string>
     <string name="return_to_today">Retour à aujourd’hui</string>
     <string name="today">Aujourd’hui</string>
-    <string name="device_calendar_does_not_support">Le calendrier du périphérique ne prend pas en charge l’action</string>
+    <string name="device_does_not_support">Le calendrier du périphérique ne prend pas en charge l’action</string>
     <string name="add_event">Ajouter un évènement</string>
     <string name="exit">Quitter</string>
     <string name="about">À propos</string>
@@ -332,6 +333,13 @@
     <string name="wednesday">mercredi</string>
     <string name="thursday">jeudi</string>
     <string name="friday">vendredi</string>
+    <string name="saturday_short">s</string>
+    <string name="sunday_short">d</string>
+    <string name="monday_short">l</string>
+    <string name="tuesday_short">m</string>
+    <string name="wednesday_short">m</string>
+    <string name="thursday_short">j</string>
+    <string name="friday_short">v</string>
     <string name="sun_view">Vue Soleil</string>
     <string name="asr_hanafi_juristic">Méthode juridique Hanafi Asr</string>
     <string name="enable_new_interface">Activer la nouvelle interface</string>
@@ -346,7 +354,7 @@
     <string name="country_emoji">🇫🇷</string>
     <string name="nepali_calendar_short">népalais</string>
     <string name="nepali_calendar">Calendrier népalais</string>
-    <string name="widget_prefer_system_colors">Suivre la coloration du système dans les widgets</string>
+    <string name="widget_prefer_device_colors">Suivre la coloration du système dans les widgets</string>
     <string name="show_secondary_calendar">Afficher le calendrier secondaire</string>
     <string name="season">Saison</string>
     <string name="nepal">Nepal</string>
@@ -377,4 +385,7 @@
     <string name="add_quick_settings_tile">Ajouter une tuile de réglages rapides</string>
     <string name="true_north">Vrai Nord</string>
     <string name="lock">Verrouiller</string>
+    <string name="full_screen">Plein écran</string>
+    <string name="exit_full_screen">Quitter le plein écran</string>
+    <string name="color_gradient">Dégradé de couleurs</string>
 </resources>

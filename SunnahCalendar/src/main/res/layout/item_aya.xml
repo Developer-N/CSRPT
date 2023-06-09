@@ -7,8 +7,7 @@
     android:layout_marginTop="2dp"
     android:layout_marginEnd="4dp"
     android:layout_marginBottom="2dp"
-    app:cardBackgroundColor="?attr/colorCard"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
     app:cardPreventCornerOverlap="false"
     style="@style/Widget.Material3.CardView.Elevated">
 
@@ -24,7 +23,6 @@
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
             android:padding="3dp"
-            android:textColor="?attr/colorTextNormal"
             android:textIsSelectable="true" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -33,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
             android:padding="3dp"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorSecondary"
             android:textIsSelectable="true" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -42,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
             android:padding="3dp"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorSecondary"
             android:textIsSelectable="true" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -51,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
             android:padding="3dp"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorSecondary"
             android:textIsSelectable="true" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -60,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
             android:padding="3dp"
-            android:textColor="?attr/colorTextSecond"
+            android:textColor="?attr/colorSecondary"
             android:textIsSelectable="true" />
 
         <androidx.appcompat.widget.LinearLayoutCompat
@@ -72,8 +70,7 @@
                 android:id="@+id/aya_item_ayaNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorTextNormal"
-                android:textSize="20sp" />
+                    android:textSize="20sp" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -86,7 +83,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:padding="2dp"
-                    android:tint="?attr/colorIcon"
+                    android:tint="?attr/colorAccent"
                     app:srcCompat="@drawable/ic_baseline_play_circle_filled" />
 
                 <androidx.appcompat.widget.AppCompatImageButton
@@ -95,7 +92,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:padding="2dp"
-                    android:tint="?attr/colorIcon"
+                    android:tint="?attr/colorAccent"
                     app:srcCompat="@drawable/ic_bookmark0" />
 
                 <androidx.appcompat.widget.AppCompatImageButton
@@ -104,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:padding="2dp"
-                    android:tint="?attr/colorIcon"
+                    android:tint="?attr/colorAccent"
                     app:srcCompat="@drawable/ic_note_add" />
 
                 <androidx.appcompat.widget.AppCompatImageButton
@@ -113,7 +110,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:padding="2dp"
-                    android:tint="?attr/colorIcon"
+                    android:tint="?attr/colorAccent"
                     app:srcCompat="@drawable/ic_share" />
 
                 <androidx.appcompat.widget.AppCompatImageButton
@@ -122,7 +119,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:padding="2dp"
-                    android:tint="?attr/colorIcon"
+                    android:tint="?attr/colorAccent"
                     app:srcCompat="@drawable/ic_copy" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
@@ -137,15 +134,14 @@
             android:hint="@string/your_note"
             app:endIconDrawable="@drawable/ic_cancel"
             app:endIconMode="custom"
-            app:endIconTint="?attr/colorTextHoliday"
+            app:endIconTint="?attr/colorHoliday"
             app:startIconDrawable="@drawable/ic_note"
-            app:startIconTint="?attr/colorIcon">
+            app:startIconTint="?attr/colorAccent">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/txt_aya_note"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="?attr/colorTextNormal" />
+                android:layout_height="wrap_content"/>
         </com.google.android.material.textfield.TextInputLayout>
     </com.google.android.flexbox.FlexboxLayout>
 

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/azkar_activity_root"
-    style="@style/Widget.Material3.CardView.Elevated"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/screenBackgroundColor"
+    android:keepScreenOn="true"
     tools:context="ir.namoo.religiousprayers.ui.azkar.AzkarActivity">
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -16,10 +18,19 @@
             android:id="@+id/app_bar"
             layout="@layout/app_bar" />
 
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/compose_view"
+        <com.google.android.material.carousel.MaskableFrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurface"
+            android:padding="4dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:shapeAppearance="@style/shapeAppearanceTopCornerExtraLarge">
 
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/compose_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.carousel.MaskableFrameLayout>
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.constraintlayout.widget.ConstraintLayout>

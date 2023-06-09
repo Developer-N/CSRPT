@@ -4,7 +4,6 @@
     <!-- Calendar Navigation items  -->
     <string name="quran">Quran</string>
     <string name="azkar">Azkar</string>
-    <string name="monthly_times">Monthly pray times</string>
     <string name="edit_times">Edit times</string>
     <string name="download_upload">Download and upload times</string>
     <string name="donate">Donate</string>
@@ -51,7 +50,7 @@
     <string name="str_forward">Forward</string>
     <string name="str_backward">Backward</string>
     <string name="error_gedit_data">Entered data not correct!</string>
-    <string name="use_summer_time">Use official clock (summer time) to edit.</string>
+    <string name="edit_time_message">Edit times message.</string>
     <string name="edit_not_enabled">Edit mode not enabled</string>
     <string name="str_dialog_clear_edited_title">Delete all edited times</string>
     <string name="str_dialog_clear_edited_message">Are you sure to delete all edited times?</string>
@@ -108,7 +107,6 @@
     <string name="enable_athan">Enable Athan</string>
     <string name="enable_alarm">Enable Alarm</string>
     <string name="alert_type">Alert Type</string>
-    <string name="full_screen">Alert Type</string>
     <string name="notification">Notification</string>
     <string name="notif">Notification</string>
     <string name="just_notification">Just Notification</string>
@@ -274,5 +272,8 @@
     <string name="post_notification_permission_message">For show notification application need you to allow permission.</string>
 
     <string name="phone_state_permission_message">For prevent play athan while phone in calling app need read phone state permission.</string>
+
+    <string name="default_image">Default Image</string>
+    <string name="eid">Eid</string>
 
 </resources>

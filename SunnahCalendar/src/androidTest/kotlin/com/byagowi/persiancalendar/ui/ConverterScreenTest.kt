@@ -29,7 +29,7 @@ class ConverterScreenTest {
                 viewModel.changeSelectedDate(Jdn.today() + 1)
                 viewModel.changeSelectedDate(Jdn.today())
                 job.cancel()
-                assertEquals(listOf(false, false, false, true, false), values)
+                assertEquals(listOf(false, false, false, false, true, false), values)
             }
 
             // Day distance
@@ -46,7 +46,7 @@ class ConverterScreenTest {
                 viewModel.changeSecondSelectedDate(Jdn.today() + 1)
                 job.cancel()
                 val expected = listOf(
-                    false, false, false, false, true, false, true, false, false, false, false
+                    false, false, false, false, false, true, false, true, false, false, false, false
                 )
                 // Disabled for now
                 assertEquals(expected, values)

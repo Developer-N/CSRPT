@@ -1,6 +1,5 @@
 package com.byagowi.persiancalendar.utils
 
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.StringRes
@@ -14,30 +13,31 @@ import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinates
 import io.github.persiancalendar.praytimes.HighLatitudesMethod
+import io.github.persiancalendar.praytimes.MidnightMethod
 import io.github.persiancalendar.praytimes.PrayTimes
-import java.util.*
-import kotlin.math.abs
+import java.util.GregorianCalendar
+import kotlin.math.absoluteValue
 
-fun String.splitIgnoreEmpty(delim: String) = this.split(delim).filter { it.isNotEmpty() }
+// .split() turns an empty string into an array with an empty string which is undesirable
+// for our use so this filter any non empty string after split, its name rhymes with .filterNotNull
+fun String.splitFilterNotEmpty(delim: String) = this.split(delim).filter { it.isNotEmpty() }
 
 fun Coordinates.calculatePrayTimes(
     calendar: GregorianCalendar = GregorianCalendar(),
     calculationMethod: CalculationMethod = com.byagowi.persiancalendar.global.calculationMethod,
     asrMethod: AsrMethod = com.byagowi.persiancalendar.global.asrMethod,
     highLatitudesMethod: HighLatitudesMethod = com.byagowi.persiancalendar.global.highLatitudesMethod,
-    overrideIranDst: Boolean = true,
+    midnightMethod: MidnightMethod = com.byagowi.persiancalendar.global.midnightMethod,
 ): PrayTimes {
     val year = calendar[GregorianCalendar.YEAR]
     val month = calendar[GregorianCalendar.MONTH] + 1
     val day = calendar[GregorianCalendar.DAY_OF_MONTH]
-    val offset = (calendar.timeZone.getOffset(calendar.time.time) / (60 * 60 * 1000.0)).let {
-        if (it == 4.5 && overrideIranDst && Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU &&
-            calendar.timeZone.id == IRAN_TIMEZONE_ID
-        ) 3.5
-        else it
-    }
+    val offset = (calendar.timeZone.getOffset(calendar.time.time) / (60 * 60 * 1000.0))
+        // This turns GMT+4:30 to GMT+3:30 as Iran has abandoned summer but older devices aren't unaware
+        .let { if (it == 4.5 && calendar.timeZone.id == IRAN_TIMEZONE_ID) 3.5 else it }
     return PrayTimes(
-        calculationMethod, year, month, day, offset, this, asrMethod, highLatitudesMethod
+        calculationMethod, year, month, day, offset, this, asrMethod, highLatitudesMethod,
+        midnightMethod
     )
 }
 
@@ -62,7 +62,7 @@ val CalculationMethod.titleStringId
 // Midnight sun occurs at latitudes from 65°44' to 90° north or south as
 // https://en.wikipedia.org/wiki/Midnight_sun
 val enableHighLatitudesConfiguration: Boolean
-    get() = coordinates.value?.let { abs(it.latitude) > 50 } ?: false
+    get() = coordinates.value?.let { it.latitude.absoluteValue > 50 } ?: false
 
 val HighLatitudesMethod.titleStringId
     get(): @StringRes Int = when (this) {

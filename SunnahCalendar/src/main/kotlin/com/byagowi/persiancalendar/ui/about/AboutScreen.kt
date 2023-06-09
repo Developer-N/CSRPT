@@ -8,6 +8,7 @@ import android.text.util.Linkify
 import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.browser.customtabs.CustomTabsIntent
@@ -15,13 +16,17 @@ import androidx.core.net.toUri
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentAboutBinding
+import com.byagowi.persiancalendar.databinding.AboutScreenBinding
 import com.byagowi.persiancalendar.generated.faq
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
@@ -37,25 +42,24 @@ import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 import com.google.android.material.chip.Chip
 
-class AboutScreen : Fragment(R.layout.fragment_about) {
+class AboutScreen : Fragment(R.layout.about_screen) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentAboutBinding.bind(view)
-        binding.appBar.toolbar.let { toolbar ->
-            toolbar.setTitle(R.string.about)
-            toolbar.setupMenuNavigation()
-            toolbar.menu.add(R.string.share).also {
-                it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_baseline_share)
-                it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                it.onClick { shareApplication() }
-            }
-            toolbar.menu.add(R.string.device_information).also {
-                it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_device_information)
-                it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                it.onClick {
+        val binding = AboutScreenBinding.bind(view)
+        binding.appBar.toolbar.setTitle(R.string.about)
+        binding.appBar.toolbar.setupMenuNavigation()
+        binding.appBar.toolbar.menu.add(R.string.share).also {
+            it.icon = binding.appBar.toolbar.context.getCompatDrawable(R.drawable.ic_baseline_share)
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.onClick { shareApplication() }
+        }
+        binding.appBar.toolbar.menu.add(R.string.device_information).also {
+            it.icon =
+                binding.appBar.toolbar.context.getCompatDrawable(R.drawable.ic_device_information)
+            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            it.onClick {
 //                    findNavController().navigateSafe(AboutScreenDirections.actionAboutToDeviceInformation())
-                }
             }
         }
         binding.appBar.root.hideToolbarBottomShadow()
@@ -89,11 +93,13 @@ class AboutScreen : Fragment(R.layout.fragment_about) {
                 context?.getAnimatedDrawable(R.drawable.splash_icon_animation) ?: return@also
             it.setImageDrawable(animation)
             animation.start()
-            val easterEggController = EasterEggController(::showPeriodicTableDialog)
+            val clickHandlerDialog = createEasterEggClickHandler(::showPeriodicTableDialog)
+            val clickHandlerIcon = createIconRandomEffects(it)
             it.setOnClickListener {
                 animation.stop()
                 animation.start()
-                easterEggController.handleClick(activity)
+                clickHandlerDialog(activity)
+                clickHandlerIcon()
             }
         }
 
@@ -133,13 +139,26 @@ class AboutScreen : Fragment(R.layout.fragment_about) {
         binding.emailTitle.putLineStartIcon(R.drawable.ic_email)
 
         setupContributorsList(binding)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
-    private fun setupContributorsList(binding: FragmentAboutBinding) {
+    private fun setupContributorsList(binding: AboutScreenBinding) {
         val context = binding.root.context
 
         val chipsIconTintId = TypedValue().apply {
-            context.theme.resolveAttribute(R.attr.colorDrawerIcon, this, true)
+            context.theme.resolveAttribute(
+                com.google.android.material.R.attr.colorAccent,
+                this,
+                true
+            )
         }.resourceId
 
         val chipClick = View.OnClickListener {

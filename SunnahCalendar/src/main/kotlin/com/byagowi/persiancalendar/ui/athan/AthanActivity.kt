@@ -12,10 +12,12 @@ import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
 import com.byagowi.persiancalendar.FAJR_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
@@ -36,12 +38,14 @@ class AthanActivity : ComponentActivity() {
     private var originalVolume = -1
     private val preventPhoneCallIntervention = PreventPhoneCallIntervention(::stop)
     private val stopTask = object : Runnable {
-        override fun run() = runCatching {
-            spentSeconds += 5
-            if (ringtone == null || ringtone?.isPlaying == false || spentSeconds > 360 ||
-                (stopAtHalfMinute && spentSeconds > 30)
-            ) finish() else handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
-        }.onFailure(logException).onFailure { finish() }.let {}
+        override fun run() {
+            runCatching {
+                spentSeconds += 5
+                if (ringtone == null || ringtone?.isPlaying == false || spentSeconds > 360 ||
+                    (stopAtHalfMinute && spentSeconds > 30)
+                ) finish() else handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
+            }.onFailure(logException).onFailure { finish() }
+        }
     }
     private var stopAtHalfMinute = false
 
@@ -61,8 +65,16 @@ class AthanActivity : ComponentActivity() {
             ?.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
     }
 
+    private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() = stop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        transparentSystemBars()
+
+        onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
 
         val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
         val isFajr = prayerKey == FAJR_KEY
@@ -134,8 +146,6 @@ class AthanActivity : ComponentActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) stop()
     }
-
-    override fun onBackPressed() = stop()
 
     private fun stop() {
         if (alreadyStopped) return

@@ -1,14 +1,19 @@
 package ir.namoo.commons.koin
 
 import android.content.Context
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.service.PrayTimesService
-import ir.namoo.commons.utils.KtorUtils
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.quran.db.FileDownloadDB
 import ir.namoo.quran.db.FileDownloadRepository
@@ -27,10 +32,11 @@ import ir.namoo.religiousprayers.ui.azkar.AzkarRepository
 import ir.namoo.religiousprayers.ui.azkar.AzkarViewModel
 import ir.namoo.religiousprayers.ui.downloadtimes.DownloadPrayTimesViewModel
 import ir.namoo.religiousprayers.ui.edit.EditViewModel
-import ir.namoo.religiousprayers.ui.monthly.MonthlyViewModel
+import kotlinx.serialization.json.Json
 import okhttp3.Cache
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import timber.log.Timber
 
 val koinModule = module {
     // Quran
@@ -62,7 +68,26 @@ val koinModule = module {
                 }
                 addNetworkInterceptor(get<CacheInterceptor>())
             }
-            KtorUtils.configureHttpClient(this)
+            defaultRequest {
+//                header("APIKEY", API_KEY)
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 30 * 1000
+                connectTimeoutMillis = 30 * 1000
+                socketTimeoutMillis = 30 * 1000
+            }
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                })
+            }
+            install(Logging) {
+                logger = object : Logger {
+                    override fun log(message: String) {
+                        Timber.d(message)
+                    }
+                }
+            }
         }
     }
 
@@ -78,6 +103,5 @@ val koinModule = module {
     viewModel { AzkarActivityViewModel(get()) }
     viewModel { DownloadPrayTimesViewModel(get(), get(), get()) }
     viewModel { EditViewModel(get()) }
-    viewModel { MonthlyViewModel() }
 
 }//end of module

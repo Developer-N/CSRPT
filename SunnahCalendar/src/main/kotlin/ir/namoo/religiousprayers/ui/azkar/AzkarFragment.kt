@@ -13,8 +13,10 @@ import android.widget.LinearLayout
 import androidx.appcompat.widget.SearchView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -22,6 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.FragmentAzkarBinding
@@ -39,13 +45,13 @@ import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
-import org.koin.android.ext.android.get
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 @SuppressLint("SdCardPath")
 class AzkarFragment : Fragment() {
     private lateinit var binding: FragmentAzkarBinding
-    private val azkarViewModel: AzkarViewModel = get()
+    private val azkarViewModel: AzkarViewModel by viewModel()
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreateView(
@@ -124,14 +130,28 @@ class AzkarFragment : Fragment() {
         }
         binding.appBar.root.hideToolbarBottomShadow()
         azkarViewModel.getChapters()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
+
         binding.azkarChapter.setContent {
             Mdc3Theme {
                 val appFont = remember { getAppFont(requireContext()) }
-                val normalTextColor =
-                    remember { Color(requireContext().resolveColor(R.attr.colorTextNormal)) }
-                val iconColor = remember { Color(requireContext().resolveColor(R.attr.colorIcon)) }
-                val cardColor = remember { Color(requireContext().resolveColor(R.attr.colorCard)) }
-                Column {
+                val iconColor =
+                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
+                val cardColor =
+                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
+                Column(
+                    modifier = Modifier
+                        .background(cardColor)
+                        .fillMaxSize()
+                ) {
 //                    Button(onClick = { startAzkar(requireContext(), "morning", null) }) {
 //                        Text(text = stringResource(id = R.string.morning_azkar))
 //                    }
@@ -139,13 +159,12 @@ class AzkarFragment : Fragment() {
 //                        Text(text = stringResource(id = R.string.evening_azkar))
 //                    }
                     AnimatedVisibility(azkarViewModel.isLoading) {
-                        LoadingUIElement(typeface = appFont, normalTextColor = normalTextColor)
+                        LoadingUIElement(typeface = appFont)
                     }
                     val listState = rememberLazyListState()
                     LazyColumn(state = listState) {
                         if (azkarViewModel.filteredAzkarChapters.isNotEmpty()) {
-                            items(
-                                items = azkarViewModel.filteredAzkarChapters,
+                            items(items = azkarViewModel.filteredAzkarChapters,
                                 key = { it.id }) { zikr ->
                                 Box(modifier = Modifier.animateItemPlacement()) {
                                     ZikrChapterUI(zikr,
@@ -153,7 +172,6 @@ class AzkarFragment : Fragment() {
                                         lang = azkarViewModel.azkarLang,
                                         typeface = appFont,
                                         cardColor = cardColor,
-                                        normalTextColor = normalTextColor,
                                         iconColor = iconColor,
                                         onFavClick = { azkarViewModel.updateAzkarChapter(it) },
                                         onCardClick = { id ->
@@ -169,12 +187,9 @@ class AzkarFragment : Fragment() {
                     }
                     if (azkarViewModel.filteredAzkarChapters.size == 0) {
                         NothingFoundUIElement(
-                            normalTextColor = normalTextColor,
-                            typeface = appFont,
-                            iconColor = iconColor
+                            typeface = appFont, iconColor = iconColor
                         )
-                        if (azkarViewModel.searchQuery.isEmpty() && !azkarViewModel.isBookmarkShowed)
-                            azkarViewModel.getChapters()
+                        if (azkarViewModel.searchQuery.isEmpty() && !azkarViewModel.isBookmarkShowed) azkarViewModel.getChapters()
                     }
                 }
             }

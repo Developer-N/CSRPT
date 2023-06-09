@@ -21,6 +21,10 @@ import android.widget.AdapterView
 import android.widget.Toast
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
@@ -109,6 +113,15 @@ class DownloadFragment : Fragment() {
         }
 
         viewModel.checkDownloads()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
 
         return binding.root
     }//end of onCreateView
@@ -260,9 +273,11 @@ class DownloadFragment : Fragment() {
                                     inProgressDownloads.remove(inProgressDownloads.find { f -> f.id == it.id })
                                     viewModel.removeDownload(it.id)
                                 }
+
                                 DownloadManager.STATUS_FAILED -> {
                                     visibleDownloadViews(false)
                                 }
+
                                 DownloadManager.STATUS_PENDING, DownloadManager.STATUS_RUNNING -> {
                                     visibleDownloadViews(true)
                                     lifecycleScope.launch {
@@ -291,6 +306,12 @@ class DownloadFragment : Fragment() {
                     getSelectedQuranDirectoryPath(requireContext()) + "/" + folders[spinnerSelectedPosition] + "/" + getSuraFileName(
                         chapter.sura
                     )
+                try {
+                    File(downloadFile).let {
+                        if (it.exists()) it.delete()
+                    }
+                } catch (_: Exception) {
+                }
                 val folderPath =
                     getSelectedQuranDirectoryPath(requireContext()) + "/" + folders[binding.spinnerQuranDownloadType.selectedItemPosition]
 

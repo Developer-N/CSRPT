@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.fragment.app.commit
@@ -13,6 +14,7 @@ import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.updateStoredPreference
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.makeWallpaperTransparency
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.createSampleRemoteViews
@@ -32,9 +34,8 @@ class WidgetConfigurationActivity : AppCompatActivity() {
         finish()
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finishAndSuccess()
+    private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() = finishAndSuccess()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,13 +43,16 @@ class WidgetConfigurationActivity : AppCompatActivity() {
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
         window?.makeWallpaperTransparency()
+        transparentSystemBars()
+
+        onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
 
         val binding = WidgetPreferenceLayoutBinding.inflate(layoutInflater).also {
             setContentView(it.root)
         }
 
-        val width = 200.dp.toInt()
-        val height = 60.dp.toInt()
+        val width = (200 * resources.dp).toInt()
+        val height = (60 * resources.dp).toInt()
         fun updateWidget() {
             binding.preview.addView(
                 createSampleRemoteViews(this, width, height)

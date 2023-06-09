@@ -30,6 +30,7 @@ import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
+import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.enableWorkManager
 import com.byagowi.persiancalendar.utils.getFromStringId
@@ -104,6 +105,7 @@ private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Lon
     when {
         Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 ->
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+
         else -> am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
     }
 }
@@ -118,8 +120,6 @@ class AzkarWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
     }
 }
 
-private var lastAzkarName = ""
-private var lastAzkarJdn: Int = 0
 fun startAzkar(context: Context, name: String, intendedTime: Long?) {
     debugLog("Azkar: startAzkar for $name")
     if (intendedTime == null) return startAzkarBody(context, name)
@@ -128,15 +128,20 @@ fun startAzkar(context: Context, name: String, intendedTime: Long?) {
 
     // If at the of being is disabled by user, skip
     if (!context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false)) return
-    val today = Jdn.today().toJavaCalendar()[Calendar.DAY_OF_YEAR]
-    if (lastAzkarJdn == today && lastAzkarName == name) return
-    lastAzkarJdn = today; lastAzkarName = name
+
     startAzkarBody(context, name)
 }
 
-fun startAzkarBody(context: Context, name: String) = runCatching {
-    debugLog("Azkar: startAzkarBody for $name")
 
+private var lastAzkarKey = ""
+private var lastAzkarJdn: Jdn? = null
+
+fun startAzkarBody(context: Context, name: String) = runCatching {
+    applyAppLanguage(context)
+    val today = Jdn.today()
+    if (lastAzkarJdn == today && lastAzkarKey == name) return
+    lastAzkarJdn = today; lastAzkarKey = name
+    debugLog("Azkar: startAzkarBody for $name")
     runCatching {
         @Suppress("Deprecation")
         context.getSystemService<PowerManager>()?.newWakeLock(

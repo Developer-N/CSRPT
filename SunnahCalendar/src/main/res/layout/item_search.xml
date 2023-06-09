@@ -5,8 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="2dp"
-    app:cardBackgroundColor="?attr/colorCard"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
     app:cardPreventCornerOverlap="false">
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -26,7 +25,6 @@
                 android:layout_gravity="start"
                 android:layout_margin="2dp"
                 android:padding="3dp"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="18sp" />
 
             <com.google.android.material.chip.Chip
@@ -37,9 +35,8 @@
                 android:layout_gravity="end"
                 android:layout_margin="2dp"
                 android:text="@string/go_to_aya"
-                android:textColor="?attr/colorTextNormal"
                 app:chipIcon="@drawable/ic_keyboard_arrow_right"
-                app:chipIconTint="?attr/colorIcon" />
+                app:chipIconTint="?attr/colorAccent" />
         </FrameLayout>
 
         <com.google.android.flexbox.FlexboxLayout
@@ -55,7 +52,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:padding="3dp"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="16sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -64,7 +60,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:padding="3dp"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="16sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -73,7 +68,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:padding="3dp"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="16sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -82,7 +76,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:padding="3dp"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="16sp" />
 
         </com.google.android.flexbox.FlexboxLayout>
@@ -94,7 +87,7 @@
             android:layout_gravity="center"
             android:background="@android:color/transparent"
             android:padding="3dp"
-            android:tint="?attr/colorIcon"
+            android:tint="?attr/colorAccent"
             app:srcCompat="@drawable/ic_keyboard_arrow_down" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>

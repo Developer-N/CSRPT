@@ -22,6 +22,7 @@ import com.byagowi.persiancalendar.global.calendarTypesTitleAbbr
 import com.byagowi.persiancalendar.global.enabledCalendars
 import com.byagowi.persiancalendar.global.eventsRepository
 import com.byagowi.persiancalendar.global.holidayString
+import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.isForcedIranTimeEnabled
 import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
 import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
@@ -35,12 +36,15 @@ import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.global.weekDays
 import com.byagowi.persiancalendar.global.weekDaysInitials
 import com.byagowi.persiancalendar.global.weekStartOffset
+import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.NepaliDate
 import io.github.persiancalendar.calendar.islamic.IranianIslamicDateConverter
-import java.util.*
+import java.util.Date
+import java.util.GregorianCalendar
+import java.util.TimeZone
 import kotlin.math.abs
 
 val supportedYearOfIranCalendar: Int get() = IranianIslamicDateConverter.latestSupportedYearOfIran
@@ -112,31 +116,41 @@ fun getA11yDaySummary(
             .append(context.getString(R.string.nth_week_of_year, formatNumber(weekOfYearStart)))
     }
 
-    if (withZodiac) {
-        val zodiac = getZodiacInfo(context, jdn, withEmoji = false, short = false)
-        if (zodiac.isNotEmpty()) appendLine().appendLine().append(zodiac)
+    if (withZodiac && isAstronomicalExtraFeaturesEnabled) {
+        appendLine().appendLine()
+            .appendLine(generateZodiacInformation(context, jdn, withEmoji = false))
+            .append(isMoonInScorpio(context, jdn))
     }
 }
 
-fun Calendar.toCivilDate() =
-    CivilDate(this[Calendar.YEAR], this[Calendar.MONTH] + 1, this[Calendar.DAY_OF_MONTH])
-
-fun Date.toJavaCalendar(forceLocalTime: Boolean = false): Calendar = Calendar.getInstance().also {
-    if (!forceLocalTime && isForcedIranTimeEnabled)
-        it.timeZone = TimeZone.getTimeZone(IRAN_TIMEZONE_ID)
-    it.time = this
+fun GregorianCalendar.toCivilDate(): CivilDate {
+    return CivilDate(
+        this[GregorianCalendar.YEAR],
+        this[GregorianCalendar.MONTH] + 1,
+        this[GregorianCalendar.DAY_OF_MONTH]
+    )
 }
 
-fun Calendar.formatDateAndTime(): String = language.timeAndDateFormat.format(
-    Clock(this).toFormattedString(forcedIn12 = true),
-    formatDate(Jdn(this.toCivilDate()).toCalendar(mainCalendar), forceNonNumerical = true)
-)
+fun Date.toGregorianCalendar(forceLocalTime: Boolean = false): GregorianCalendar {
+    val calendar = GregorianCalendar()
+    if (!forceLocalTime && isForcedIranTimeEnabled)
+        calendar.timeZone = TimeZone.getTimeZone(IRAN_TIMEZONE_ID)
+    calendar.time = this
+    return calendar
+}
+
+fun GregorianCalendar.formatDateAndTime(): String {
+    return language.timeAndDateFormat.format(
+        Clock(this).toFormattedString(forcedIn12 = true),
+        formatDate(Jdn(this.toCivilDate()).toCalendar(mainCalendar), forceNonNumerical = true)
+    )
+}
 
 // Google Meet generates weird and ugly descriptions with lines having such patterns, let's get rid of them
 private val descriptionCleaningPattern = Regex("^-::~[:~]+:-$", RegexOption.MULTILINE)
 
 private fun readDeviceEvents(
-    context: Context, startingDate: Calendar, rangeInMillis: Long
+    context: Context, startingDate: GregorianCalendar, rangeInMillis: Long
 ): List<CalendarEvent.DeviceCalendarEvent> = if (!isShowDeviceCalendarEvents ||
     ActivityCompat.checkSelfPermission(
         context, Manifest.permission.READ_CALENDAR
@@ -162,9 +176,9 @@ private fun readDeviceEvents(
         }.map {
             val startDate = Date(it.getLong(3))
             val endDate = Date(it.getLong(4))
-            val startCalendar = startDate.toJavaCalendar()
-            val endCalendar = endDate.toJavaCalendar()
-            fun Calendar.clock() = Clock(this).toBasicFormatString()
+            val startCalendar = startDate.toGregorianCalendar()
+            val endCalendar = endDate.toGregorianCalendar()
+            fun GregorianCalendar.clock() = Clock(this).toBasicFormatString()
             CalendarEvent.DeviceCalendarEvent(
                 id = it.getInt(0),
                 title =
@@ -186,13 +200,19 @@ private fun readDeviceEvents(
 }.onFailure(logException).getOrNull() ?: emptyList()
 
 fun Context.readDayDeviceEvents(jdn: Jdn) =
-    DeviceCalendarEventsStore(readDeviceEvents(this, jdn.toJavaCalendar(), DAY_IN_MILLIS))
+    DeviceCalendarEventsStore(readDeviceEvents(this, jdn.toGregorianCalendar(), DAY_IN_MILLIS))
 
 fun Context.readMonthDeviceEvents(jdn: Jdn) =
-    DeviceCalendarEventsStore(readDeviceEvents(this, jdn.toJavaCalendar(), 32L * DAY_IN_MILLIS))
+    DeviceCalendarEventsStore(
+        readDeviceEvents(
+            this,
+            jdn.toGregorianCalendar(),
+            32L * DAY_IN_MILLIS
+        )
+    )
 
 fun Context.getAllEnabledAppointments() = readDeviceEvents(
-    this, Calendar.getInstance().apply { add(Calendar.YEAR, -1) },
+    this, GregorianCalendar().apply { add(GregorianCalendar.YEAR, -1) },
     365L * 2L * DAY_IN_MILLIS // all the events of previous and next year from today
 )
 
@@ -286,10 +306,21 @@ fun monthFormatForSecondaryCalendar(date: AbstractDate, secondaryCalendar: Calen
     ).toCalendar(secondaryCalendar)
     return when {
         from.month == to.month -> language.my.format(from.monthName, formatNumber(from.year))
-        from.year != to.year -> listOf(from, to).joinToString(EN_DASH) {
-            language.my.format(it.monthName, formatNumber(it.year))
+        from.year != to.year -> listOf(
+            from.year to from.month..secondaryCalendar.getYearMonths(from.year),
+            to.year to 1..to.month
+        ).joinToString(EN_DASH) { (year, months) ->
+            language.my.format(months.joinToString(EN_DASH) {
+                from.calendarType.monthsNames.getOrNull(it - 1).debugAssertNotNull ?: ""
+            }, formatNumber(year))
         }
-        else -> language.my.format(from.monthName + EN_DASH + to.monthName, formatNumber(from.year))
+
+        else -> language.my.format(
+            (from.month..to.month).joinToString(EN_DASH) {
+                from.calendarType.monthsNames.getOrNull(it - 1).debugAssertNotNull ?: ""
+            },
+            formatNumber(from.year)
+        )
     }
 }
 

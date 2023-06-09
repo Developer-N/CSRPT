@@ -7,9 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.IBinder
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
@@ -55,22 +53,25 @@ class QuranPlayer : Service() {
 
     private val db: QuranDB by inject()
     private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-            if (p1 != null) {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent != null) {
 //                sura = p1.extras?.getInt("sura") ?: sura
 //                chapter = QuranDB.getInstance(this@QuranPlayer).chaptersDao().getChapter(sura)
-                if (p1.extras?.get("aya") != null)
-                    aya = p1.extras?.getInt("aya") ?: aya
-                when (p1.extras?.get("action")) {
+                aya = intent.getIntExtra("aya", aya)
+                when (intent.getStringExtra("action")) {
                     NOTIFY_QURAN_PLAY -> {//get Sura and Aya and play and notify notification and send broadcast to sura view
                         play(sura, aya)
                     }
+
                     NOTIFY_QURAN_NEXT -> {//play next and notify notification and send broadcast to sura view
                         play(sura, aya + 1)
                     }
+
                     NOTIFY_QURAN_PREVIOUS -> {//play previous and notify notification and send broadcast to sura view
-                        play(sura, aya - 1)
+                        if (aya > 1)
+                            play(sura, aya - 1)
                     }
+
                     NOTIFY_QURAN_PAUSE -> {//pause and notify notification and send broadcast to sura view
                         length = mediaPlayer?.currentPosition ?: 0
                         mediaPlayer?.pause()
@@ -78,6 +79,7 @@ class QuranPlayer : Service() {
                             putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_PAUSE)
                         })
                     }
+
                     NOTIFY_QURAN_RESUME -> {//pause and notify notification and send broadcast to sura view
                         mediaPlayer?.apply {
                             seekTo(length)
@@ -87,6 +89,7 @@ class QuranPlayer : Service() {
                             putExtra("action", QURAN_NOTIFY_VIEW_PLAYER_RESUME)
                         })
                     }
+
                     NOTIFY_QURAN_STOP -> {// stop and remove notification and broadcast to sura view
 //                        clearNotification()
                         sendBroadcast(Intent(QURAN_VIEW_PLAYER_ACTION).apply {
@@ -98,8 +101,9 @@ class QuranPlayer : Service() {
             }
         }
 
-        private fun play(sura: Int, aya: Int) {
-            this@QuranPlayer.aya = aya
+        private fun play(s: Int, a: Int) {
+            aya = if (a < 1) 1 else a
+            sura = s
             mediaPlayer?.let {
                 if (it.isPlaying)
                     it.stop()
@@ -108,17 +112,12 @@ class QuranPlayer : Service() {
             if (!File((folderName + "/" + getAyaFileName(sura, aya))).exists())
                 loadFolders(getAyaFileName(sura, aya))
             mediaPlayer = MediaPlayer().apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build()
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
             }
             if (aya > chapter?.ayaCount!!) return
 //            showNotification(sura, aya)
@@ -137,11 +136,13 @@ class QuranPlayer : Service() {
                                 this@QuranPlayer,
                                 (folderName + "/" + getAyaFileName(sura, 0)).toUri()
                             )
+
                         File(folderName + "/" + getAyaFileName(1, 1)).exists() ->
                             setDataSource(
                                 this@QuranPlayer,
                                 (folderName + "/" + getAyaFileName(1, 1)).toUri()
                             )
+
                         else -> setDataSource(
                             this@QuranPlayer,
                             (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
@@ -152,17 +153,12 @@ class QuranPlayer : Service() {
                     }
                     setOnCompletionListener {
                         mediaPlayer = MediaPlayer().apply {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                                        .build()
-                                )
-                            } else {
-                                @Suppress("DEPRECATION")
-                                setAudioStreamType(AudioManager.STREAM_MUSIC)
-                            }
+                            setAudioAttributes(
+                                AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                    .build()
+                            )
                             setDataSource(
                                 this@QuranPlayer,
                                 (folderName + "/" + getAyaFileName(sura, aya)).toUri()
@@ -227,17 +223,12 @@ class QuranPlayer : Service() {
             if (!File(("$translateFolderName/" + getAyaFileName(sura, aya))).exists())
                 loadFolders(getAyaFileName(sura, aya))
             mediaPlayer = MediaPlayer().apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build()
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
                 setDataSource(
                     this@QuranPlayer,
                     (translateFolderName + "/" + getAyaFileName(sura, aya)).toUri()

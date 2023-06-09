@@ -7,7 +7,8 @@ const val LOG_TAG = "NAMOO"
 
 const val LOCATION_PERMISSION_REQUEST_CODE = 23
 const val CALENDAR_READ_PERMISSION_REQUEST_CODE = 55
-const val POST_NOTIFICATION_PERMISSION_REQUEST_CODE = 38
+const val POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION = 38
+const val POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION = 34
 
 const val LAST_CHOSEN_TAB_KEY = "LastChosenTab"
 
@@ -16,6 +17,7 @@ const val PREF_OTHER_CALENDARS_KEY = "otherCalendarTypes"
 const val PREF_SECONDARY_CALENDAR_IN_TABLE = "secondaryCalendarShown"
 const val PREF_PRAY_TIME_METHOD = "SelectedPrayTimeMethod"
 const val PREF_HIGH_LATITUDES_METHOD = "SelectedHighLatitudesMethod"
+const val PREF_MIDNIGHT_METHOD = "SelectedMidnightMethod"
 const val PREF_ASR_HANAFI_JURISTIC = "AsrHanafiJuristic"
 const val PREF_ISLAMIC_OFFSET = "islamic_offset"
 const val PREF_ISLAMIC_OFFSET_SET_DATE = "islamic_offset_set_date"
@@ -38,6 +40,7 @@ const val PREF_NUMERICAL_DATE_PREFERRED = "numericalDatePreferred"
 const val PREF_ASTRONOMICAL_FEATURES = "astronomicalFeatures"
 const val PREF_SHOW_WEEK_OF_YEAR_NUMBER = "showWeekOfYearNumber"
 const val PREF_NOTIFY_DATE = "NotifyDate"
+const val PREF_NOTIFY_IGNORED = "NotifyIgnored"
 const val PREF_NOTIFICATION_ATHAN = "NotificationAthan"
 const val PREF_NOTIFY_DATE_LOCK_SCREEN = "NotifyDateLockScreen"
 const val PREF_ATHAN_VOLUME = "athanVolume"
@@ -52,7 +55,7 @@ const val PREF_TITLE_AGE_WIDGET = "TitleForAgeWidget"
 const val PREF_ATHAN_ALARM = "AthanAlarm"
 const val PREF_ATHAN_GAP = "AthanGap"
 const val PREF_THEME = "Theme"
-const val PREF_NEW_INTERFACE = "NewInterface"
+const val PREF_THEME_GRADIENT = "ThemeGradient"
 const val PREF_HOLIDAY_TYPES = "holiday_types"
 const val PREF_WEEK_START = "WeekStart"
 const val PREF_WEEK_ENDS = "WeekEnds"
@@ -84,6 +87,7 @@ const val DEFAULT_NOTIFY_DATE_LOCK_SCREEN = true
 const val DEFAULT_ATHAN_VOLUME = 3
 const val DEFAULT_ISLAMIC_OFFSET = "0"
 const val DEFAULT_SECONDARY_CALENDAR_IN_TABLE = false
+const val DEFAULT_THEME_GRADIENT = true
 
 const val LOAD_APP_ID = 1000
 const val THREE_HOURS_APP_ID = 1010
@@ -122,7 +126,7 @@ val DEFAULT_WIDGET_CUSTOMIZATIONS = setOf(
 )
 
 const val FAJR_KEY = "FAJR"
-const val SUNRISE_KRY = "SUNRISE"
+const val SUNRISE_KEY = "SUNRISE"
 const val DHUHR_KEY = "DHUHR"
 const val ASR_KEY = "ASR"
 const val MAGHRIB_KEY = "MAGHRIB"
@@ -130,12 +134,9 @@ const val ISHA_KEY = "ISHA"
 
 val ATHANS_LIST = listOf(FAJR_KEY, DHUHR_KEY, ASR_KEY, MAGHRIB_KEY, ISHA_KEY)
 
-val TIME_NAMES = listOf(
-    R.string.imsak, R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr,
-    R.string.sunset, R.string.maghrib, R.string.isha, R.string.midnight
-)
-
 const val QIBLA_LATITUDE = 21.422522
 const val QIBLA_LONGITUDE = 39.826181
 
 const val IRAN_TIMEZONE_ID = "Asia/Tehran"
+const val AFGHANISTAN_TIMEZONE_ID = "Asia/Kabul"
+const val NEPAL_TIMEZONE_ID = "Asia/Kathmandu"

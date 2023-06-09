@@ -95,7 +95,7 @@
     <string name="show_device_calendar_events_summary">شخصی اولای گؤستر</string>
     <string name="show_device_calendar_events">شخصی اولای‌لار</string>
     <string name="add_event">اولای آرتیر</string>
-    <string name="device_calendar_does_not_support">سیستم‌ئزین تقویمی بونو دستک‌لمیر</string>
+    <string name="device_does_not_support">سیستم‌ئزین تقویمی بونو دستک‌لمیر</string>
     <string name="customize_widget_summary">اعلان‌لاردا و ویجت‌ده گؤستریلن‌لر</string>
     <string name="customize_widget">اعلان‌لاری و ویجتی شخصی ائتمک</string>
     <string name="add">آرتیر</string>
@@ -204,6 +204,7 @@
         <item quantity="other">%1$s ساعات</item>
     </plurals>
     <string name="spaced_and">" و "</string>
+    <string name="spaced_or">" یا "</string>
     <string name="spaced_comma">"، "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">وسیله‌نین اطلاعاتی</string>
@@ -332,6 +333,13 @@
     <string name="wednesday">اوْدگونو</string>
     <string name="thursday">سۇگونو</string>
     <string name="friday">آینی‌گون</string>
+    <string name="saturday_short">یئل</string>
+    <string name="sunday_short">سۆد</string>
+    <string name="monday_short">دۇز</string>
+    <string name="tuesday_short">آرا</string>
+    <string name="wednesday_short">اوْد</string>
+    <string name="thursday_short">سۇ</string>
+    <string name="friday_short">آینی</string>
     <string name="sun_view">خورشیدنما</string>
     <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
     <string name="country_emoji">🇮🇷</string>

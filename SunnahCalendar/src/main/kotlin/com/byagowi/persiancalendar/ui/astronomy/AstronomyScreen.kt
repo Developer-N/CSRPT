@@ -12,16 +12,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import androidx.core.util.lruCache
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isInvisible
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.navGraphViewModels
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentAstronomyBinding
+import com.byagowi.persiancalendar.databinding.AstronomyScreenBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
@@ -36,27 +41,26 @@ import com.byagowi.persiancalendar.ui.utils.setupLayoutTransition
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.isRtl
+import com.byagowi.persiancalendar.utils.isSouthernHemisphere
 import com.byagowi.persiancalendar.utils.toCivilDate
-import com.byagowi.persiancalendar.utils.toJavaCalendar
+import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import com.google.android.material.materialswitch.MaterialSwitch
 import io.github.cosinekitty.astronomy.seasons
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Date
 import kotlin.math.abs
 import kotlin.math.min
 
-class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
+class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentAstronomyBinding.bind(view)
+        val binding = AstronomyScreenBinding.bind(view)
 
-        binding.appBar.toolbar.let {
-            it.setTitle(R.string.astronomy)
-            it.setupMenuNavigation()
-        }
+        binding.appBar.toolbar.setTitle(R.string.astronomy)
+        binding.appBar.toolbar.setupMenuNavigation()
 
         val resetButton = binding.appBar.toolbar.menu.add(R.string.return_to_today).also {
             it.icon =
@@ -125,8 +129,8 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
             val tropical = viewModel.isTropical.value
             val sunZodiac = if (tropical) Zodiac.fromTropical(state.sun.elon)
             else Zodiac.fromIau(state.sun.elon)
-            val moonZodiac = if (tropical) Zodiac.fromTropical(state.moon.elon)
-            else Zodiac.fromIau(state.moon.elon)
+            val moonZodiac = if (tropical) Zodiac.fromTropical(state.moon.lon)
+            else Zodiac.fromIau(state.moon.lon)
 
             binding.sun.setValue(
                 sunZodiac.format(view.context, true) // ☉☀️
@@ -149,7 +153,7 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
                 }.setValue(
                     Date(
                         seasonsCache[CivilDate(
-                            PersianDate(jdn.toPersianCalendar().year, i * 3, 29)
+                            PersianDate(jdn.toPersianDate().year, i * 3, 29)
                         ).year].let {
                             when (i) {
                                 1 -> it.juneSolstice
@@ -158,7 +162,7 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
                                 else -> it.marchEquinox
                             }
                         }.toMillisecondsSince1970()
-                    ).toJavaCalendar().formatDateAndTime()
+                    ).toGregorianCalendar().formatDateAndTime()
                 )
             }
         }
@@ -174,21 +178,25 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
             }
         }
 
-        listOf(
-            binding.firstSeason to 4,
-            binding.secondSeason to 7,
-            binding.thirdSeason to 10,
-            binding.fourthSeason to 1
-        ).map { (holder, month) -> // 'month' is month number of first Persian month in the season
-            val season = Season.fromPersianCalendar(PersianDate(1400, month, 1), coordinates.value)
-            holder.setTitle(getString(season.nameStringId))
-            holder.setColor(season.color)
-        }
+        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event != Lifecycle.Event.ON_RESUME) return@LifecycleEventObserver
+            listOf(
+                binding.firstSeason, binding.secondSeason, binding.thirdSeason, binding.fourthSeason
+            ).zip(
+                if (coordinates.value?.isSouthernHemisphere == true)
+                    listOf(Season.WINTER, Season.SPRING, Season.SUMMER, Season.AUTUMN)
+                else
+                    listOf(Season.SUMMER, Season.AUTUMN, Season.WINTER, Season.SPRING)
+            ).forEach { (holder, season) ->
+                holder.setTitle(getString(season.nameStringId))
+                holder.setColor(season.color)
+            }
+            binding.sun.setTitle(getString(R.string.sun))
+            binding.sun.setColor(0xcceaaa00.toInt())
+            binding.moon.setTitle(getString(R.string.moon))
+            binding.moon.setColor(0xcc606060.toInt())
+        })
 
-        binding.sun.setTitle(getString(R.string.sun))
-        binding.sun.setColor(0xcceaaa00.toInt())
-        binding.moon.setTitle(getString(R.string.moon))
-        binding.moon.setColor(0xcc606060.toInt())
 
         fun bringDate() {
             val currentJdn = Jdn(viewModel.astronomyState.value.date.toCivilDate())
@@ -207,6 +215,9 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
             it.onClick {
                 findNavController().navigateSafe(AstronomyScreenDirections.actionAstronomyToMap())
             }
+        }
+        binding.mapIcon.setOnClickListener {
+            findNavController().navigateSafe(AstronomyScreenDirections.actionAstronomyToMap())
         }
 
         resetButton.onClick {
@@ -265,6 +276,16 @@ class AstronomyScreen : Fragment(R.layout.fragment_astronomy) {
 
         binding.firstColumn.setupLayoutTransition()
         binding.secondColumn.setupLayoutTransition()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.contentRoot) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.sliderWrapper.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
 
         // Setup view model change listeners
         // https://developer.android.com/topic/libraries/architecture/coroutines#lifecycle-aware

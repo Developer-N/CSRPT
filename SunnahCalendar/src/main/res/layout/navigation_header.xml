@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:importantForAccessibility="no"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Its content description is replaced by code -->
-    <ImageView
-        android:id="@+id/season_image"
+    <View
+        android:id="@+id/status_bar_place_holder"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/drawer_header_height"
-        android:contentDescription="@string/app_name"
-        android:scaleType="centerCrop" />
+        android:layout_height="1dp"
+        android:background="@drawable/drawer_top_bar" />
+
+    <com.google.android.material.carousel.MaskableFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="4dp"
+        android:importantForAccessibility="noHideDescendants"
+        app:shapeAppearance="?attr/shapeAppearanceCornerExtraLarge">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/seasons_pager"
+            android:layout_width="match_parent"
+            android:layout_height="196dp" />
+
+    </com.google.android.material.carousel.MaskableFrameLayout>
 
 </LinearLayout>

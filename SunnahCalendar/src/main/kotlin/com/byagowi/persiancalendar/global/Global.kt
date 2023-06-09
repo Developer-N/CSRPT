@@ -18,6 +18,7 @@ import com.byagowi.persiancalendar.DEFAULT_SECONDARY_CALENDAR_IN_TABLE
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_CLOCK
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_CUSTOMIZATIONS
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_IN_24
+import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.PREF_ALTITUDE
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
@@ -31,7 +32,7 @@ import com.byagowi.persiancalendar.PREF_LATITUDE
 import com.byagowi.persiancalendar.PREF_LOCAL_DIGITS
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_MAIN_CALENDAR_KEY
-import com.byagowi.persiancalendar.PREF_NEW_INTERFACE
+import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
 import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE_LOCK_SCREEN
@@ -55,7 +56,6 @@ import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.entities.ShiftWorkRecord
-import com.byagowi.persiancalendar.ui.utils.canEnableNewInterface
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
@@ -63,7 +63,7 @@ import com.byagowi.persiancalendar.utils.getJdnOrNull
 import com.byagowi.persiancalendar.utils.isIslamicOffsetExpired
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.scheduleAlarms
-import com.byagowi.persiancalendar.utils.splitIgnoreEmpty
+import com.byagowi.persiancalendar.utils.splitFilterNotEmpty
 import com.byagowi.persiancalendar.utils.storedCity
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.byagowi.persiancalendar.variants.debugLog
@@ -72,9 +72,16 @@ import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinates
 import io.github.persiancalendar.praytimes.HighLatitudesMethod
+import io.github.persiancalendar.praytimes.MidnightMethod
 import ir.namoo.commons.utils.createAthansSettingDB
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.TimeZone
+
+// Using global variable isn't really the best idea.
+// Somehow it's a legacy thing for this now aged project.
+// We have limited most of global variable to this package and
+// are avoiding storing complicated things on it.
 
 private val monthNameEmptyList = List(12) { "" }
 var persianMonths = monthNameEmptyList
@@ -106,11 +113,11 @@ var notificationAthan = DEFAULT_NOTIFICATION_ATHAN
     private set
 var calculationMethod = CalculationMethod.valueOf(DEFAULT_PRAY_TIME_METHOD)
     private set
+var midnightMethod = calculationMethod.defaultMidnight
+    private set
 var asrMethod = AsrMethod.Standard
     private set
 var highLatitudesMethod = HighLatitudesMethod.NightMiddle
-    private set
-var enableNewInterface = false
     private set
 var language = Language.FA
     private set
@@ -122,17 +129,20 @@ var enabledCalendars = listOf(CalendarType.SHAMSI, CalendarType.GREGORIAN, Calen
     private set
 val mainCalendar inline get() = enabledCalendars.getOrNull(0) ?: CalendarType.SHAMSI
 val mainCalendarDigits
-    get() =
-        if (secondaryCalendar == null) preferredDigits
-        else if (!language.canHaveLocalDigits) Language.ARABIC_DIGITS
-        else mainCalendar.preferredDigits
+    get() = when {
+        secondaryCalendar == null -> preferredDigits
+        preferredDigits === Language.ARABIC_DIGITS -> Language.ARABIC_DIGITS
+        !language.canHaveLocalDigits -> Language.ARABIC_DIGITS
+        else -> mainCalendar.preferredDigits
+    }
 val secondaryCalendar
-    get() =
-        if (secondaryCalendarEnabled) enabledCalendars.getOrNull(1) else null
+    get() = if (secondaryCalendarEnabled) enabledCalendars.getOrNull(1) else null
 val secondaryCalendarDigits
-    get() =
-        if (!language.canHaveLocalDigits) Language.ARABIC_DIGITS
-        else (secondaryCalendar?.preferredDigits ?: Language.ARABIC_DIGITS)
+    get() = when {
+        !language.canHaveLocalDigits -> Language.ARABIC_DIGITS
+        preferredDigits === Language.ARABIC_DIGITS -> Language.ARABIC_DIGITS
+        else -> secondaryCalendar?.preferredDigits ?: Language.ARABIC_DIGITS
+    }
 var isShowWeekOfYearEnabled = false
     private set
 var isCenterAlignWidgets = true
@@ -199,8 +209,10 @@ fun configureCalendarsAndLoadEvents(context: Context) {
     debugLog("Utils: configureCalendarsAndLoadEvents is called")
     val appPrefs = context.appPrefs
 
-    IslamicDate.islamicOffset = if (appPrefs.isIslamicOffsetExpired) 0 else
-        appPrefs.getString(PREF_ISLAMIC_OFFSET, DEFAULT_ISLAMIC_OFFSET)?.toIntOrNull() ?: 0
+    IslamicDate.islamicOffset = if (appPrefs.isIslamicOffsetExpired) 0 else appPrefs.getString(
+        PREF_ISLAMIC_OFFSET,
+        DEFAULT_ISLAMIC_OFFSET
+    )?.toIntOrNull() ?: 0
 
     eventsRepository = EventsRepository(appPrefs, language)
     isIranHolidaysEnabled = eventsRepository?.iranHolidays ?: false
@@ -221,24 +233,23 @@ fun updateStoredPreference(context: Context) {
     val prefs = context.appPrefs
 
     language = prefs.getString(PREF_APP_LANGUAGE, null)?.let(Language::valueOfLanguageCode)
-        ?: Language.preferredDefaultLanguage
+        ?: Language.getPreferredDefaultLanguage(context)
     easternGregorianArabicMonths = prefs.getBoolean(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false)
 
-    enableNewInterface = canEnableNewInterface &&
-            prefs.getBoolean(PREF_NEW_INTERFACE, false) //shouldEnableNewInterface)
-
-    preferredDigits =
-        if (!prefs.getBoolean(PREF_LOCAL_DIGITS, DEFAULT_LOCAL_DIGITS) ||
-            !language.canHaveLocalDigits
-        ) Language.ARABIC_DIGITS
-        else language.preferredDigits
+    preferredDigits = if (!prefs.getBoolean(
+            PREF_LOCAL_DIGITS,
+            DEFAULT_LOCAL_DIGITS
+        ) || !language.canHaveLocalDigits
+    ) Language.ARABIC_DIGITS
+    else language.preferredDigits
 
     clockIn24 = prefs.getBoolean(PREF_WIDGET_IN_24, DEFAULT_WIDGET_IN_24)
-    isForcedIranTimeEnabled = language.showIranTimeOption
-            && prefs.getBoolean(PREF_IRAN_TIME, DEFAULT_IRAN_TIME)
+    isForcedIranTimeEnabled = language.showIranTimeOption && prefs.getBoolean(
+        PREF_IRAN_TIME,
+        DEFAULT_IRAN_TIME
+    ) && TimeZone.getDefault().id != IRAN_TIMEZONE_ID
     isNotifyDateOnLockScreen = prefs.getBoolean(
-        PREF_NOTIFY_DATE_LOCK_SCREEN,
-        DEFAULT_NOTIFY_DATE_LOCK_SCREEN
+        PREF_NOTIFY_DATE_LOCK_SCREEN, DEFAULT_NOTIFY_DATE_LOCK_SCREEN
     )
     isWidgetClock = prefs.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
     isNotifyDate = prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
@@ -247,20 +258,27 @@ fun updateStoredPreference(context: Context) {
 
     // We were using "Jafari" method but later found out Tehran is nearer to time.ir and others
     // so switched to "Tehran" method as default calculation algorithm
-    calculationMethod = CalculationMethod
-        .valueOf(prefs.getString(PREF_PRAY_TIME_METHOD, null) ?: DEFAULT_PRAY_TIME_METHOD)
-    asrMethod =
-        if (calculationMethod.isJafari ||
-            !prefs.getBoolean(PREF_ASR_HANAFI_JURISTIC, language.isHanafiMajority)
-        ) AsrMethod.Standard else AsrMethod.Hanafi
+    calculationMethod = CalculationMethod.valueOf(
+        prefs.getString(PREF_PRAY_TIME_METHOD, null) ?: DEFAULT_PRAY_TIME_METHOD
+    )
+    asrMethod = if (calculationMethod.isJafari || !prefs.getBoolean(
+            PREF_ASR_HANAFI_JURISTIC,
+            language.isHanafiMajority
+        )
+    ) AsrMethod.Standard else AsrMethod.Hanafi
+    midnightMethod = context.appPrefs.getString(PREF_MIDNIGHT_METHOD, null)
+        ?.let(MidnightMethod::valueOf)
+        ?.takeIf { !it.isJafariOnly || calculationMethod.isJafari }
+        ?: calculationMethod.defaultMidnight
     highLatitudesMethod = HighLatitudesMethod.valueOf(
         if (!enableHighLatitudesConfiguration) DEFAULT_HIGH_LATITUDES_METHOD
         else prefs.getString(PREF_HIGH_LATITUDES_METHOD, null) ?: DEFAULT_HIGH_LATITUDES_METHOD
     )
 
     coordinates_.value = prefs.storedCity?.coordinates ?: run {
-        listOf(PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE)
-            .map { prefs.getString(it, null)?.toDoubleOrNull() ?: .0 }
+        listOf(PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE).map {
+            prefs.getString(it, null)?.toDoubleOrNull() ?: .0
+        }
             .takeIf { coords -> coords.any { it != .0 } } // if all were zero preference isn't set yet
             ?.let { (lat, lng, alt) -> Coordinates(lat, lng, alt) }
     }
@@ -268,9 +286,8 @@ fun updateStoredPreference(context: Context) {
         val mainCalendar = CalendarType.valueOf(
             prefs.getString(PREF_MAIN_CALENDAR_KEY, null) ?: language.defaultMainCalendar
         )
-        val otherCalendars =
-            (prefs.getString(PREF_OTHER_CALENDARS_KEY, null) ?: language.defaultOtherCalendars)
-                .splitIgnoreEmpty(",").map(CalendarType::valueOf)
+        val otherCalendars = (prefs.getString(PREF_OTHER_CALENDARS_KEY, null)
+            ?: language.defaultOtherCalendars).splitFilterNotEmpty(",").map(CalendarType::valueOf)
         enabledCalendars = (listOf(mainCalendar) + otherCalendars).distinct()
         secondaryCalendarEnabled = prefs.getBoolean(
             PREF_SECONDARY_CALENDAR_IN_TABLE, DEFAULT_SECONDARY_CALENDAR_IN_TABLE
@@ -286,13 +303,13 @@ fun updateStoredPreference(context: Context) {
         (prefs.getString(PREF_WEEK_START, null) ?: language.defaultWeekStart).toIntOrNull() ?: 0
 
     weekEnds = BooleanArray(7)
-    (prefs.getStringSet(PREF_WEEK_ENDS, null) ?: language.defaultWeekEnds)
-        .mapNotNull(String::toIntOrNull).forEach { weekEnds[it] = true }
+    (prefs.getStringSet(PREF_WEEK_ENDS, null)
+        ?: language.defaultWeekEnds).mapNotNull(String::toIntOrNull).forEach { weekEnds[it] = true }
 
     isShowDeviceCalendarEvents = prefs.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false)
     val resources = context.resources
-    whatToShowOnWidgets = prefs.getStringSet(PREF_WHAT_TO_SHOW_WIDGETS, null)
-        ?: DEFAULT_WIDGET_CUSTOMIZATIONS
+    whatToShowOnWidgets =
+        prefs.getStringSet(PREF_WHAT_TO_SHOW_WIDGETS, null) ?: DEFAULT_WIDGET_CUSTOMIZATIONS
 
     isAstronomicalExtraFeaturesEnabled = prefs.getBoolean(PREF_ASTRONOMICAL_FEATURES, false)
     numericalDatePreferred = prefs.getBoolean(PREF_NUMERICAL_DATE_PREFERRED, false)
@@ -302,10 +319,8 @@ fun updateStoredPreference(context: Context) {
 
     calendarTypesTitleAbbr = enumValues<CalendarType>().map { context.getString(it.shortTitle) }
 
-    shiftWorks = (prefs.getString(PREF_SHIFT_WORK_SETTING, null) ?: "")
-        .splitIgnoreEmpty(",")
-        .map { it.splitIgnoreEmpty("=") }
-        .filter { it.size == 2 }
+    shiftWorks = (prefs.getString(PREF_SHIFT_WORK_SETTING, null) ?: "").splitFilterNotEmpty(",")
+        .map { it.splitFilterNotEmpty("=") }.filter { it.size == 2 }
         .map { ShiftWorkRecord(it[0], it[1].toIntOrNull() ?: 1) }
     shiftWorkPeriod = shiftWorks.sumOf { it.length }
     shiftWorkStartingJdn = prefs.getJdnOrNull(PREF_SHIFT_WORK_STARTING_JDN)
@@ -324,15 +339,19 @@ fun updateStoredPreference(context: Context) {
             amString = DEFAULT_AM
             pmString = DEFAULT_PM
         }
+
         else -> {
             amString = context.getString(R.string.am)
             pmString = context.getString(R.string.pm)
         }
     }
-    holidayString = if (language.isDari) "رخصتی" else context.getString(R.string.holiday)
-    spacedAndInDates =
-        if (language.languagePrefersHalfSpaceAndInDates) " "
-        else context.getString(R.string.spaced_and)
+    holidayString = when {
+        language.isPersian -> DEFAULT_HOLIDAY
+        language.isDari -> "رخصتی"
+        else -> context.getString(R.string.holiday)
+    }
+    spacedAndInDates = if (language.languagePrefersHalfSpaceAndInDates) " "
+    else context.getString(R.string.spaced_and)
     spacedColon = context.getString(R.string.spaced_colon)
     spacedComma = context.getString(R.string.spaced_comma)
 

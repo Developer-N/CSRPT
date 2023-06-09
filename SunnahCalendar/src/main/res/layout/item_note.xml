@@ -7,8 +7,7 @@
     android:layout_margin="2dp"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    app:cardBackgroundColor="?attr/colorCard"
-    app:cardElevation="4dp"
+    app:cardElevation="2dp"
     app:cardPreventCornerOverlap="false">
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -29,8 +28,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|center_vertical"
                 android:layout_margin="3dp"
-                android:padding="3dp"
-                android:textColor="?attr/colorTextNormal" />
+                android:padding="3dp" />
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="wrap_content"
@@ -47,7 +45,6 @@
                     android:layout_gravity="end"
                     android:layout_margin="2dp"
                     android:text="@string/delete"
-                    android:textColor="?attr/colorTextNormal"
                     app:chipIcon="@drawable/ic_delete"
                     app:chipIconTint="?attr/colorHoliday" />
 
@@ -59,9 +56,8 @@
                     android:layout_gravity="end"
                     android:layout_margin="2dp"
                     android:text="@string/save"
-                    android:textColor="?attr/colorTextNormal"
                     app:chipIcon="@drawable/ic_save"
-                    app:chipIconTint="?attr/colorIcon" />
+                    app:chipIconTint="?attr/colorAccent" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/note_btn_go_to_aya"
@@ -71,9 +67,8 @@
                     android:layout_gravity="end"
                     android:layout_margin="2dp"
                     android:text="@string/go_to_aya"
-                    android:textColor="?attr/colorTextNormal"
                     app:chipIcon="@drawable/ic_keyboard_arrow_right"
-                    app:chipIconTint="?attr/colorIcon" />
+                    app:chipIconTint="?attr/colorAccent" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.flexbox.FlexboxLayout>
@@ -84,15 +79,14 @@
             android:layout_height="wrap_content"
             android:hint="@string/your_note"
             app:startIconDrawable="@drawable/ic_note"
-            app:startIconTint="?attr/colorIcon">
+            app:startIconTint="?attr/colorAccent">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/note_txt_note"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
-                android:padding="3dp"
-                android:textColor="?attr/colorTextNormal" />
+                android:padding="3dp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 

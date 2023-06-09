@@ -24,7 +24,7 @@
     <string name="exit">خروج</string>
     <!--Calendar-->
     <string name="add_event">إضافة حدث جديد</string>
-    <string name="device_calendar_does_not_support">تطبيق التقويم الجهاز لا يدعم هذه عملية</string>
+    <string name="device_does_not_support">تطبيق التقويم الجهاز لا يدعم هذه عملية</string>
     <string name="today">اليوم</string>
     <string name="return_to_today">الرجوع إلى اليوم</string>
     <string name="goto_date">الذهاب إلى تاريخٍ معين</string>
@@ -210,6 +210,7 @@
     <string name="shift_work_starting_date_edit">%1$s هو اليوم الذي يبدء منه إزاحة وقت العمل.</string>
     <string name="shift_work_reset_button">تعطيل أو إعادة ظبط</string>
     <string name="spaced_and">" و "</string>
+    <string name="spaced_or">" أو "</string>
     <string name="spaced_comma">"، "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">معلومات الجهاز</string>
@@ -324,6 +325,13 @@
     <string name="wednesday">الأربعاء</string>
     <string name="thursday">الخميس</string>
     <string name="friday">الجمعة</string>
+    <string name="saturday_short">سب</string>
+    <string name="sunday_short">أح</string>
+    <string name="monday_short">اث</string>
+    <string name="tuesday_short">ثل</string>
+    <string name="wednesday_short">أر</string>
+    <string name="thursday_short">خم</string>
+    <string name="friday_short">جم</string>
     <string name="sun_view">عرض الشمس</string>
     <string name="asr_hanafi_juristic">طريقة الحنفي في حساب وقت صلاة العصر</string>
     <string name="enable_new_interface">تفعيل الواجهة الجديدة</string>
@@ -386,7 +394,7 @@
     </plurals>
     <string name="show_sun_and_moon_path_in_24_hours">عرض مسار الشمس والقمر في 24 ساعة</string>
     <string name="nepali_calendar_short">نيبالي</string>
-    <string name="widget_prefer_system_colors">اتبع تلوين النظام في المصغر</string>
+    <string name="widget_prefer_device_colors">اتبع تلوين النظام في المصغر</string>
     <string name="nepali_calendar">التقويم النيبالي</string>
     <string name="show_secondary_calendar">إظهار التقويم الثانوي</string>
     <string name="season">موسم</string>
@@ -418,4 +426,7 @@
     <string name="add_quick_settings_tile">إضافة إعدادات السريعة</string>
     <string name="true_north">الشمال الحقيقي</string>
     <string name="lock">قفل</string>
+    <string name="full_screen">ملء الشاشة</string>
+    <string name="exit_full_screen">الخروج من وضع ملء الشاشة</string>
+    <string name="color_gradient">تدرج اللون</string>
 </resources>

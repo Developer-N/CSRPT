@@ -2,6 +2,7 @@ package com.byagowi.persiancalendar.utils
 
 import android.app.AlarmManager
 import android.app.KeyguardManager
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -13,8 +14,6 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
-import android.telephony.TelephonyManager
-import android.util.Log
 import androidx.annotation.RawRes
 import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
@@ -43,15 +42,17 @@ import com.byagowi.persiancalendar.PREF_ATHAN_GAP
 import com.byagowi.persiancalendar.PREF_ATHAN_URI
 import com.byagowi.persiancalendar.PREF_ATHAN_VOLUME
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SUNRISE_KRY
+import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.variants.debugLog
 import io.github.persiancalendar.praytimes.PrayTimes
+import ir.namoo.commons.ATHAN_NOTIFICATION_ID
 import ir.namoo.commons.DEFAULT_FULL_SCREEN_METHOD
 import ir.namoo.commons.DEFAULT_NOTIFICATION_METHOD
 import ir.namoo.commons.PREF_AZKAR_REINDER
@@ -70,10 +71,8 @@ import kotlin.math.abs
 
 // https://stackoverflow.com/a/69505596
 fun Resources.getRawUri(@RawRes rawRes: Int) = "%s://%s/%s/%s".format(
-    ContentResolver.SCHEME_ANDROID_RESOURCE,
-    this.getResourcePackageName(rawRes),
-    this.getResourceTypeName(rawRes),
-    this.getResourceEntryName(rawRes)
+    ContentResolver.SCHEME_ANDROID_RESOURCE, this.getResourcePackageName(rawRes),
+    this.getResourceTypeName(rawRes), this.getResourceEntryName(rawRes)
 )
 
 val Context.athanVolume: Int get() = appPrefs.getInt(PREF_ATHAN_VOLUME, DEFAULT_ATHAN_VOLUME)
@@ -86,12 +85,13 @@ fun getAthanUri(context: Context): Uri =
         ?: context.resources.getRawUri(R.raw.special)).toUri()
 
 private var lastAthanKey = ""
+private var lastBAthanKey = ""
+private var lastAAthanKey = ""
 private var lastAthanJdn: Jdn? = null
 fun startAthan(context: Context, prayTimeKey: String, intendedTime: Long?) {
     debugLog("Alarms: startAthan for $prayTimeKey")
     if (intendedTime == null || prayTimeKey.startsWith("SS_")) return startAthanBody(
-        context,
-        prayTimeKey
+        context, prayTimeKey
     )
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return
@@ -99,138 +99,155 @@ fun startAthan(context: Context, prayTimeKey: String, intendedTime: Long?) {
     // If at the of being is disabled by user, skip
     if (prayTimeKey !in getEnabledAlarms(context)) return
 
-    // skips if already called through either WorkManager or AlarmManager
-    val today = Jdn.today()
-    if (lastAthanJdn == today && lastAthanKey == prayTimeKey) return
-    lastAthanJdn = today; lastAthanKey = prayTimeKey
-
     startAthanBody(context, prayTimeKey)
 }
 
-private fun startAthanBody(context: Context, prayTimeKey: String) = runCatching {
-    debugLog("Alarms: startAthanBody for $prayTimeKey")
-
+private fun startAthanBody(context: Context, prayTimeKey: String) {
     runCatching {
-        @Suppress("Deprecation") context.getSystemService<PowerManager>()?.newWakeLock(
-            PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
-            "SunnahCalendar:alarm"
-        )?.acquire(THIRTY_SECONDS_IN_MILLIS)
-    }.onFailure(logException)
-    val setting = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
-        .getAllAthanSettings().find { prayTimeKey.contains(it.athanKey) } ?: return@runCatching
-    when {
-        prayTimeKey.startsWith("SS_") -> {
-            runCatching {
-                context.getSystemService<AudioManager>()?.let { audioManager ->
-                    audioManager.ringerMode = context.appPrefsLite.getInt(
-                        PREF_ORIGINAL_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL
-                    )
-                }
-            }
+        // skips if already called through either WorkManager or AlarmManager
+        if (!prayTimeKey.contains("S_")) {
+            val today = Jdn.today()
+            if (lastAthanJdn == today && (lastAthanKey == prayTimeKey || lastBAthanKey == prayTimeKey || lastAAthanKey == prayTimeKey)) return
+            lastAthanJdn = today
+            if (prayTimeKey.startsWith("B"))
+                lastBAthanKey = prayTimeKey
+            else if (prayTimeKey.startsWith("A") && prayTimeKey != ASR_KEY)
+                lastAAthanKey = prayTimeKey
+            else
+                lastAthanKey = prayTimeKey
         }
-        prayTimeKey.startsWith("S_") -> {
-            runCatching {
-                context.getSystemService<AudioManager>()?.let { audioManager ->
-                    context.appPrefsLite.edit {
-                        putInt(PREF_ORIGINAL_RINGER_MODE, audioManager.ringerMode)
-                    }
-                    audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-                    val time = Calendar.getInstance().also {
-                        it.add(Calendar.MINUTE, setting.silentMinute)
-                    }
-                    scheduleAlarm(context, "S$prayTimeKey", time.timeInMillis, 22)
-                }
-            }
-        }
-        setting.playType != 0 -> {
-            ContextCompat.startForegroundService(
-                context, Intent(context, NAthanNotification::class.java).putExtra(
-                    KEY_EXTRA_PRAYER, prayTimeKey
-                )
-            )
-        }
-        else -> {
-            val keyguardManager = context.getSystemService<KeyguardManager>()
-            if (keyguardManager != null && keyguardManager.isKeyguardLocked) {
-                val fullScreenIntent = Intent(context, NAthanActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra(KEY_EXTRA_PRAYER, prayTimeKey)
-                }
-                val fullScreenPendingIntent = PendingIntent.getActivity(
-                    context,
-                    2023,
-                    fullScreenIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-                )
-                val chanelID = "full_screen_athan_notification"
-                val cityName = context.appPrefs.cityName
-                val prayTimeName = context.getString(getPrayTimeName(prayTimeKey))
-                val title = if (cityName == null) prayTimeName
-                else "$prayTimeName$spacedComma${
-                    context.getString(
-                        R.string.in_city_time, cityName
-                    )
-                }"
+        debugLog("Alarms: startAthanBody for $prayTimeKey")
 
-                var prayTimes = coordinates.value?.calculatePrayTimes()
-                prayTimes = PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())
-                val subtitle = when (prayTimeKey) {
-                    FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
-                    DHUHR_KEY -> listOf(R.string.asr, R.string.maghrib)
-                    ASR_KEY -> listOf(R.string.maghrib, R.string.isha)
-                    MAGHRIB_KEY -> listOf(R.string.isha)
-                    ISHA_KEY -> listOf()
-                    else -> listOf()
-                }.joinToString(" - ") {
-                    "${context.getString(it)}: ${
-                        prayTimes?.getFromStringId(it)?.toFormattedString() ?: ""
+        runCatching {
+            @Suppress("Deprecation") context.getSystemService<PowerManager>()?.newWakeLock(
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
+                "SunnahCalendar:alarm"
+            )?.acquire(THIRTY_SECONDS_IN_MILLIS)
+        }.onFailure(logException)
+        val setting = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+            .getAllAthanSettings().find { prayTimeKey.contains(it.athanKey) } ?: return@runCatching
+        when {
+            prayTimeKey.startsWith("SS_") -> {
+                runCatching {
+                    context.getSystemService<AudioManager>()?.let { audioManager ->
+                        audioManager.ringerMode = context.appPrefsLite.getInt(
+                            PREF_ORIGINAL_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL
+                        )
+                    }
+                }
+            }
+
+            prayTimeKey.startsWith("S_") -> {
+                runCatching {
+                    context.getSystemService<AudioManager>()?.let { audioManager ->
+                        context.appPrefsLite.edit {
+                            putInt(PREF_ORIGINAL_RINGER_MODE, audioManager.ringerMode)
+                        }
+                        audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
+                        val time = Calendar.getInstance().also {
+                            it.add(Calendar.MINUTE, setting.silentMinute)
+                        }
+                        scheduleAlarm(context, "S$prayTimeKey", time.timeInMillis, 22)
+                    }
+                }
+            }
+
+            setting.playType != 0 -> {
+                ContextCompat.startForegroundService(
+                    context, Intent(context, NAthanNotification::class.java).putExtra(
+                        KEY_EXTRA_PRAYER, prayTimeKey
+                    )
+                )
+            }
+
+            else -> {
+                val keyguardManager = context.getSystemService<KeyguardManager>()
+                if (keyguardManager != null && keyguardManager.isKeyguardLocked) {
+                    val fullScreenIntent = Intent(context, NAthanActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        putExtra(KEY_EXTRA_PRAYER, prayTimeKey)
+                    }
+                    val fullScreenPendingIntent = PendingIntent.getActivity(
+                        context,
+                        2023,
+                        fullScreenIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+                    )
+                    val chanelID = "full_screen_athan_notification"
+                    val cityName = context.appPrefs.cityName
+                    val prayTimeName = context.getString(getPrayTimeName(prayTimeKey))
+                    val title = if (cityName == null) prayTimeName
+                    else "$prayTimeName$spacedComma${
+                        context.getString(
+                            R.string.in_city_time, cityName
+                        )
                     }"
-                }
-                val notification = NotificationCompat.Builder(context.applicationContext, chanelID)
-                    .setContentText(subtitle).setContentTitle(title)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setFullScreenIntent(fullScreenPendingIntent, true).setSound(null).build()
 
-                val notificationManager = context.getSystemService<NotificationManager>() ?: return
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val channel = NotificationChannel(
-                        chanelID,
-                        "Full Screen Athan Notification",
-                        NotificationManager.IMPORTANCE_HIGH
+                    var prayTimes = coordinates.value?.calculatePrayTimes()
+                    prayTimes = PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())
+                    val subtitle = when (prayTimeKey) {
+                        FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
+                        DHUHR_KEY -> listOf(R.string.asr, R.string.maghrib)
+                        ASR_KEY -> listOf(R.string.maghrib, R.string.isha)
+                        MAGHRIB_KEY -> listOf(R.string.isha)
+                        ISHA_KEY -> listOf()
+                        else -> listOf()
+                    }.joinToString(" - ") {
+                        "${context.getString(it)}: ${
+                            prayTimes?.getFromStringId(it)?.toFormattedString() ?: ""
+                        }"
+                    }
+                    val notification =
+                        NotificationCompat.Builder(context.applicationContext, chanelID)
+                            .setContentText(subtitle).setContentTitle(title)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setCategory(NotificationCompat.CATEGORY_ALARM)
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                            .setFullScreenIntent(fullScreenPendingIntent, true).setSound(null)
+                            .build()
+
+                    val notificationManager =
+                        context.getSystemService<NotificationManager>() ?: return
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val channel = NotificationChannel(
+                            chanelID,
+                            "Full Screen Athan Notification",
+                            NotificationManager.IMPORTANCE_HIGH
+                        )
+                        channel.setSound(null, null)
+                        channel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                        notificationManager.createNotificationChannel(channel)
+                    }
+                    notificationManager.notify(ATHAN_NOTIFICATION_ID, notification)
+                } else {
+                    context.startActivity(
+                        Intent(
+                            context, NAthanActivity::class.java
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            .putExtra(KEY_EXTRA_PRAYER, prayTimeKey)
                     )
-                    channel.setSound(null, null)
-                    notificationManager.createNotificationChannel(channel)
                 }
-                notificationManager.notify(2024, notification)
-            } else {
-                context.startActivity(
-                    Intent(
-                        context, NAthanActivity::class.java
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        .putExtra(KEY_EXTRA_PRAYER, prayTimeKey)
-                )
             }
         }
-    }
-}.onFailure(logException).let {}
+    }.onFailure(logException).let {}
+}
 
 fun getEnabledAlarms(context: Context): Set<String> {
 //    if (coordinates.value == null) return emptySet()
 //    return (context.appPrefs.getString(PREF_ATHAN_ALARM, null)?.trim() ?: return emptySet())
 //        .splitIgnoreEmpty(",")
 //        .toSet()
-    val enabledAthans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+    val athans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
-    return if (enabledAthans.isEmpty()) emptySet()
+    return if (athans.isEmpty()) emptySet()
     else {
         val result = mutableSetOf<String>()
-        for (a in enabledAthans) {
-            if (a.state) result.add(a.athanKey)
-            if (a.isBeforeEnabled) result.add("B${a.athanKey}")
-            if (a.isAfterEnabled) result.add("A${a.athanKey}")
-            if (a.isSilentEnabled) result.add("S_${a.athanKey}")
+        for (athan in athans) {
+            if (athan.state) result.add(athan.athanKey)
+            if (athan.isBeforeEnabled) result.add("B${athan.athanKey}")
+            if (athan.isAfterEnabled) result.add("A${athan.athanKey}")
+            if (athan.isSilentEnabled) result.add("S_${athan.athanKey}")
         }
         result
     }
@@ -258,6 +275,7 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() - athanSettings[0].beforeAlertMinute
                     )
                 }
+
                 "A$FAJR_KEY" -> {
                     id = 12
                     Clock.fromMinutesCount(
@@ -265,10 +283,12 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() + athanSettings[0].afterAlertMinute
                     )
                 }
+
                 "S_$FAJR_KEY" -> {
                     id = 17
                     Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.fajr).toMinutes())
                 }
+
                 "B$DHUHR_KEY" -> {
                     id = 8
                     Clock.fromMinutesCount(
@@ -276,6 +296,7 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() - athanSettings[2].beforeAlertMinute
                     )
                 }
+
                 "A$DHUHR_KEY" -> {
                     id = 13
                     Clock.fromMinutesCount(
@@ -283,10 +304,12 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() + athanSettings[2].afterAlertMinute
                     )
                 }
+
                 "S_$DHUHR_KEY" -> {
                     id = 18
                     Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.dhuhr).toMinutes())
                 }
+
                 "B$ASR_KEY" -> {
                     id = 9
                     Clock.fromMinutesCount(
@@ -294,6 +317,7 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() - athanSettings[3].beforeAlertMinute
                     )
                 }
+
                 "A$ASR_KEY" -> {
                     id = 14
                     Clock.fromMinutesCount(
@@ -301,10 +325,12 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() + athanSettings[3].afterAlertMinute
                     )
                 }
+
                 "S_$ASR_KEY" -> {
                     id = 19
                     Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.asr).toMinutes())
                 }
+
                 "B$MAGHRIB_KEY" -> {
                     id = 10
                     Clock.fromMinutesCount(
@@ -312,6 +338,7 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() - athanSettings[4].beforeAlertMinute
                     )
                 }
+
                 "A$MAGHRIB_KEY" -> {
                     id = 15
                     Clock.fromMinutesCount(
@@ -319,10 +346,12 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() + athanSettings[4].afterAlertMinute
                     )
                 }
+
                 "S_$MAGHRIB_KEY" -> {
                     id = 20
                     Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.maghrib).toMinutes())
                 }
+
                 "B$ISHA_KEY" -> {
                     id = 11
                     Clock.fromMinutesCount(
@@ -330,6 +359,7 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() - athanSettings[5].beforeAlertMinute
                     )
                 }
+
                 "A$ISHA_KEY" -> {
                     id = 16
                     Clock.fromMinutesCount(
@@ -337,18 +367,20 @@ fun scheduleAlarms(context: Context) {
                             .toMinutes() + athanSettings[5].afterAlertMinute
                     )
                 }
+
                 "S_$ISHA_KEY" -> {
                     id = 21
                     Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.isha).toMinutes())
                 }
+
                 else -> {
                     id = athanSettings.find { aS -> aS.athanKey == name }?.id ?: -1
                     prayTimes.getFromStringId(getPrayTimeName(name))
                 }
             }
-            it[Calendar.HOUR_OF_DAY] = alarmTime.hours
-            it[Calendar.MINUTE] = alarmTime.minutes
-            it[Calendar.SECOND] = 0
+            it[GregorianCalendar.HOUR_OF_DAY] = alarmTime.hours
+            it[GregorianCalendar.MINUTE] = alarmTime.minutes
+            it[GregorianCalendar.SECOND] = 0
         }.timeInMillis - athanGap
         val playType = athanSettings.find { name.contains(it.athanKey) }?.playType ?: 0
         val isDefaultMethod = if (playType == 0 && context.appPrefsLite.getInt(
@@ -373,27 +405,25 @@ private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis:
         val workerInputData = Data.Builder().putLong(KEY_EXTRA_PRAYER_TIME, timeInMillis)
             .putString(KEY_EXTRA_PRAYER, alarmTimeName).build()
         val alarmWorker = OneTimeWorkRequest.Builder(AlarmWorker::class.java)
-            .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS)
-            .setInputData(workerInputData)
+            .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS).setInputData(workerInputData)
             .build()
         WorkManager.getInstance(context)
-            .beginUniqueWork(ALARM_TAG + i, ExistingWorkPolicy.REPLACE, alarmWorker)
-            .enqueue()
+            .beginUniqueWork(ALARM_TAG + i, ExistingWorkPolicy.REPLACE, alarmWorker).enqueue()
     }
 
     val am = context.getSystemService<AlarmManager>() ?: return
     val pendingIntent = PendingIntent.getBroadcast(
-        context, ALARMS_BASE_ID + i,
-        Intent(context, BroadcastReceivers::class.java)
-            .putExtra(KEY_EXTRA_PRAYER, alarmTimeName)
-            .putExtra(KEY_EXTRA_PRAYER_TIME, timeInMillis)
-            .setAction(BROADCAST_ALARM),
-        PendingIntent.FLAG_UPDATE_CURRENT or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        context,
+        ALARMS_BASE_ID + i,
+        Intent(context, BroadcastReceivers::class.java).putExtra(KEY_EXTRA_PRAYER, alarmTimeName)
+            .putExtra(KEY_EXTRA_PRAYER_TIME, timeInMillis).setAction(BROADCAST_ALARM),
+        PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     )
     when {
-        Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 ->
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+        Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 -> am.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent
+        )
+
         else -> am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
     }
 }
@@ -425,6 +455,7 @@ private fun scheduleAlarm2(context: Context, alarmTimeName: String, timeInMillis
         Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 -> am.setAlarmClock(
             AlarmManager.AlarmClockInfo(timeInMillis, pendingIntent), pendingIntent
         )
+
         else -> am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
     }
 }
@@ -433,7 +464,7 @@ private val prayTimesNames = mapOf(
     "B$FAJR_KEY" to R.string.bfajr,
     "A$FAJR_KEY" to R.string.afajr,
     FAJR_KEY to R.string.fajr,
-    SUNRISE_KRY to R.string.sunrise,
+    SUNRISE_KEY to R.string.sunrise,
     "B$DHUHR_KEY" to R.string.bdhuhr,
     "A$DHUHR_KEY" to R.string.adhuhr,
     DHUHR_KEY to R.string.dhuhr,
@@ -465,3 +496,19 @@ fun PrayTimes.getFromStringId(@StringRes stringId: Int) = Clock.fromHoursFractio
         else -> .0
     }
 )
+
+private val TIME_NAMES = listOf(
+    R.string.imsak,
+    R.string.fajr,
+    R.string.sunrise,
+    R.string.dhuhr,
+    R.string.asr,
+    R.string.sunset,
+    R.string.maghrib,
+    R.string.isha,
+    R.string.midnight
+)
+
+fun getTimeNames(): List<Int> {
+    return if (calculationMethod.isJafari) TIME_NAMES else TIME_NAMES - R.string.sunset
+}

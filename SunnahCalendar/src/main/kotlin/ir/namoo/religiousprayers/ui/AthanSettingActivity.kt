@@ -11,7 +11,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
+import android.view.ViewGroup
+import android.view.Window
 import android.view.animation.AnimationUtils
 import android.widget.AdapterView
 import android.widget.NumberPicker
@@ -20,16 +21,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ActivityAthanSettingBinding
 import com.byagowi.persiancalendar.entities.Theme
+import com.byagowi.persiancalendar.ui.utils.SystemBarsTransparency
+import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.scheduleAlarms
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import ir.namoo.commons.ATHAN_ID
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSetting
@@ -60,15 +69,33 @@ class AthanSettingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Theme.apply(this)
         applyAppLanguage(this)
+        window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
+        findViewById<View>(android.R.id.content).transitionName = "shared_element_container"
+        setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
+        window.sharedElementsUseOverlay = true
         super.onCreate(savedInstanceState)
-
-        window.addFlags(FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
+        transparentSystemBars()
 
         val athanId = intent.extras?.getInt(ATHAN_ID) ?: return
         athanSetting = athanSettingsDB.athanSettingsDAO().getSetting(athanId)
         binding = ActivityAthanSettingBinding.inflate(layoutInflater).apply {
             setContentView(root)
+        }
+
+        binding.appBar.root.hideToolbarBottomShadow()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            SystemBarsTransparency(this@AthanSettingActivity)
+            binding.rootContent.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
         }
 
         audioManager = getSystemService()
@@ -90,6 +117,7 @@ class AthanSettingActivity : AppCompatActivity() {
         binding.appBar.toolbar.let {
             it.navigationIcon =
                 AppCompatResources.getDrawable(this, R.drawable.ic_baseline_arrow_back_24)
+            it.setNavigationIconTint(resolveColor(R.attr.colorOnAppBar))
             it.setNavigationOnClickListener { finish() }
         }
 
@@ -110,6 +138,7 @@ class AthanSettingActivity : AppCompatActivity() {
                 "FAJR" -> {
                     it.title = getString(R.string.fajr)
                 }
+
                 "SUNRISE" -> {
                     it.title = getString(R.string.sunrise)
                     binding.itemAthanSettingState.text = resources.getString(R.string.enable_alarm)
@@ -122,15 +151,19 @@ class AthanSettingActivity : AppCompatActivity() {
                     binding.btnAthanPlay.visibility = View.GONE
                     binding.btnAthanRest.visibility = View.GONE
                 }
+
                 "DHUHR" -> {
                     it.title = getString(R.string.dhuhr)
                 }
+
                 "ASR" -> {
                     it.title = getString(R.string.asr)
                 }
+
                 "MAGHRIB" -> {
                     it.title = getString(R.string.maghrib)
                 }
+
                 "ISHA" -> {
                     it.title = getString(R.string.isha)
                 }
@@ -277,6 +310,7 @@ class AthanSettingActivity : AppCompatActivity() {
                 else when (athanSetting.athanURI) {
                     "" -> if (athanSetting.athanKey == "FAJR") getString(R.string.default_fajr_athan_name)
                     else getString(R.string.default_athan_name)
+
                     else -> {
                         val name = getFileNameFromLink(athanSetting.athanURI)
                         val all = athanDB.athanDAO().getAllAthans()

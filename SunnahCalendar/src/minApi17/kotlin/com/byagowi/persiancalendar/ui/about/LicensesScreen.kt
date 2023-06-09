@@ -16,17 +16,22 @@ import android.text.SpannableString
 import android.text.style.ReplacementSpan
 import android.text.util.Linkify
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import androidx.core.os.postDelayed
 import androidx.core.text.buildSpannedString
 import androidx.core.text.inSpans
 import androidx.core.text.scale
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentLicensesBinding
+import com.byagowi.persiancalendar.databinding.LicensesScreenBinding
 import com.byagowi.persiancalendar.generated.EventType
 import com.byagowi.persiancalendar.generated.gregorianEvents
 import com.byagowi.persiancalendar.generated.irregularRecurringEvents
@@ -45,7 +50,7 @@ import com.google.android.material.sidesheet.SideSheetCallback
 import com.google.android.material.transition.MaterialFadeThrough
 import kotlin.math.roundToInt
 
-class LicensesScreen : Fragment(R.layout.fragment_licenses) {
+class LicensesScreen : Fragment(R.layout.licenses_screen) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         exitTransition = MaterialFadeThrough()
@@ -56,11 +61,9 @@ class LicensesScreen : Fragment(R.layout.fragment_licenses) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentLicensesBinding.bind(view)
-        binding.appBar.toolbar.let {
-            it.setTitle(R.string.about_license_title)
-            it.setupUpNavigation()
-        }
+        val binding = LicensesScreenBinding.bind(view)
+        binding.appBar.toolbar.setTitle(R.string.about_license_title)
+        binding.appBar.toolbar.setupUpNavigation()
 
         @SuppressLint("SetTextI18n")
         binding.eventsStats.text = """Events count:
@@ -71,7 +74,7 @@ Nepali Events: ${nepaliEvents.size + 1}
 Irregular Recurring Events: ${irregularRecurringEvents.size + 1}
 
 Sources:
-${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
+${enumValues<EventType>().joinToString("\n") { "${it.name}: ${it.source}" }}"""
         Linkify.addLinks(binding.eventsStats, Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES)
         val sideSheet = SideSheetBehavior.from(binding.standardSideSheet)
         sideSheet.addCallback(object : SideSheetCallback() {
@@ -90,7 +93,7 @@ ${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
                 val bounds = Rect()
                 paint.color = Color.WHITE
                 paint.getTextBounds(text, 0, text.length, bounds)
-                val padding = 1.dp
+                val padding = 1 * resources.dp
                 val width = bounds.width() + padding.toInt() * 2
                 val height = bounds.height()
                 val bitmap = createBitmap(width, height)
@@ -114,14 +117,14 @@ ${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
                     ::showFlingDemoDialog
                 ),
             ).forEach { (title, icon, dialog) ->
-                val easterEggController = EasterEggController(dialog)
-                it.add(title).setIcon(icon).onClick { easterEggController.handleClick(activity) }
+                val clickHandler = createEasterEggClickHandler(dialog)
+                it.add(title).setIcon(icon).onClick { clickHandler(activity) }
             }
         }
 
         // Based on https://stackoverflow.com/a/34623367
         class BadgeSpan : ReplacementSpan() {
-            private val sidePadding = 6.sp
+            private val sidePadding = 6 * resources.sp
 
             override fun getSize(
                 paint: Paint, text: CharSequence?, start: Int, end: Int, fm: Paint.FontMetricsInt?
@@ -131,14 +134,16 @@ ${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
                 canvas: Canvas, text: CharSequence?, start: Int, end: Int, x: Float, top: Int,
                 y: Int, bottom: Int, paint: Paint
             ) {
-                val verticalReduce = 5.sp
+                val verticalReduce = 5 * resources.sp
                 val rect = RectF(
                     x, top + verticalReduce,
                     x + getSize(paint, text, start, end, null), bottom.toFloat()
                 )
-                paint.color = view.context.resolveColor(R.attr.colorDivider)
-                canvas.drawRoundRect(rect, 25.dp, 25.dp, paint)
-                paint.color = view.context.resolveColor(R.attr.colorTextDrawer)
+                paint.color =
+                    view.context.resolveColor(com.google.android.material.R.attr.colorSurfaceDim)
+                val dp = resources.dp
+                canvas.drawRoundRect(rect, 25 * dp, 25 * dp, paint)
+                paint.color = view.context.resolveColor(android.R.attr.textColorPrimary)
                 canvas.drawText(text ?: "", start, end, x + sidePadding, y.toFloat(), paint)
             }
         }
@@ -160,5 +165,14 @@ ${EventType.values().joinToString("\n") { "${it.name}: ${it.source}" }}"""
         val itemDecoration = DividerItemDecoration(context, layoutManager.orientation)
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.addItemDecoration(itemDecoration)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.recyclerView.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
     }
 }

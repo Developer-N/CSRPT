@@ -13,12 +13,24 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.google.android.material.color.DynamicColors
 
-enum class Theme(val key: String, @StringRes val title: Int, @StyleRes private val styleRes: Int) {
-    SYSTEM_DEFAULT("SystemDefault", R.string.theme_default, R.style.LightTheme),
+enum class Theme(
+    val key: String,
+    @StringRes val title: Int,
+    @StyleRes private val styleRes: Int,
+    private val hasGradient: Boolean = true,
+    private val hasDynamicColors: Boolean = false,
+) {
+    SYSTEM_DEFAULT(
+        "SystemDefault", R.string.theme_default, R.style.LightTheme,
+        hasDynamicColors = true
+    ),
     LIGHT("LightTheme", R.string.theme_light, R.style.LightTheme),
     DARK("DarkTheme", R.string.theme_dark, R.style.DarkTheme),
     DARK_GREEN("DarkGreenTheme", R.string.theme_dark_green, R.style.DarkGreenTheme),
-    MODERN("ClassicTheme"/*legacy*/, R.string.theme_modern, R.style.ModernTheme),
+    MODERN(
+        "ClassicTheme"/*legacy*/, R.string.theme_modern, R.style.ModernTheme,
+        hasDynamicColors = true
+    ),
     AQUA("BlueTheme"/*legacy*/, R.string.theme_aqua, R.style.AquaTheme),
     PURPLE("PurpleTheme", R.string.theme_purple, R.style.PurpleTheme),
     DEEP_PURPLE("DeepPurpleTheme", R.string.theme_deep_purple, R.style.DeepPurpleTheme),
@@ -27,30 +39,46 @@ enum class Theme(val key: String, @StringRes val title: Int, @StyleRes private v
     GREEN("GreenTheme", R.string.theme_green, R.style.GreenTheme),
     BROWN("BrownTheme", R.string.theme_brown, R.style.BrownTheme),
     NEW_BLUE("NewBlueTheme", R.string.theme_nblue, R.style.NewBlueTheme),
-    BLACK("BlackTheme", R.string.theme_black, R.style.BlackTheme);
+    BLACK(
+        "BlackTheme", R.string.theme_black, R.style.BlackTheme,
+        hasGradient = false, hasDynamicColors = true
+    );
 
     companion object {
-        private val SharedPreferences?.theme
-            get() = this?.getString(PREF_THEME, null) ?: SYSTEM_DEFAULT.key
+        private fun SharedPreferences?.getTheme() =
+            this?.getString(PREF_THEME, null) ?: SYSTEM_DEFAULT.key
+
+        fun supportsGradient(context: Context) = getCurrent(context).hasGradient &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 
         fun apply(activity: AppCompatActivity) {
             val theme = getCurrent(activity)
-            if (theme != SYSTEM_DEFAULT &&
-                // Let's use dynamic colors also in black theme of Android 12
-                !(DynamicColors.isDynamicColorAvailable() && theme == BLACK)
-            ) return activity.setTheme(theme.styleRes)
-            val isNightModeEnabled = isNightMode(activity)
+            val isDynamicColorAvailable = DynamicColors.isDynamicColorAvailable()
+            if (theme == SYSTEM_DEFAULT || (isDynamicColorAvailable && theme.hasDynamicColors)) {
+                val isNightModeEnabled = isNightMode(activity)
 
-            if (DynamicColors.isDynamicColorAvailable()) {
-                activity.setTheme(
-                    when {
-                        theme == BLACK -> R.style.DynamicBlackTheme
-                        isNightModeEnabled -> R.style.DynamicDarkTheme
-                        else -> R.style.DynamicLightTheme
-                    }
-                )
-                DynamicColors.applyToActivityIfAvailable(activity)
-            } else activity.setTheme(if (isNightModeEnabled) DARK.styleRes else LIGHT.styleRes)
+                if (isDynamicColorAvailable) {
+                    activity.setTheme(
+                        when {
+                            theme == BLACK -> R.style.DynamicBlackTheme
+                            theme == MODERN -> R.style.DynamicModernTheme
+                            isNightModeEnabled -> R.style.DynamicDarkTheme
+                            else -> R.style.DynamicLightTheme
+                        }
+                    )
+                    DynamicColors.applyToActivityIfAvailable(activity)
+                    activity.setTheme(
+                        when {
+                            theme == BLACK -> R.style.DynamicBlackSurfaceOverride
+                            theme == MODERN -> R.style.DynamicModernSurfaceOverride
+                            isNightModeEnabled -> R.style.DynamicDarkSurfaceOverride
+                            else -> R.style.DynamicLightSurfaceOverride
+                        }
+                    )
+                } else activity.setTheme(if (isNightModeEnabled) DARK.styleRes else LIGHT.styleRes)
+            } else activity.setTheme(theme.styleRes)
+
+            activity.setTheme(R.style.SharedStyle)
 
             // Apply blur considerations only if is supported by the device
             if (
@@ -60,26 +88,25 @@ enum class Theme(val key: String, @StringRes val title: Int, @StyleRes private v
         }
 
         private fun getCurrent(context: Context): Theme {
-            val key = context.appPrefs.theme
-            return values().find { it.key == key } ?: SYSTEM_DEFAULT
+            val key = context.appPrefs.getTheme()
+            return enumValues<Theme>().find { it.key == key } ?: SYSTEM_DEFAULT
         }
 
         @StyleRes
-        fun getWidgetSuitableStyle(context: Context): Int {
+        fun getWidgetSuitableStyle(context: Context, prefersWidgetsDynamicColors: Boolean): Int {
             val isNightMode = isNightMode(context)
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (isNightMode) R.style.DynamicDarkTheme else R.style.DynamicLightTheme
+            return if (prefersWidgetsDynamicColors) {
+                if (isNightMode) R.style.DynamicDarkTheme else R.style.DynamicModernTheme
             } else MODERN.styleRes
         }
 
-        fun isDefault(prefs: SharedPreferences?) = prefs.theme == SYSTEM_DEFAULT.key
+        fun isDefault(prefs: SharedPreferences?) = prefs.getTheme() == SYSTEM_DEFAULT.key
 
         @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
         fun isDynamicColor(prefs: SharedPreferences?): Boolean {
-            return DynamicColors.isDynamicColorAvailable() && when (prefs.theme) {
-                SYSTEM_DEFAULT.key, BLACK.key -> true
-                else -> false
-            }
+            val themeKey = prefs.getTheme()
+            return DynamicColors.isDynamicColorAvailable() &&
+                    enumValues<Theme>().firstOrNull { it.key == themeKey }?.hasDynamicColors ?: false
         }
 
         fun isNightMode(context: Context): Boolean =

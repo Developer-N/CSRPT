@@ -20,6 +20,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -27,6 +28,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.os.postDelayed
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isInvisible
+import androidx.core.view.updateLayoutParams
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -35,6 +40,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
+import androidx.viewpager2.widget.MarginPageTransformer
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ActivityQuranBinding
 import com.byagowi.persiancalendar.databinding.NavigationHeaderBinding
@@ -42,7 +48,10 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.DrawerHost
+import com.byagowi.persiancalendar.ui.utils.SystemBarsTransparency
+import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.logException
@@ -58,7 +67,6 @@ import ir.namoo.quran.utils.ACTION_CHANGE_SURA
 import ir.namoo.quran.utils.ACTION_GO_TO_DOWNLOAD_PAGE
 import ir.namoo.quran.utils.initQuranUtils
 import kotlin.math.roundToInt
-
 
 class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener,
     NavController.OnDestinationChangedListener, DrawerHost {
@@ -77,6 +85,7 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         Theme.apply(this)
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
+        transparentSystemBars()
 
         initQuranUtils(this, appPrefsLite)
         onBackPressedDispatcher.addCallback(this, onBackPressedCloseDrawerCallback)
@@ -108,10 +117,15 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         }
         binding.quranNavigation.setNavigationItemSelectedListener(this)
         navHostFragment?.navController?.addOnDestinationChangedListener(this)
-        NavigationHeaderBinding.bind(binding.quranNavigation.getHeaderView(0))
-            .seasonImage.setImageResource(run {
-                R.drawable.quran_drawer2
-            })
+//        NavigationHeaderBinding.bind(binding.quranNavigation.getHeaderView(0))
+//            .seasonImage.setImageResource(run {
+//                R.drawable.quran_drawer2
+//            })
+        NavigationHeaderBinding.bind(binding.quranNavigation.getHeaderView(0)).seasonsPager.also {
+            it.adapter = QuranDrawerAdapter()
+            it.currentItem = 0
+            it.setPageTransformer(MarginPageTransformer((8 * resources.dp).toInt()))
+        }
         intent?.run {
             navigateTo(
                 when (action) {
@@ -126,6 +140,28 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 //            Handler(Looper.getMainLooper()).postDelayed(1000) {
 //                createShortcut()
 //            }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            val transparencyState = SystemBarsTransparency(this@QuranActivity)
+            binding.quranNavigation.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = if (transparencyState.shouldStatusBarBeTransparent) 0 else insets.top
+                bottomMargin =
+                    if (transparencyState.shouldNavigationBarBeTransparent) 0 else insets.bottom
+            }
+            NavigationHeaderBinding.bind(binding.quranNavigation.getHeaderView(0))
+                .statusBarPlaceHolder.let { placeHolder ->
+                    placeHolder.updateLayoutParams {
+                        this@updateLayoutParams.height =
+                            if (transparencyState.shouldStatusBarBeTransparent) insets.top else 0
+                    }
+                    placeHolder.isInvisible = !transparencyState.needsVisibleStatusBarPlaceHolder
+                }
+            windowInsets
+        }
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ register receiver for change sura
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -259,6 +295,7 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 }
 
             }
+
             else -> {
                 binding.root.closeDrawer(GravityCompat.START)
                 if (navHostFragment?.navController?.currentDestination?.id != itemId) {
@@ -342,6 +379,7 @@ class QuranActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 binding.root.openDrawer(GravityCompat.START)
             true
         }
+
         else -> super.onKeyDown(keyCode, event)
     }
 

@@ -1,10 +1,17 @@
 package ir.namoo.commons.service
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
 import ir.namoo.commons.BASE_API_URL
-import ir.namoo.commons.model.*
+import ir.namoo.commons.model.ApplicationModel
+import ir.namoo.commons.model.CityModel
+import ir.namoo.commons.model.CountryModel
+import ir.namoo.commons.model.PrayTimesModel
+import ir.namoo.commons.model.ProvinceModel
+import ir.namoo.commons.model.ServerAthanModel
+import ir.namoo.commons.model.ServerResponseModel
+import ir.namoo.commons.model.UpdateModel
 
 class PrayTimesService constructor(private val httpClient: HttpClient) {
 

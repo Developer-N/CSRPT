@@ -2,13 +2,24 @@ package com.byagowi.persiancalendar.entities
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import android.view.inputmethod.InputMethodManager
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.getSystemService
+import com.byagowi.persiancalendar.AFGHANISTAN_TIMEZONE_ID
+import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
+import com.byagowi.persiancalendar.NEPAL_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.utils.listOf12Items
 import com.byagowi.persiancalendar.utils.listOf7Items
+import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.variants.debugLog
 import io.github.cosinekitty.astronomy.EclipseKind
 import io.github.persiancalendar.praytimes.CalculationMethod
-import java.util.*
+import java.util.Locale
+import java.util.TimeZone
+
 
 enum class Language(val code: String, val nativeName: String) {
     // The following order is used for language change dialog also
@@ -29,6 +40,7 @@ enum class Language(val code: String, val nativeName: String) {
     JA("ja", "日本語"),
     KMR("kmr", "Kurdî"),
     NE("ne", "नेपाली"),
+    RU("ru", "Русский"),
     TG("tg", "Тоҷикӣ"),
     TR("tr", "Türkçe"),
     UR("ur", "اردو"),
@@ -91,13 +103,13 @@ enum class Language(val code: String, val nativeName: String) {
 
     val betterToUseShortCalendarName: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, AR, TR, TG -> true
+            EN_US, JA, ZH_CN, FR, ES, AR, TR, TG, RU -> true
             else -> false
         }
 
     val mightPreferUmmAlquraIslamicCalendar: Boolean
         get() = when (this) {
-            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, TR, KMR, TG, NE -> true
+            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, TR, KMR, TG, NE, RU -> true
             else -> false
         }
 
@@ -129,14 +141,14 @@ enum class Language(val code: String, val nativeName: String) {
     // Whether locale uses الفبا or not
     val isArabicScript: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, TR, KMR, EN_IR, TG, NE -> false
+            EN_US, JA, ZH_CN, FR, ES, RU, TR, KMR, EN_IR, TG, NE -> false
             else -> true
         }
 
     // Whether locale would prefer local digits like ۱۲۳ over the global ones, 123, initially at least
     val prefersLocalDigits: Boolean
         get() = when (this) {
-            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, TR, KMR, TG -> false
+            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, RU, TR, KMR, TG -> false
             else -> true
         }
 
@@ -175,7 +187,7 @@ enum class Language(val code: String, val nativeName: String) {
     // We can presume user would prefer Gregorian calendar at least initially
     private val prefersGregorianCalendar: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, UR, TR, KMR, TG -> true
+            EN_US, JA, ZH_CN, FR, ES, RU, UR, TR, KMR, TG -> true
             else -> false
         }
 
@@ -219,7 +231,7 @@ enum class Language(val code: String, val nativeName: String) {
     val defaultWeekStart
         get() = when (this) {
             FA -> "0"
-            TR, TG -> "2" // Monday
+            TR, TG, RU -> "2" // Monday
             else -> if (prefersGregorianCalendar || isNepali) "1"/*Sunday*/ else "0"
         }
 
@@ -229,6 +241,12 @@ enum class Language(val code: String, val nativeName: String) {
             isNepali -> setOf("0")
             prefersGregorianCalendar -> setOf("0", "1") // Saturday and Sunday
             else -> setOf("6") // 6 means Friday
+        }
+
+    val additionalShiftWorkTitles: List<String>
+        get() = when (this) {
+            FA -> listOf("مرخصی", "صبح/شب", "صبح/عصر", "عصر/شب")
+            else -> emptyList()
         }
 
     fun getPersianMonths(context: Context): List<String> = when (this) {
@@ -249,6 +267,7 @@ enum class Language(val code: String, val nativeName: String) {
             if (easternGregorianArabicMonths) easternGregorianCalendarMonths
             else gregorianCalendarMonths.map(context::getString)
         }
+
         else -> gregorianCalendarMonths.map(context::getString)
     }
 
@@ -259,19 +278,13 @@ enum class Language(val code: String, val nativeName: String) {
 
     fun getWeekDays(context: Context): List<String> = when (this) {
         FA, EN_IR, FA_AF -> weekDaysInPersian
-        NE -> weekDaysInNepali
         else -> weekDays.map(context::getString)
     }
 
     fun getWeekDaysInitials(context: Context): List<String> = when (this) {
-        AR -> weekDaysInitialsInArabic
-        AZB -> weekDaysInitialsInAzerbaijani
-        TR -> weekDaysInitialsInTurkish
         EN_IR -> weekDaysInitialsInEnglishIran
-        TG -> weekDaysInitialsInTajiki
-        NE -> weekDaysInitialsInNepali
-        ZH_CN -> weekDaysInitialsInChinese
-        else -> getWeekDays(context).map { it.substring(0, 1) }
+        FA, FA_AF -> weekDaysInitialsInPersian
+        else -> weekDaysInitials.map(context::getString)
     }
 
     fun getCountryName(cityItem: CityItem): String = when {
@@ -305,22 +318,6 @@ enum class Language(val code: String, val nativeName: String) {
         else -> text
     }
 
-    private fun prepareForArabicSort(text: String) = text
-        .replace("ی", "ي")
-        .replace("ک", "ك")
-        .replace("گ", "كی")
-        .replace("ژ", "زی")
-        .replace("چ", "جی")
-        .replace("پ", "بی")
-        .replace("و", "نی")
-        .replace("ڕ", "ری")
-        .replace("ڵ", "لی")
-        .replace("ڤ", "فی")
-        .replace("ۆ", "وی")
-        .replace("ێ", "یی")
-        .replace("ھ", "نی")
-        .replace("ە", "هی")
-
     // Too hard to translate and don't want to disappoint translators thus
     // not moved yet to our common i18n system
     fun tryTranslateEclipseType(isSolar: Boolean, type: EclipseKind) = when (this) {
@@ -335,6 +332,7 @@ enum class Language(val code: String, val nativeName: String) {
                 else -> null
             }
         }
+
         FA, FA_AF -> {
             when {
                 isSolar && type == EclipseKind.Annular -> "خورشیدگرفتگی حلقه‌ای"
@@ -346,6 +344,7 @@ enum class Language(val code: String, val nativeName: String) {
                 else -> null
             }
         }
+
         else -> null
     }
 
@@ -356,15 +355,73 @@ enum class Language(val code: String, val nativeName: String) {
         @SuppressLint("ConstantLocale")
         private val userDeviceCountry = Locale.getDefault().country ?: "IR"
 
+        private val userTimeZoneId = TimeZone.getDefault().id ?: IRAN_TIMEZONE_ID
+
         // Preferred app language for certain locale
-        val preferredDefaultLanguage
-            get() = when (userDeviceLanguage) {
-                FA.code, "en", EN_US.code -> if (userDeviceCountry == "AF") FA_AF else FA
+        fun getPreferredDefaultLanguage(context: Context): Language {
+            return when (userDeviceLanguage) {
+                FA.code -> if (userDeviceCountry == "AF") FA_AF else FA
+                "en", EN_US.code ->
+                    guessLanguageFromTimezoneId() ?: guessLanguageFromKeyboards(context)
+
                 else -> valueOfLanguageCode(userDeviceLanguage) ?: EN_US
             }
+        }
+
+        private fun guessLanguageFromTimezoneId(): Language? = when (userTimeZoneId) {
+            IRAN_TIMEZONE_ID -> FA
+            AFGHANISTAN_TIMEZONE_ID -> FA_AF
+            NEPAL_TIMEZONE_ID -> NE
+            // Other than these specific zones let's respect user device language anyway
+            else -> null
+        }
+
+        // Based on https://stackoverflow.com/a/28216764 but doesn't seem to work
+        private fun guessLanguageFromKeyboards(context: Context): Language = runCatching {
+            val imm = context.getSystemService<InputMethodManager>() ?: return EN_US
+            val imeMethods = imm.enabledInputMethodList
+            for (method in imeMethods ?: emptyList()) {
+                for (submethod in imm.getEnabledInputMethodSubtypeList(method, true)) {
+                    if (submethod.mode == "keyboard") {
+                        val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            submethod.languageTag
+                        } else @Suppress("DEPRECATION") submethod.locale
+                        debugLog("Language: '$locale' is available in keyboards")
+                        if (locale.isEmpty()) continue
+                        val language = valueOfLanguageCode(locale)
+                            ?: valueOfLanguageCode(locale.split("-").firstOrNull() ?: "")
+                        // Use the knowledge only to detect Persian language
+                        // as others might be surprising
+                        if (language == FA || language == FA_AF) return language
+                    }
+                }
+            }
+            return EN_US
+        }.onFailure(logException).getOrNull() ?: EN_US
 
         fun valueOfLanguageCode(languageCode: String): Language? =
-            values().find { it.code == languageCode }
+            enumValues<Language>().find { it.code == languageCode }
+
+        private val arabicSortReplacements = mapOf(
+            'ی' to "ي",
+            'ک' to "ك",
+            'گ' to "كی",
+            'ژ' to "زی",
+            'چ' to "جی",
+            'پ' to "بی",
+            'و' to "نی",
+            'ڕ' to "ری",
+            'ڵ' to "لی",
+            'ڤ' to "فی",
+            'ۆ' to "وی",
+            'ێ' to "یی",
+            'ھ' to "نی",
+            'ە' to "هی",
+        )
+
+        @VisibleForTesting
+        fun prepareForArabicSort(text: String): String =
+            text.map { arabicSortReplacements[it] ?: it }.joinToString("")
 
         private val persianCalendarMonths = listOf12Items(
             R.string.farvardin, R.string.ordibehesht, R.string.khordad,
@@ -387,6 +444,11 @@ enum class Language(val code: String, val nativeName: String) {
         private val weekDays = listOf7Items(
             R.string.saturday, R.string.sunday, R.string.monday, R.string.tuesday,
             R.string.wednesday, R.string.thursday, R.string.friday
+        )
+        private val weekDaysInitials = listOf7Items(
+            R.string.saturday_short, R.string.sunday_short, R.string.monday_short,
+            R.string.tuesday_short, R.string.wednesday_short, R.string.thursday_short,
+            R.string.friday_short
         )
 
         // These are special cases and new ones should be translated in strings.xml of the language
@@ -419,23 +481,11 @@ enum class Language(val code: String, val nativeName: String) {
         private val weekDaysInPersian = listOf7Items(
             "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"
         )
-        private val weekDaysInitialsInArabic = listOf7Items(
-            "سب", "أح", "اث", "ثل", "أر", "خم", "جم"
-        )
-        private val weekDaysInitialsInAzerbaijani = listOf7Items(
-            "یئل", "سۆد", "دۇز", "آرا", "اوْد", "سۇ", "آینی"
-        )
-        private val weekDaysInitialsInChinese = listOf7Items(
-            "六", "日", "一", "二", "三", "四", "五"
-        )
-        private val weekDaysInitialsInTurkish = listOf7Items(
-            "Ct", "Pz", "Pt", "Sa", "Ça", "Pe", "Cu"
+        private val weekDaysInitialsInPersian = listOf7Items(
+            "ش", "ی", "د", "س", "چ", "پ", "ج"
         )
         private val weekDaysInitialsInEnglishIran = listOf7Items(
             "Sh", "Ye", "Do", "Se", "Ch", "Pa", "Jo"
-        )
-        private val weekDaysInitialsInTajiki = listOf7Items(
-            "Шн", "Як", "Дш", "Сш", "Чш", "Пш", "Ҷм"
         )
 
         // https://github.com/techgaun/ad-bs-converter/blob/4731f2c/src/converter.js
@@ -447,15 +497,6 @@ enum class Language(val code: String, val nativeName: String) {
         val nepaliMonthsInEnglish = listOf12Items(
             "Baisakh", "Jestha", "Ashadh", "Shrawan", "Bhadra", "Ashwin",
             "Kartik", "Mangsir", "Paush", "Mangh", "Falgun", "Chaitra"
-        )
-
-        // https://github.com/techgaun/get-nepday-of-week/blob/02b6ffc/index.js#L19
-        // probably should be provided from the translations though
-        val weekDaysInNepali = listOf7Items(
-            "शनिबार", "आइतबार", "सोमबार", "मंगलबार", "बुधबार", "बिहिबार", "शुक्रबार"
-        )
-        val weekDaysInitialsInNepali = listOf7Items(
-            "श", "आ", "सो", "मं", "बु", "बि", "शु"
         )
 
         private val irCodeOrder = listOf("zz", "ir", "tr", "af", "iq")

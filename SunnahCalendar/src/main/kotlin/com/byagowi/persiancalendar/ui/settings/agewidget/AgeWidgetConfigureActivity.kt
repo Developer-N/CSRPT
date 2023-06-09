@@ -12,10 +12,11 @@ import androidx.fragment.app.commit
 import com.byagowi.persiancalendar.PREF_SELECTED_DATE_AGE_WIDGET
 import com.byagowi.persiancalendar.PREF_TITLE_AGE_WIDGET
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.ActivityAgeWidgetConfigureBinding
+import com.byagowi.persiancalendar.databinding.AgeWidgetConfigureActivityBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.ui.utils.makeWallpaperTransparency
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.createAgeRemoteViews
@@ -39,12 +40,13 @@ class AgeWidgetConfigureActivity : AppCompatActivity() {
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
         window?.makeWallpaperTransparency()
+        transparentSystemBars()
 
         // Set the result to CANCELED.  This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED)
 
-        val binding = ActivityAgeWidgetConfigureBinding.inflate(layoutInflater).also {
+        val binding = AgeWidgetConfigureActivityBinding.inflate(layoutInflater).also {
             setContentView(it.root)
         }
 

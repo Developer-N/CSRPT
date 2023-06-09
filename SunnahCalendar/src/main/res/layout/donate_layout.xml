@@ -13,7 +13,6 @@
         android:padding="4dp"
         android:text="@string/donate"
         android:textAlignment="center"
-        android:textColor="?attr/colorTextNormal"
         android:textSize="@dimen/text_size_title"
         android:textStyle="bold" />
 
@@ -24,7 +23,7 @@
         android:padding="4dp"
         android:text="@string/donate_msg"
         android:textAlignment="textStart"
-        android:textColor="?attr/colorTextSecond"
+        android:textColor="?attr/colorSecondary"
         android:textSize="@dimen/text_size_description" />
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -44,7 +43,7 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="?attr/colorCard"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="10dp"
             app:cardElevation="4dp">
 
@@ -61,7 +60,6 @@
                     android:padding="4dp"
                     android:text="@string/_5"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorTextNormal"
                     android:textSize="@dimen/text_size_title"
                     android:textStyle="bold" />
 
@@ -70,7 +68,7 @@
                     android:layout_height="42dp"
                     android:layout_margin="5dp"
                     app:srcCompat="@drawable/ic_baseline_monetization_on_24"
-                    app:tint="?attr/colorIcon" />
+                    app:tint="?attr/colorAccent" />
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.material.card.MaterialCardView>
 
@@ -83,7 +81,7 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="?attr/colorCard"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="10dp"
             app:cardElevation="4dp">
 
@@ -100,7 +98,6 @@
                     android:padding="4dp"
                     android:text="@string/_10"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorTextNormal"
                     android:textSize="@dimen/text_size_title"
                     android:textStyle="bold" />
 
@@ -109,7 +106,7 @@
                     android:layout_height="42dp"
                     android:layout_margin="5dp"
                     app:srcCompat="@drawable/ic_baseline_monetization_on_24"
-                    app:tint="?attr/colorIcon" />
+                    app:tint="?attr/colorAccent" />
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.material.card.MaterialCardView>
 
@@ -132,7 +129,7 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="?attr/colorCard"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="10dp"
             app:cardElevation="4dp">
 
@@ -149,7 +146,6 @@
                     android:padding="4dp"
                     android:text="@string/_20"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorTextNormal"
                     android:textSize="@dimen/text_size_title"
                     android:textStyle="bold" />
 
@@ -158,7 +154,7 @@
                     android:layout_height="42dp"
                     android:layout_margin="5dp"
                     app:srcCompat="@drawable/ic_baseline_monetization_on_24"
-                    app:tint="?attr/colorIcon" />
+                    app:tint="?attr/colorAccent" />
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.material.card.MaterialCardView>
 
@@ -171,7 +167,7 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="?attr/colorCard"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="10dp"
             app:cardElevation="4dp">
 
@@ -188,7 +184,7 @@
                     android:padding="4dp"
                     android:text="@string/_50"
                     android:textAlignment="center"
-                    android:textColor="?attr/colorTextNormal"
+
                     android:textSize="@dimen/text_size_title"
                     android:textStyle="bold" />
 
@@ -197,7 +193,7 @@
                     android:layout_height="42dp"
                     android:layout_margin="5dp"
                     app:srcCompat="@drawable/ic_baseline_monetization_on_24"
-                    app:tint="?attr/colorIcon" />
+                    app:tint="?attr/colorAccent" />
             </androidx.appcompat.widget.LinearLayoutCompat>
         </com.google.android.material.card.MaterialCardView>
 
@@ -212,7 +208,7 @@
         android:layout_margin="10dp"
         android:clickable="true"
         android:focusable="true"
-        app:cardBackgroundColor="?attr/colorCard"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="10dp"
         app:cardElevation="4dp">
 
@@ -229,7 +225,6 @@
                 android:padding="4dp"
                 android:text="@string/custom_donate"
                 android:textAlignment="center"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="@dimen/text_size_title"
                 android:textStyle="bold" />
 
@@ -238,7 +233,7 @@
                 android:layout_height="42dp"
                 android:layout_margin="5dp"
                 app:srcCompat="@drawable/ic_baseline_monetization_on_24"
-                app:tint="?attr/colorIcon" />
+                app:tint="?attr/colorAccent" />
         </androidx.appcompat.widget.LinearLayoutCompat>
     </com.google.android.material.card.MaterialCardView>
 

@@ -4,13 +4,14 @@ import com.byagowi.persiancalendar.global.weekDays
 import com.byagowi.persiancalendar.global.weekEnds
 import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
 import com.byagowi.persiancalendar.utils.toCivilDate
-import com.byagowi.persiancalendar.utils.toJavaCalendar
+import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.NepaliDate
 import io.github.persiancalendar.calendar.PersianDate
-import java.util.*
+import java.util.Date
+import java.util.GregorianCalendar
 import kotlin.math.ceil
 
 // Julian day number, basically a day counter starting from some day in concept
@@ -27,16 +28,16 @@ value class Jdn(val value: Long) {
     fun isWeekEnd() = weekEnds[dayOfWeek]
 
     fun toCalendar(calendar: CalendarType): AbstractDate = when (calendar) {
-        CalendarType.ISLAMIC -> toIslamicCalendar()
-        CalendarType.GREGORIAN -> toGregorianCalendar()
-        CalendarType.SHAMSI -> toPersianCalendar()
-        CalendarType.NEPALI -> toNepaliCalendar()
+        CalendarType.ISLAMIC -> toIslamicDate()
+        CalendarType.GREGORIAN -> toCivilDate()
+        CalendarType.SHAMSI -> toPersianDate()
+        CalendarType.NEPALI -> toNepaliDate()
     }
 
-    fun toIslamicCalendar() = IslamicDate(value)
-    fun toGregorianCalendar() = CivilDate(value)
-    fun toPersianCalendar() = PersianDate(value)
-    fun toNepaliCalendar() = NepaliDate(value)
+    fun toIslamicDate() = IslamicDate(value)
+    fun toCivilDate() = CivilDate(value)
+    fun toPersianDate() = PersianDate(value)
+    fun toNepaliDate() = NepaliDate(value)
 
     fun createMonthDaysList(monthLength: Int) = (value until value + monthLength).map(::Jdn)
 
@@ -47,8 +48,8 @@ value class Jdn(val value: Long) {
     // Difference of two Jdn values in days
     operator fun minus(other: Jdn): Int = (value - other.value).toInt()
 
-    fun toJavaCalendar(): GregorianCalendar = GregorianCalendar().also {
-        val gregorian = this.toGregorianCalendar()
+    fun toGregorianCalendar(): GregorianCalendar = GregorianCalendar().also {
+        val gregorian = this.toCivilDate()
         it.set(gregorian.year, gregorian.month - 1, gregorian.dayOfMonth)
     }
 
@@ -60,7 +61,7 @@ value class Jdn(val value: Long) {
     val dayOfWeekName: String get() = weekDays[this.dayOfWeek]
 
     fun calculatePersianSeasonPassedDaysAndCount(): Pair<Int, Int> {
-        val persianDate = this.toPersianCalendar()
+        val persianDate = this.toPersianDate()
         val season = (persianDate.month - 1) / 3
         val seasonBeginning = PersianDate(persianDate.year, season * 3 + 1, 1)
         val seasonBeginningJdn = Jdn(seasonBeginning)
@@ -69,6 +70,6 @@ value class Jdn(val value: Long) {
     }
 
     companion object {
-        fun today() = Jdn(Date().toJavaCalendar().toCivilDate())
+        fun today() = Jdn(Date().toGregorianCalendar().toCivilDate())
     }
 }

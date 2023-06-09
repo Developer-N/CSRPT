@@ -15,6 +15,10 @@ import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.byagowi.persiancalendar.BuildConfig
@@ -31,6 +35,7 @@ import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getFromStringId
+import com.byagowi.persiancalendar.utils.toCivilDate
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.persiancalendar.calendar.CivilDate
@@ -49,13 +54,13 @@ import ir.namoo.religiousprayers.praytimeprovider.PrayTimesDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
 
 class EditFragment : Fragment() {
     private lateinit var binding: FragmentEditBinding
-    private val viewModel: EditViewModel by viewModel()
+    private val viewModel: EditViewModel = get()
     private lateinit var times: MutableList<EditedPrayTimesEntity>
     private lateinit var originalTimes: MutableList<EditedPrayTimesEntity>
 
@@ -176,6 +181,16 @@ class EditFragment : Fragment() {
         } else {
             enableDisableAllPickers(true)
         }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
+
         return binding.root
     }
 
@@ -235,7 +250,7 @@ class EditFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 binding.txtEditInfo.text =
-                    formatNumber(resources.getString(R.string.use_summer_time))
+                    formatNumber(resources.getString(R.string.edit_time_message))
                 initPickers()
                 viewModel.timeList.observe(requireActivity()) {
                     times = arrayListOf()
@@ -274,42 +289,54 @@ class EditFragment : Fragment() {
                             if (originalTime != null && time != null) {
                                 if (originalTime.fajr != time.fajr) changeCardBackgroundColor(
                                     binding.cardFajr,
-                                    R.attr.colorWarning
+                                    R.attr.colorTextHoliday
                                 )
-                                else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+                                else changeCardBackgroundColor(
+                                    binding.cardFajr,
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+                                )
 
                                 if (originalTime.sunrise != time.sunrise) changeCardBackgroundColor(
-                                    binding.cardSunrise, R.attr.colorWarning
+                                    binding.cardSunrise, R.attr.colorTextHoliday
                                 )
                                 else changeCardBackgroundColor(
                                     binding.cardSunrise,
-                                    R.attr.colorCard
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
                                 )
 
                                 if (originalTime.dhuhr != time.dhuhr) changeCardBackgroundColor(
-                                    binding.cardDhuhr, R.attr.colorWarning
+                                    binding.cardDhuhr, R.attr.colorTextHoliday
                                 )
-                                else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+                                else changeCardBackgroundColor(
+                                    binding.cardDhuhr,
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+                                )
 
                                 if (originalTime.asr != time.asr) changeCardBackgroundColor(
                                     binding.cardAsr,
-                                    R.attr.colorWarning
+                                    R.attr.colorTextHoliday
                                 )
-                                else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+                                else changeCardBackgroundColor(
+                                    binding.cardAsr,
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+                                )
 
                                 if (originalTime.maghrib != time.maghrib) changeCardBackgroundColor(
-                                    binding.cardMaghrib, R.attr.colorWarning
+                                    binding.cardMaghrib, R.attr.colorTextHoliday
                                 )
                                 else changeCardBackgroundColor(
                                     binding.cardMaghrib,
-                                    R.attr.colorCard
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
                                 )
 
                                 if (originalTime.isha != time.isha) changeCardBackgroundColor(
                                     binding.cardIsha,
-                                    R.attr.colorWarning
+                                    R.attr.colorTextHoliday
                                 )
-                                else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+                                else changeCardBackgroundColor(
+                                    binding.cardIsha,
+                                    com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+                                )
                             }
                         }
                     }
@@ -328,10 +355,14 @@ class EditFragment : Fragment() {
             val str = getDayMonthForDayOfYear(i)
             val month = str.split("/")[0].toInt()
             val day = str.split("/")[1].toInt()
-            val persianDate = PersianDate(PersianDate(civilDate.toJdn()).year, month, day)
+            val persianDate = PersianDate(PersianDate(civilDate.toCivilDate()).year, month, day)
             val date = CivilDate(persianDate.toJdn())
-            var time = coordinates.value?.calculatePrayTimes(Jdn(date).toJavaCalendar())
-            if (!requireContext().appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME) && i in 2..185) time =
+            var time = coordinates.value?.calculatePrayTimes(Jdn(date).toGregorianCalendar())
+            if (!requireContext().appPrefs.getBoolean(
+                    PREF_SUMMER_TIME,
+                    DEFAULT_SUMMER_TIME
+                ) && i in 2..185
+            ) time =
                 fixSummerTimes(time, true)
             res.add(time)
             lifecycleScope.launch {
@@ -413,8 +444,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.fajr,
                     originalTimes.find { it.dayNumber == day }?.fajr
                 )
-            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardFajr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
 
         }
         binding.pickerFajrHour.setOnValueChangedListener { _, _, newVal ->
@@ -424,8 +458,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.fajr,
                     originalTimes.find { it.dayNumber == day }?.fajr
                 )
-            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardFajr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardFajr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardFajr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
 
         binding.pickerSunriseMinute.setOnValueChangedListener { _, _, newVal ->
@@ -436,8 +473,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.sunrise,
                     originalTimes.find { it.dayNumber == day }?.sunrise
                 )
-            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardSunrise,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
         binding.pickerSunriseHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -447,8 +487,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.sunrise,
                     originalTimes.find { it.dayNumber == day }?.sunrise
                 )
-            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardSunrise, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardSunrise, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardSunrise,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
 
         binding.pickerDhuhrMinute.setOnValueChangedListener { _, _, newVal ->
@@ -458,8 +501,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.dhuhr,
                     originalTimes.find { it.dayNumber == day }?.dhuhr
                 )
-            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardDhuhr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
         binding.pickerDhuhrHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -468,8 +514,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.dhuhr,
                     originalTimes.find { it.dayNumber == day }?.dhuhr
                 )
-            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardDhuhr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardDhuhr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
 
         binding.pickerAsrMinute.setOnValueChangedListener { _, _, newVal ->
@@ -479,8 +528,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.asr,
                     originalTimes.find { it.dayNumber == day }?.asr
                 )
-            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardAsr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
         binding.pickerAsrHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -489,8 +541,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.asr,
                     originalTimes.find { it.dayNumber == day }?.asr
                 )
-            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardAsr, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardAsr, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardAsr,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
 
         }
 
@@ -502,8 +557,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.maghrib,
                     originalTimes.find { it.dayNumber == day }?.maghrib
                 )
-            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardMaghrib,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
         binding.pickerMaghribHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -513,8 +571,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.maghrib,
                     originalTimes.find { it.dayNumber == day }?.maghrib
                 )
-            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardMaghrib, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardMaghrib,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
 
         binding.pickerIshaMinute.setOnValueChangedListener { _, _, newVal ->
@@ -524,8 +585,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.isha,
                     originalTimes.find { it.dayNumber == day }?.isha
                 )
-            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardIsha,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
         binding.pickerIshaHour.setOnValueChangedListener { _, _, newVal ->
             val day = viewModel.dayNum.value
@@ -534,8 +598,11 @@ class EditFragment : Fragment() {
                     times.find { it.dayNumber == day }?.isha,
                     originalTimes.find { it.dayNumber == day }?.isha
                 )
-            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorWarning)
-            else changeCardBackgroundColor(binding.cardIsha, R.attr.colorCard)
+            ) changeCardBackgroundColor(binding.cardIsha, R.attr.colorTextHoliday)
+            else changeCardBackgroundColor(
+                binding.cardIsha,
+                com.google.accompanist.themeadapter.material3.R.attr.colorSurface
+            )
         }
 
     }//end of initPickers
@@ -553,18 +620,23 @@ class EditFragment : Fragment() {
                 0 -> {
                     times[times.indexOf(t)].fajr = fixTime(t!!.fajr, min)
                 }
+
                 1 -> {
                     times[times.indexOf(t)].sunrise = fixTime(t!!.sunrise, min)
                 }
+
                 2 -> {
                     times[times.indexOf(t)].dhuhr = fixTime(t!!.dhuhr, min)
                 }
+
                 3 -> {
                     times[times.indexOf(t)].asr = fixTime(t!!.asr, min)
                 }
+
                 4 -> {
                     times[times.indexOf(t)].maghrib = fixTime(t!!.maghrib, min)
                 }
+
                 5 -> {
                     times[times.indexOf(t)].isha = fixTime(t!!.isha, min)
                 }

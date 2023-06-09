@@ -9,15 +9,23 @@ import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.pmString
 import com.byagowi.persiancalendar.global.spacedAndInDates
 import com.byagowi.persiancalendar.utils.formatNumber
-import java.util.*
+import java.util.GregorianCalendar
+import java.util.Locale
+import kotlin.math.absoluteValue
 
 data class Clock(var hours: Int, var minutes: Int) {
-    constructor(date: Calendar) : this(date[Calendar.HOUR_OF_DAY], date[Calendar.MINUTE])
+    constructor(date: GregorianCalendar) :
+            this(date[GregorianCalendar.HOUR_OF_DAY], date[GregorianCalendar.MINUTE])
 
     fun toMinutes() = hours * 60 + minutes
 
     fun toBasicFormatString(hours: Int = this.hours): String =
         formatNumber("%02d:%02d".format(Locale.ENGLISH, hours, minutes))
+
+    fun toTimeZoneOffsetFormat(): String {
+        val sign = if (hours < 0) "-" else "+"
+        return "%s%02d:%02d".format(Locale.ENGLISH, sign, hours.absoluteValue, minutes)
+    }
 
     fun toFormattedString(forcedIn12: Boolean = false, printAmPm: Boolean = true): String {
         if (clockIn24 && !forcedIn12) return toBasicFormatString()

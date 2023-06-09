@@ -1,5 +1,6 @@
 package ir.namoo.religiousprayers.ui.azkar
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,8 +14,7 @@ import kotlinx.coroutines.launch
 
 class AzkarViewModel constructor(private val azkarRepository: AzkarRepository) : ViewModel() {
 
-    var azkarChapters by mutableStateOf(listOf<AzkarChapter>())
-        private set
+    private var azkarChapters by mutableStateOf(listOf<AzkarChapter>())
     var filteredAzkarChapters by mutableStateOf(mutableListOf<AzkarChapter>())
         private set
     var error by mutableStateOf("")
@@ -37,9 +37,11 @@ class AzkarViewModel constructor(private val azkarRepository: AzkarRepository) :
                         isLoading = false
                         error = (it.asDataState() as DataState.Error).message
                     }
+
                     DataState.Loading -> {
                         isLoading = true
                     }
+
                     is DataState.Success -> {
                         azkarChapters =
                             (it.asDataState() as DataState.Success<List<AzkarChapter>>).data

@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground">
+    android:layout_height="match_parent">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -17,10 +16,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="4dp"
-            android:visibility="gone"
             android:clickable="true"
             android:focusable="true"
-            app:cardBackgroundColor="?attr/colorCard">
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="1dp">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -34,15 +34,14 @@
                     android:layout_margin="4dp"
                     android:layout_weight="5"
                     android:padding="4dp"
-                    android:text="@string/phone_state_permission_message"
-                    android:textColor="?attr/colorTextNormal" />
+                    android:text="@string/phone_state_permission_message" />
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_weight="1"
                     app:srcCompat="@drawable/baseline_warning_24"
-                    app:tint="?attr/colorWarning" />
+                    app:tint="?attr/colorTextHoliday" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -68,7 +67,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="4dp"
-            app:cardBackgroundColor="?attr/colorCard">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="1dp">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -89,7 +89,7 @@
                         android:paddingTop="5dp"
                         android:paddingEnd="20dp"
                         android:text="@string/location"
-                        android:textColor="?attr/colorTextSecond" />
+                        android:textColor="?attr/colorSecondary" />
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -100,8 +100,7 @@
                     android:enabled="true"
                     android:hint="@string/city"
                     android:inputType="textShortMessage"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorTextNormal" />
+                    android:textAlignment="center" />
 
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
@@ -115,7 +114,7 @@
                         android:layout_weight="5"
                         android:text="@string/latitude"
                         android:textAlignment="center"
-                        android:textColor="?attr/colorTextSecond"
+                        android:textColor="?attr/colorSecondary"
                         android:textIsSelectable="true" />
 
                     <com.google.android.material.textview.MaterialTextView
@@ -125,7 +124,7 @@
                         android:layout_weight="5"
                         android:text="@string/longitude"
                         android:textAlignment="center"
-                        android:textColor="?attr/colorTextSecond"
+                        android:textColor="?attr/colorSecondary"
                         android:textIsSelectable="true" />
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -139,6 +138,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
+                        android:elevation="2dp"
                         android:text="@string/renew_location"
                         app:chipIcon="@drawable/ic_refresh" />
 
@@ -163,7 +163,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
-            app:cardBackgroundColor="?attr/colorCard">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="1dp">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -176,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="2dp"
                     android:text="@string/athan_settings"
-                    android:textColor="?attr/colorTextSecond" />
+                    android:textColor="?attr/colorSecondary" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_athans"
@@ -194,7 +195,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
-            app:cardBackgroundColor="?attr/colorCard">
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardElevation="1dp">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
@@ -268,7 +270,7 @@
                             android:layout_height="wrap_content"
                             android:layout_margin="2dp"
                             android:text="@string/add_normal_athans"
-                            android:textColor="?attr/colorTextSecond" />
+                            android:textColor="?attr/colorSecondary" />
 
                         <androidx.appcompat.widget.LinearLayoutCompat
                             android:layout_width="match_parent"
@@ -284,7 +286,7 @@
                                 android:layout_margin="4dp"
                                 android:text="@string/add_online_athan"
                                 app:chipIcon="@drawable/ic_download"
-                                app:chipIconTint="?attr/colorIcon" />
+                                app:chipIconTint="?attr/colorAccent" />
 
                             <com.google.android.material.chip.Chip
                                 android:id="@+id/btn_add_local_athan"
@@ -294,7 +296,7 @@
                                 android:layout_margin="4dp"
                                 android:text="@string/add_local_athan"
                                 app:chipIcon="@drawable/ic_add"
-                                app:chipIconTint="?attr/colorIcon" />
+                                app:chipIconTint="?attr/colorAccent" />
 
                         </androidx.appcompat.widget.LinearLayoutCompat>
                     </androidx.appcompat.widget.LinearLayoutCompat>
@@ -312,7 +314,7 @@
                             android:layout_height="wrap_content"
                             android:layout_margin="2dp"
                             android:text="@string/add_alarm"
-                            android:textColor="?attr/colorTextSecond" />
+                            android:textColor="?attr/colorSecondary" />
 
                         <androidx.appcompat.widget.LinearLayoutCompat
                             android:layout_width="match_parent"
@@ -328,7 +330,7 @@
                                 android:layout_margin="4dp"
                                 android:text="@string/add_online_alarm"
                                 app:chipIcon="@drawable/ic_download"
-                                app:chipIconTint="?attr/colorIcon" />
+                                app:chipIconTint="?attr/colorAccent" />
 
                             <com.google.android.material.chip.Chip
                                 android:id="@+id/btn_add_local_alarm"
@@ -338,7 +340,7 @@
                                 android:layout_margin="4dp"
                                 android:text="@string/add_local_alarm"
                                 app:chipIcon="@drawable/ic_add"
-                                app:chipIconTint="?attr/colorIcon" />
+                                app:chipIconTint="?attr/colorAccent" />
 
                         </androidx.appcompat.widget.LinearLayoutCompat>
                     </androidx.appcompat.widget.LinearLayoutCompat>
@@ -367,7 +369,7 @@
                         android:layout_height="wrap_content"
                         android:layout_margin="2dp"
                         android:text="@string/play_athan_problem"
-                        android:textColor="?attr/colorTextSecond" />
+                        android:textColor="?attr/colorSecondary" />
 
 
                     <com.google.android.material.textview.MaterialTextView
@@ -375,7 +377,7 @@
                         android:layout_height="wrap_content"
                         android:layout_margin="2dp"
                         android:text="@string/notification"
-                        android:textColor="?attr/colorTextSecond" />
+                        android:textColor="?attr/colorSecondary" />
 
                     <RadioGroup
                         android:id="@+id/radio_notification_method"
@@ -405,7 +407,7 @@
                         android:layout_height="wrap_content"
                         android:layout_margin="2dp"
                         android:text="@string/full_screen"
-                        android:textColor="?attr/colorTextSecond" />
+                        android:textColor="?attr/colorSecondary" />
 
                     <RadioGroup
                         android:id="@+id/radio_fullscreen_method"

@@ -95,7 +95,7 @@
     <string name="show_device_calendar_events_summary">نمایش رویدادهای شخصی</string>
     <string name="show_device_calendar_events">رویدادهای شخصی</string>
     <string name="add_event">افزودن رویداد</string>
-    <string name="device_calendar_does_not_support">تقویم دستگاه از این کنش پشتیبانی نمی‌کند</string>
+    <string name="device_does_not_support">دستگاه از این کنش پشتیبانی نمی‌کند</string>
     <string name="customize_widget_summary">چه چیزهایی در ویجت‌ها و اعلان نمایش داده شوند</string>
     <string name="customize_widget">شخصی‌سازی ویجت‌ها و اعلان</string>
     <string name="add">افزودن</string>
@@ -205,6 +205,7 @@
         <item quantity="other">%1$s ساعت</item>
     </plurals>
     <string name="spaced_and">" و "</string>
+    <string name="spaced_or">" یا "</string>
     <string name="spaced_comma">"، "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">اطلاعات دستگاه</string>
@@ -327,6 +328,13 @@
     <string name="wednesday">بدھ</string>
     <string name="thursday">جمعرات</string>
     <string name="friday">جمعہ</string>
+    <string name="saturday_short">س</string>
+    <string name="sunday_short">ا</string>
+    <string name="monday_short">پ</string>
+    <string name="tuesday_short">م</string>
+    <string name="wednesday_short">ب</string>
+    <string name="thursday_short">ج</string>
+    <string name="friday_short">ج</string>
     <string name="sun_view">خورشیدنما</string>
     <string name="asr_hanafi_juristic">شیوهٔ محاسبهٔ اذان عصر حنفی</string>
     <string name="country_emoji">🇵🇰🇮🇳</string>

@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        app:cardBackgroundColor="?attr/colorCard"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardElevation="@dimen/card_elevation"
         app:cardPreventCornerOverlap="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -33,7 +33,6 @@
                 android:gravity="center"
                 android:padding="5dp"
                 android:text="@string/welcome_please_select_your_city"
-                android:textColor="?attr/colorTextNormal"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -45,14 +44,14 @@
                 android:layout_gravity="center"
                 android:text="@string/next_page"
                 android:visibility="visible"
-                app:chipIconTint="?attr/colorIcon" />
+                app:chipIconTint="?attr/colorAccent" />
 
             <com.google.android.material.card.MaterialCardView
                 style="@style/Widget.Material3.CardView.Elevated"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
-                app:cardBackgroundColor="?attr/colorCard"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardElevation="@dimen/card_elevation"
                 app:cardPreventCornerOverlap="false">
 
@@ -78,15 +77,14 @@
                         android:layout_marginEnd="5dp"
                         android:enabled="false"
                         android:hint="@string/search"
-                        app:boxBackgroundColor="?attr/colorCard">
+                        app:boxBackgroundColor="?attr/colorSurface">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/txt_intro0_city_search"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:imeOptions="actionSearch"
-                            android:inputType="textShortMessage"
-                            android:textColor="?attr/colorTextNormal" />
+                            android:inputType="textShortMessage" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <androidx.recyclerview.widget.RecyclerView

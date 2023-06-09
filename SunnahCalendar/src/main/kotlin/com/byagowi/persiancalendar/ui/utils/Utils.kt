@@ -11,11 +11,14 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
+import android.net.Uri
 import android.os.Build
 import android.util.Base64
 import android.util.TypedValue
+import android.view.GestureDetector
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -47,7 +50,6 @@ import androidx.navigation.findNavController
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.byagowi.persiancalendar.CALENDAR_READ_PERMISSION_REQUEST_CODE
 import com.byagowi.persiancalendar.LOCATION_PERMISSION_REQUEST_CODE
-import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.RLM
 import com.byagowi.persiancalendar.ui.DrawerHost
@@ -59,64 +61,92 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-
-val Number.dp: Float get() = this.toFloat() * Resources.getSystem().displayMetrics.density
-val Number.sp: Float get() = this.toFloat() * Resources.getSystem().displayMetrics.scaledDensity
+inline val Resources.dp: Float get() = displayMetrics.density
+inline val Resources.sp: Float get() = displayMetrics.scaledDensity
 
 val Context.layoutInflater: LayoutInflater get() = LayoutInflater.from(this)
 
-fun Context?.copyToClipboard(
-    text: CharSequence?,
-    onSuccess: ((String) -> Unit) = { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
-) = runCatching {
-    this?.getSystemService<ClipboardManager>()
-        ?.setPrimaryClip(ClipData.newPlainText(null, text)) ?: return@runCatching null
-    val message = (if (resources.isRtl) RLM else "") +
-            getString(R.string.date_copied_clipboard, text)
-    onSuccess(message)
-}.onFailure(logException).getOrNull().debugAssertNotNull.let {}
-
-fun FragmentActivity.bringMarketPage() = runCatching {
-    startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri()))
-}.onFailure(logException).onFailure {
+fun Context?.copyToClipboard(text: CharSequence?) {
     runCatching {
-        val uri = "https://play.google.com/store/apps/details?id=$packageName".toUri()
-        startActivity(Intent(Intent.ACTION_VIEW, uri))
-    }.onFailure(logException)
-}.let {}
-
-fun Bitmap.toPngBase64(): String {
-    val buffer = ByteArrayOutputStream()
-    this.compress(Bitmap.CompressFormat.PNG, 100, buffer)
-    val base64 = Base64.encodeToString(buffer.toByteArray(), Base64.DEFAULT)
-    return "data:image/png;base64,$base64"
+        this?.getSystemService<ClipboardManager>()
+            ?.setPrimaryClip(ClipData.newPlainText(null, text)) ?: return@runCatching null
+        if (Build.VERSION.SDK_INT < 32) {
+            val message = (if (resources.isRtl) RLM else "") +
+                    getString(R.string.date_copied_clipboard, text)
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        } else Unit
+    }.onFailure(logException).getOrNull().debugAssertNotNull
 }
 
-private fun Context.saveTextAsFile(text: String, fileName: String) = FileProvider.getUriForFile(
-    applicationContext, "$packageName.provider",
-    File(externalCacheDir, fileName).also { it.writeText(text) }
-)
+fun FragmentActivity.bringMarketPage() {
+    runCatching {
+        startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri()))
+    }.onFailure(logException).onFailure {
+        runCatching {
+            val uri = "https://play.google.com/store/apps/details?id=$packageName".toUri()
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        }.onFailure(logException)
+    }
+}
 
-fun Context.openHtmlInBrowser(html: String) = runCatching {
-    CustomTabsIntent.Builder().build()
-        .also { it.intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-        .launchUrl(this, saveTextAsFile(html, "persian-calendar.html"))
-}.onFailure(logException).let {}
+fun Bitmap.toByteArray(): ByteArray {
+    val buffer = ByteArrayOutputStream()
+    this.compress(Bitmap.CompressFormat.PNG, 100, buffer)
+    return buffer.toByteArray()
+}
 
-fun FragmentActivity.shareText(text: String) = runCatching {
-    ShareCompat.IntentBuilder(this)
-        .setType("text/plain")
-        .setChooserTitle(getString(R.string.date_converter))
-        .setText(text)
-        .startChooser()
-}.onFailure(logException).let {}
+fun Bitmap.toPngBase64(): String =
+    "data:image/png;base64,${Base64.encodeToString(toByteArray(), Base64.DEFAULT)}"
 
-fun FragmentActivity.shareTextFile(text: String, fileName: String, mime: String) = runCatching {
-    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).also {
-        it.type = mime
-        it.putExtra(Intent.EXTRA_STREAM, saveTextAsFile(text, fileName))
-    }, getString(R.string.share)))
-}.onFailure(logException).let {}
+private fun Context.saveTextAsFile(text: String, fileName: String): Uri {
+    return FileProvider.getUriForFile(
+        applicationContext, "$packageName.provider",
+        File(externalCacheDir, fileName).also { it.writeText(text) }
+    )
+}
+
+private fun Context.saveBytesAsFile(byteArray: ByteArray, fileName: String): Uri {
+    return FileProvider.getUriForFile(
+        applicationContext, "$packageName.provider",
+        File(externalCacheDir, fileName).also { it.writeBytes(byteArray) }
+    )
+}
+
+fun Context.openHtmlInBrowser(html: String) {
+    runCatching {
+        CustomTabsIntent.Builder().build()
+            .also { it.intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            .launchUrl(this, saveTextAsFile(html, "persian-calendar.html"))
+    }.onFailure(logException)
+}
+
+fun FragmentActivity.shareText(text: String) {
+    runCatching {
+        ShareCompat.IntentBuilder(this)
+            .setType("text/plain")
+            .setChooserTitle(getString(R.string.date_converter))
+            .setText(text)
+            .startChooser()
+    }.onFailure(logException)
+}
+
+fun FragmentActivity.shareTextFile(text: String, fileName: String, mime: String) {
+    runCatching {
+        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).also {
+            it.type = mime
+            it.putExtra(Intent.EXTRA_STREAM, saveTextAsFile(text, fileName))
+        }, getString(R.string.share)))
+    }.onFailure(logException)
+}
+
+fun FragmentActivity.shareBinaryFile(binary: ByteArray, fileName: String, mime: String) {
+    runCatching {
+        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).also {
+            it.type = mime
+            it.putExtra(Intent.EXTRA_STREAM, saveBytesAsFile(binary, fileName))
+        }, getString(R.string.share)))
+    }.onFailure(logException)
+}
 
 fun Toolbar.setupUpNavigation() {
     navigationIcon = DrawerArrowDrawable(context).also { it.progress = 1f }
@@ -129,6 +159,7 @@ fun Toolbar.setupMenuNavigation() {
 }
 
 // https://stackoverflow.com/a/58249983
+// Akin to https://github.com/material-components/material-components-android/blob/8938da8c/lib/java/com/google/android/material/internal/ContextUtils.java#L40
 private tailrec fun Context.getActivity(): FragmentActivity? = this as? FragmentActivity
     ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
@@ -148,9 +179,9 @@ fun Flow.addViewsToFlow(viewList: List<View>) {
     }.toIntArray()
 }
 
-fun NavController.navigateSafe(directions: NavDirections) = runCatching {
-    navigate(directions)
-}.onFailure(logException).getOrNull().debugAssertNotNull.let {}
+fun NavController.navigateSafe(directions: NavDirections) {
+    runCatching { navigate(directions) }.onFailure(logException).getOrNull().debugAssertNotNull
+}
 
 fun Context.getCompatDrawable(@DrawableRes drawableRes: Int) =
     AppCompatResources.getDrawable(this, drawableRes).debugAssertNotNull ?: ShapeDrawable()
@@ -158,6 +189,7 @@ fun Context.getCompatDrawable(@DrawableRes drawableRes: Int) =
 fun Context.getAnimatedDrawable(@DrawableRes animatedDrawableRes: Int) =
     AnimatedVectorDrawableCompat.create(this, animatedDrawableRes)
 
+// https://stackoverflow.com/a/48421144 but doesn't seem to be needed anymore?
 fun AppBarLayout.hideToolbarBottomShadow() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) outlineProvider = null
 }
@@ -169,8 +201,9 @@ fun View.fadeIn(durationMillis: Long = 250) {
     })
 }
 
-inline fun MenuItem.onClick(crossinline action: () -> Unit) =
-    this.setOnMenuItemClickListener { action(); false /* let it handle selected menu */ }.let {}
+inline fun MenuItem.onClick(crossinline action: () -> Unit) {
+    this.setOnMenuItemClickListener { action(); false /* let it handle selected menu */ }
+}
 
 fun View.setupExpandableAccessibilityDescription() {
     ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
@@ -228,11 +261,8 @@ fun FragmentActivity.askForCalendarPermission() {
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun FragmentActivity.askForPostNotificationPermission() {
-    requestPermissions(
-        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-        POST_NOTIFICATION_PERMISSION_REQUEST_CODE
-    )
+fun FragmentActivity.askForPostNotificationPermission(requestCode: Int) {
+    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), requestCode)
 }
 
 fun Window.makeWallpaperTransparency() {
@@ -252,8 +282,31 @@ fun prepareViewForRendering(view: View, width: Int, height: Int) {
     view.layout(0, 0, width, height)
 }
 
-// Whether we can enable the new interface
-val canEnableNewInterface = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+fun createFlingDetector(
+    context: Context, callback: (velocityX: Float, velocityY: Float) -> Boolean
+): GestureDetector {
+    class FlingListener : GestureDetector.SimpleOnGestureListener() {
+        override fun onFling(
+            e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float
+        ): Boolean {
+            return callback(velocityX, velocityY)
+        }
+    }
 
-// Make the new interface for Android 12 opt-out instead of opt-in
-val shouldEnableNewInterface = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    return GestureDetector(context, FlingListener())
+}
+
+// Android 14 will have a grayscale dynamic colors mode and this is somehow a hack to check for that
+// I guess there will be better ways to check for that in the future I guess but this does the trick
+// Android 13, at least in Extension 5 emulator image, also provides such theme.
+// https://stackoverflow.com/a/76272434
+val Context.isDynamicGrayscale: Boolean
+    get() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val hsv = FloatArray(3)
+        return listOf(
+            android.R.color.system_accent1_500,
+            android.R.color.system_accent2_500,
+            android.R.color.system_accent3_500,
+        ).maxOf { Color.colorToHSV(getColor(it), hsv); hsv[1] } < .25
+    }

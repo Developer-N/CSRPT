@@ -9,7 +9,6 @@ import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.hardware.Sensor
 import android.hardware.SensorManager
@@ -35,6 +34,10 @@ import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.core.text.buildSpannedString
 import androidx.core.text.inSpans
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DiffUtil
@@ -44,8 +47,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.DeviceInformationItemBinding
-import com.byagowi.persiancalendar.databinding.FragmentDeviceInformationBinding
-import com.byagowi.persiancalendar.generated.demoRuntimeShader
+import com.byagowi.persiancalendar.databinding.DeviceInformationScreenBinding
 import com.byagowi.persiancalendar.ui.utils.copyToClipboard
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.layoutInflater
@@ -54,7 +56,6 @@ import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
 import com.byagowi.persiancalendar.ui.utils.setupUpNavigation
 import com.byagowi.persiancalendar.ui.utils.shareTextFile
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.google.android.material.circularreveal.CircularRevealCompat
 import com.google.android.material.circularreveal.CircularRevealWidget
 import com.google.android.material.snackbar.Snackbar
@@ -72,22 +73,20 @@ import kotlinx.html.th
 import kotlinx.html.thead
 import kotlinx.html.tr
 import kotlinx.html.unsafe
-import java.util.*
+import java.util.Locale
 import kotlin.math.hypot
 
 /**
  * @author MEHDI DIMYADI
  * MEHDIMYADI
  */
-class DeviceInformationScreen : Fragment(R.layout.fragment_device_information) {
+class DeviceInformationScreen : Fragment(R.layout.device_information_screen) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentDeviceInformationBinding.bind(view)
-        binding.toolbar.let {
-            it.setTitle(R.string.device_information)
-            it.setupUpNavigation()
-        }
+        val binding = DeviceInformationScreenBinding.bind(view)
+        binding.toolbar.setTitle(R.string.device_information)
+        binding.toolbar.setupUpNavigation()
 
         binding.root.circularRevealFromMiddle()
 
@@ -129,7 +128,7 @@ class DeviceInformationScreen : Fragment(R.layout.fragment_device_information) {
                 }.onFailure(logException).onFailure {
                     Snackbar.make(
                         binding.root,
-                        R.string.device_calendar_does_not_support,
+                        R.string.device_does_not_support,
                         Snackbar.LENGTH_SHORT
                     ).show()
                 }
@@ -156,9 +155,19 @@ class DeviceInformationScreen : Fragment(R.layout.fragment_device_information) {
                     ::showColorPickerDialog
                 ),
             ).forEach { (icon, title, dialog) ->
-                val easterEggController = EasterEggController(dialog)
-                it.add(title).setIcon(icon).onClick { easterEggController.handleClick(activity) }
+                val clickHandler = createEasterEggClickHandler(dialog)
+                it.add(title).setIcon(icon).onClick { clickHandler(activity) }
             }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            binding.bottomNavigation.updatePadding(bottom = insets.bottom)
+            binding.recyclerView.updatePadding(bottom = insets.bottom)
+            WindowInsetsCompat.CONSUMED
         }
     }
 }
@@ -186,31 +195,56 @@ fun <T> T.circularRevealFromMiddle() where T : View?, T : CircularRevealWidget {
     }
 }
 
+// @Language("AGSL")
+// private const val demoRuntimeShader = """
+// // This is a SkSl/AGSL flavor shader only usable in Android 13, see also:
+// // * https://shaders.skia.org/?id=de2a4d7d893a7251eb33129ddf9d76ea517901cec960db116a1bbd7832757c1f
+// // * https://developer.android.com/about/versions/13/features#graphics
+// // * https://cs.android.com/android/platform/superproject/+/master:external/skia/src/sksl/SkSLMain.cpp;l=275
+//
+// uniform float iTime;
+// uniform vec2 iResolution;
+//
+// // Source: @notargs https://twitter.com/notargs/status/1250468645030858753
+// half4 main(vec2 fragCoord) {
+//     vec3 d = .5 - fragCoord.xy1 / iResolution.y, p = vec3(0), o;
+//     for (int i = 0; i < 32; ++i) {
+//         o = p;
+//         o.z -= iTime * 9.;
+//         float a = o.z * .1;
+//         o.xy *= mat2(cos(a), sin(a), -sin(a), cos(a));
+//         p += (.1 - length(cos(o.xy) + sin(o.yz))) * d;
+//     }
+//     return ((sin(p) + vec3(2, 5, 12)) / length(p)).xyz1;
+// }
+// """
+
 class CheckerBoard(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private val checkerBoard = createCheckerRoundedBoard(40f, 8f, Color.parseColor("#100A0A0A"))
-    private val startTime = System.nanoTime()
-    private val shader by lazy(LazyThreadSafetyMode.NONE) {
-        runCatching {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@runCatching null
-            RuntimeShader(demoRuntimeShader).also {
-                val width = context.resources?.displayMetrics?.widthPixels?.toFloat() ?: 800f
-                val height = context.resources?.displayMetrics?.heightPixels?.toFloat() ?: 800f
-                it.setFloatUniform("iResolution", width, height)
-            }
-        }.onFailure(logException).getOrNull().debugAssertNotNull
-    }
-    private val shaderPaint = Paint().also {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            it.shader = shader
-        }
-    }
+    // private val startTime = System.nanoTime()
+    // private val shader by lazy(LazyThreadSafetyMode.NONE) {
+    //     runCatching {
+    //         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@runCatching null
+    //         RuntimeShader(demoRuntimeShader).also {
+    //             val width = context.resources?.displayMetrics?.widthPixels?.toFloat() ?: 800f
+    //             val height = context.resources?.displayMetrics?.heightPixels?.toFloat() ?: 800f
+    //             it.setFloatUniform("iResolution", width, height)
+    //         }
+    //     }.onFailure(logException).getOrNull().debugAssertNotNull
+    // }
+    // private val shaderPaint = Paint().also {
+    //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    //         it.shader = shader
+    //     }
+    // }
 
     override fun onDraw(canvas: Canvas) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            shader?.setFloatUniform("iTime", (System.nanoTime() - startTime) / 1e9f)
-            canvas.drawPaint(shaderPaint)
-            invalidate()
-        } else canvas.drawPaint(checkerBoard)
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        //     shader?.setFloatUniform("iTime", (System.nanoTime() - startTime) / 1e9f)
+        //     canvas.drawPaint(shaderPaint)
+        //     invalidate()
+        // } else
+        canvas.drawPaint(checkerBoard)
     }
 }
 
@@ -416,13 +450,15 @@ private class DeviceInformationAdapter(private val activity: FragmentActivity) :
 
                         if (!regex.matches(it)) append(it)
                         else inSpans(object : ClickableSpan() {
-                            override fun onClick(textView: View) = runCatching {
-                                val pattern =
-                                    "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
-                                CustomTabsIntent.Builder().build().launchUrl(
-                                    activity, it.replace(regex, pattern).toUri()
-                                )
-                            }.onFailure(logException).let {}
+                            override fun onClick(textView: View) {
+                                runCatching {
+                                    val pattern =
+                                        "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
+                                    CustomTabsIntent.Builder().build().launchUrl(
+                                        activity, it.replace(regex, pattern).toUri()
+                                    )
+                                }.onFailure(logException)
+                            }
                         }) { append(it) }
                     }
                 }
@@ -476,12 +512,7 @@ private class DeviceInformationAdapter(private val activity: FragmentActivity) :
             binding.content.movementMethod = LinkMovementMethod.getInstance()
         }
 
-        override fun onClick(v: View?) {
-            activity.copyToClipboard(deviceInformationItems[bindingAdapterPosition].content) {
-                val view = activity.findViewById<View?>(android.R.id.content).debugAssertNotNull
-                    ?: return@copyToClipboard
-                Snackbar.make(view, it, Snackbar.LENGTH_SHORT).show()
-            }
-        }
+        override fun onClick(v: View?) =
+            activity.copyToClipboard(deviceInformationItems[bindingAdapterPosition].content)
     }
 }

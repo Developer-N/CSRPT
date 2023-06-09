@@ -40,10 +40,12 @@ class DayPickerView(context: Context, attrs: AttributeSet? = null) : FrameLayout
             }
             binding.monthPicker.also {
                 it.minValue = 1
-                it.maxValue = selectedCalendarType.getYearMonths(date.year)
-                it.value = date.month
+                val maxValue = selectedCalendarType.getYearMonths(date.year)
                 val months = date.calendarType.monthsNames
-                it.setFormatter { x -> months[x - 1] + " / " + formatNumber(x) }
+                val displayedValues =
+                    (1..maxValue).map { x -> months[x - 1] + " / " + formatNumber(x) }
+                it.setMaxValueAndDisplayedValues(maxValue, displayedValues)
+                it.value = date.month
                 it.isVerticalScrollBarEnabled = false
             }
             binding.dayPicker.also {
@@ -56,12 +58,23 @@ class DayPickerView(context: Context, attrs: AttributeSet? = null) : FrameLayout
         }
 
     private fun reinitializeDayPicker(dayPicker: NumberPicker, year: Int, month: Int) {
-        dayPicker.maxValue = selectedCalendarType.getMonthLength(year, month)
+        val maxValue = selectedCalendarType.getMonthLength(year, month)
         val monthStart = Jdn(selectedCalendarType, year, month, 1)
-        binding.dayPicker.setFormatter {
-            (monthStart + it - 1).dayOfWeekName + " / " + formatNumber(it)
-        }
+        val displayedValues =
+            (1..maxValue).map { (monthStart + it - 1).dayOfWeekName + " / " + formatNumber(it) }
+        dayPicker.setMaxValueAndDisplayedValues(maxValue, displayedValues)
         binding.dayPicker.invalidate()
+    }
+
+    // Order of setting maxValue vs displayedValues depends on whether current maxValue is
+    // less than the going to be one or not, otherwise, it can crash so this applies maxValue
+    // and displayedValues in correct order.
+    private fun NumberPicker.setMaxValueAndDisplayedValues(
+        maxValue: Int, displayedValues: List<String>
+    ) {
+        if (this.maxValue > maxValue) this.maxValue = maxValue
+        this.displayedValues = displayedValues.toTypedArray()
+        if (this.maxValue < maxValue) this.maxValue = maxValue
     }
 
     private val todayJdn = Jdn.today()

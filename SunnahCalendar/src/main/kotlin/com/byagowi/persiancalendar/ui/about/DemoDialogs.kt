@@ -3,7 +3,6 @@ package com.byagowi.persiancalendar.ui.about
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ComposeShader
@@ -14,6 +13,8 @@ import android.graphics.PorterDuff
 import android.graphics.RadialGradient
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.RenderEffect
+import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.graphics.SweepGradient
 import android.hardware.Sensor
@@ -25,19 +26,19 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.opengl.GLSurfaceView
 import android.os.Build
+import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Scroller
@@ -56,7 +57,6 @@ import androidx.core.graphics.component1
 import androidx.core.graphics.component2
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.get
-import androidx.core.graphics.set
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withTranslation
 import androidx.core.text.HtmlCompat
@@ -77,21 +77,24 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ShaderSandboxBinding
 import com.byagowi.persiancalendar.generated.sandboxFragmentShader
+import com.byagowi.persiancalendar.ui.SeasonsAdapter
 import com.byagowi.persiancalendar.ui.common.BaseSlider
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.map.GLRenderer
+import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.sp
 import com.byagowi.persiancalendar.utils.createStatusIcon
 import com.byagowi.persiancalendar.utils.getDayIconResource
 import com.byagowi.persiancalendar.utils.logException
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.progressindicator.LinearProgressIndicator
@@ -100,10 +103,6 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.TriangleEdgeTreatment
 import com.google.android.material.slider.Slider
 import com.google.android.material.tabs.TabLayout
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
@@ -111,13 +110,15 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
+import org.intellij.lang.annotations.Language
+import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.pow
@@ -131,13 +132,10 @@ import kotlin.random.Random
 // These are somehow a sandbox to test things not used in the app yet and can be removed anytime.
 //
 
-class EasterEggController(
-    val callback: (FragmentActivity) -> Unit,
-    private var clickCount: Int = 0
-) {
-    fun handleClick(activity: FragmentActivity?) {
-        activity ?: return
-        runCatching {
+fun createEasterEggClickHandler(callback: (FragmentActivity) -> Unit): (FragmentActivity?) -> Unit {
+    var clickCount = 0
+    return { activity: FragmentActivity? ->
+        if (activity != null) runCatching {
             when (++clickCount % 10) {
                 0 -> callback(activity)
                 9 -> Toast.makeText(activity, "One more to go!", Toast.LENGTH_SHORT).show()
@@ -146,12 +144,61 @@ class EasterEggController(
     }
 }
 
+fun createIconRandomEffects(view: View): () -> Unit {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return {}
+    var clickCount = 0
+    val colorShader by lazy(LazyThreadSafetyMode.NONE) { RuntimeShader(colorShiftEffect) }
+    return {
+        runCatching {
+            view.setRenderEffect(
+                if (clickCount++ % 2 == 0) {
+                    colorShader.setFloatUniform("colorShift", Random.nextFloat())
+                    RenderEffect.createRuntimeShaderEffect(colorShader, "content")
+                } else {
+                    val r = Random.nextFloat() * 30
+                    RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP)
+                }
+            )
+        }.onFailure(logException)
+    }
+}
+
+@Language("AGSL")
+private const val colorShiftEffect = """
+uniform shader content;
+
+uniform float colorShift;
+
+// https://gist.github.com/983/e170a24ae8eba2cd174f
+half3 rgb2hsv(half3 c) {
+    half4 K = half4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    half4 p = mix(half4(c.bg, K.wz), half4(c.gb, K.xy), step(c.b, c.g));
+    half4 q = mix(half4(p.xyw, c.r), half4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return half3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+half3 hsv2rgb(half3 c) {
+    half4 K = half4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    half3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+half4 main(float2 fragCoord) {
+    half4 color = content.eval(fragCoord);
+    half3 hsv = rgb2hsv(color.rgb);
+    hsv.x = mod(hsv.x + colorShift, 1);
+    return half4(hsv2rgb(hsv), color.a);
+}
+"""
+
 fun showHiddenUiDialog(activity: FragmentActivity) {
     val root = LinearLayout(activity)
     root.orientation = LinearLayout.VERTICAL
     root.addView(
         TabLayout(activity, null, R.style.TabLayoutColored).also { tabLayout ->
-            val tintColor = activity.resolveColor(R.attr.normalTabTextColor)
             listOf(
                 R.drawable.ic_developer to -1,
                 R.drawable.ic_translator to 0,
@@ -161,9 +208,6 @@ fun showHiddenUiDialog(activity: FragmentActivity) {
             ).map { (iconId: Int, badgeNumber: Int) ->
                 tabLayout.addTab(tabLayout.newTab().also { tab ->
                     tab.setIcon(iconId)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        tab.icon?.setTint(tintColor)
-                    }
                     tab.orCreateBadge.also { badge ->
                         badge.isVisible = badgeNumber >= 0
                         if (badgeNumber > 0) badge.number = badgeNumber
@@ -196,7 +240,7 @@ fun showHiddenUiDialog(activity: FragmentActivity) {
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.color = Color.BLACK }
 
         init {
-            val scale = 100.dp.toInt()
+            val scale = (100 * resources.dp).toInt()
             layoutParams = LinearLayout.LayoutParams(scale, scale).also {
                 it.gravity = Gravity.CENTER_HORIZONTAL
             }
@@ -226,7 +270,7 @@ fun showHiddenUiDialog(activity: FragmentActivity) {
             valueAnimator.addUpdateListener {
                 progressBar.indeterminateDrawable?.colorFilter =
                     BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                        it.animatedValue as Int, BlendModeCompat.SRC_ATOP
+                        it.animatedValue as? Int ?: 0, BlendModeCompat.SRC_ATOP
                     )
             }
         }.start()
@@ -336,8 +380,9 @@ class CircleColorPickerView(context: Context, attrs: AttributeSet? = null) : Vie
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         generateReferenceCircle()
-        lastX = lastX.takeIf { it != -1f } ?: (bitmap.width / 2f)
-        lastY = lastY.takeIf { it != -1f } ?: (bitmap.height / 2f)
+
+        if (lastX == -1f) lastX = bitmap.width / 2f
+        if (lastY == -1f) lastY = bitmap.height / 2f
 
         strokePaint.strokeWidth = bitmap.width / 100f
         shadowPaint.shader = RadialGradient(
@@ -466,30 +511,28 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
 
         private val lifecycle = activity.lifecycleScope
 
-        private var velocityTracker: VelocityTracker? = null
+        private val flingDetector = createFlingDetector(context) { velocityX, velocityY ->
+            horizontalFling.setStartVelocity(velocityX).start()
+            verticalFling.setStartVelocity(velocityY).start()
+            true
+        }
+
         override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            flingDetector.onTouchEvent(event)
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    velocityTracker = VelocityTracker.obtain()
                     horizontalFling.cancel()
                     verticalFling.cancel()
                     previousX = event.x
                     previousY = event.y
                 }
+
                 MotionEvent.ACTION_MOVE -> {
-                    velocityTracker?.addMovement(event)
                     x.value += event.x - previousX
                     y.value += event.y - previousY
                     previousX = event.x
                     previousY = event.y
                     invalidate()
-                }
-                MotionEvent.ACTION_UP -> {
-                    velocityTracker?.computeCurrentVelocity(1000)
-                    horizontalFling.setStartVelocity(velocityTracker?.xVelocity ?: 0f).start()
-                    verticalFling.setStartVelocity(velocityTracker?.yVelocity ?: 0f).start()
-                    velocityTracker?.recycle()
-                    velocityTracker = null
                 }
             }
             return true
@@ -540,16 +583,41 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
         }
     }
 
-    MaterialAlertDialogBuilder(activity)
+    fun formatTitle(input: String): Spanned {
+        return HtmlCompat.fromHtml(
+            "<small><small>$input</small></small>"
+                .replace(Regex("([a-zA-Z])(\\d+)"), "$1<sup><small>$2</small></sup>"),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
+    }
+
+    val dialog = MaterialAlertDialogBuilder(activity)
         .setTitle(
-            HtmlCompat.fromHtml(
-                "<small><small>1s2 | 2s2 2p6 | 3s2 3p6 | 3d10 4s2 4p6 | 4d10 5s2 5p6 | 4f14 5d10 6s2 6p6 | 5f14 6d10 7s2 7p6</small></small>"
-                    .replace(Regex("(\\w)(\\d+)"), "$1<sup><small>$2</small></sup>"),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
+            formatTitle(
+                "1s2 | 2s2 2p6 | 3s2 3p6 | 3d10 4s2 4p6 | 4d10 5s2 5p6 | 4f14 5d10 6s2 6p6 | 5f14 6d10 7s2 7p6"
             )
         )
         .setView(zoomableView)
         .show()
+
+    zoomableView.onClick = { x, y ->
+        val index = floor(x / cellSize).toInt() + floor(y / cellSize).toInt() * 18
+        elementsIndices.getOrNull(index)?.let { atomicNumber ->
+            val info = elements.getOrNull(atomicNumber - 1)?.split(",") ?: return@let
+            dialog.setTitle(formatTitle("$atomicNumber ${info[0]} ${info[1]}<br>${info[2]}"))
+        }
+        if (index == 161) {
+            MaterialAlertDialogBuilder(activity)
+                .setView(EditText(activity).also {
+                    it.layoutDirection = View.LAYOUT_DIRECTION_LTR
+                    it.textDirection = View.TEXT_DIRECTION_LTR
+                    it.setText(elements.reversed()
+                        .mapIndexed { index, s -> "${elements.size - index},$s" }
+                        .joinToString("\n"))
+                })
+                .show()
+        }
+    }
 }
 
 private val elementsColor = buildMap {
@@ -589,125 +657,135 @@ private val elementsIndices = buildList {
     }
 }
 
+// Based on https://en.wikipedia.org/wiki/Template:Infobox_element/symbol-to-electron-configuration
+// Algorithmic atomic configuration won't be perfect, see also https://github.com/xanecs/aufbau-principle
 private val elements = """
-H,Hydrogen
-He,Helium
-Li,Lithium
-Be,Beryllium
-B,Boron
-C,Carbon
-N,Nitrogen
-O,Oxygen
-F,Fluorine
-Ne,Neon
-Na,Sodium
-Mg,Magnesium
-Al,Aluminium
-Si,Silicon
-P,Phosphorus
-S,Sulfur
-Cl,Chlorine
-Ar,Argon
-K,Potassium
-Ca,Calcium
-Sc,Scandium
-Ti,Titanium
-V,Vanadium
-Cr,Chromium
-Mn,Manganese
-Fe,Iron
-Co,Cobalt
-Ni,Nickel
-Cu,Copper
-Zn,Zinc
-Ga,Gallium
-Ge,Germanium
-As,Arsenic
-Se,Selenium
-Br,Bromine
-Kr,Krypton
-Rb,Rubidium
-Sr,Strontium
-Y,Yttrium
-Zr,Zirconium
-Nb,Niobium
-Mo,Molybdenum
-Tc,Technetium
-Ru,Ruthenium
-Rh,Rhodium
-Pd,Palladium
-Ag,Silver
-Cd,Cadmium
-In,Indium
-Sn,Tin
-Sb,Antimony
-Te,Tellurium
-I,Iodine
-Xe,Xenon
-Cs,Caesium
-Ba,Barium
-La,Lanthanum
-Ce,Cerium
-Pr,Praseodymium
-Nd,Neodymium
-Pm,Promethium
-Sm,Samarium
-Eu,Europium
-Gd,Gadolinium
-Tb,Terbium
-Dy,Dysprosium
-Ho,Holmium
-Er,Erbium
-Tm,Thulium
-Yb,Ytterbium
-Lu,Lutetium
-Hf,Hafnium
-Ta,Tantalum
-W,Tungsten
-Re,Rhenium
-Os,Osmium
-Ir,Iridium
-Pt,Platinum
-Au,Gold
-Hg,Mercury
-Tl,Thallium
-Pb,Lead
-Bi,Bismuth
-Po,Polonium
-At,Astatine
-Rn,Radon
-Fr,Francium
-Ra,Radium
-Ac,Actinium
-Th,Thorium
-Pa,Protactinium
-U,Uranium
-Np,Neptunium
-Pu,Plutonium
-Am,Americium
-Cm,Curium
-Bk,Berkelium
-Cf,Californium
-Es,Einsteinium
-Fm,Fermium
-Md,Mendelevium
-No,Nobelium
-Lr,Lawrencium
-Rf,Rutherfordium
-Db,Dubnium
-Sg,Seaborgium
-Bh,Bohrium
-Hs,Hassium
-Mt,Meitnerium
-Ds,Darmstadtium
-Rg,Roentgenium
-Cn,Copernicium
-Nh,Nihonium
-Fl,Flerovium
-Mc,Moscovium
-Lv,Livermorium
-Ts,Tennessine
-Og,Oganesson
+H,Hydrogen,1s1
+He,Helium,1s2
+Li,Lithium,[He] 2s1
+Be,Beryllium,[He] 2s2
+B,Boron,[He] 2s2 2p1
+C,Carbon,[He] 2s2 2p2
+N,Nitrogen,[He] 2s2 2p3
+O,Oxygen,[He] 2s2 2p4
+F,Fluorine,[He] 2s2 2p5
+Ne,Neon,[He] 2s2 2p6
+Na,Sodium,[Ne] 3s1
+Mg,Magnesium,[Ne] 3s2
+Al,Aluminium,[Ne] 3s2 3p1
+Si,Silicon,[Ne] 3s2 3p2
+P,Phosphorus,[Ne] 3s2 3p3
+S,Sulfur,[Ne] 3s2 3p4
+Cl,Chlorine,[Ne] 3s2 3p5
+Ar,Argon,[Ne] 3s2 3p6
+K,Potassium,[Ar] 4s1
+Ca,Calcium,[Ar] 4s2
+Sc,Scandium,[Ar] 3d1 4s2
+Ti,Titanium,[Ar] 3d2 4s2
+V,Vanadium,[Ar] 3d3 4s2
+Cr,Chromium,[Ar] 3d5 4s1
+Mn,Manganese,[Ar] 3d5 4s2
+Fe,Iron,[Ar] 3d6 4s2
+Co,Cobalt,[Ar] 3d7 4s2
+Ni,Nickel,[Ar] 3d8 4s2 or [Ar] 3d9 4s1
+Cu,Copper,[Ar] 3d10 4s1
+Zn,Zinc,[Ar] 3d10 4s2
+Ga,Gallium,[Ar] 3d10 4s2 4p1
+Ge,Germanium,[Ar] 3d10 4s2 4p2
+As,Arsenic,[Ar] 3d10 4s2 4p3
+Se,Selenium,[Ar] 3d10 4s2 4p4
+Br,Bromine,[Ar] 3d10 4s2 4p5
+Kr,Krypton,[Ar] 3d10 4s2 4p6
+Rb,Rubidium,[Kr] 5s1
+Sr,Strontium,[Kr] 5s2
+Y,Yttrium,[Kr] 4d1 5s2
+Zr,Zirconium,[Kr] 4d2 5s2
+Nb,Niobium,[Kr] 4d4 5s1
+Mo,Molybdenum,[Kr] 4d5 5s1
+Tc,Technetium,[Kr] 4d5 5s2
+Ru,Ruthenium,[Kr] 4d7 5s1
+Rh,Rhodium,[Kr] 4d8 5s1
+Pd,Palladium,[Kr] 4d10
+Ag,Silver,[Kr] 4d10 5s1
+Cd,Cadmium,[Kr] 4d10 5s2
+In,Indium,[Kr] 4d10 5s2 5p1
+Sn,Tin,[Kr] 4d10 5s2 5p2
+Sb,Antimony,[Kr] 4d10 5s2 5p3
+Te,Tellurium,[Kr] 4d10 5s2 5p4
+I,Iodine,[Kr] 4d10 5s2 5p5
+Xe,Xenon,[Kr] 4d10 5s2 5p6
+Cs,Caesium,[Xe] 6s1
+Ba,Barium,[Xe] 6s2
+La,Lanthanum,[Xe] 5d1 6s2
+Ce,Cerium,[Xe] 4f1 5d1 6s2
+Pr,Praseodymium,[Xe] 4f3 6s2
+Nd,Neodymium,[Xe] 4f4 6s2
+Pm,Promethium,[Xe] 4f5 6s2
+Sm,Samarium,[Xe] 4f6 6s2
+Eu,Europium,[Xe] 4f7 6s2
+Gd,Gadolinium,[Xe] 4f7 5d1 6s2
+Tb,Terbium,[Xe] 4f9 6s2
+Dy,Dysprosium,[Xe] 4f10 6s2
+Ho,Holmium,[Xe] 4f11 6s2
+Er,Erbium,[Xe] 4f12 6s2
+Tm,Thulium,[Xe] 4f13 6s2
+Yb,Ytterbium,[Xe] 4f14 6s2
+Lu,Lutetium,[Xe] 4f14 5d1 6s2
+Hf,Hafnium,[Xe] 4f14 5d2 6s2
+Ta,Tantalum,[Xe] 4f14 5d3 6s2
+W,Tungsten,[Xe] 4f14 5d4 6s2
+Re,Rhenium,[Xe] 4f14 5d5 6s2
+Os,Osmium,[Xe] 4f14 5d6 6s2
+Ir,Iridium,[Xe] 4f14 5d7 6s2
+Pt,Platinum,[Xe] 4f14 5d9 6s1
+Au,Gold,[Xe] 4f14 5d10 6s1
+Hg,Mercury,[Xe] 4f14 5d10 6s2
+Tl,Thallium,[Xe] 4f14 5d10 6s2 6p1 (to check)
+Pb,Lead,[Xe] 4f14 5d10 6s2 6p2
+Bi,Bismuth,[Xe] 4f14 5d10 6s2 6p3
+Po,Polonium,[Xe] 4f14 5d10 6s2 6p4
+At,Astatine,[Xe] 4f14 5d10 6s2 6p5
+Rn,Radon,[Xe] 4f14 5d10 6s2 6p6
+Fr,Francium,[Rn] 7s1
+Ra,Radium,[Rn] 7s2
+Ac,Actinium,[Rn] 6d1 7s2
+Th,Thorium,[Rn] 6d2 7s2
+Pa,Protactinium,[Rn] 5f2 6d1 7s2
+U,Uranium,[Rn] 5f3 6d1 7s2
+Np,Neptunium,[Rn] 5f4 6d1 7s2
+Pu,Plutonium,[Rn] 5f6 7s2
+Am,Americium,[Rn] 5f7 7s2
+Cm,Curium,[Rn] 5f7 6d1 7s2
+Bk,Berkelium,[Rn] 5f9 7s2
+Cf,Californium,[Rn] 5f10 7s2
+Es,Einsteinium,[Rn] 5f11 7s2
+Fm,Fermium,[Rn] 5f12 7s2
+Md,Mendelevium,[Rn] 5f13 7s2
+No,Nobelium,[Rn] 5f14 7s2
+Lr,Lawrencium,[Rn] 5f14 7s2 7p1 (modern calculations all favour the 7p1)
+Rf,Rutherfordium,[Rn] 5f14 6d2 7s2
+Db,Dubnium,[Rn] 5f14 6d3 7s2
+Sg,Seaborgium,[Rn] 5f14 6d4 7s2
+Bh,Bohrium,[Rn] 5f14 6d5 7s2
+Hs,Hassium,[Rn] 5f14 6d6 7s2
+Mt,Meitnerium,[Rn] 5f14 6d7 7s2
+Ds,Darmstadtium,[Rn] 5f14 6d8 7s2
+Rg,Roentgenium,[Rn] 5f14 6d9 7s2
+Cn,Copernicium,[Rn] 5f14 6d10 7s2
+Nh,Nihonium,[Rn] 5f14 6d10 7s2 7p1
+Fl,Flerovium,[Rn] 5f14 6d10 7s2 7p2
+Mc,Moscovium,[Rn] 5f14 6d10 7s2 7p3
+Lv,Livermorium,[Rn] 5f14 6d10 7s2 7p4
+Ts,Tennessine,[Rn] 5f14 6d10 7s2 7p5
+Og,Oganesson,[Rn] 5f14 6d10 7s2 7p6
+Uue,Ununennium,[Og] 8s1 (predicted)
+Ubn,Unbinilium,[Og] 8s2 (predicted)
+Ubu,Unbiunium,[Og] 8s2 8p1 (predicted)
+Ubb,Unbibium,[Og] 7d1 8s2 8p1
+Ubt,Unbitrium,
+Ubq,Unbiquadium,[Og] 6f3 8s2 8p1
+Ubc,Unbipentium,
+Ubh,Unbihexium,[Og] 5g2 6f3 8s2 8p1
 """.trim().split("\n")
 
 fun showRotationalSpringDemoDialog(activity: FragmentActivity) {
@@ -762,11 +840,13 @@ fun showRotationalSpringDemoDialog(activity: FragmentActivity) {
                     radiusSpring.cancel()
                     rotationalSpring.cancel()
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     radius.value = hypot(event.x - centerX, event.y - centerY)
                     theta.value = atan2(event.y - centerY, event.x - centerX) * 180
                     invalidate()
                 }
+
                 MotionEvent.ACTION_UP -> {
                     radiusSpring.animateToFinalPosition(0f)
                     rotationalSpring.animateToFinalPosition(0f)
@@ -827,7 +907,7 @@ fun showSignalGeneratorDialog(activity: FragmentActivity, viewLifecycle: Lifecyc
         private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
             it.color = Color.BLACK
             it.textAlign = Paint.Align.CENTER
-            it.textSize = 20.dp
+            it.textSize = 20 * resources.dp
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -943,6 +1023,7 @@ fun showSpringDemoDialog(activity: FragmentActivity) {
                     previousX = event.x
                     previousY = event.y
                 }
+
                 MotionEvent.ACTION_MOVE -> {
                     x.value += event.x - previousX
                     y.value += event.y - previousY
@@ -950,6 +1031,7 @@ fun showSpringDemoDialog(activity: FragmentActivity) {
                     previousY = event.y
                     invalidate()
                 }
+
                 MotionEvent.ACTION_UP -> {
                     horizontalSpring.animateToFinalPosition(width / 2f)
                     verticalSpring.animateToFinalPosition(height / 2f)
@@ -1068,29 +1150,6 @@ fun showViewDragHelperDemoDialog(activity: FragmentActivity) {
         .show()
 }
 
-private fun textToQrCodeBitmap(text: String): Bitmap {
-    val size = 768
-    val bitmap = createBitmap(size, size)
-    val bitMatrix = QRCodeWriter().encode(
-        text, BarcodeFormat.QR_CODE, size, size, mapOf(
-            EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
-            EncodeHintType.MARGIN to 0
-        )
-    )
-    (0 until bitMatrix.height).forEach { y ->
-        (0 until bitMatrix.width).forEach { x ->
-            bitmap[x, y] = if (bitMatrix[x, y]) Color.BLACK else Color.TRANSPARENT
-        }
-    }
-    return bitmap
-}
-
-fun showQrCode(activity: FragmentActivity, text: String) {
-    MaterialAlertDialogBuilder(activity)
-        .setView(ImageView(activity).also { it.setImageBitmap(textToQrCodeBitmap(text)) })
-        .show()
-}
-
 // Based on https://habr.com/ru/post/514844/ and https://timiskhakov.github.io/posts/programming-guitar-music
 private fun guitarString(
     frequency: Double,
@@ -1184,7 +1243,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
 
         private val paths = List(4) { Path() } // just a hack to make different colors possible
         private val paintSink = Paint().also {
-            it.strokeWidth = 1.dp
+            it.strokeWidth = 1 * resources.dp
             it.style = Paint.Style.STROKE
             it.color = Color.GRAY
         }
@@ -1216,7 +1275,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
         spinner.context, androidx.appcompat.R.layout.support_simple_spinner_dropdown_item,
         listOf("Select a sensor") + sensors
     )
-    textView.setPadding(8.dp.toInt())
+    textView.setPadding((8 * activity.resources.dp).toInt())
     textView.isVisible = false
     textView.textDirection = View.TEXT_DIRECTION_LTR
     var previousListener: SensorEventListener? = null
@@ -1277,8 +1336,8 @@ fun showInputDeviceTestDialog(activity: FragmentActivity) {
     MaterialAlertDialogBuilder(activity)
         .setView(object : AppCompatEditText(activity) {
             init {
-                setPadding(8.dp.toInt())
-                textSize = 4.dp
+                setPadding((8 * resources.dp).toInt())
+                textSize = 4 * resources.dp
                 text?.append("Input Devices Monitor:")
             }
 
@@ -1320,11 +1379,13 @@ fun showIconsDemoDialog(activity: FragmentActivity) {
                             0 -> setImageResource(getDayIconResource(day))
                             1 -> setImageBitmap(createStatusIcon(day))
                         }
-                        layoutParams = ViewGroup.MarginLayoutParams(36.dp.toInt(), 36.dp.toInt())
-                            .apply { setMargins(4.dp.toInt()) }
+                        val dp = resources.dp
+                        layoutParams =
+                            ViewGroup.MarginLayoutParams((36 * dp).toInt(), (36 * dp).toInt())
+                                .apply { setMargins((4 * dp).toInt()) }
                         shapeAppearanceModel = ShapeAppearanceModel.Builder()
-                            .setAllCorners(CornerFamily.ROUNDED, 8.dp)
-                            .setAllEdges(TriangleEdgeTreatment(4.dp, true))
+                            .setAllCorners(CornerFamily.ROUNDED, 8 * dp)
+                            .setAllEdges(TriangleEdgeTreatment(4 * dp, true))
                             .build()
                         setBackgroundColor(Color.DKGRAY)
                     }) {}
@@ -1341,7 +1402,7 @@ fun showTypographyDemoDialog(activity: FragmentActivity) {
         textAppearances.forEach { (appearanceName, appearanceId) ->
             val textAppearance = TextAppearanceSpan(activity, appearanceId)
             inSpans(textAppearance) { append(appearanceName) }
-            append(" ${(textAppearance.textSize / 1.sp).roundToInt()}sp")
+            append(" ${(textAppearance.textSize / activity.resources.sp).roundToInt()}sp")
             appendLine()
         }
     }
@@ -1365,3 +1426,21 @@ private val textAppearances = listOf(
     "LabelMedium" to com.google.android.material.R.style.TextAppearance_Material3_LabelMedium,
     "LabelSmall" to com.google.android.material.R.style.TextAppearance_Material3_LabelSmall
 )
+
+fun showCarouselDialog(activity: FragmentActivity) {
+    MaterialAlertDialogBuilder(activity).setView(FrameLayout(activity).also { root ->
+        root.addView(RecyclerView(activity).also {
+            it.layoutManager = CarouselLayoutManager()
+            it.adapter = SeasonsAdapter()
+            it.setHasFixedSize(true) // Just as an optimization
+            it.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (196 * activity.resources.dp).toInt()
+            )
+            // When items have match parent width PagerSnapHelper can be used instead of LinearSnapHelper
+            PagerSnapHelper().attachToRecyclerView(it) // LinearSnapHelper().attachToRecyclerView(it)
+            it.scrollToPosition(0)
+            it.smoothScrollToPosition(12)
+        })
+    }).show()
+}

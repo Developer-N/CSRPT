@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.carousel.MaskableFrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="34dp"
+        app:shapeAppearance="?attr/shapeAppearanceCornerExtraLarge">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/converter_spinner_background">
+
+            <com.byagowi.persiancalendar.ui.common.ArrowView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:importantForAccessibility="no"
+                android:paddingStart="0dp"
+                android:paddingEnd="6dp" />
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:paddingStart="4dp"
+                android:paddingEnd="24dp"
+                android:popupBackground="@drawable/popup_background" />
+
+        </FrameLayout>
+
+    </com.google.android.material.carousel.MaskableFrameLayout>
+
+</FrameLayout>

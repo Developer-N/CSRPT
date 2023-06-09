@@ -4,7 +4,6 @@
     <!-- Calendar Navigation items  -->
     <string name="quran">قرآن</string>
     <string name="azkar">اذکار</string>
-    <string name="monthly_times">اوقات ماهانه</string>
     <string name="edit_times">ویرایش اوقات</string>
     <string name="download_upload">دانلود اوقات</string>
     <string name="donate">پشتیبانی مالی</string>
@@ -51,7 +50,7 @@
     <string name="str_forward">به جلو ببر</string>
     <string name="str_backward">به عقب ببر</string>
     <string name="error_gedit_data">در وارد کردن اطلاعات دقت کنید!</string>
-    <string name="use_summer_time">برای ویرایش از ساعت رسمی (ساعت تابستانی که از 2 فروردین تا 30 شهریور یک ساعت به جلو برده می شود) استفاده کنید.</string>
+    <string name="edit_time_message">ابتدا ماه و روز مورد نظر را در قسمت تاریخ وارد کنید سپس اوقات را ویرایش و برای ذخیره تغییرات از منوی بالا روی آیکن تیک کلیک کنید. (اوقات هر روز باید جداگانه ویرایش شود.)</string>
     <string name="edit_not_enabled">حالت ویرایش اوقات غیر فعال است!</string>
     <string name="str_dialog_clear_edited_title">حذف اوقات ویرایش شده</string>
     <string name="str_dialog_clear_edited_message">آیا مطمئن هستید می خواهید تمام اوقات ویرایش شده را حذف کنید؟</string>
@@ -108,6 +107,15 @@
     <string name="send_mail">ارسال ایمیل</string>
     <string name="str_changes_title">تغییرات</string>
     <string name="changes">
+
+        \n----تغییرات نسخه : 10.6.2----\n
+1.	بروزرسانی ظاهر برنامه و استفاده از طیف رنگی برای پوسته ها\n
+2.	رنگ بندی بهتر برای اندروید 12 به بالا\n
+3.	بروزرسانی تقویم\n
+4.	حذف اوقات ماهانه از منوی کناری (برای مشاهده اوقات کامل ماه در صفحه ی اصلی از طریق منوی بالا اقدام فرمایید)\n
+5.	رفع مشکل پخش نشدن اذان روی قفل صفحه\n
+6.	رفع تعدادی دیگر از مشکلات گزارش شده و بهبود کارایی\n
+
 
         \n----تغییرات نسخه : 10.5.2023----\n
     1. جلوگیری از پخش اذان هنگام مکالمه با تلفن\n
@@ -299,7 +307,6 @@
     <string name="enable_athan">اذان پخش شود</string>
     <string name="enable_alarm">هشدار پخش شود</string>
     <string name="alert_type">حالت پخش</string>
-    <string name="full_screen">تمام صفحه</string>
     <string name="notification">پخش در نوار اعلان</string>
     <string name="notif">اعلان</string>
     <string name="just_notification">فقط اعلان</string>
@@ -464,5 +471,7 @@
 
     <string name="phone_state_permission_message">برای جلوگیری از پخش اذان هنگام مکالمه با تلفن برنامه به مجوز نیاز دارد تا وضعیت تلفن را بررسی کند.</string>
 
+    <string name="default_image">Default Image</string>
+    <string name="eid">عید</string>
 
 </resources>

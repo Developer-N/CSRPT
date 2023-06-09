@@ -25,7 +25,7 @@
     <string name="exit">Exit</string>
     <!--Calendar-->
     <string name="add_event">Add event</string>
-    <string name="device_calendar_does_not_support">"Device calendar doesn't support the action"</string>
+    <string name="device_does_not_support">"The device doesn't support this action"</string>
     <string name="today">Today</string>
     <string name="return_to_today">Return to today</string>
     <string name="goto_date">Go to date</string>
@@ -217,6 +217,7 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="shift_work_starting_date_edit">%1$s, previously selected, is the chosen shift work starting day.</string>
     <string name="shift_work_reset_button">Disable or reprogram</string>
     <string name="spaced_and">" and "</string>
+    <string name="spaced_or">" or "</string>
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">Device Information</string>
@@ -330,6 +331,13 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="wednesday">Wednesday</string>
     <string name="thursday">Thursday</string>
     <string name="friday">Friday</string>
+    <string name="saturday_short">S</string>
+    <string name="sunday_short">S</string>
+    <string name="monday_short">M</string>
+    <string name="tuesday_short">T</string>
+    <string name="wednesday_short">W</string>
+    <string name="thursday_short">T</string>
+    <string name="friday_short">F</string>
     <!--Title of a widget that shows how much of a day is passed-->
     <string name="sun_view">Sun View</string>
     <string name="asr_hanafi_juristic">Hanafi Asr Juristic Method</string>
@@ -342,7 +350,7 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="high_latitudes_one_seventh">One Seventh</string>
     <string name="none">None</string>
     <string name="show_sun_and_moon_path_in_24_hours">Show Sun and Moon path in 24 hours</string>
-    <string name="widget_prefer_system_colors">Follow System Coloring in Widgets</string>
+    <string name="widget_prefer_device_colors">Follow Device Coloring in Widgets</string>
     <string name="nepali_calendar">Nepali Calendar</string>
     <string name="nepali_calendar_short">Nepali</string>
     <string name="country_emoji">🇺🇸🇬🇧</string>
@@ -377,10 +385,19 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="add_quick_settings_tile">Add Quick Settings tile</string>
     <string name="true_north">True north</string>
     <string name="lock">Lock</string>
+    <string name="full_screen">Full Screen</string>
+    <string name="exit_full_screen">Exit Full Screen</string>
+    <string name="color_gradient">Color gradient</string>
+    <string name="time_zones">Time zones</string>
+    <string name="qr_code">QR Code</string>
 
     <plurals name="shift_work_record_title">
         <item quantity="one">%1$s %2$s day</item>
         <item quantity="other">%1$s %2$s days</item>
+    </plurals>
+    <plurals name="n_seconds">
+        <item quantity="one">%1$s second</item>
+        <item quantity="other">%1$s seconds</item>
     </plurals>
     <plurals name="n_minutes">
         <item quantity="one">%1$s minute</item>
@@ -393,6 +410,10 @@ The app needs this only once, however, if you move to a new location, accessing 
     <plurals name="n_days">
         <item quantity="one">%1$s day</item>
         <item quantity="other">%1$s days</item>
+    </plurals>
+    <plurals name="n_weeks">
+        <item quantity="one">%1$s week</item>
+        <item quantity="other">%1$s weeks</item>
     </plurals>
     <plurals name="n_months">
         <item quantity="one">%1$s month</item>

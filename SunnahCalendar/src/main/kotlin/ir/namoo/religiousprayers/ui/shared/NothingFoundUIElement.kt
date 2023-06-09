@@ -31,7 +31,6 @@ import com.byagowi.persiancalendar.R
 @Composable
 fun NothingFoundUIElement(
     message: String = stringResource(id = R.string.nothing_found),
-    normalTextColor: Color,
     typeface: Typeface,
     iconColor: Color
 ) {
@@ -50,7 +49,6 @@ fun NothingFoundUIElement(
     ) {
         Text(
             text = message,
-            color = normalTextColor,
             fontFamily = FontFamily(typeface),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold

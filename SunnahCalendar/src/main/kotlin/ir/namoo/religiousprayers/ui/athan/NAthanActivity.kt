@@ -15,10 +15,14 @@ import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
-import android.view.WindowManager
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
 import com.byagowi.persiancalendar.DHUHR_KEY
@@ -27,13 +31,13 @@ import com.byagowi.persiancalendar.ISHA_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
 import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SUNRISE_KRY
+import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.databinding.ActivityNathanBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
-import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
@@ -44,11 +48,11 @@ import com.byagowi.persiancalendar.utils.cityName
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getPrayTimeName
 import com.byagowi.persiancalendar.utils.logException
+import ir.namoo.commons.ATHAN_NOTIFICATION_ID
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
 import ir.namoo.commons.utils.getDefaultDOAUri
-import ir.namoo.commons.utils.turnScreenOffAndKeyguardOn
 import ir.namoo.commons.utils.turnScreenOnAndKeyguardOff
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import org.koin.android.ext.android.inject
@@ -69,7 +73,7 @@ class NAthanActivity : AppCompatActivity() {
     private val preventPhoneCallIntervention = PreventPhoneCallIntervention(::stop)
     private var isDoaPlayed = false
     private var doaPlayer: MediaPlayer? = null
-    private lateinit var prayerKey: String
+    private lateinit var prayTimeKey: String
     private var bFajrCount = 0
     private lateinit var startDate: Date
     private val stopTask = object : Runnable {
@@ -78,7 +82,7 @@ class NAthanActivity : AppCompatActivity() {
             if (ringtone == null || ringtone?.isPlaying == false || spentSeconds > 360 ||
                 (stopAtHalfMinute && spentSeconds > 30)
             ) {
-                if (prayerKey == "BFAJR" && bFajrCount < 5 && ringtone?.isPlaying == false) {
+                if (prayTimeKey == "BFAJR" && bFajrCount < 5 && ringtone?.isPlaying == false) {
                     ringtone?.play()
                     bFajrCount++
                     handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
@@ -105,13 +109,17 @@ class NAthanActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        turnScreenOffAndKeyguardOn()
         if (originalVolume != -1) getSystemService<AudioManager>()
             ?.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
         runCatching {
-            getSystemService<NotificationManager>()?.cancel(2024)
+            getSystemService<NotificationManager>()?.cancel(ATHAN_NOTIFICATION_ID)
         }.onFailure(logException)
     }
+
+    private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() = stop()
+    }
+
 
     @SuppressLint("SetTextI18n")
     @Suppress("Deprecation")
@@ -135,17 +143,19 @@ class NAthanActivity : AppCompatActivity() {
             }
         }.onFailure(logException)
         startDate = Date(System.currentTimeMillis())
-        turnScreenOnAndKeyguardOff()
         Theme.apply(this)
+        applyAppLanguage(this)
+        turnScreenOnAndKeyguardOff()
         super.onCreate(savedInstanceState)
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = resolveColor(android.R.attr.colorPrimaryDark)
-        prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
+        transparentSystemBars()
+        onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
+
+        prayTimeKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
         setting = athanSettingsDB.athanSettingsDAO().getAllAthanSettings()
-            .find { prayerKey.contains(it.athanKey) } ?: return
-        if (prayerKey.startsWith("B") || (prayerKey.startsWith("A") && prayerKey != ASR_KEY) || !setting.playDoa) isDoaPlayed =
+            .find { prayTimeKey.contains(it.athanKey) } ?: return
+        if (prayTimeKey.startsWith("B") || (prayTimeKey.startsWith("A") && prayTimeKey != ASR_KEY) || !setting.playDoa) isDoaPlayed =
             true
-        val isFajr = prayerKey == FAJR_KEY
+        val isFajr = prayTimeKey == FAJR_KEY
         var goMute = false
 
         getSystemService<AudioManager>()?.let { audioManager ->
@@ -158,7 +168,7 @@ class NAthanActivity : AppCompatActivity() {
             ) goMute = true
         }
         if (!goMute) runCatching {
-            val athanUri = getAthanUri(setting, prayerKey, this)
+            val athanUri = getAthanUri(setting, prayTimeKey, this)
             runCatching {
                 MediaPlayer.create(this, athanUri).duration // is in milliseconds
             }.onFailure(logException).onSuccess {
@@ -167,7 +177,7 @@ class NAthanActivity : AppCompatActivity() {
                 if (it < THIRTY_SECONDS_IN_MILLIS) stopAtHalfMinute = true
             }
             ringtone =
-                RingtoneManager.getRingtone(this, getAthanUri(setting, prayerKey, this)).also {
+                RingtoneManager.getRingtone(this, getAthanUri(setting, prayTimeKey, this)).also {
                     it.audioAttributes = AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .setUsage(AudioAttributes.USAGE_ALARM)
@@ -181,57 +191,55 @@ class NAthanActivity : AppCompatActivity() {
 
         var prayTimes = coordinates.value?.calculatePrayTimes()
         prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
-        ActivityNathanBinding.inflate(layoutInflater).apply {
+        val binding = ActivityNathanBinding.inflate(layoutInflater).apply {
             setContentView(root)
-            athanName.setText(getPrayTimeName(prayerKey))
+            athanName.setText(getPrayTimeName(prayTimeKey))
             btnStop.setOnClickListener { stop() }
             place.text = String.format(getString(R.string.in_city_time), appPrefs.cityName) + " " +
-                    when (prayerKey) {
+                    when (prayTimeKey) {
                         FAJR_KEY -> prayTimes?.getFromStringId(R.string.fajr)?.toFormattedString()
-                        SUNRISE_KRY -> prayTimes?.getFromStringId(R.string.sunrise)
+                        SUNRISE_KEY -> prayTimes?.getFromStringId(R.string.sunrise)
                             ?.toFormattedString()
+
                         DHUHR_KEY -> prayTimes?.getFromStringId(R.string.dhuhr)?.toFormattedString()
                         ASR_KEY -> prayTimes?.getFromStringId(R.string.asr)?.toFormattedString()
                         MAGHRIB_KEY -> prayTimes?.getFromStringId(R.string.maghrib)
                             ?.toFormattedString()
+
                         ISHA_KEY -> prayTimes?.getFromStringId(R.string.isha)?.toFormattedString()
                         else -> ""
                     }
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.activityRoot.updatePadding(bottom = insets.bottom)
+            binding.activityRoot.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
         }
 
         handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
 
         if (setting.isAscending) handler.post(ascendVolume)
         preventPhoneCallIntervention.startListener(this)
-        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
     }
-
-//    override fun onWindowFocusChanged(hasFocus: Boolean) {
-//        super.onWindowFocusChanged(hasFocus)
-//        if (!hasFocus && isLockedAndPassed30Second()) stop()
-//    }
 
     override fun onPause() {
         super.onPause()
-        if (isLockedAndPassed30Second())
+        if (isLockedAndPassed2Second())
             stop()
     }
 
-    private fun isLockedAndPassed30Second(): Boolean {
+    private fun isLockedAndPassed2Second(): Boolean {
         val keyguardManager = getSystemService<KeyguardManager>() ?: return true
         val nowDate = Date(System.currentTimeMillis())
         val diffInSecond = TimeUnit.MILLISECONDS.toSeconds(nowDate.time - startDate.time)
         return if (!keyguardManager.isKeyguardLocked)
             true
-        else diffInSecond > 30
+        else diffInSecond > 2
     }
-
-    private val onBackPressedCallback: OnBackPressedCallback =
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                stop()
-            }
-        }
 
     private fun stop() {
         if (alreadyStopped) return

@@ -68,7 +68,7 @@
         android:allowBackup="true"
         android:banner="@mipmap/ic_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_descriptor"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -131,17 +131,15 @@
 
         <activity
             android:name="ir.namoo.religiousprayers.ui.athan.NAthanActivity"
-            android:directBootAware="true"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
             android:showForAllUsers="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
-            android:taskAffinity=""
             android:theme="@style/AthanTheme"
-            android:turnScreenOn="true"
-            android:windowSoftInputMode="stateAlwaysHidden" />
+            android:turnScreenOn="true"/>
 
         <activity android:name="ir.namoo.religiousprayers.ui.azkar.AzkarActivity" />
 
@@ -385,6 +383,12 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="false" />
         </service>
 
         <service

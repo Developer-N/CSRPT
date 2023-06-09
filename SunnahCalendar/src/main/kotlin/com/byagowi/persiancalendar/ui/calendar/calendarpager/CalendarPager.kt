@@ -1,13 +1,16 @@
 package com.byagowi.persiancalendar.ui.calendar.calendarpager
 
 import android.content.Context
+import android.content.res.Configuration
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.doOnAttach
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentMonthBinding
+import com.byagowi.persiancalendar.databinding.MonthPageBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.ui.common.ArrowView
@@ -73,24 +76,49 @@ class CalendarPager(context: Context, attrs: AttributeSet? = null) : FrameLayout
     inner class PagerAdapter : RecyclerView.Adapter<PagerAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-            FragmentMonthBinding.inflate(parent.context.layoutInflater, parent, false)
+            MonthPageBinding.inflate(parent.context.layoutInflater, parent, false)
         )
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
 
         override fun getItemCount() = monthsLimit
 
-        private val sharedDayViewData = SharedDayViewData(
-            context, resources.getDimension(R.dimen.grid_calendar_height) / 7 - 4.5.sp
-        )
+        private val monthViewInitializer by lazy(LazyThreadSafetyMode.NONE) {
+            val suitableHeight = listOfNotNull(
+                resources.getDimension(R.dimen.grid_calendar_height),
+                resources.displayMetrics.heightPixels / 2.2f
+            ).max().coerceAtMost(resources.getDimension(R.dimen.grid_calendar_height_max))
 
-        inner class ViewHolder(val binding: FragmentMonthBinding) :
+            updateLayoutParams {
+                when (resources.configuration.orientation) {
+                    Configuration.ORIENTATION_PORTRAIT -> this.height = suitableHeight.toInt()
+
+                    Configuration.ORIENTATION_LANDSCAPE -> this.width =
+                        (resources.displayMetrics.widthPixels / 2.05f).coerceAtMost(
+                            resources.getDimension(R.dimen.grid_calendar_land_width_max)
+                        ).toInt()
+
+                    else -> Unit
+                }
+            }
+
+            val cellHeight = suitableHeight / 7 - 4.5f * resources.sp
+            val sharedDayViewData = SharedDayViewData(context, cellHeight)
+            fun(binding: MonthPageBinding) {
+                binding.monthView.initialize(sharedDayViewData, this@CalendarPager)
+
+                binding.previous.updateLayoutParams { this.height = (cellHeight / 1.4).toInt() }
+                binding.next.updateLayoutParams { this.height = (cellHeight / 1.4).toInt() }
+            }
+        }
+
+        inner class ViewHolder(val binding: MonthPageBinding) :
             RecyclerView.ViewHolder(binding.root) {
 
             var pageRefresh = fun(_: Boolean, _: Jdn?) {}
 
             init {
-                binding.monthView.initialize(sharedDayViewData, this@CalendarPager)
+                doOnAttach { monthViewInitializer(binding) }
 
                 binding.previous.let {
                     it.contentDescription = it.context.getString(

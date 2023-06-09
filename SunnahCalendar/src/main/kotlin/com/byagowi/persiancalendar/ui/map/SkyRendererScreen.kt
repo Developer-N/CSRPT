@@ -11,7 +11,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.navigation.navGraphViewModels
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.FragmentSkyRendererBinding
+import com.byagowi.persiancalendar.databinding.SkyRendererScreenBinding
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.ui.utils.setupUpNavigation
 import com.byagowi.persiancalendar.utils.logException
@@ -24,14 +24,12 @@ import io.github.cosinekitty.astronomy.Time
 import io.github.cosinekitty.astronomy.equator
 import io.github.cosinekitty.astronomy.horizon
 
-class SkyRendererScreen : Fragment(R.layout.fragment_sky_renderer) {
+class SkyRendererScreen : Fragment(R.layout.sky_renderer_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentSkyRendererBinding.bind(view)
-        binding.appBar.toolbar.let {
-            it.title = "PanoRendo"
-            it.setupUpNavigation()
-        }
+        val binding = SkyRendererScreenBinding.bind(view)
+        binding.appBar.toolbar.title = "PanoRendo"
+        binding.appBar.toolbar.setupUpNavigation()
 
         binding.toneMap.adapter = ArrayAdapter(
             view.context,

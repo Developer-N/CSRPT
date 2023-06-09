@@ -8,7 +8,6 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withMatrix
@@ -16,14 +15,14 @@ import androidx.core.graphics.withRotation
 import androidx.core.graphics.withTranslation
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
-import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
+import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.variants.debugLog
 import com.google.android.material.math.MathUtils
-import java.util.*
+import java.util.GregorianCalendar
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -53,7 +52,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                     resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
                 animator.interpolator = AccelerateDecelerateInterpolator()
                 animator.addUpdateListener { _ ->
-                    val fraction = ((animator.animatedValue as? Float) ?: 0f)
+                    val fraction = animator.animatedValue as? Float ?: 0f
                     ranges.indices.forEach {
                         ranges[it][0] = MathUtils.lerp(
                             iauRanges[it][0], tropicalRanges[it][0], fraction
@@ -93,25 +92,29 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
             rotationalMinutesChange(velocity.toInt())
             invalidate()
         }
-    private var velocityTracker: VelocityTracker? = null
     private var rotationDirection = 0
+
+    private val flingDetector = createFlingDetector(context) { velocityX, velocityY ->
+        flingAnimation.setStartVelocity(rotationDirection * 2 * hypot(velocityX, velocityY))
+        true
+    }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         parent?.requestDisallowInterceptTouchEvent(true)
         super.dispatchTouchEvent(event)
-        if (mode != AstronomyMode.Earth || saveScale != 1f) return true
+        if (mode != AstronomyMode.Earth || currentScale != 1f) return true
         val r = width / 2
+        flingDetector.onTouchEvent(event)
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                velocityTracker = VelocityTracker.obtain()
                 flingAnimation.cancel()
                 previousAngle = atan2(event.y - r, event.x - r)
                 rotationSpeed = if (hypot(event.x - r, event.y - r) > r / 2)
                     525949 // minutes in solar year
                 else 39341 // 27.32 days in minutes, https://en.wikipedia.org/wiki/Orbit_of_the_Moon
             }
+
             MotionEvent.ACTION_MOVE -> {
-                velocityTracker?.addMovement(event)
                 val currentAngle = atan2(event.y - r, event.x - r)
                 val rawAngleChange = currentAngle - previousAngle
                 val angleChange =
@@ -124,17 +127,9 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                 rotationalMinutesChange(minutesChange)
                 previousAngle = currentAngle
             }
+
             MotionEvent.ACTION_UP -> {
-                velocityTracker?.computeCurrentVelocity(1000)
-                flingAnimation.setStartVelocity(
-                    rotationDirection * 2 * hypot(
-                        velocityTracker?.xVelocity ?: 0f,
-                        velocityTracker?.yVelocity ?: 0f
-                    )
-                )
                 flingAnimation.start()
-                velocityTracker?.recycle()
-                velocityTracker = null
                 previousAngle = 0f
             }
         }
@@ -143,7 +138,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
 
     private val colorTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.textAlign = Paint.Align.CENTER
-        it.color = context.resolveColor(R.attr.colorTextNormal)
+        it.color = context.resolveColor(android.R.attr.textColorPrimary)
     }
 
     private val textPath = Path()
@@ -210,10 +205,10 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                 canvas.drawPath(trianglePath, sunIndicatorPaint)
             }
         }
-        val moonDegree = state.moon.elon.toFloat()
+        val moonDegree = state.moon.lon.toFloat()
         canvas.drawCircle(radius, radius, radius * .3f, moonOrbitPaint)
         canvas.withRotation(-moonDegree + 90, radius, radius) {
-            val moonDistance = state.moon.vec.length() / 0.002569 // Lunar distance in AU
+            val moonDistance = state.moon.dist / 0.002569 // Lunar distance in AU
             solarDraw.moon(
                 this, state.sun, state.moon, radius,
                 radius * moonDistance.toFloat() * .7f, cr / 1.9f
@@ -224,10 +219,11 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         }
     }
 
+    private val dp = resources.dp
     private val trianglePath = Path().also {
-        it.moveTo(0f, 6.dp)
-        it.lineTo((-5).dp, .5.dp)
-        it.lineTo(5.dp, .5.dp)
+        it.moveTo(0f, 6 * dp)
+        it.lineTo(-5 * dp, .5f * dp)
+        it.lineTo(5 * dp, .5f * dp)
         it.close()
     }
     private val arcRect = RectF()
@@ -251,19 +247,19 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
     private val circlesPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val zodiacSeparatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = context.resolveColor(com.google.android.material.R.attr.colorSurface)
-        it.strokeWidth = .5.dp
+        it.strokeWidth = .5f * dp
         it.style = Paint.Style.STROKE
     }
 
     private val zodiacPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0xFF808080.toInt()
-        it.strokeWidth = 1.dp
-        it.textSize = 10.dp
+        it.strokeWidth = 1 * dp
+        it.textSize = 10 * dp
         it.textAlign = Paint.Align.CENTER
     }
     private val moonOrbitPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.style = Paint.Style.STROKE
-        it.strokeWidth = 1.dp
+        it.strokeWidth = 1 * dp
         it.color = 0x40808080
     }
 

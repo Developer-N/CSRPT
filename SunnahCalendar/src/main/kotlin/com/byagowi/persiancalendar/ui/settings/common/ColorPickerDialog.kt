@@ -12,7 +12,7 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import java.util.*
+import java.util.Locale
 
 //1- text color 2- next color 3- background
 fun showColorPickerDialog(activity: FragmentActivity, witchColor: Int, key: String) {
@@ -38,7 +38,7 @@ private fun showColorPickerDialog(
         )
         if (witchColor != 3) it.hideAlphaSeekBar()
         it.setPickedColor(initialColor)
-        it.setPadding(10.dp.toInt())
+        it.setPadding((10 * activity.resources.dp).toInt())
     }
     MaterialAlertDialogBuilder(activity)
         .setTitle(if (witchColor == 3) R.string.widget_background_color else if (witchColor == 1) R.string.widget_text_color else R.string.widget_next_athan_text_color)

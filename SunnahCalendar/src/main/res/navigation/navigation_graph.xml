@@ -9,13 +9,13 @@
         android:id="@+id/main_activity"
         android:name="com.byagowi.persiancalendar.ui.MainActivity"
         android:label="@string/app_name"
-        tools:layout="@layout/activity_main" />
+        tools:layout="@layout/main_activity" />
 
     <fragment
         android:id="@+id/calendar"
         android:name="com.byagowi.persiancalendar.ui.calendar.CalendarScreen"
         android:label="@string/calendar"
-        tools:layout="@layout/fragment_calendar">
+        tools:layout="@layout/calendar_screen">
         <action
             android:id="@+id/navigate_to_self"
             app:destination="@id/calendar"
@@ -55,18 +55,13 @@
         android:id="@+id/converter"
         android:name="com.byagowi.persiancalendar.ui.converter.ConverterScreen"
         android:label="@string/date_converter"
-        tools:layout="@layout/fragment_converter" />
+        tools:layout="@layout/converter_screen" />
 
     <fragment
         android:id="@+id/azkar"
         android:name="ir.namoo.religiousprayers.ui.azkar.AzkarFragment"
         android:label="Azkar Fragment"
         tools:layout="@layout/fragment_azkar" />
-    <fragment
-        android:id="@+id/monthly"
-        android:name="ir.namoo.religiousprayers.ui.monthly.MonthlyFragment"
-        android:label="Azkar Monthly"
-        tools:layout="@layout/fragment_monthly" />
     <fragment
         android:id="@+id/edit"
         android:name="ir.namoo.religiousprayers.ui.edit.EditFragment"
@@ -82,7 +77,7 @@
         android:id="@+id/compass"
         android:name="com.byagowi.persiancalendar.ui.compass.CompassScreen"
         android:label="@string/compass"
-        tools:layout="@layout/fragment_compass">
+        tools:layout="@layout/compass_screen">
         <action
             android:id="@+id/action_compass_to_level"
             app:destination="@id/level"
@@ -116,7 +111,7 @@
         android:id="@+id/settings"
         android:name="com.byagowi.persiancalendar.ui.settings.SettingsScreen"
         android:label="@string/settings"
-        tools:layout="@layout/fragment_calendar">
+        tools:layout="@layout/calendar_screen">
         <argument
             android:name="tab"
             android:defaultValue="0"

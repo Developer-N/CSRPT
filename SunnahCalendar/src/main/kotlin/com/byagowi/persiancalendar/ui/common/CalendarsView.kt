@@ -7,13 +7,11 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
-import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.CalendarsViewBinding
 import com.byagowi.persiancalendar.entities.CalendarType
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.isForcedIranTimeEnabled
 import com.byagowi.persiancalendar.global.language
@@ -25,12 +23,13 @@ import com.byagowi.persiancalendar.ui.utils.setupLayoutTransition
 import com.byagowi.persiancalendar.utils.calculateDaysDifference
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.utils.generateZodiacInformation
 import com.byagowi.persiancalendar.utils.getA11yDaySummary
-import com.byagowi.persiancalendar.utils.getZodiacInfo
-import com.byagowi.persiancalendar.utils.toJavaCalendar
+import com.byagowi.persiancalendar.utils.isMoonInScorpio
+import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import io.github.cosinekitty.astronomy.seasons
-import java.util.*
+import java.util.Date
 
 class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
 
@@ -47,8 +46,7 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
     fun toggle() {
         isExpanded = !isExpanded
 
-        binding.expansionArrow
-            .animateTo(if (isExpanded) ArrowView.Direction.UP else ArrowView.Direction.DOWN)
+        binding.expansionArrow.animateTo(if (isExpanded) ArrowView.Direction.UP else ArrowView.Direction.DOWN)
         TransitionManager.beginDelayedTransition(binding.root, ChangeBounds())
 
         binding.extraInformationContainer.isVisible = isExpanded
@@ -80,8 +78,16 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
         binding.weekDayName.text = jdn.dayOfWeekName
         binding.moonPhaseView.jdn = jdn.value.toFloat()
 
+        binding.moonInScorpio.also {
+            if (isAstronomicalExtraFeaturesEnabled) {
+                it.text = isMoonInScorpio(context, jdn)
+            }
+            it.isVisible = it.text.isNotEmpty()
+        }
         binding.zodiac.also {
-            it.text = getZodiacInfo(context, jdn, withEmoji = true, short = false)
+            if (isAstronomicalExtraFeaturesEnabled) {
+                it.text = generateZodiacInformation(context, jdn, withEmoji = true)
+            }
             it.isVisible = it.text.isNotEmpty()
         }
 
@@ -95,7 +101,8 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
             binding.also {
                 it.diffDate.isVisible = true
                 it.diffDate.text = listOf(
-                    context.getString(R.string.days_distance), spacedColon,
+                    context.getString(R.string.days_distance),
+                    spacedColon,
                     calculateDaysDifference(resources, jdn)
                 ).joinToString("")
             }
@@ -108,12 +115,16 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
         val weeksCount = endOfYearJdn.getWeekOfYear(startOfYearJdn)
 
         val startOfYearText = context.getString(
-            R.string.start_of_year_diff, formatNumber(jdn - startOfYearJdn + 1),
-            formatNumber(currentWeek), formatNumber(date.month)
+            R.string.start_of_year_diff,
+            formatNumber(jdn - startOfYearJdn + 1),
+            formatNumber(currentWeek),
+            formatNumber(date.month)
         )
         val endOfYearText = context.getString(
-            R.string.end_of_year_diff, formatNumber(endOfYearJdn - jdn),
-            formatNumber(weeksCount - currentWeek), formatNumber(12 - date.month)
+            R.string.end_of_year_diff,
+            formatNumber(endOfYearJdn - jdn),
+            formatNumber(weeksCount - currentWeek),
+            formatNumber(12 - date.month)
         )
         binding.startAndEndOfYearDiff.text =
             listOf(startOfYearText, endOfYearText).joinToString("\n")
@@ -124,18 +135,10 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
                 val addition = if (date.month == 12) 1 else 0
                 val equinoxYear = date.year + addition
                 val calendar = Date(
-                    seasons(jdn.toGregorianCalendar().year).marchEquinox
-                        .toMillisecondsSince1970()
-                ).toJavaCalendar()
+                    seasons(jdn.toCivilDate().year).marchEquinox.toMillisecondsSince1970()
+                ).toGregorianCalendar()
                 equinox = context.getString(
-                    R.string.spring_equinox,
-                    formatNumber(equinoxYear),
-                    // TODO: to be removed soon
-                    // Special case 1402's equinox due to confusion of 12:54 am for users
-                    if (equinoxYear == 1402 && calendar.timeZone.id == IRAN_TIMEZONE_ID
-                        && language == Language.FA)
-                        formatNumber("00:54 بامداد، 1 فروردین 1402")
-                    else calendar.formatDateAndTime()
+                    R.string.spring_equinox, formatNumber(equinoxYear), calendar.formatDateAndTime()
                 )
             }
         }
@@ -154,8 +157,13 @@ class CalendarsView(context: Context, attrs: AttributeSet? = null) : FrameLayout
 
         // a11y
         binding.root.contentDescription = getA11yDaySummary(
-            context, jdn, isToday, EventsStore.empty(),
-            withZodiac = true, withOtherCalendars = true, withTitle = true
+            context,
+            jdn,
+            isToday,
+            EventsStore.empty(),
+            withZodiac = true,
+            withOtherCalendars = true,
+            withTitle = true
         )
     }
 }

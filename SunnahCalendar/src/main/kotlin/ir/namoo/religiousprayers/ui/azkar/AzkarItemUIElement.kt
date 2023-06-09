@@ -20,7 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedAssistChip
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -45,14 +44,12 @@ import com.byagowi.persiancalendar.entities.Language
 import kotlinx.coroutines.launch
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AzkarItemUIElement(
     item: AzkarItem,
     reference: AzkarReference,
     lang: String,
     cardColor: Color,
-    textColor: Color,
     iconColor: Color,
     typeface: Typeface,
     arabicTypeface: Typeface,
@@ -73,7 +70,7 @@ fun AzkarItemUIElement(
             .fillMaxWidth()
             .padding(4.dp, 2.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(1.dp)
     ) {
         Column(
             modifier = Modifier
@@ -91,7 +88,6 @@ fun AzkarItemUIElement(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp),
-                    color = textColor,
                     text = item.arabic ?: "---",
                     fontFamily = FontFamily(arabicTypeface),
                     fontSize = 22.sp,
@@ -103,7 +99,6 @@ fun AzkarItemUIElement(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp),
-                    color = textColor,
                     text = when (lang) {
                         Language.FA.code -> item.persian
                         else -> item.kurdish
@@ -145,7 +140,6 @@ fun AzkarItemUIElement(
                     elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
                     colors = AssistChipDefaults.assistChipColors(
                         containerColor = cardColor,
-                        labelColor = textColor,
                         trailingIconContentColor = iconColor
                     )
                 )
@@ -187,7 +181,6 @@ fun AzkarItemUIElement(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp),
-                    color = textColor,
                     text = (when (lang) {
                         Language.CKB.code -> reference.kurdish
                         Language.FA.code -> reference.persian

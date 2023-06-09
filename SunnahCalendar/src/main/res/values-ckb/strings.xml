@@ -95,7 +95,7 @@
     <string name="show_device_calendar_events_summary">نیشاندانی ڕووداوەکانی ڕۆژژمێری ئامراز</string>
     <string name="show_device_calendar_events">ڕووداوەکانی ڕۆژژمێری ئامراز</string>
     <string name="add_event">زیادکردنی ڕووداو</string>
-    <string name="device_calendar_does_not_support">ڕۆژژمێری ئامراز لەم کردەوەیە پشتیوانی ناکات</string>
+    <string name="device_does_not_support">ڕۆژژمێری ئامراز لەم کردەوەیە پشتیوانی ناکات</string>
     <string name="customize_widget_summary">چ شتگەلێک لە ویجیتەکان و ئاگاداریدا نیشان بدرێ</string>
     <string name="customize_widget">تایبەتیکردنی ویجیتەکان و ئاگاداری</string>
     <string name="add">زیادکردن</string>
@@ -206,6 +206,7 @@
         <item quantity="other">%1$s کاتژمێر</item>
     </plurals>
     <string name="spaced_and">" و "</string>
+    <string name="spaced_or">" یان "</string>
     <string name="spaced_comma">"، "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">زانیاریی ئامراز</string>
@@ -328,6 +329,13 @@
     <string name="wednesday">چوارشەممە</string>
     <string name="thursday">پێنجشەممە</string>
     <string name="friday">ھەینی</string>
+    <string name="saturday_short">ش</string>
+    <string name="sunday_short">ی</string>
+    <string name="monday_short">د</string>
+    <string name="tuesday_short">س</string>
+    <string name="wednesday_short">چ</string>
+    <string name="thursday_short">پ</string>
+    <string name="friday_short">ھ</string>
     <string name="sun_view">نیشاندانی خۆر</string>
     <string name="country_emoji">🇮🇷🇮🇶</string>
     <string name="nepal">نیپال</string>
@@ -335,7 +343,7 @@
     <string name="nepali_calendar_short">نیپالی</string>
     <string name="season">وەرز</string>
     <string name="show_secondary_calendar">ڕۆژژمێری لاوەکی نیشان بدە</string>
-    <string name="widget_prefer_system_colors">شوێنکەوتنی ڕەنگکاریی سیستەم لە ویجیتەکاندا</string>
+    <string name="widget_prefer_device_colors">شوێنکەوتنی ڕەنگکاریی سیستەم لە ویجیتەکاندا</string>
     <string name="enable_new_interface">چالاککردنی ڕووکاری نوێ</string>
     <string name="calculator">حسێبکەر</string>
     <string name="asr_hanafi_juristic">شێوازی نوێژی ئێوارەی حەنەفی</string>
@@ -369,8 +377,8 @@
     <string name="screensaver_settings">ڕێکخستنەکانی شاشەپارێز</string>
     <string name="live_wallpaper_settings">ڕێکخستنەکانی دیوارکاغەزی زیندوو</string>
     <string name="tropical">خولگەیی</string>
-    <string name="enable_notification">ئایا دەتەوێت ئاگادارکردنەوەی بەروار چالاک بکەیت؟</string>
-    <string name="add_quick_settings_tile">زیادکردنی ڕێکخستنە خێراکان</string>
-    <string name="true_north">باکووری ڕاستەقینە</string>
-    <string name="lock">قفڵکردن</string>
+    <string name="enable_notification">دەتەوێت ئاگاداریی ڕێککەوت چالاک بکەیت؟</string>
+    <string name="add_quick_settings_tile">زیادکردنی کاشیی ڕێکخستنی خێرا</string>
+    <string name="true_north">باکووری ڕاستی</string>
+    <string name="lock">قفڵ</string>
 </resources>

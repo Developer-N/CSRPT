@@ -26,7 +26,7 @@
     <string name="about">बारे</string>
     <string name="exit">बाहिर निस्कनुहोस्</string>
     <string name="add_event">घटना थप्नुहोस्</string>
-    <string name="device_calendar_does_not_support">मोबाइलको क्यालेन्डरले कार्यलाई समर्थन गर्दैन</string>
+    <string name="device_does_not_support">मोबाइलको क्यालेन्डरले कार्यलाई समर्थन गर्दैन</string>
     <string name="today">आज</string>
     <string name="return_to_today">आज मा फर्कनुहोस्</string>
     <string name="goto_date">मिति मा जानुहोस्</string>
@@ -247,6 +247,7 @@
     <string name="remove">हटाउनुहोस्</string>
     <string name="shift_work_starting_date">%1$s, क्यालेन्डरमा चयन गरिएको, काम सुरु हुने दिन हो।</string>
     <string name="spaced_and">" र "</string>
+    <string name="spaced_or">" वा "</string>
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">उपकरण जानकारी</string>
@@ -332,8 +333,15 @@
     <string name="monday">सोमबार</string>
     <string name="tuesday">मंगलबार</string>
     <string name="wednesday">बुधबार</string>
-    <string name="thursday">बिहीबार</string>
+    <string name="thursday">बिहिबार</string>
     <string name="friday">शुक्रबार</string>
+    <string name="saturday_short">श</string>
+    <string name="sunday_short">आ</string>
+    <string name="monday_short">सो</string>
+    <string name="tuesday_short">मं</string>
+    <string name="wednesday_short">बु</string>
+    <string name="thursday_short">बि</string>
+    <string name="friday_short">शु</string>
     <string name="sun_view">सूर्य दृश्य</string>
     <string name="enable_new_interface">नयाँ इन्टरफेस सक्षम गर्नुहोस्</string>
     <string name="month_pray_times">महिनाको प्रार्थना समय</string>
@@ -342,7 +350,7 @@
     <string name="show_sun_and_moon_path_in_24_hours">24 घण्टामा सूर्य र चन्द्र मार्ग देखाउनुहोस्</string>
     <string name="dhu_al_hijjah">धु उल हिज्जा</string>
     <string name="asr_hanafi_juristic">Hanafi Asr न्यायिक विधि</string>
-    <string name="widget_prefer_system_colors">विजेटहरूमा प्रणाली रङ पालना गर्नुहोस्</string>
+    <string name="widget_prefer_device_colors">विजेटहरूमा प्रणाली रङ पालना गर्नुहोस्</string>
     <string name="nepal">नेपाल</string>
     <string name="calculator">क्यालकुलेटर</string>
 </resources>

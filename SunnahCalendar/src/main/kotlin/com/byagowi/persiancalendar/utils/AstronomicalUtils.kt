@@ -3,9 +3,9 @@ package com.byagowi.persiancalendar.utils
 import android.content.Context
 import android.icu.util.ChineseCalendar
 import android.os.Build
+import androidx.annotation.StringRes
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.global.spacedComma
@@ -22,30 +22,30 @@ import io.github.cosinekitty.astronomy.horizon
 import io.github.cosinekitty.astronomy.rotationEqdHor
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.PersianDate
-import java.util.*
+import java.util.GregorianCalendar
 import kotlin.math.atan2
 
 // Based on Mehdi's work
 
-fun isMoonInScorpio(jdn: Jdn) = isMoonInScorpio(jdn.toPersianCalendar(), jdn.toIslamicCalendar())
+fun isMoonInScorpio(jdn: Jdn): Boolean = isMoonInScorpio(jdn.toPersianDate(), jdn.toIslamicDate())
 
-fun isMoonInScorpio(persianDate: PersianDate, islamicDate: IslamicDate) =
-    (((islamicDate.dayOfMonth + 1) * 12.2f + (persianDate.dayOfMonth + 1)) / 30f +
+fun isMoonInScorpio(persianDate: PersianDate, islamicDate: IslamicDate): Boolean {
+    return (((islamicDate.dayOfMonth + 1) * 12.2f + (persianDate.dayOfMonth + 1)) / 30f +
             persianDate.month).toInt() % 12 == 8
+}
 
-fun getZodiacInfo(context: Context, jdn: Jdn, withEmoji: Boolean, short: Boolean): String {
-    if (!isAstronomicalExtraFeaturesEnabled) return ""
-    val persianDate = jdn.toPersianCalendar()
-    val islamicDate = jdn.toIslamicCalendar()
-    val moonInScorpioText = if (isMoonInScorpio(persianDate, islamicDate))
-        context.getString(R.string.moonInScorpio) else ""
+fun isMoonInScorpio(context: Context, jdn: Jdn): String {
+    val persian = jdn.toPersianDate()
+    val islamic = jdn.toIslamicDate()
+    return if (isMoonInScorpio(persian, islamic)) context.getString(R.string.moonInScorpio) else ""
+}
 
-    if (short) return moonInScorpioText
-    return "%s\n%s$spacedColon%s\n%s".format(
+fun generateZodiacInformation(context: Context, jdn: Jdn, withEmoji: Boolean): String {
+    val persianDate = jdn.toPersianDate()
+    return "%s\n%s$spacedColon%s".format(
         generateYearName(context, persianDate, withEmoji),
         context.getString(R.string.zodiac),
-        Zodiac.fromPersianCalendar(persianDate).format(context, withEmoji),
-        moonInScorpioText
+        Zodiac.fromPersianCalendar(persianDate).format(context, withEmoji)
     ).trim()
 }
 
@@ -61,7 +61,7 @@ fun generateYearName(
             context.getString(R.string.shamsi_calendar_short)
         ),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val date = ChineseCalendar((time ?: Jdn(persianDate).toJavaCalendar()).time)
+            val date = ChineseCalendar((time ?: Jdn(persianDate).toGregorianCalendar()).time)
             val year = date[ChineseCalendar.YEAR]
             language.inParentheses.format(
                 ChineseZodiac.fromChineseCalendar(date).format(context, withEmoji),
@@ -85,18 +85,18 @@ fun sunlitSideMoonTiltAngle(time: Time, observer: Observer): Double {
     return Math.toDegrees(atan2(vec.z, vec.y))
 }
 
-val planetsTitles by lazy(LazyThreadSafetyMode.NONE) {
-    mapOf(
-        Body.Mercury to R.string.mercury,
-        Body.Venus to R.string.venus,
-        Body.Earth to R.string.earth,
-        Body.Mars to R.string.mars,
-        Body.Jupiter to R.string.jupiter,
-        Body.Saturn to R.string.saturn,
-        Body.Uranus to R.string.uranus,
-        Body.Neptune to R.string.neptune,
-        Body.Pluto to R.string.pluto,
-        Body.Sun to R.string.sun,
-        Body.Moon to R.string.moon,
-    ).withDefault { R.string.empty }
-}
+val Body.titleStringId
+    get(): @StringRes Int = when (this) {
+        Body.Mercury -> R.string.mercury
+        Body.Venus -> R.string.venus
+        Body.Earth -> R.string.earth
+        Body.Mars -> R.string.mars
+        Body.Jupiter -> R.string.jupiter
+        Body.Saturn -> R.string.saturn
+        Body.Uranus -> R.string.uranus
+        Body.Neptune -> R.string.neptune
+        Body.Pluto -> R.string.pluto
+        Body.Sun -> R.string.sun
+        Body.Moon -> R.string.moon
+        else -> R.string.empty
+    }

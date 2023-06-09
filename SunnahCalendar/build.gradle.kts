@@ -12,12 +12,12 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("kotlin-parcelize")
-    kotlin("plugin.serialization") version "1.8.10"
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-val composeCompilerVersion = "1.4.3"
-val composeVersion = "1.3.3"
+val composeCompilerVersion = "1.4.7"
+val composeVersion = "1.4.1"
 
 val isMinApi21Build = gradle.startParameter.taskNames.any { "minApi21" in it || "MinApi21" in it }
 
@@ -32,6 +32,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
         compose = true
     }
 
@@ -41,14 +42,14 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21 // if (enableFirebaseInNightlyBuilds) 19 else 17
         targetSdk = 33
-        versionCode = 10500
-        versionName = "10.5.2023"
+        versionCode = 10620
+        versionName = "10.6.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
         resourceConfigurations += listOf(
             "en", "fa", "ckb", "ar", "ur", "ps", "glk", "azb", "ja", "fr", "es", "tr", "kmr", "tg",
-            "ne", "zh-rCN"
+            "ne", "zh-rCN", "ru"
         )
         setProperty("archivesBaseName", "SunnahCalendar-$versionName")
     }
@@ -90,7 +91,7 @@ android {
         }
     }
 
-    packagingOptions {
+    packaging {
         resources.excludes += "DebugProbesKt.bin"
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
         resources.excludes += "META-INF/INDEX.LIST"
@@ -108,10 +109,11 @@ android {
         kotlinCompilerExtensionVersion = composeCompilerVersion
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+    val javaVersion = JavaVersion.VERSION_17
 
+    compileOptions {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
         // isCoreLibraryDesugaringEnabled = true
         //   Actually could be useful as makes use of java.time.Duration possible instead
         //   java.util.concurrent.TimeUnit but needs multidex as it says:
@@ -121,7 +123,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = javaVersion.majorVersion
     }
 
     lint { disable += listOf("MissingTranslation") }
@@ -142,7 +144,7 @@ val minApi21Implementation by configurations
 
 dependencies {
     implementation("com.github.persian-calendar:calendar:1.2.2")
-    implementation("com.github.persian-calendar:praytimes:3.0.0")
+    implementation("com.github.persian-calendar:praytimes:3.1.2")
     implementation("com.github.persian-calendar:calculator:0827f0fbcad2ffa8559f05dcc82002f1dac1464b")
 
     // https://github.com/cosinekitty/astronomy/releases/tag/v2.1.0
@@ -154,42 +156,44 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
     implementation("androidx.dynamicanimation:dynamicanimation:1.0.0")
-    implementation("com.google.android.material:material:1.9.0-beta01")
+    implementation("com.google.android.material:material:1.9.0")
 
-    val navVersion = "2.5.3"
+    val navVersion = "2.5.1"
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
     implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
     androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
 
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.10.1")
     val fragmentVersion = "1.5.2"
     implementation("androidx.fragment:fragment-ktx:$fragmentVersion")
     debugImplementation("androidx.fragment:fragment-testing:$fragmentVersion")
-    implementation("androidx.activity:activity-ktx:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
 
     implementation("androidx.browser:browser:1.5.0")
 
-    implementation("androidx.work:work-runtime-ktx:2.8.0")
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
 
-    val coroutinesVersion = "1.6.4"
+    val coroutinesVersion = "1.7.1"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.8.1")
 
     implementation("com.google.openlocationcode:openlocationcode:1.0.4")
-    implementation("com.google.zxing:core:3.5.1")
+    testImplementation("com.google.zxing:core:3.5.1")
 
     // Only needed for debug builds for now, won't be needed for minApi21 builds either
     debugImplementation("androidx.multidex:multidex:2.0.1")
 
-    minApi21Implementation("androidx.activity:activity-compose:1.6.1")
-    val accompanistVersion = "0.28.0"
+    val activityVersion = "1.7.2"
+    implementation("androidx.activity:activity-ktx:$activityVersion")
+    minApi21Implementation("androidx.activity:activity-compose:$activityVersion")
+
+    val accompanistVersion = "0.30.1"
     minApi21Implementation("com.google.accompanist:accompanist-flowlayout:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     minApi21Implementation("com.google.accompanist:accompanist-themeadapter-material3:$accompanistVersion")
     minApi21Implementation("androidx.compose.ui:ui:$composeVersion")
-    minApi21Implementation("androidx.compose.material3:material3:1.1.0-alpha08")
+    minApi21Implementation("androidx.compose.material3:material3:1.1.0")
     minApi21Implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
     minApi21Implementation("androidx.compose.animation:animation-graphics:$composeVersion")
     implementation("androidx.compose.runtime:runtime:$composeVersion")
@@ -202,16 +206,16 @@ dependencies {
 
     testImplementation(kotlin("test"))
 
-    testImplementation("org.junit.platform:junit-platform-runner:1.9.2")
-    val junit5Version = "5.9.2"
+    testImplementation("org.junit.platform:junit-platform-runner:1.9.3")
+    val junit5Version = "5.9.3"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit5Version")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junit5Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit5Version")
 
-    testImplementation("org.mockito:mockito-core:5.2.0")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.0.0")
 
-    testImplementation("com.google.truth:truth:1.1.3")
+    testImplementation("com.google.truth:truth:1.1.4")
 
     val androidTestVersion = "1.4.0"
     androidTestImplementation("androidx.test:runner:$androidTestVersion")
@@ -223,17 +227,17 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:$espressoVersion")
 
     // Koin main features for Android
-    implementation("io.insert-koin:koin-android:3.3.3")
+    implementation("io.insert-koin:koin-android:3.4.2")
     // Koin Jetpack WorkManager
-    implementation("io.insert-koin:koin-androidx-workmanager:3.3.3")
+    implementation("io.insert-koin:koin-androidx-workmanager:3.4.2")
     // Koin Navigation Graph
-    implementation("io.insert-koin:koin-androidx-navigation:3.3.3")
+    implementation("io.insert-koin:koin-androidx-navigation:3.4.2")
     // Koin Jetpack Compose
-    implementation("io.insert-koin:koin-androidx-compose:3.4.1")
+    implementation("io.insert-koin:koin-androidx-compose:3.4.5")
     // Koin Koin for Ktor
-    implementation("io.insert-koin:koin-ktor:3.3.0")
+    implementation("io.insert-koin:koin-ktor:3.4.1")
     // Koin SLF4J Logger
-    implementation("io.insert-koin:koin-logger-slf4j:3.3.0")
+    implementation("io.insert-koin:koin-logger-slf4j:3.4.1")
 
     //Ktor
     val ktorVersion = "2.2.2"
@@ -243,36 +247,36 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-android:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
+    implementation("ch.qos.logback:logback-classic:1.4.7")
 
     //Json Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
     //room
-    implementation("androidx.room:room-runtime:2.5.0")
-    ksp("androidx.room:room-compiler:2.5.0")
-    implementation("androidx.room:room-ktx:2.5.0")
+    implementation("androidx.room:room-runtime:2.5.1")
+    ksp("androidx.room:room-compiler:2.5.1")
+    implementation("androidx.room:room-ktx:2.5.1")
 
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
 
     implementation("androidx.multidex:multidex:2.0.1")
 
     //FireBase
     implementation("com.google.firebase:firebase-core:21.1.1")
-    implementation("com.google.firebase:firebase-crashlytics-ktx:18.3.5")
-    implementation("com.google.firebase:firebase-analytics-ktx:21.2.0")
-    implementation("com.google.firebase:firebase-inappmessaging-display-ktx:20.3.0")
+    implementation("com.google.firebase:firebase-crashlytics-ktx:18.3.7")
+    implementation("com.google.firebase:firebase-analytics-ktx:21.3.0")
+    implementation("com.google.firebase:firebase-inappmessaging-display-ktx:20.3.2")
 
     //Timber
     implementation("com.jakewharton.timber:timber:5.0.1")
 
     //OkHttp
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.6")
-    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.6")
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
 
     //Reflection
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.10")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
 
     //Zip jar file
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar", "*.jar"))))
@@ -309,11 +313,5 @@ tasks.register("mergeWeblate") {
             "git remote update weblate",
             "git merge weblate/main",
         ).forEach { println(it.execute().text) }
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "11"
     }
 }

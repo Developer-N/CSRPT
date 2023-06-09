@@ -3,14 +3,10 @@ package ir.namoo.commons.utils
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.KeyguardManager
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -18,14 +14,11 @@ import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.DHUHR_KEY
@@ -33,7 +26,7 @@ import com.byagowi.persiancalendar.FAJR_KEY
 import com.byagowi.persiancalendar.ISHA_KEY
 import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SUNRISE_KRY
+import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.mainCalendar
@@ -41,7 +34,7 @@ import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.toCivilDate
-import com.byagowi.persiancalendar.utils.toJavaCalendar
+import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.praytimes.PrayTimes
@@ -50,13 +43,11 @@ import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.PrayTimesModel
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-val Number.ndp: Float get() = this.toFloat() * Resources.getSystem().displayMetrics.density
-val Number.nsp: Float get() = this.toFloat() * Resources.getSystem().displayMetrics.scaledDensity
-
-fun String.numbersOf(): String {
+fun String.digitsOf(): String {
     val res = StringBuilder()
     for (c in this) if (c.isDigit()) res.append(c)
     return res.toString()
@@ -128,7 +119,7 @@ fun snackMessage(
         val snack = Snackbar.make(view, message, snackTime)
         (snack.view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView).typeface =
             getAppFont(view.context)
-        snack.view.setBackgroundColor(view.context.resolveColor(R.attr.colorCard))
+        snack.view.setBackgroundColor(view.context.resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface))
         snackAction?.let {
             snack.setAction(it, clickAction)
         }
@@ -138,25 +129,6 @@ fun snackMessage(
 
 fun Context.toastMessage(msg: String) {
     Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-}
-
-fun createBitmapFromView3(v: View): Bitmap {
-    v.layoutParams = LinearLayoutCompat.LayoutParams(
-        LinearLayoutCompat.LayoutParams.MATCH_PARENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT
-    )
-    v.measure(
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    )
-    v.layout(0, 0, v.measuredWidth, v.measuredHeight)
-    val bitmap = Bitmap.createBitmap(
-        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
-    )
-
-    val c = Canvas(bitmap)
-    v.layout(v.left, v.top, v.right, v.bottom)
-    v.draw(c)
-    return bitmap
 }
 
 fun animateVisibility(view: View, visible: Boolean) {
@@ -177,46 +149,57 @@ fun getDayMonthForDayOfYear(day: Int): String {
             m = 1
             d = day
         }
+
         day <= 62 -> {// 2
             m = 2
             d = day - 31
         }
+
         day <= 93 -> {// 3
             m = 3
             d = day - 62
         }
+
         day <= 124 -> {//4
             m = 4
             d = day - 93
         }
+
         day <= 155 -> {//5
             m = 5
             d = day - 124
         }
+
         day <= 186 -> {//6
             m = 6
             d = day - 155
         }
+
         day <= 216 -> {//7
             m = 7
             d = day - 186
         }
+
         day <= 246 -> {//8
             m = 8
             d = day - 216
         }
+
         day <= 276 -> {//9
             m = 9
             d = day - 246
         }
+
         day <= 306 -> {//10
             m = 10
             d = day - 276
         }
+
         day <= 336 -> {//11
             m = 11
             d = day - 306
         }
+
         day <= 366 -> {//12
             m = 12
             d = day - 336
@@ -339,7 +322,7 @@ fun formatServerDate(serverDate: String): String {
     var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(serverDate)
     if (date == null) date = Date()
     return formatDate(
-        Jdn(date.toJavaCalendar().toCivilDate().toJdn()).toCalendar(mainCalendar)
+        Jdn(date.toGregorianCalendar().toCivilDate().toJdn()).toCalendar(mainCalendar)
     )
 }
 
@@ -369,7 +352,7 @@ fun createAthansSettingDB(context: Context) {
         )
         athanSettingDB.insert(
             AthanSetting(
-                SUNRISE_KRY,
+                SUNRISE_KEY,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -501,41 +484,6 @@ fun getAthanUri(setting: AthanSetting, key: String, context: Context): Uri {
     else setting.athanURI.toUri()
 }
 
-fun createBitmapFromView(v: View): Bitmap {
-    v.layoutParams = RelativeLayout.LayoutParams(
-        RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT
-    )
-    v.measure(
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    )
-    v.layout(0, 0, v.measuredWidth, v.measuredHeight)
-    val bitmap = Bitmap.createBitmap(
-        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
-    )
-
-    val c = Canvas(bitmap)
-    v.layout(v.left, v.top, v.right, v.bottom)
-    v.draw(c)
-    return bitmap
-}
-
-fun createBitmapFromView2(v: View): Bitmap {
-    v.measure(
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    )
-    v.layout(0, 0, v.measuredWidth, v.measuredHeight)
-    val bitmap = Bitmap.createBitmap(
-        v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888
-    )
-
-    val c = Canvas(bitmap)
-    v.layout(v.left, v.top, v.right, v.bottom)
-    v.draw(c)
-    return bitmap
-}
-
 fun String.smartTruncate(length: Int): String {
     val words = split(" ")
     var added = 0
@@ -593,23 +541,6 @@ fun Activity.turnScreenOnAndKeyguardOff() {
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        getSystemService<KeyguardManager>()?.requestDismissKeyguard(this, null)
-    }
-}
-
-fun Activity.turnScreenOffAndKeyguardOn() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-        setShowWhenLocked(false)
-        setTurnScreenOn(false)
-        window.clearFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
-        )
-    } else {
-        @Suppress("DEPRECATION") window.clearFlags(
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
-        )
-    }
 }
 
 fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
@@ -638,4 +569,11 @@ fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
             putBoolean(PREF_PHONE_STATE_PERMISSION, true)
         }
     }
+}
+
+fun File.logTo(log: String) {
+    if (!exists())
+        createNewFile()
+    val currentText = readText()
+    writeText("$currentText\r\n$log")
 }

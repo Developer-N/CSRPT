@@ -6,32 +6,35 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.withRotation
+import com.byagowi.persiancalendar.QIBLA_LATITUDE
+import com.byagowi.persiancalendar.QIBLA_LONGITUDE
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EarthPosition
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.QIBLA_LATITUDE
-import com.byagowi.persiancalendar.QIBLA_LONGITUDE
 import com.byagowi.persiancalendar.ui.common.AngleDisplay
 import com.byagowi.persiancalendar.ui.common.SolarDraw
+import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.sp
 import com.byagowi.persiancalendar.utils.toObserver
-import java.util.*
+import java.util.GregorianCalendar
+import kotlin.math.cbrt
 import kotlin.math.min
 import kotlin.math.round
+import kotlin.math.roundToInt
 
-class CompassView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(context, attrs) {
 
     var angle = 0f
         set(value) {
@@ -48,47 +51,42 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
 
     private val northwardShapePath = Path()
     private val northArrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = Color.RED
+        it.color = ContextCompat.getColor(context, R.color.north_arrow)
         it.style = Paint.Style.FILL
-        it.alpha = 100
     }
     private val markerPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.qibla_color)
+        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
     }
+    private val dp = resources.dp
     private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.qibla_color)
-        it.strokeWidth = 0.5.dp
+        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.strokeWidth = .5f * dp
         it.style = Paint.Style.STROKE // Sadece Cember ciziyor.
     }
     private val moonPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.style = Paint.Style.STROKE
         it.color = Color.LTGRAY
-        it.strokeWidth = 1.dp
     }
     private val moonShadePaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0x808080FF.toInt()
         it.style = Paint.Style.STROKE
-        it.strokeWidth = 9.dp
+        it.strokeWidth = 9 * dp
         it.strokeCap = Paint.Cap.ROUND
     }
-    private val sunPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.style = Paint.Style.STROKE
-        it.strokeWidth = 1.dp
-    }
+    private val sunPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.style = Paint.Style.STROKE }
     private val sunShadePaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0x80808080.toInt()
         it.style = Paint.Style.STROKE
-        it.strokeWidth = 9.dp
+        it.strokeWidth = 9 * dp
         it.strokeCap = Paint.Cap.ROUND
     }
     private val qiblaPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0xFF009000.toInt()
         it.style = Paint.Style.FILL_AND_STROKE
-        it.strokeWidth = 1.dp
         it.pathEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
     }
     private val kaaba = context.getCompatDrawable(R.drawable.kaaba)
-        .toBitmap(32.dp.toInt(), 32.dp.toInt())
+        .toBitmap((32 * dp).toInt(), (32 * dp).toInt())
 
     private var cx = 0f
     private var cy = 0f // Center of Compass (cx, cy)
@@ -99,7 +97,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
     private var astronomyState = observer?.let { AstronomyState(it, GregorianCalendar()) }
 
     private val fullDay = Clock(24, 0).toMinutes().toFloat()
-    private var sunProgress = Clock(Calendar.getInstance()).toMinutes() / fullDay
+    private var sunProgress = Clock(GregorianCalendar()).toMinutes() / fullDay
 
     private val enableShade = false
 
@@ -124,20 +122,17 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
             invalidate()
         }
     private val planetsPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.qibla_color)
-        it.textSize = 12.sp
+        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
         it.textAlign = Paint.Align.CENTER
     }
     private val textPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.qibla_color)
-        it.textSize = 12.sp
+        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
         it.textAlign = Paint.Align.CENTER
     }
     private val textStrokePaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = context.resolveColor(R.attr.colorCard)
-        it.strokeWidth = 5.dp
+        it.color = context.resolveColor(com.google.android.material.R.attr.colorSurface)
+        it.strokeWidth = 5 * dp
         it.style = Paint.Style.STROKE
-        it.textSize = 12.sp
         it.textAlign = Paint.Align.CENTER
     }
 
@@ -163,16 +158,32 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
         }
     }
 
-    override fun onDraw(canvas: Canvas) {
-        angleDisplay.draw(canvas, (round(trueNorth) + 360f) % 360f)
-        canvas.withRotation(-trueNorth, cx, cy) {
-            drawDial()
-            drawPath(northwardShapePath, northArrowPaint)
-            if (coordinates.value != null) {
-                drawMoon()
-                drawSun()
-                drawQibla()
-                drawPlanets()
+    init {
+        val matrixProperties = FloatArray(9)
+        maxScale = 2f
+        val textSize = 12 * resources.sp
+        val dashSize = 1 * dp
+        onDraw = fun(canvas: Canvas, matrix: Matrix) {
+            matrix.getValues(matrixProperties)
+            val scale = matrixProperties[Matrix.MSCALE_X]
+            planetsPaint.textSize = textSize * scale
+            textPaint.textSize = textSize * scale
+            textStrokePaint.textSize = textSize * scale
+            northArrowPaint.alpha = (100 * cbrt(scale)).roundToInt()
+            qiblaPaint.strokeWidth = dashSize * scale
+            moonPaint.strokeWidth = dashSize * scale
+            sunPaint.strokeWidth = dashSize * scale
+
+            angleDisplay.draw(canvas, (round(trueNorth) + 360f) % 360f)
+            canvas.withRotation(-trueNorth, cx, cy) {
+                drawDial()
+                drawPath(northwardShapePath, northArrowPaint)
+                if (coordinates.value != null) {
+                    drawMoon()
+                    drawSun()
+                    drawQibla()
+                    drawPlanets()
+                }
             }
         }
     }
@@ -270,8 +281,8 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : View(context,
             val textCenter = cy - radius / 2
             withRotation(90f, cx, textCenter) {
                 val distance = qiblaHeading.km
-                drawText(distance, cx, textCenter + 4.dp, textStrokePaint)
-                drawText(distance, cx, textCenter + 4.dp, textPaint)
+                drawText(distance, cx, textCenter + 4 * dp, textStrokePaint)
+                drawText(distance, cx, textCenter + 4 * dp, textPaint)
             }
         }
     }

@@ -1,5 +1,6 @@
 package ir.namoo.commons
 
+
 const val BASE_API_URL = "https://namoodev.ir/api/v1"
 
 const val appLink = "\r\n https://namoodev.ir/pt"//namoo.ir
@@ -45,3 +46,5 @@ const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
 const val PREF_ORIGINAL_RINGER_MODE = "pref_original_ringer_mode"
 
 const val PREF_PHONE_STATE_PERMISSION = "is_phone_state_permission_showed"
+
+const val ATHAN_NOTIFICATION_ID = 2030

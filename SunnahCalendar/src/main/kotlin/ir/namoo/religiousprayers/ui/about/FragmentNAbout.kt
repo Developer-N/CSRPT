@@ -12,19 +12,33 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.core.content.FileProvider
+import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.FragmentNaboutBinding
-import com.byagowi.persiancalendar.ui.utils.*
+import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
+import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
+import com.byagowi.persiancalendar.ui.utils.navigateSafe
+import com.byagowi.persiancalendar.ui.utils.onClick
+import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import com.google.accompanist.themeadapter.material3.Mdc3Theme
@@ -33,7 +47,6 @@ import com.google.android.material.textview.MaterialTextView
 import ir.namoo.commons.appLink
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.snackMessage
-import java.io.File
 
 class FragmentNAbout : Fragment() {
 
@@ -44,7 +57,7 @@ class FragmentNAbout : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentNaboutBinding.inflate(layoutInflater, container, false)
-
+        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         binding.appBar.toolbar.let { toolbar ->
             toolbar.setTitle(R.string.about)
             toolbar.setupMenuNavigation()
@@ -52,7 +65,17 @@ class FragmentNAbout : Fragment() {
             toolbar.menu.add(R.string.share).also {
                 it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_share)
                 it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                it.onClick { shareApplication() }
+                it.onClick {
+                    val intent = Intent(Intent.ACTION_SEND)
+                    intent.type = "text/plain"
+                    intent.putExtra(
+                        Intent.EXTRA_TEXT,
+                        "نرم افزار تقویم + اوقات شرعی اهل سنت را از لینک زیر دانلود کنید. \n$appLink"
+                    )
+                    startActivity(
+                        Intent.createChooser(intent, resources.getString(R.string.share))
+                    )
+                }
             }
 
             toolbar.menu.add(R.string.device_information).also {
@@ -86,6 +109,15 @@ class FragmentNAbout : Fragment() {
         }
         binding.appBar.root.hideToolbarBottomShadow()
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
+
         val version = programVersion(requireContext().packageManager, requireContext().packageName)
         val versionDescription = formatNumber(
             "${getString(R.string.app_name)}: ${
@@ -96,64 +128,37 @@ class FragmentNAbout : Fragment() {
         binding.info.setContent {
             Mdc3Theme {
                 val appFont = remember { getAppFont(requireContext()) }
-                val normalTextColor =
-                    remember { Color(requireContext().resolveColor(R.attr.colorTextNormal)) }
-                val iconColor = remember { Color(requireContext().resolveColor(R.attr.colorIcon)) }
-                val cardColor = remember { Color(requireContext().resolveColor(R.attr.colorCard)) }
+                val iconColor =
+                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
+                val cardColor =
+                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
                 val scrollState = rememberScrollState()
-                Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    InfoUIElement(appFont, normalTextColor, cardColor, versionDescription)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(cardColor)
+                        .verticalScroll(scrollState)
+                        .padding(4.dp, 10.dp)
+                ) {
+                    InfoUIElement(appFont, versionDescription)
+                    Divider(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(), thickness = 2.dp
+                    )
                     ContactUIElement(
-                        normalTextColor = normalTextColor,
+                        typeface = appFont,
                         iconColor = iconColor,
                         cardColor = cardColor,
                         namooClick = { openTG(binding.root) },
-                        developerNClick = { openTGDeveloper(binding.root) }
-                    ) { mailTo() }
+                        developerNClick = { openTGDeveloper(binding.root) },
+                        mailTo = { mailTo() }
+                    )
+
                 }
             }
         }
         return binding.root
-    }
-
-    private fun shareApplication() {
-        val activity = activity ?: return
-        runCatching {
-            val app = activity.applicationContext?.applicationInfo ?: return
-            val cacheDir = requireContext().getExternalFilesDir("pic")?.absolutePath ?: return
-
-            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                type = "*/*"
-                val uri = FileProvider.getUriForFile(
-                    activity.applicationContext,
-                    "${BuildConfig.APPLICATION_ID}.provider",
-                    File(app.sourceDir).copyTo(
-                        File(
-                            "$cacheDir/" + getString(R.string.app_name).replace(
-                                " ", "_"
-                            ) + "-" + formatNumber(
-                                programVersion(
-                                    requireContext().packageManager, requireContext().packageName
-                                ).split("-")[0]
-                            ) + ".apk"
-                        ), true
-                    )
-                ).apply {
-                    activity.grantUriPermission(
-                        "com.android.providers.media.MediaProvider",
-                        this,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-                }
-                putExtra(Intent.EXTRA_STREAM, uri)
-                val text = "\n" + getString(R.string.app_name) + "\n$appLink"
-                putExtra(Intent.EXTRA_TEXT, text)
-                setDataAndType(uri, "*/*")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }, getString(R.string.share)))
-        }.onFailure(logException).getOrElse {
-            requireActivity().bringMarketPage()
-        }
     }
 
     private fun programVersion(packageManager: PackageManager, packageName: String): String =

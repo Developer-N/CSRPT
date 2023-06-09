@@ -2,9 +2,12 @@ package com.byagowi.persiancalendar.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.AlarmManager
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -15,7 +18,11 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.Spannable
 import android.text.SpannableString
-import android.view.*
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.Window
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
@@ -37,21 +44,65 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
-import com.byagowi.persiancalendar.*
-import com.byagowi.persiancalendar.databinding.ActivityMainBinding
+import androidx.viewpager2.widget.MarginPageTransformer
+import com.byagowi.persiancalendar.CALENDAR_READ_PERMISSION_REQUEST_CODE
+import com.byagowi.persiancalendar.CHANGE_LANGUAGE_IS_PROMOTED_ONCE
+import com.byagowi.persiancalendar.DEFAULT_NOTIFY_DATE
+import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
+import com.byagowi.persiancalendar.LAST_CHOSEN_TAB_KEY
+import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION
+import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION
+import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
+import com.byagowi.persiancalendar.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
+import com.byagowi.persiancalendar.PREF_HAS_EVER_VISITED
+import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET
+import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET_SET_DATE
+import com.byagowi.persiancalendar.PREF_LAST_APP_VISIT_VERSION
+import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
+import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
+import com.byagowi.persiancalendar.PREF_NOTIFY_DATE
+import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
+import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
+import com.byagowi.persiancalendar.PREF_THEME
+import com.byagowi.persiancalendar.PREF_THEME_GRADIENT
+import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.databinding.MainActivityBinding
 import com.byagowi.persiancalendar.databinding.NavigationHeaderBinding
-import com.byagowi.persiancalendar.entities.*
-import com.byagowi.persiancalendar.global.*
+import com.byagowi.persiancalendar.entities.CalendarType
+import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.Language
+import com.byagowi.persiancalendar.entities.Theme
+import com.byagowi.persiancalendar.global.configureCalendarsAndLoadEvents
+import com.byagowi.persiancalendar.global.initGlobal
+import com.byagowi.persiancalendar.global.isIranHolidaysEnabled
+import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.loadLanguageResources
+import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.updateStoredPreference
 import com.byagowi.persiancalendar.service.ApplicationService
 import com.byagowi.persiancalendar.ui.calendar.CalendarScreenDirections
 import com.byagowi.persiancalendar.ui.settings.SettingsScreen
-import com.byagowi.persiancalendar.ui.utils.*
-import com.byagowi.persiancalendar.utils.*
+import com.byagowi.persiancalendar.ui.utils.askForCalendarPermission
+import com.byagowi.persiancalendar.ui.utils.askForPostNotificationPermission
+import com.byagowi.persiancalendar.ui.utils.bringMarketPage
+import com.byagowi.persiancalendar.ui.utils.considerSystemBarsInsets
+import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.ui.utils.navigateSafe
+import com.byagowi.persiancalendar.ui.utils.resolveColor
+import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
+import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.applyAppLanguage
+import com.byagowi.persiancalendar.utils.isRtl
+import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.putJdn
+import com.byagowi.persiancalendar.utils.readAndStoreDeviceCalendarEventsOfTheDay
+import com.byagowi.persiancalendar.utils.startEitherServiceOrWorker
+import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
+import com.byagowi.persiancalendar.utils.update
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.shape.MaterialShapeDrawable
-import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
 import io.github.persiancalendar.calendar.PersianDate
@@ -60,12 +111,20 @@ import ir.namoo.commons.NAVIGATE_TO_DOWNLOAD_FRAGMENT
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.PREF_LAST_UPDATE_CHECK
 import ir.namoo.commons.model.AthanSettingsDB
+import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.UpdateModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.repository.asDataState
-import ir.namoo.commons.utils.*
+import ir.namoo.commons.utils.CustomTypefaceSpan
+import ir.namoo.commons.utils.checkAndAskPhoneStatePermission
+import ir.namoo.commons.utils.getAppFont
+import ir.namoo.commons.utils.getDayNum
+import ir.namoo.commons.utils.isNetworkConnected
+import ir.namoo.commons.utils.openUrlInCustomTab
+import ir.namoo.commons.utils.overrideFont
 import ir.namoo.quran.ui.QuranActivity
+import ir.namoo.religiousprayers.ui.calendar.NavigationHeaderAdapter
 import ir.namoo.religiousprayers.ui.donate.DonateFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -83,13 +142,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     private var creationDateJdn = Jdn.today()
     private var settingHasChanged = false
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: MainActivityBinding
 
     private val onBackPressedCloseDrawerCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = binding.root.closeDrawer(GravityCompat.START)
     }
 
-    private val exitId = View.generateViewId()
     private val donateID = 62366236
     private val quranID = 6236
 
@@ -110,6 +168,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
         window.sharedElementsUseOverlay = false
         super.onCreate(savedInstanceState)
+        transparentSystemBars()
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCloseDrawerCallback)
         initGlobal(this)
@@ -121,21 +180,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         readAndStoreDeviceCalendarEventsOfTheDay(applicationContext)
         update(applicationContext, false)
 
-        binding = ActivityMainBinding.inflate(layoutInflater).also {
+        binding = MainActivityBinding.inflate(layoutInflater).also {
             setContentView(it.root)
         }
         ensureDirectionality()
-
-        if (enableNewInterface && getSystemService<ActivityManager>()?.isLowRamDevice == false) {
-            window?.makeWallpaperTransparency()
-            binding.root.fitsSystemWindows = false
-            binding.root.background = MaterialShapeDrawable().also {
-                it.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(16.dp)
-            }
-            binding.root.clipToOutline = true
-            binding.root.alpha = 0.96f
-            binding.root.fitsSystemWindows = false
-        }
+        setNavHostBackground()
 
         binding.root.addDrawerListener(createDrawerListener())
         val typeface = getAppFont(this)
@@ -144,7 +193,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             Triple(R.id.calendar, R.drawable.ic_date_range, R.string.calendar),
             Triple(quranID, R.drawable.ic_baseline_menu_book, R.string.quran),
             Triple(R.id.azkar, R.drawable.ic_azkar, R.string.azkar),
-            Triple(R.id.monthly, R.drawable.ic_date_range, R.string.monthly_times),
             Triple(R.id.edit, R.drawable.ic_edit, R.string.edit_times),
             Triple(R.id.downup, R.drawable.ic_synce, R.string.download_upload),
             Triple(R.id.converter, R.drawable.ic_swap_vertical_circle, R.string.date_converter),
@@ -153,7 +201,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             Triple(R.id.settings, R.drawable.ic_settings, R.string.settings),
             Triple(R.id.about, R.drawable.ic_info, R.string.about),
             Triple(donateID, R.drawable.ic_baseline_monetization_on_24, R.string.donate),
-            Triple(exitId, R.drawable.ic_cancel, R.string.exit)
+            Triple(R.id.exit, R.drawable.ic_cancel, R.string.exit)
         ).forEach { (id, icon, title) ->
             val spannable = SpannableString(getString(title)).apply {
                 setSpan(
@@ -188,29 +236,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             ) != PackageManager.PERMISSION_GRANTED
         ) askForCalendarPermission()
 
-        val persian = creationDateJdn.toPersianCalendar()
-        run {
-            val header = NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0))
-            val season = Season.fromPersianCalendar(persian, coordinates.value)
-//            header.seasonImage.setImageResource(season.imageId)
-            header.seasonImage.contentDescription = getString(season.nameStringId)
-            header.seasonImage.setImageResource(run {
-                val c = Jdn.today().toIslamicCalendar()
-                when {
-                    c.month == 9 -> R.drawable.ramadhan
-                    c.month == 10 && c.dayOfMonth in 1..3 -> R.drawable.eid
-                    else -> R.drawable.drawer_background
-                }
-            })
-        }
-
         if (!appPrefs.getBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, false)) {
             showChangeLanguageSnackbar()
             appPrefs.edit { putBoolean(CHANGE_LANGUAGE_IS_PROMOTED_ONCE, true) }
         }
 
         if (mainCalendar == CalendarType.SHAMSI && isIranHolidaysEnabled &&
-            persian.year > supportedYearOfIranCalendar
+            creationDateJdn.toPersianDate().year > supportedYearOfIranCalendar
         ) showAppIsOutDatedSnackbar()
 
         applyAppLanguage(this)
@@ -256,7 +288,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 setTitle(R.string.requset_permision)
                 setMessage(R.string.post_notification_permission_message)
                 setPositiveButton(R.string.ok) { _, _ ->
-                    askForPostNotificationPermission()
+                    askForPostNotificationPermission(2024)
                 }
                 setNegativeButton(R.string.cancel) { dialog, _ ->
                     dialog.dismiss()
@@ -267,6 +299,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         lifecycleScope.launch {
             checkAndAskPhoneStatePermission(athanSettings)
         }
+    }
+
+    private fun setNavHostBackground() {
+        if (!appPrefs.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT)
+            || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP
+        ) binding.navHostFragment.setBackgroundColor(resolveColor(R.attr.screenBackgroundColor))
+        else binding.navHostFragment.setBackgroundResource(R.drawable.gradient_background)
     }
 
     // This shouldn't be needed but as a the last resort
@@ -305,14 +344,16 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun navigateTo(@IdRes id: Int) {
-        navHostFragment?.navController?.navigate(id, null, navOptions {
-            anim {
-                enter = R.anim.nav_enter_anim
-                exit = R.anim.nav_exit_anim
-                popEnter = R.anim.nav_enter_anim
-                popExit = R.anim.nav_exit_anim
+        navHostFragment?.navController?.navigate(
+            id, null, navOptions {
+                anim {
+                    enter = R.anim.nav_enter_anim
+                    exit = R.anim.nav_exit_anim
+                    popEnter = R.anim.nav_enter_anim
+                    popExit = R.anim.nav_exit_anim
+                }
             }
-        })
+        )
     }
 
     override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
@@ -328,30 +369,35 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             LAST_CHOSEN_TAB_KEY -> return // don't run the expensive update and etc on tab changes
             PREF_ISLAMIC_OFFSET ->
                 prefs.edit { putJdn(PREF_ISLAMIC_OFFSET_SET_DATE, Jdn.today()) }
+
             PREF_SHOW_DEVICE_CALENDAR_EVENTS -> {
-                if (prefs.getBoolean(
-                        PREF_SHOW_DEVICE_CALENDAR_EVENTS,
-                        true
-                    ) && ActivityCompat.checkSelfPermission(
+                if (prefs.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, true) &&
+                    ActivityCompat.checkSelfPermission(
                         this, Manifest.permission.READ_CALENDAR
                     ) != PackageManager.PERMISSION_GRANTED
                 ) askForCalendarPermission()
             }
+
             PREF_APP_LANGUAGE -> restartToSettings()
-            PREF_NEW_INTERFACE -> restartToSettings()
             PREF_THEME, PREF_APP_FONT -> {
                 // Restart activity if theme is changed and don't if app theme
                 // has just got a default value by preferences as going
                 // from null => SystemDefault which makes no difference
                 if (previousAppThemeValue != null || !Theme.isDefault(prefs)) restartToSettings()
             }
+
+            PREF_THEME_GRADIENT -> setNavHostBackground()
+
             PREF_NOTIFY_DATE -> {
                 if (!prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)) {
                     stopService(Intent(this, ApplicationService::class.java))
                     startEitherServiceOrWorker(applicationContext)
                 }
             }
+
             PREF_EASTERN_GREGORIAN_ARABIC_MONTHS -> loadLanguageResources(this)
+
+            PREF_PRAY_TIME_METHOD -> prefs.edit { remove(PREF_MIDNIGHT_METHOD) }
         }
 
         configureCalendarsAndLoadEvents(this)
@@ -371,18 +417,28 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, isGranted) }
                 if (isGranted) {
                     val navController = navHostFragment?.navController
-                    if (navController?.currentDestination?.id == R.id.calendar) navController.navigateSafe(
-                        CalendarScreenDirections.navigateToSelf()
-                    )
+                    if (navController?.currentDestination?.id == R.id.calendar)
+                        navController.navigateSafe(CalendarScreenDirections.navigateToSelf())
                 }
             }
-            POST_NOTIFICATION_PERMISSION_REQUEST_CODE -> {
+
+            POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
                 val isGranted = ActivityCompat.checkSelfPermission(
                     this, Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
                 appPrefs.edit { putBoolean(PREF_NOTIFY_DATE, isGranted) }
                 updateStoredPreference(this)
                 if (isGranted) update(this, updateDate = true)
+            }
+
+            POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+                val isGranted = ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+                appPrefs.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
+                updateStoredPreference(this)
             }
         }
     }
@@ -392,6 +448,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         applyAppLanguage(this)
         ensureDirectionality()
     }
+
+    private var drawerOpenedOnce = false
 
     override fun onResume() {
         super.onResume()
@@ -405,17 +463,26 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 navController.navigateSafe(CalendarScreenDirections.navigateToSelf())
             }
         }
+
+        // Recreating on every resume to react to system theme change (Android 14's monotone theme)
+        NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0)).seasonsPager.also {
+            it.adapter = NavigationHeaderAdapter()
+            it.currentItem =
+                NavigationHeaderAdapter.getCurrentIndex() - if (drawerOpenedOnce) 0 else 3
+            it.setPageTransformer(MarginPageTransformer((8 * resources.dp).toInt()))
+        }
     }
 
     // Checking for the ancient "menu" key
     override fun onKeyDown(keyCode: Int, event: KeyEvent?) = when (keyCode) {
         KeyEvent.KEYCODE_MENU -> {
-            if (binding.root.isDrawerOpen(GravityCompat.START)) binding.root.closeDrawer(
-                GravityCompat.START
-            )
-            else binding.root.openDrawer(GravityCompat.START)
+            if (binding.root.isDrawerOpen(GravityCompat.START))
+                binding.root.closeDrawer(GravityCompat.START)
+            else
+                binding.root.openDrawer(GravityCompat.START)
             true
         }
+
         else -> super.onKeyDown(keyCode, event)
     }
 
@@ -430,15 +497,17 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onNavigationItemSelected(selectedMenuItem: MenuItem): Boolean {
         when (val itemId = selectedMenuItem.itemId) {
-            exitId -> finish()
+            R.id.exit -> finish()
             donateID -> {
                 binding.root.closeDrawer(GravityCompat.START)
                 DonateFragment().show(supportFragmentManager, DonateFragment::class.java.name)
             }
+
             quranID -> {
                 binding.root.closeDrawer(GravityCompat.START)
                 startActivity(Intent(this, QuranActivity::class.java))
             }
+
             else -> {
                 binding.root.closeDrawer(GravityCompat.START)
                 if (navHostFragment?.navController?.currentDestination?.id != itemId) {
@@ -456,6 +525,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         Snackbar.make(
             binding.root, "✖  Change app language?", Snackbar.LENGTH_INDEFINITE
         ).also {
+            it.considerSystemBarsInsets()
             it.view.layoutDirection = View.LAYOUT_DIRECTION_LTR
             it.view.setOnClickListener { _ -> it.dismiss() }
             it.setAction("Settings") {
@@ -472,6 +542,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     fun showAppIsOutDatedSnackbar() = Snackbar.make(
         binding.root, getString(R.string.outdated_app), 10000
     ).also {
+        it.considerSystemBarsInsets()
         it.setAction(getString(R.string.update)) { bringMarketPage() }
         it.setActionTextColor(ContextCompat.getColor(it.context, R.color.dark_accent))
     }.show()
@@ -502,20 +573,19 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         private val blurs = if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && windowManager.isCrossWindowBlurEnabled
-        ) (0..4).map {
+        ) (0..9).map {
             if (it == 0) null
-            else RenderEffect.createBlurEffect(it * 6f, it * 6f, Shader.TileMode.CLAMP)
+            else RenderEffect.createBlurEffect(it * 2f, it * 2f, Shader.TileMode.CLAMP)
         } else emptyList()
 
         private fun slidingAnimation(drawerView: View, slideOffset: Float) {
             binding.navHostFragment.translationX =
-                slideOffset * drawerView.width.toFloat() * slidingDirection
+                slideOffset * drawerView.width.toFloat() * slidingDirection * .97f
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && blurs.isNotEmpty()) {
                 val blurIndex =
                     if (slideOffset.isNaN()) 0 else ((blurs.size - 1) * slideOffset).roundToInt()
                 binding.navHostFragment.setRenderEffect(blurs[blurIndex])
-                binding.navigation.getHeaderView(0)
-                    .setRenderEffect(blurs[blurs.size - 1 - blurIndex])
+                binding.navigation.setRenderEffect(blurs[blurs.size - 1 - blurIndex])
             }
             binding.root.bringChildToFront(drawerView)
             binding.root.requestLayout()
@@ -524,6 +594,11 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         override fun onDrawerOpened(drawerView: View) {
             super.onDrawerOpened(drawerView)
             onBackPressedCloseDrawerCallback.isEnabled = true
+
+            NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0))
+                .seasonsPager.setCurrentItem(NavigationHeaderAdapter.getCurrentIndex(), true)
+
+            drawerOpenedOnce = true
         }
 
         override fun onDrawerClosed(drawerView: View) {

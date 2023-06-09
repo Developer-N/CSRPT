@@ -6,14 +6,13 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -22,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -35,29 +33,26 @@ import com.byagowi.persiancalendar.R
 
 @Composable
 fun InfoUIElement(
-    typeface: Typeface, normalTextColor: Color, cardColor: Color, versionDescription: String
+    typeface: Typeface, versionDescription: String
 ) {
-    Card(
+    Box(
         modifier = Modifier
             .padding(4.dp)
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = CardDefaults.elevatedShape,
-        elevation = CardDefaults.elevatedCardElevation()
+            .fillMaxWidth()
     ) {
         Column {
-            InfoTitle(typeface, normalTextColor)
+            InfoTitle(typeface)
             Spacer(modifier = Modifier.height(8.dp))
-            InfoVersion(typeface, versionDescription, normalTextColor)
+            InfoVersion(typeface, versionDescription)
             Spacer(modifier = Modifier.height(8.dp))
-            InfoDescription(typeface, normalTextColor)
+            InfoDescription(typeface)
         }
 
     }
 }
 
 @Composable
-fun InfoTitle(typeface: Typeface, normalTextColor: Color) {
+fun InfoTitle(typeface: Typeface) {
     Text(
         modifier = Modifier
             .padding(4.dp)
@@ -66,14 +61,13 @@ fun InfoTitle(typeface: Typeface, normalTextColor: Color) {
         textAlign = TextAlign.Center,
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
-        fontFamily = FontFamily(typeface),
-        color = normalTextColor
+        fontFamily = FontFamily(typeface)
     )
 }
 
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
-fun InfoVersion(typeface: Typeface, versionDescription: String, normalTextColor: Color) {
+fun InfoVersion(typeface: Typeface, versionDescription: String) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             modifier = Modifier
@@ -81,8 +75,7 @@ fun InfoVersion(typeface: Typeface, versionDescription: String, normalTextColor:
                 .weight(2f),
             text = versionDescription,
             fontSize = 12.sp,
-            fontFamily = FontFamily(typeface),
-            color = normalTextColor
+            fontFamily = FontFamily(typeface)
         )
         val image = AnimatedImageVector.animatedVectorResource(R.drawable.app_icon_animated)
         val state = remember { mutableStateOf(false) }
@@ -103,12 +96,11 @@ fun InfoVersion(typeface: Typeface, versionDescription: String, normalTextColor:
 }
 
 @Composable
-fun InfoDescription(typeface: Typeface, normalTextColor: Color) {
+fun InfoDescription(typeface: Typeface) {
     Text(
         modifier = Modifier.padding(6.dp),
         text = stringResource(id = R.string.str_info_msg),
         fontSize = 12.sp,
-        fontFamily = FontFamily(typeface),
-        color = normalTextColor
+        fontFamily = FontFamily(typeface)
     )
 }

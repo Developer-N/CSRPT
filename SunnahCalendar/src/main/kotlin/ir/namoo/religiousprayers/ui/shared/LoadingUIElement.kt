@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 
 @Composable
-fun LoadingUIElement(typeface: Typeface, normalTextColor: Color) {
+fun LoadingUIElement(typeface: Typeface) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,7 +45,6 @@ fun LoadingUIElement(typeface: Typeface, normalTextColor: Color) {
                 .fillMaxWidth(),
             textAlign = TextAlign.Center,
             text = stringResource(id = R.string.loading),
-            color = normalTextColor,
             fontFamily = FontFamily(typeface)
         )
     }

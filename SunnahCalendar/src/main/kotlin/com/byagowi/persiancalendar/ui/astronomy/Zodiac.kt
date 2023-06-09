@@ -42,18 +42,18 @@ import kotlin.math.floor
 enum class Zodiac(
     private val iauRangeEnd: Double, val emoji: String, @StringRes private val title: Int
 ) {
-    ARIES(33.18, "♈", R.string.aries),
-    TAURUS(51.16, "♉", R.string.taurus),
-    GEMINI(93.44, "♊", R.string.gemini),
-    CANCER(119.48, "♋", R.string.cancer),
-    LEO(135.30, "♌", R.string.leo),
-    VIRGO(173.34, "♍", R.string.virgo),
-    LIBRA(224.17, "♎", R.string.libra),
-    SCORPIO(242.57, "♏", R.string.scorpio),
-    SAGITTARIUS(271.26, "♐", R.string.sagittarius),
-    CAPRICORN(302.49, "♑", R.string.capricorn),
-    AQUARIUS(311.72, "♒", R.string.aquarius),
-    PISCES(348.58, "♓", R.string.pisces);
+    ARIES(33.18, "♈", R.string.aries), // 15-45 (Tropical)
+    TAURUS(51.16, "♉", R.string.taurus), // 45-75
+    GEMINI(93.44, "♊", R.string.gemini), // 75-105
+    CANCER(119.48, "♋", R.string.cancer), // 105-135
+    LEO(135.30, "♌", R.string.leo), // 135-165
+    VIRGO(173.34, "♍", R.string.virgo), // 165-195
+    LIBRA(224.17, "♎", R.string.libra), // 195-225
+    SCORPIO(242.57, "♏", R.string.scorpio), // 225-255
+    SAGITTARIUS(271.26, "♐", R.string.sagittarius), // 255-285
+    CAPRICORN(302.49, "♑", R.string.capricorn), // 285-315
+    AQUARIUS(311.72, "♒", R.string.aquarius), // 315-345
+    PISCES(348.58, "♓", R.string.pisces); // 345-15
 
     fun format(context: Context, withEmoji: Boolean, short: Boolean = false) = buildString {
         if (withEmoji && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) append("$emoji ")
@@ -61,20 +61,23 @@ enum class Zodiac(
         append(if (short) result.split(" (")[0] else result)
     }
 
-    private val iauPreviousRangeEnd
-        get() = values().getOrNull(ordinal - 1)?.iauRangeEnd ?: (PISCES.iauRangeEnd - 360)
+    private val iauPreviousRangeEnd: Double
+        get() {
+            return enumValues<Zodiac>().getOrNull(ordinal - 1)?.iauRangeEnd
+                ?: (PISCES.iauRangeEnd - 360)
+        }
 
     val iauRange get() = listOf(iauPreviousRangeEnd, iauRangeEnd)
-    val tropicalRange get() = listOf(ordinal * 30.0, (ordinal + 1) * 30.0)
+    val tropicalRange get() = listOf(ordinal * 30.0 + 15, (ordinal + 1) * 30.0 + 15)
 
     companion object {
-        fun fromPersianCalendar(persianDate: PersianDate) =
-            values().getOrNull(persianDate.month - 1) ?: ARIES
+        fun fromPersianCalendar(persianDate: PersianDate): Zodiac =
+            enumValues<Zodiac>().getOrNull(persianDate.month - 1) ?: ARIES
 
-        fun fromIau(latitude: Double) =
-            values().firstOrNull { latitude < it.iauRangeEnd } ?: ARIES
+        fun fromIau(longitude: Double): Zodiac =
+            enumValues<Zodiac>().firstOrNull { longitude < it.iauRangeEnd } ?: ARIES
 
-        fun fromTropical(latitude: Double) =
-            values().getOrNull(floor(latitude / 30).toInt()) ?: ARIES
+        fun fromTropical(longitude: Double): Zodiac =
+            enumValues<Zodiac>().getOrNull(floor(longitude / 30).toInt()) ?: ARIES
     }
 }

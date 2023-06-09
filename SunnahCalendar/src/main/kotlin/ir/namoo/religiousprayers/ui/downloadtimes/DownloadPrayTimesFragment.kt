@@ -10,9 +10,11 @@ import android.widget.LinearLayout
 import androidx.appcompat.widget.SearchView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,6 +28,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.R
@@ -82,14 +88,27 @@ class DownloadPrayTimesFragment : Fragment() {
         }
         binding.appBar.root.hideToolbarBottomShadow()
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            binding.contentRoot.updatePadding(bottom = insets.bottom)
+            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = insets.top
+            }
+            WindowInsetsCompat.CONSUMED
+        }
+
         binding.downloadView.setContent {
             Mdc3Theme {
                 val typeface = remember { getAppFont(requireContext()) }
-                val normalTextColor =
-                    remember { Color(requireContext().resolveColor(R.attr.colorTextNormal)) }
-                val iconColor = remember { Color(requireContext().resolveColor(R.attr.colorIcon)) }
-                val cardColor = remember { Color(requireContext().resolveColor(R.attr.colorCard)) }
-                Column {
+                val iconColor =
+                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
+                val cardColor =
+                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
+                Column(
+                    modifier = Modifier
+                        .background(cardColor)
+                        .fillMaxSize()
+                ) {
                     Text(
                         text = stringResource(id = R.string.available_cities_list),
                         modifier = Modifier
@@ -98,28 +117,25 @@ class DownloadPrayTimesFragment : Fragment() {
                         fontFamily = FontFamily(typeface),
                         textAlign = TextAlign.Center
                     )
-                    if (viewModel.serverCitiesList.isNotEmpty())
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp, 8.dp)
-                        ) {
-                            Text(
-                                modifier = Modifier.weight(4f),
-                                text = stringResource(id = R.string.city),
-                                fontFamily = FontFamily(typeface),
-                                color = normalTextColor
-                            )
-                            Text(
-                                modifier = Modifier.weight(5f),
-                                text = stringResource(id = R.string.update_date),
-                                fontFamily = FontFamily(typeface),
-                                color = normalTextColor
-                            )
-                        }
+                    if (viewModel.serverCitiesList.isNotEmpty()) Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp, 8.dp)
+                    ) {
+                        Text(
+                            modifier = Modifier.weight(4f),
+                            text = stringResource(id = R.string.city),
+                            fontFamily = FontFamily(typeface)
+                        )
+                        Text(
+                            modifier = Modifier.weight(5f),
+                            text = stringResource(id = R.string.update_date),
+                            fontFamily = FontFamily(typeface)
+                        )
+                    }
 
                     AnimatedVisibility(visible = viewModel.isLoading) {
-                        LoadingUIElement(typeface = typeface, normalTextColor = normalTextColor)
+                        LoadingUIElement(typeface = typeface)
                     }
                     val listState = rememberLazyListState()
                     LazyColumn(state = listState) {
@@ -130,15 +146,12 @@ class DownloadPrayTimesFragment : Fragment() {
                                 )
                             )
                             items(items = viewModel.serverCitiesList.filter {
-                                it.name.contains(
-                                    viewModel.searchQuery
-                                )
+                                it.name.contains(viewModel.searchQuery)
                             }, key = { it.id }) { city ->
                                 Box(modifier = Modifier.animateItemPlacement()) {
                                     CityItemUIElement(city = city,
                                         searchText = viewModel.searchQuery,
                                         typeface = typeface,
-                                        textColor = normalTextColor,
                                         cardColor = cardColor,
                                         iconColor = iconColor,
                                         cityItemState = viewModel.citiesState[viewModel.serverCitiesList.indexOf(
@@ -154,9 +167,7 @@ class DownloadPrayTimesFragment : Fragment() {
                                 viewModel.searchQuery
                             )
                         } && viewModel.searchQuery.isNotEmpty()) NothingFoundUIElement(
-                        normalTextColor = normalTextColor,
-                        typeface = typeface,
-                        iconColor = iconColor
+                        typeface = typeface, iconColor = iconColor
                     )
                 }
             }

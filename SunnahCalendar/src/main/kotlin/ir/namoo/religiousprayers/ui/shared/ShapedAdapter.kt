@@ -14,7 +14,7 @@ class ShapedAdapter<T>(context: Context, resource: Int, textView: Int, objects: 
     var padding = 0
 
     init {
-        padding = 24.dp.toInt()
+        padding = (24 * context.resources.dp).toInt()
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

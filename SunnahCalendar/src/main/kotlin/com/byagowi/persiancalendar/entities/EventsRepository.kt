@@ -57,6 +57,7 @@ class EventsRepository(
             // Enable Iranian events of Gregorian calendar even if itself isn't enabled
             record.type == EventType.Iran && international && calendarType == CalendarType.GREGORIAN ->
                 false
+
             else -> true
         }
     }
@@ -102,11 +103,11 @@ class EventsRepository(
 
     fun getEvents(jdn: Jdn, deviceEvents: DeviceCalendarEventsStore): List<CalendarEvent<*>> {
         return listOf(
-            persianCalendarEvents.getEvents(jdn.toPersianCalendar(), irregularCalendarEventsStore),
-            islamicCalendarEvents.getEvents(jdn.toIslamicCalendar(), irregularCalendarEventsStore),
-            nepaliCalendarEvents.getEvents(jdn.toNepaliCalendar(), irregularCalendarEventsStore),
+            persianCalendarEvents.getEvents(jdn.toPersianDate(), irregularCalendarEventsStore),
+            islamicCalendarEvents.getEvents(jdn.toIslamicDate(), irregularCalendarEventsStore),
+            nepaliCalendarEvents.getEvents(jdn.toNepaliDate(), irregularCalendarEventsStore),
             gregorianCalendarEvents
-                .getEvents(jdn.toGregorianCalendar(), irregularCalendarEventsStore, deviceEvents)
+                .getEvents(jdn.toCivilDate(), irregularCalendarEventsStore, deviceEvents)
         ).flatten()
     }
 
@@ -115,10 +116,10 @@ class EventsRepository(
             persianCalendarEvents.getAllEvents(), islamicCalendarEvents.getAllEvents(),
             nepaliCalendarEvents.getAllEvents(), gregorianCalendarEvents.getAllEvents()
         ).flatten() + listOf(
-            jdn.toPersianCalendar(),
-            jdn.toGregorianCalendar(),
-            jdn.toIslamicCalendar(),
-            jdn.toNepaliCalendar()
+            jdn.toPersianDate(),
+            jdn.toCivilDate(),
+            jdn.toIslamicDate(),
+            jdn.toNepaliDate()
         ).flatMap {
             val store = irregularCalendarEventsStore
             val thisYear = store.getEventsList<CalendarEvent<*>>(it.year, it.calendarType)
@@ -143,14 +144,17 @@ class EventsRepository(
                 val date = PersianDate(-1, record.month, record.day)
                 CalendarEvent.PersianCalendarEvent(title, holiday, date)
             }
+
             CalendarType.GREGORIAN -> {
                 val date = CivilDate(-1, record.month, record.day)
                 CalendarEvent.GregorianCalendarEvent(title, holiday, date)
             }
+
             CalendarType.ISLAMIC -> {
                 val date = IslamicDate(-1, record.month, record.day)
                 CalendarEvent.IslamicCalendarEvent(title, holiday, date)
             }
+
             CalendarType.NEPALI -> {
                 val date = NepaliDate(-1, record.month, record.day)
                 CalendarEvent.NepaliCalendarEvent(title, holiday, date)

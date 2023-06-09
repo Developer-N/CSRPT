@@ -22,32 +22,36 @@
         android:layout_marginBottom="28dp"
         android:visibility="gone" />
 
-    <!-- Times -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/times"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/pray_times"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="@dimen/padding_item"
-        android:paddingBottom="@dimen/padding_item">
+        android:layout_height="wrap_content"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/timesRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="@dimen/padding_item"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:itemCount="6"
-            tools:listitem="@layout/ntime_item" />
+<!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--        android:id="@+id/times"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:paddingTop="@dimen/padding_item">-->
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/timesRecyclerView"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center"-->
+<!--            android:padding="@dimen/padding_item"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent"-->
+<!--            tools:itemCount="6"-->
+<!--            tools:listitem="@layout/ntime_item" />-->
+
+<!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center"
         android:orientation="horizontal">
 
@@ -67,18 +71,8 @@
             android:layout_gravity="center"
             android:layout_margin="4dp"
             android:background="@android:color/transparent"
-            android:tint="?attr/colorIcon"
+            android:tint="?attr/colorAccent"
             app:srcCompat="@drawable/ic_share" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/btn_owghat_tack_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="4dp"
-            android:background="@android:color/transparent"
-            android:tint="?attr/colorIcon"
-            app:srcCompat="@drawable/ic_camera" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.appcompat.widget.LinearLayoutCompat>
