@@ -7,9 +7,11 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
 import android.net.Uri
 import android.os.Build
@@ -25,6 +27,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.widget.Toast
+import androidx.annotation.AnyRes
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
@@ -35,7 +38,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.core.app.ShareCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.toDrawable
@@ -48,21 +50,27 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.CALENDAR_READ_PERMISSION_REQUEST_CODE
 import com.byagowi.persiancalendar.LOCATION_PERMISSION_REQUEST_CODE
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.RLM
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.DrawerHost
-import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.ByteArrayOutputStream
 import java.io.File
 
+inline val Resources.isRtl get() = configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL || language.isLessKnownRtl
+inline val Resources.isPortrait get() = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+inline val Resources.isLandscape get() = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 inline val Resources.dp: Float get() = displayMetrics.density
-inline val Resources.sp: Float get() = displayMetrics.scaledDensity
+fun Resources.sp(value: Float): Float =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, displayMetrics)
 
 val Context.layoutInflater: LayoutInflater get() = LayoutInflater.from(this)
 
@@ -96,19 +104,12 @@ fun Bitmap.toByteArray(): ByteArray {
 }
 
 fun Bitmap.toPngBase64(): String =
-    "data:image/png;base64,${Base64.encodeToString(toByteArray(), Base64.DEFAULT)}"
+    "data:image/png;base64," + Base64.encodeToString(toByteArray(), Base64.DEFAULT)
 
-private fun Context.saveTextAsFile(text: String, fileName: String): Uri {
+private inline fun Context.saveAsFile(fileName: String, crossinline action: (File) -> Unit): Uri {
     return FileProvider.getUriForFile(
         applicationContext, "$packageName.provider",
-        File(externalCacheDir, fileName).also { it.writeText(text) }
-    )
-}
-
-private fun Context.saveBytesAsFile(byteArray: ByteArray, fileName: String): Uri {
-    return FileProvider.getUriForFile(
-        applicationContext, "$packageName.provider",
-        File(externalCacheDir, fileName).also { it.writeBytes(byteArray) }
+        File(externalCacheDir, fileName).also(action)
     )
 }
 
@@ -116,7 +117,7 @@ fun Context.openHtmlInBrowser(html: String) {
     runCatching {
         CustomTabsIntent.Builder().build()
             .also { it.intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            .launchUrl(this, saveTextAsFile(html, "persian-calendar.html"))
+            .launchUrl(this, saveAsFile("persian-calendar.html") { it.writeText(html) })
     }.onFailure(logException)
 }
 
@@ -130,23 +131,20 @@ fun FragmentActivity.shareText(text: String) {
     }.onFailure(logException)
 }
 
-fun FragmentActivity.shareTextFile(text: String, fileName: String, mime: String) {
+private fun FragmentActivity.shareUriFile(uri: Uri, mime: String) {
     runCatching {
         startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).also {
             it.type = mime
-            it.putExtra(Intent.EXTRA_STREAM, saveTextAsFile(text, fileName))
+            it.putExtra(Intent.EXTRA_STREAM, uri)
         }, getString(R.string.share)))
     }.onFailure(logException)
 }
 
-fun FragmentActivity.shareBinaryFile(binary: ByteArray, fileName: String, mime: String) {
-    runCatching {
-        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).also {
-            it.type = mime
-            it.putExtra(Intent.EXTRA_STREAM, saveBytesAsFile(binary, fileName))
-        }, getString(R.string.share)))
-    }.onFailure(logException)
-}
+fun FragmentActivity.shareTextFile(text: String, fileName: String, mime: String) =
+    shareUriFile(saveAsFile(fileName) { it.writeText(text) }, mime)
+
+fun FragmentActivity.shareBinaryFile(binary: ByteArray, fileName: String, mime: String) =
+    shareUriFile(saveAsFile(fileName) { it.writeBytes(binary) }, mime)
 
 fun Toolbar.setupUpNavigation() {
     navigationIcon = DrawerArrowDrawable(context).also { it.progress = 1f }
@@ -164,9 +162,21 @@ private tailrec fun Context.getActivity(): FragmentActivity? = this as? Fragment
     ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
 @ColorInt
-fun Context.resolveColor(@AttrRes attribute: Int) = TypedValue().let {
-    theme.resolveAttribute(attribute, it, true)
-    ContextCompat.getColor(this, it.resourceId)
+fun Context.resolveColor(@AttrRes attribute: Int): Int {
+    return if (BuildConfig.DEBUG) MaterialColors.getColor(this, attribute, "ui/Utils")
+    else MaterialColors.getColor(this, attribute, Color.TRANSPARENT)
+}
+
+/**
+ * Turns an attribute to a resource id from the theme
+ *
+ * See also [com.google.android.material.resources.MaterialAttributes] which currently isn't exposed
+ */
+@AnyRes
+fun Context.resolveResourceIdFromTheme(@AttrRes attributeId: Int): Int {
+    val typedValue = TypedValue()
+    theme.resolveAttribute(attributeId, typedValue, true)
+    return typedValue.resourceId
 }
 
 fun Flow.addViewsToFlow(viewList: List<View>) {
@@ -183,8 +193,10 @@ fun NavController.navigateSafe(directions: NavDirections) {
     runCatching { navigate(directions) }.onFailure(logException).getOrNull().debugAssertNotNull
 }
 
-fun Context.getCompatDrawable(@DrawableRes drawableRes: Int) =
-    AppCompatResources.getDrawable(this, drawableRes).debugAssertNotNull ?: ShapeDrawable()
+fun Context?.getCompatDrawable(@DrawableRes drawableRes: Int): Drawable {
+    return this?.let { AppCompatResources.getDrawable(it, drawableRes) }.debugAssertNotNull
+        ?: ShapeDrawable()
+}
 
 fun Context.getAnimatedDrawable(@DrawableRes animatedDrawableRes: Int) =
     AnimatedVectorDrawableCompat.create(this, animatedDrawableRes)
@@ -287,7 +299,7 @@ fun createFlingDetector(
 ): GestureDetector {
     class FlingListener : GestureDetector.SimpleOnGestureListener() {
         override fun onFling(
-            e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float
+            e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float
         ): Boolean {
             return callback(velocityX, velocityY)
         }
@@ -308,5 +320,5 @@ val Context.isDynamicGrayscale: Boolean
             android.R.color.system_accent1_500,
             android.R.color.system_accent2_500,
             android.R.color.system_accent3_500,
-        ).maxOf { Color.colorToHSV(getColor(it), hsv); hsv[1] } < .25
+        ).all { Color.colorToHSV(getColor(it), hsv); hsv[1] < .25 }
     }

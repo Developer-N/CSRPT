@@ -21,9 +21,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -33,18 +33,16 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.FragmentDownloadTimesBinding
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import ir.namoo.commons.utils.getAppFont
+import ir.namoo.commons.utils.appFont
+import ir.namoo.commons.utils.cardColor
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
@@ -99,11 +97,12 @@ class DownloadPrayTimesFragment : Fragment() {
 
         binding.downloadView.setContent {
             Mdc3Theme {
-                val typeface = remember { getAppFont(requireContext()) }
-                val iconColor =
-                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
-                val cardColor =
-                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
+                val isLoading by viewModel.isLoading.collectAsState()
+                val query by viewModel.query.collectAsState()
+                val addedCities by viewModel.addedCities.collectAsState()
+                val cityItemState by viewModel.cityIteState.collectAsState()
+                val selectedCity by viewModel.selectedCity.collectAsState()
+
                 Column(
                     modifier = Modifier
                         .background(cardColor)
@@ -114,10 +113,10 @@ class DownloadPrayTimesFragment : Fragment() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp),
-                        fontFamily = FontFamily(typeface),
+                        fontFamily = FontFamily(appFont),
                         textAlign = TextAlign.Center
                     )
-                    if (viewModel.serverCitiesList.isNotEmpty()) Row(
+                    if (addedCities.isNotEmpty()) Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp, 8.dp)
@@ -125,50 +124,34 @@ class DownloadPrayTimesFragment : Fragment() {
                         Text(
                             modifier = Modifier.weight(4f),
                             text = stringResource(id = R.string.city),
-                            fontFamily = FontFamily(typeface)
+                            fontFamily = FontFamily(appFont)
                         )
                         Text(
                             modifier = Modifier.weight(5f),
                             text = stringResource(id = R.string.update_date),
-                            fontFamily = FontFamily(typeface)
+                            fontFamily = FontFamily(appFont)
                         )
                     }
 
-                    AnimatedVisibility(visible = viewModel.isLoading) {
-                        LoadingUIElement(typeface = typeface)
+                    AnimatedVisibility(visible = isLoading) {
+                        LoadingUIElement()
                     }
                     val listState = rememberLazyListState()
-                    LazyColumn(state = listState) {
-                        if (viewModel.serverCitiesList.isNotEmpty() && viewModel.citiesState.isNotEmpty()) {
-                            viewModel.selectCity(
-                                requireContext().appPrefs.getString(
-                                    PREF_GEOCODED_CITYNAME, ""
-                                )
-                            )
-                            items(items = viewModel.serverCitiesList.filter {
-                                it.name.contains(viewModel.searchQuery)
-                            }, key = { it.id }) { city ->
+                    if (addedCities.isNotEmpty() && cityItemState.isNotEmpty()) {
+                        LazyColumn(state = listState) {
+                            items(items = addedCities, key = { it.id }) { city ->
                                 Box(modifier = Modifier.animateItemPlacement()) {
                                     CityItemUIElement(city = city,
-                                        searchText = viewModel.searchQuery,
-                                        typeface = typeface,
-                                        cardColor = cardColor,
-                                        iconColor = iconColor,
-                                        cityItemState = viewModel.citiesState[viewModel.serverCitiesList.indexOf(
-                                            city
-                                        )],
+                                        searchText = query,
+                                        cityItemState = cityItemState[addedCities.indexOf(city)].apply {
+                                            isSelected = selectedCity == city.name
+                                        },
                                         download = { viewModel.download(city, requireContext()) })
                                 }
                             }
                         }
-                    }
-                    if (viewModel.serverCitiesList.none {
-                            it.name.contains(
-                                viewModel.searchQuery
-                            )
-                        } && viewModel.searchQuery.isNotEmpty()) NothingFoundUIElement(
-                        typeface = typeface, iconColor = iconColor
-                    )
+                    } else if (!isLoading && query.isNotEmpty())
+                        NothingFoundUIElement()
                 }
             }
         }
@@ -182,13 +165,13 @@ class DownloadPrayTimesFragment : Fragment() {
     }
 
     private fun updateView() {
-        if (isNetworkConnected(requireContext())) viewModel.loadAddedCities()
+        if (isNetworkConnected(requireContext())) viewModel.loadData(requireContext())
         else {
             onPause()
             MaterialAlertDialogBuilder(requireContext()).apply {
                 setTitle(R.string.network_error_title)
                 setMessage(R.string.network_error_message)
-                setPositiveButton(R.string.str_retray) { dialog, _ ->
+                setPositiveButton(R.string.str_retry) { dialog, _ ->
                     dialog.dismiss()
                     onResume()
                 }

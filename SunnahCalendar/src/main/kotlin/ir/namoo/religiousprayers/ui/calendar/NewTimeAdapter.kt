@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Clock
-import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getNextOwghatTimeId
 import com.byagowi.persiancalendar.utils.scheduleAlarms
@@ -21,7 +20,7 @@ import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.model.AthanSettingsDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.get
+import org.koin.compose.koinInject
 import java.util.GregorianCalendar
 import java.util.Locale
 
@@ -30,7 +29,7 @@ fun NewTimeAdapter(
     times: PrayTimes,
     isToday: Boolean = true,
     resource: Resources,
-    settings: AthanSettingsDB = get(),
+    settings: AthanSettingsDB = koinInject(),
     iconColor: Color,
     cardColor: Color,
     remTextColor: Color,

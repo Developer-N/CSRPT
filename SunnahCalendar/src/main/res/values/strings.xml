@@ -63,7 +63,7 @@
     <string name="sagittarius">Sagittarius</string>
     <string name="moonInScorpio">Moon is in Scorpio</string>
     <string name="events">Events</string>
-    <string name="no_event">No event or appointment for this day.</string>
+    <string name="no_event">No event or appointment for this day</string>
     <string name="warn_if_events_not_set">To select and show preferred holidays and events, visit the Settings</string>
     <string name="sunriseSunView">Sunrise</string>
     <string name="middaySunView">Midday</string>
@@ -120,8 +120,8 @@
     <string name="calendars_priority_summary">Set calendars to show priority or hide them</string>
     <string name="astronomy">Astronomy</string>
     <string name="astronomical_info_summary">"Show additional information like constellation, ancient names of years and moon in scorpio"</string>
-    <string name="week_of_year">Week of Year</string>
-    <string name="week_of_year_summary">Show week of year on calendar</string>
+    <string name="week_number">Week Number</string>
+    <string name="week_number_summary">Show week number on calendar</string>
     <string name="week_start">Week Start</string>
     <string name="week_start_summary">Select week start day</string>
     <string name="week_ends">Weekends</string>

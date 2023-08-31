@@ -175,7 +175,7 @@ private class ThirdPattern(@ColorInt private val tintColor: Int, size: Float) : 
                 val degree = angle + i * PI.toFloat() / 4
                 x + cos(degree) * c to y + sin(degree) * c
             }
-        } + listOf(path.last())
+        } + path.last()
     }
 
     override fun draw(canvas: Canvas) {
@@ -184,7 +184,7 @@ private class ThirdPattern(@ColorInt private val tintColor: Int, size: Float) : 
             it.style = Paint.Style.FILL
             it.color = ColorUtils.setAlphaComponent(tintColor, 0x20)
         }
-        canvas.withScale(width, height) { drawPath((path + listOf(1f to 1f)).toPath(true), paint) }
+        canvas.withScale(width, height) { drawPath((path + (1f to 1f)).toPath(true), paint) }
     }
 }
 
@@ -221,7 +221,7 @@ private class SpiralPattern(@ColorInt private val tintColor: Int, size: Float) :
 
     private fun pattern(): Path {
         val result = Path()
-        (0..3600).forEach { angle ->
+        for (angle in 0..3600) {
             val scaledRadius = width / 2 * angle / 3600
             val radians = Math.toRadians(angle.toDouble()).toFloat()
             val x = width / 2f + scaledRadius * cos(radians)

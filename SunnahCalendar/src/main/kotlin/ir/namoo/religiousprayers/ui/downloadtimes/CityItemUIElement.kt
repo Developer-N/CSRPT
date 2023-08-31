@@ -1,54 +1,60 @@
 package ir.namoo.religiousprayers.ui.downloadtimes
 
-import android.graphics.Typeface
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.byagowi.persiancalendar.R
 import ir.namoo.commons.model.CityModel
+import ir.namoo.commons.utils.appFont
+import ir.namoo.commons.utils.cardColor
+import ir.namoo.commons.utils.iconColor
 
 @Composable
 fun CityItemUIElement(
-    city: CityModel,
-    searchText: String,
-    typeface: Typeface,
-    cardColor: Color,
-    iconColor: Color,
-    cityItemState: CityItemState,
-    download: () -> Unit
+    city: CityModel, searchText: String, cityItemState: CityItemState, download: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .padding(8.dp, 2.dp)
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(1.dp)
+            .fillMaxWidth()
+            .clickable { download() },
+        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
+        elevation = CardDefaults.elevatedCardElevation()
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
-            AnimatedVisibility(visible = cityItemState.isSelected) {
+            AnimatedVisibility(
+                visible = cityItemState.isSelected,
+                enter = slideInHorizontally(animationSpec = spring()),
+                exit = shrinkHorizontally(animationSpec = spring())
+            ) {
                 Icon(
                     Icons.Filled.Check,
                     modifier = Modifier.weight(1f),
@@ -60,46 +66,46 @@ fun CityItemUIElement(
             val cityName = buildAnnotatedString {
                 if (searchText.isNotEmpty() && city.name.contains(searchText)) {
                     val index = city.name.indexOf(searchText)
-                    for (i in 0 until index) append("${city.name[i]}")
+                    for (i in 0..<index) append("${city.name[i]}")
                     withStyle(
                         style = SpanStyle(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
+                            fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error
                         )
                     ) {
                         append(searchText)
                     }
-                    for (i in (index + searchText.length) until city.name.length) append("${city.name[i]}")
+                    for (i in (index + searchText.length)..<city.name.length) append("${city.name[i]}")
                 } else append(city.name)
             }
             Text(
-                text = cityName,
-                modifier = Modifier.weight(4f),
-                fontFamily = FontFamily(typeface)
+                text = cityName, modifier = Modifier.weight(4f), fontFamily = FontFamily(appFont)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = city.lastUpdate,
                 modifier = Modifier.weight(4f),
-                fontFamily = FontFamily(typeface)
+                fontFamily = FontFamily(appFont)
             )
             Spacer(modifier = Modifier.width(4.dp))
             AnimatedVisibility(visible = cityItemState.isDownloading) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .weight(1f)
-                        .size(26.dp)
+                        .size(26.dp),
+                    strokeCap = StrokeCap.Round
                 )
             }
             AnimatedVisibility(visible = !cityItemState.isDownloading) {
-                Icon(
-                    painter = painterResource(id = if (cityItemState.isDownloaded) R.drawable.ic_synce else R.drawable.ic_download),
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { download() },
-                    contentDescription = "Selected",
-                    tint = iconColor
-                )
+
+                IconButton(modifier = Modifier
+                    .weight(1f)
+                    .height(32.dp), onClick = { download() }) {
+                    Icon(
+                        imageVector = if (cityItemState.isDownloaded) Icons.Filled.DownloadDone else Icons.Filled.CloudDownload,
+                        contentDescription = "Selected",
+                        tint = iconColor
+                    )
+                }
             }
         }
     }
@@ -121,7 +127,7 @@ fun CityItemUIElement(
 //                "2022-02-06T05:12:11.000000Z",
 //                "2022-02-06T05:12:11.000000Z"
 //            ),
-//            Typeface.createFromAsset(LocalContext.current.assets, "fonts/Vazir.ttf"),
+//            Typeface.createFromAsset(LocalContext.current.assets, "fonts/Vazirmatn.ttf"),
 //            Color.DarkGray,
 //            Color.White,
 //            Color.DarkGray

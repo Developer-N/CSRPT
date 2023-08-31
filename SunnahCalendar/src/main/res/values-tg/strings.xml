@@ -82,9 +82,9 @@
     <string name="show_device_calendar_events_summary">тамошои pӯйдодҳои Тақвими шахсӣ</string>
     <string name="calendars_priority_summary">Тақвимҳоро барои нишон додани афзалият ё пинҳон кардани онҳо таъин кунед</string>
     <string name="astronomy">Астрономӣ</string>
-    <string name="week_of_year">Ҳафтаи сол</string>
+    <string name="week_number">Ҳафтаи сол</string>
     <string name="resume">оғози дубора</string>
-    <string name="week_of_year_summary">намоиши Ҳафтаи сол дар тақвим</string>
+    <string name="week_number_summary">намоиши Ҳафтаи сол дар тақвим</string>
     <string name="week_start_summary">намоиши Рӯзи оғози ҳафта</string>
     <string name="week_ends">охири ҳафта</string>
     <string name="clock_in_24">Соат дар 24 соат</string>
@@ -170,7 +170,7 @@
     <string name="animal_year_name_dragon">Аждаҳо</string>
     <string name="animal_year_name_horse">Асп</string>
     <string name="events">Рӯйдодҳо</string>
-    <string name="no_event">Дар ин рӯз ягон чорабинӣ ё таъинот нест.</string>
+    <string name="no_event">Дар ин рӯз ягон чорабинӣ ё таъинот нест</string>
     <string name="warn_if_events_not_set">Барои интихоб ва нишон додани идҳо ва рӯйдодҳои афзалиятнок, ба Танзимотҳо равед</string>
     <string name="midnight">Нимашаб</string>
     <string name="month">Моҳ</string>

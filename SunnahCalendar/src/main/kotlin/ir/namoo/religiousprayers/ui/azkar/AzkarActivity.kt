@@ -19,8 +19,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -40,10 +40,7 @@ import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
-import ir.namoo.commons.DEFAULT_AZKAR_LANG
-import ir.namoo.commons.PREF_AZKAR_LANG
-import ir.namoo.commons.utils.appPrefsLite
-import ir.namoo.commons.utils.getAppFont
+import ir.namoo.commons.utils.initUtils
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.snackMessage
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
@@ -53,7 +50,7 @@ import java.io.File
 class AzkarActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAzkarBinding
 
-    private val azkarActivityViewModel: AzkarActivityViewModel by viewModel()
+    private val viewModel: AzkarActivityViewModel by viewModel()
     private lateinit var fileLocation: String
     private var mediaPlayer: MediaPlayer? = null
 
@@ -65,6 +62,7 @@ class AzkarActivity : AppCompatActivity() {
         setEnterSharedElementCallback(MaterialContainerTransformSharedElementCallback())
         window.sharedElementsUseOverlay = true
         super.onCreate(savedInstanceState)
+        initUtils(this)
         transparentSystemBars()
 
         binding = ActivityAzkarBinding.inflate(layoutInflater).apply {
@@ -85,66 +83,63 @@ class AzkarActivity : AppCompatActivity() {
 
         val chapterID = intent.extras?.getInt("chapterID") ?: -1
         if (chapterID == -1) finish()
-        val arabicFont = Typeface.createFromAsset(assets, "fonts/arabic_UthmanTahaN1B.ttf")
-        azkarActivityViewModel.setLang(
-            appPrefsLite.getString(PREF_AZKAR_LANG, DEFAULT_AZKAR_LANG) ?: DEFAULT_AZKAR_LANG
-        )
-        azkarActivityViewModel.loadItems(chapterID)
+        val arabicFont = Typeface.createFromAsset(assets, "fonts/Quran_Bahij_Bold.ttf")
+        viewModel.loadItems(chapterID)
         fileLocation =
             getExternalFilesDir(null)?.absolutePath + File.separator + "azkar" + File.separator
         val dir = File(fileLocation)
         if (!dir.exists()) dir.mkdirs()
         binding.composeView.setContent {
             Mdc3Theme {
-                val appFont = remember { getAppFont(this@AzkarActivity) }
-                val iconColor = remember { Color(resolveColor(android.R.attr.colorAccent)) }
-                val cardColor =
-                    remember { Color(resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
                 val state = rememberLazyListState()
-                if (!azkarActivityViewModel.isLoading) binding.appBar.toolbar.title =
-                    when (azkarActivityViewModel.azkarLang) {
-                        Language.FA.code -> azkarActivityViewModel.chapter?.persian
-                        Language.CKB.code -> azkarActivityViewModel.chapter?.kurdish
-                        else -> azkarActivityViewModel.chapter?.arabic
+
+                val isLoading by viewModel.isLoading.collectAsState()
+                val azkarLang by viewModel.azkarLang.collectAsState()
+                val chapter by viewModel.chapter.collectAsState()
+                val azkarItems by viewModel.azkarItems.collectAsState()
+                val azkarReferences by viewModel.azkarReferences.collectAsState()
+                val itemsState by viewModel.itemsState.collectAsState()
+                val lastPlay by viewModel.lastPlay.collectAsState()
+
+                if (!isLoading) binding.appBar.toolbar.title =
+                    when (azkarLang) {
+                        Language.FA.code -> chapter?.persian
+                        Language.CKB.code -> chapter?.kurdish
+                        else -> chapter?.arabic
                     }
                 Column {
-                    AnimatedVisibility(visible = azkarActivityViewModel.isLoading) {
-                        LoadingUIElement(typeface = appFont)
+                    AnimatedVisibility(visible = isLoading) {
+                        LoadingUIElement()
                     }
                     LazyColumn(state = state) {
-                        if (azkarActivityViewModel.azkarItems.isNotEmpty() && azkarActivityViewModel.azkarReferences.isNotEmpty() && azkarActivityViewModel.itemsState.isNotEmpty()) items(
-                            items = azkarActivityViewModel.azkarItems,
+                        if (azkarItems.isNotEmpty() && azkarReferences.isNotEmpty() && itemsState.isNotEmpty()) items(
+                            items = azkarItems,
                             key = { it.id }) { item ->
 
                             val fileName = item.sound + ".mp3"
                             val mp3File = File(fileLocation + fileName)
 
                             AzkarItemUIElement(item = item,
-                                reference = azkarActivityViewModel.azkarReferences[azkarActivityViewModel.azkarItems.indexOf(
+                                reference = azkarReferences[azkarItems.indexOf(
                                     item
                                 )],
-                                lang = azkarActivityViewModel.azkarLang,
-                                cardColor = cardColor,
-                                iconColor = iconColor,
-                                typeface = appFont,
+                                lang = azkarLang,
                                 arabicTypeface = arabicFont,
                                 soundFile = mp3File,
-                                itemState = azkarActivityViewModel.itemsState[azkarActivityViewModel.azkarItems.indexOf(
-                                    item
-                                )],
+                                itemState = itemsState[azkarItems.indexOf(item)],
                                 play = {
-                                    if (azkarActivityViewModel.lastPlay != -1)
+                                    if (lastPlay != -1)
                                         stop()
-                                    azkarActivityViewModel.play(item.id)
+                                    viewModel.play(item.id)
                                     play(mp3File, item.id)
                                 },
                                 stop = {
-                                    azkarActivityViewModel.stop(item.id)
+                                    viewModel.stop(item.id)
                                     stop()
                                 },
                                 download = {
                                     if (isNetworkConnected(this@AzkarActivity))
-                                        azkarActivityViewModel.downloadSound(
+                                        viewModel.downloadSound(
                                             item.sound ?: "",
                                             mp3File,
                                             item.id
@@ -175,7 +170,7 @@ class AzkarActivity : AppCompatActivity() {
             it.onClick {
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.type = "text/plain"
-                intent.putExtra(Intent.EXTRA_TEXT, azkarActivityViewModel.description)
+                intent.putExtra(Intent.EXTRA_TEXT, viewModel.description)
                 startActivity(
                     Intent.createChooser(
                         intent, resources.getString(R.string.share)
@@ -189,7 +184,7 @@ class AzkarActivity : AppCompatActivity() {
             it.onClick {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clip: ClipData = ClipData.newPlainText(
-                    getString(R.string.azkar), azkarActivityViewModel.description
+                    getString(R.string.azkar), viewModel.description
                 )
                 clipboard.setPrimaryClip(clip)
                 Snackbar.make(
@@ -206,7 +201,7 @@ class AzkarActivity : AppCompatActivity() {
             mediaPlayer?.prepare()
             mediaPlayer?.start()
             mediaPlayer?.setOnCompletionListener {
-                azkarActivityViewModel.stop(id)
+                viewModel.stop(id)
                 stop()
             }
         }.onFailure(logException)

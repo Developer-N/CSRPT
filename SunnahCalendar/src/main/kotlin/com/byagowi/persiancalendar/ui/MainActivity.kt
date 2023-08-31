@@ -22,6 +22,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
@@ -35,6 +36,10 @@ import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isInvisible
+import androidx.core.view.updateLayoutParams
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -83,17 +88,19 @@ import com.byagowi.persiancalendar.global.updateStoredPreference
 import com.byagowi.persiancalendar.service.ApplicationService
 import com.byagowi.persiancalendar.ui.calendar.CalendarScreenDirections
 import com.byagowi.persiancalendar.ui.settings.SettingsScreen
+import com.byagowi.persiancalendar.ui.utils.SystemBarsTransparency
 import com.byagowi.persiancalendar.ui.utils.askForCalendarPermission
 import com.byagowi.persiancalendar.ui.utils.askForPostNotificationPermission
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.considerSystemBarsInsets
 import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
-import com.byagowi.persiancalendar.utils.isRtl
+import com.byagowi.persiancalendar.utils.enableDeviceCalendar
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.putJdn
 import com.byagowi.persiancalendar.utils.readAndStoreDeviceCalendarEventsOfTheDay
@@ -120,10 +127,11 @@ import ir.namoo.commons.utils.CustomTypefaceSpan
 import ir.namoo.commons.utils.checkAndAskPhoneStatePermission
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.getDayNum
+import ir.namoo.commons.utils.initUtils
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.openUrlInCustomTab
 import ir.namoo.commons.utils.overrideFont
-import ir.namoo.quran.ui.QuranActivity
+import ir.namoo.quran.QuranActivity
 import ir.namoo.religiousprayers.ui.calendar.NavigationHeaderAdapter
 import ir.namoo.religiousprayers.ui.donate.DonateFragment
 import kotlinx.coroutines.Dispatchers
@@ -152,6 +160,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private val quranID = 6236
 
     private val prayTimeRepository: PrayTimeRepository = get()
+    private val locationsDB: LocationsDB = get()
     private val athanSettings: AthanSettingsDB = get()
 
     private val receiverUD = object : BroadcastReceiver() {
@@ -164,6 +173,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     override fun onCreate(savedInstanceState: Bundle?) {
         Theme.apply(this)
         applyAppLanguage(this)
+        initUtils(this)
         window.requestFeature(Window.FEATURE_ACTIVITY_TRANSITIONS)
         setExitSharedElementCallback(MaterialContainerTransformSharedElementCallback())
         window.sharedElementsUseOverlay = false
@@ -249,6 +259,27 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         previousAppThemeValue = appPrefs.getString(PREF_THEME, null)
 
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { root, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = insets.left
+                rightMargin = insets.right
+            }
+            val transparencyState = SystemBarsTransparency(this@MainActivity)
+            binding.navigation.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = if (transparencyState.shouldStatusBarBeTransparent) 0 else insets.top
+                bottomMargin =
+                    if (transparencyState.shouldNavigationBarBeTransparent) 0 else insets.bottom
+            }
+            NavigationHeaderBinding.bind(binding.navigation.getHeaderView(0))
+                .statusBarPlaceHolder.let { placeHolder ->
+                    placeHolder.layoutParams.height =
+                        if (transparencyState.shouldStatusBarBeTransparent) insets.top else 0
+                    placeHolder.isInvisible = !transparencyState.needsVisibleStatusBarPlaceHolder
+                }
+            windowInsets
+        }
+
         //check for update
         val persianDate = PersianDate(Jdn.today().value)
         if (isNetworkConnected(this) && appPrefs.getInt(PREF_LAST_UPDATE_CHECK, 1) != getDayNum(
@@ -258,7 +289,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         runCatching {
             val intentFilter = IntentFilter(NAVIGATE_TO_DOWNLOAD_FRAGMENT)
-            registerReceiver(receiverUD, intentFilter)
+            ContextCompat.registerReceiver(
+                this@MainActivity,
+                receiverUD,
+                intentFilter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
         }.onFailure(logException)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -378,7 +414,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 ) askForCalendarPermission()
             }
 
-            PREF_APP_LANGUAGE -> restartToSettings()
             PREF_THEME, PREF_APP_FONT -> {
                 // Restart activity if theme is changed and don't if app theme
                 // has just got a default value by preferences as going
@@ -395,14 +430,15 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                 }
             }
 
-            PREF_EASTERN_GREGORIAN_ARABIC_MONTHS -> loadLanguageResources(this)
-
             PREF_PRAY_TIME_METHOD -> prefs.edit { remove(PREF_MIDNIGHT_METHOD) }
         }
 
         configureCalendarsAndLoadEvents(this)
         updateStoredPreference(this)
         update(applicationContext, true)
+
+        if (key == PREF_EASTERN_GREGORIAN_ARABIC_MONTHS || key == PREF_APP_LANGUAGE)
+            loadLanguageResources(this)
     }
 
     override fun onRequestPermissionsResult(
@@ -410,17 +446,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            CALENDAR_READ_PERMISSION_REQUEST_CODE -> {
-                val isGranted = ActivityCompat.checkSelfPermission(
-                    this, Manifest.permission.READ_CALENDAR
-                ) == PackageManager.PERMISSION_GRANTED
-                appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, isGranted) }
-                if (isGranted) {
-                    val navController = navHostFragment?.navController
-                    if (navController?.currentDestination?.id == R.id.calendar)
-                        navController.navigateSafe(CalendarScreenDirections.navigateToSelf())
-                }
-            }
+            CALENDAR_READ_PERMISSION_REQUEST_CODE ->
+                enableDeviceCalendar(this, navHostFragment?.navController)
 
             POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
@@ -633,9 +660,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
                                     packageName, PackageManager.PackageInfoFlags.of(0)
                                 )
                             } else {
-                                @Suppress("DEPRECATION") packageManager.getPackageInfo(
-                                    packageName, 0
-                                )
+                                packageManager.getPackageInfo(packageName, 0)
                             }
                         val versionCode: Long = PackageInfoCompat.getLongVersionCode(pInfo)
                         if (versionCode < serverLastUpdate.versionCode) withContext(Dispatchers.Main) {

@@ -102,8 +102,8 @@
     <string name="week_ends">Fins de semaine</string>
     <string name="week_start_summary">Sélectionnez le jour de début de semaine</string>
     <string name="week_start">Début de la semaine</string>
-    <string name="week_of_year_summary">Afficher la semaine de l’année sur le calendrier</string>
-    <string name="week_of_year">Semaine de l’année</string>
+    <string name="week_number_summary">Afficher la semaine de l’année sur le calendrier</string>
+    <string name="week_number">Semaine de l’année</string>
     <string name="astronomical_info_summary">Afficher des informations supplémentaires comme les constellations, les anciens noms des années et la Lune en scorpion</string>
     <string name="astronomy">Astronomiques</string>
     <string name="calendars_priority_summary">Paramétrer les calendriers pour les afficher en priorité ou les masquer</string>
@@ -152,7 +152,7 @@
     <string name="middaySunView">Midi</string>
     <string name="sunriseSunView">Lever du soleil</string>
     <string name="warn_if_events_not_set">Pour sélectionner et afficher les jours fériés et les évènements préférés, rendez-vous dans les Paramètres</string>
-    <string name="no_event">Aucun évènement ou rendez-vous pour ce jour.</string>
+    <string name="no_event">Aucun évènement ou rendez-vous pour ce jour</string>
     <string name="events">Évènements</string>
     <string name="moonInScorpio">La Lune est en Scorpion</string>
     <string name="sagittarius">Sagittaire</string>
@@ -336,8 +336,8 @@
     <string name="saturday_short">s</string>
     <string name="sunday_short">d</string>
     <string name="monday_short">l</string>
-    <string name="tuesday_short">m</string>
-    <string name="wednesday_short">m</string>
+    <string name="tuesday_short">ma</string>
+    <string name="wednesday_short">me</string>
     <string name="thursday_short">j</string>
     <string name="friday_short">v</string>
     <string name="sun_view">Vue Soleil</string>
@@ -388,4 +388,16 @@
     <string name="full_screen">Plein écran</string>
     <string name="exit_full_screen">Quitter le plein écran</string>
     <string name="color_gradient">Dégradé de couleurs</string>
+    <string name="qr_code">Code QR</string>
+    <plurals name="n_seconds">
+        <item quantity="one">%1$s seconde</item>
+        <item quantity="many">%1$s secondes</item>
+        <item quantity="other">%1$s secondes</item>
+    </plurals>
+    <string name="time_zones">Fuseaux horaires</string>
+    <plurals name="n_weeks">
+        <item quantity="one">%1$s semaine</item>
+        <item quantity="many">%1$s semaines</item>
+        <item quantity="other">%1$s semaines</item>
+    </plurals>
 </resources>

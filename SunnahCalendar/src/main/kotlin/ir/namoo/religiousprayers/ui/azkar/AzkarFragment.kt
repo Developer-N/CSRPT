@@ -20,9 +20,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -35,14 +35,14 @@ import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import ir.namoo.commons.DEFAULT_AZKAR_LANG
 import ir.namoo.commons.PREF_AZKAR_LANG
 import ir.namoo.commons.PREF_AZKAR_REINDER
+import ir.namoo.commons.utils.appFont
 import ir.namoo.commons.utils.appPrefsLite
-import ir.namoo.commons.utils.getAppFont
+import ir.namoo.commons.utils.cardColor
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -51,18 +51,14 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 @SuppressLint("SdCardPath")
 class AzkarFragment : Fragment() {
     private lateinit var binding: FragmentAzkarBinding
-    private val azkarViewModel: AzkarViewModel by viewModel()
+    private val viewModel: AzkarViewModel by viewModel()
 
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         binding = FragmentAzkarBinding.inflate(inflater, container, false)
-        azkarViewModel.setLang(
-            requireContext().appPrefsLite.getString(
-                PREF_AZKAR_LANG, DEFAULT_AZKAR_LANG
-            ) ?: DEFAULT_AZKAR_LANG
-        )
+
         binding.appBar.toolbar.let { toolbar ->
             toolbar.setTitle(R.string.azkar)
             toolbar.setSubtitle(R.string.hisnulmuslim)
@@ -80,7 +76,7 @@ class AzkarFragment : Fragment() {
                             }
 
                             override fun onQueryTextChange(newText: String?): Boolean {
-                                azkarViewModel.search(newText ?: "")
+                                viewModel.search(newText ?: "")
                                 return true
                             }
                         })
@@ -90,9 +86,9 @@ class AzkarFragment : Fragment() {
                     it.icon = toolbar.context.getCompatDrawable(R.drawable.ic_favorite_border)
                     it.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                     it.onClick {
-                        azkarViewModel.showBookmarks()
+                        viewModel.showBookmarks()
                         it.setIcon(
-                            if (azkarViewModel.isBookmarkShowed) R.drawable.ic_favorite
+                            if (viewModel.isFavShowing.value) R.drawable.ic_favorite
                             else R.drawable.ic_favorite_border
                         )
                     }
@@ -120,7 +116,7 @@ class AzkarFragment : Fragment() {
                         item.isChecked = lang.code == selectedLang
                         item.onClick {
                             prefs.edit { putString(PREF_AZKAR_LANG, lang.code) }
-                            azkarViewModel.setLang(lang.code)
+                            viewModel.setLang(lang.code)
                             item.isChecked = true
                         }
                     }
@@ -129,7 +125,7 @@ class AzkarFragment : Fragment() {
             }
         }
         binding.appBar.root.hideToolbarBottomShadow()
-        azkarViewModel.getChapters()
+        viewModel.loadData()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -142,38 +138,29 @@ class AzkarFragment : Fragment() {
 
         binding.azkarChapter.setContent {
             Mdc3Theme {
-                val appFont = remember { getAppFont(requireContext()) }
-                val iconColor =
-                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
-                val cardColor =
-                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
+
+                val isLoading by viewModel.isLoading.collectAsState()
+                val chapters by viewModel.chapters.collectAsState()
+                val query by viewModel.query.collectAsState()
+                val azkarLang by viewModel.azkarLang.collectAsState()
+
                 Column(
                     modifier = Modifier
                         .background(cardColor)
                         .fillMaxSize()
                 ) {
-//                    Button(onClick = { startAzkar(requireContext(), "morning", null) }) {
-//                        Text(text = stringResource(id = R.string.morning_azkar))
-//                    }
-//                    Button(onClick = { startAzkar(requireContext(), "evening", null) }) {
-//                        Text(text = stringResource(id = R.string.evening_azkar))
-//                    }
-                    AnimatedVisibility(azkarViewModel.isLoading) {
-                        LoadingUIElement(typeface = appFont)
+                    AnimatedVisibility(isLoading) {
+                        LoadingUIElement()
                     }
                     val listState = rememberLazyListState()
-                    LazyColumn(state = listState) {
-                        if (azkarViewModel.filteredAzkarChapters.isNotEmpty()) {
-                            items(items = azkarViewModel.filteredAzkarChapters,
-                                key = { it.id }) { zikr ->
+                    if (chapters.isNotEmpty()) {
+                        LazyColumn(state = listState) {
+                            items(items = chapters, key = { it.id }) { zikr ->
                                 Box(modifier = Modifier.animateItemPlacement()) {
                                     ZikrChapterUI(zikr,
-                                        searchText = azkarViewModel.searchQuery,
-                                        lang = azkarViewModel.azkarLang,
-                                        typeface = appFont,
-                                        cardColor = cardColor,
-                                        iconColor = iconColor,
-                                        onFavClick = { azkarViewModel.updateAzkarChapter(it) },
+                                        searchText = query,
+                                        lang = azkarLang,
+                                        onFavClick = { viewModel.updateAzkarChapter(it) },
                                         onCardClick = { id ->
                                             startActivity(Intent(
                                                 requireContext(), AzkarActivity::class.java
@@ -184,17 +171,12 @@ class AzkarFragment : Fragment() {
                                 }
                             }
                         }
-                    }
-                    if (azkarViewModel.filteredAzkarChapters.size == 0) {
-                        NothingFoundUIElement(
-                            typeface = appFont, iconColor = iconColor
-                        )
-                        if (azkarViewModel.searchQuery.isEmpty() && !azkarViewModel.isBookmarkShowed) azkarViewModel.getChapters()
+                    } else if (!isLoading && query.isNotEmpty()) {
+                        NothingFoundUIElement()
                     }
                 }
             }
         }
-
         return binding.root
     }//end of onCreateView
 }//end of AzkarFragment

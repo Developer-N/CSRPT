@@ -17,10 +17,10 @@ package com.byagowi.persiancalendar.ui.settings.interfacecalendar.calendarsorder
  */
 
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.graphics.drawable.RippleDrawable
+import android.os.Build
 import android.view.MotionEvent
 import android.view.ViewGroup
-import androidx.core.view.MotionEventCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.databinding.CalendarTypeItemBinding
@@ -50,7 +50,12 @@ class RecyclerListAdapter(private var items: List<Item>) :
 
         // Start a drag whenever the handle view it touched
         holder.itemView.setOnTouchListener { _, event ->
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+            val rippleDrawable = holder.itemView.background
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+                rippleDrawable is RippleDrawable
+            ) rippleDrawable.setHotspot(event.x, event.y)
+
+            if (event.action == MotionEvent.ACTION_DOWN) {
                 itemTouchHelper.startDrag(holder)
             }
             false
@@ -94,8 +99,12 @@ class RecyclerListAdapter(private var items: List<Item>) :
             it.checkTextView.isChecked = items[position].enabled
         }
 
-        fun onItemSelected() = binding.root.setBackgroundColor(Color.LTGRAY)
+        fun onItemSelected() {
+            binding.root.isPressed = true
+        }
 
-        fun onItemCleared() = binding.root.setBackgroundColor(0)
+        fun onItemCleared() {
+            binding.root.isPressed = false
+        }
     }
 }

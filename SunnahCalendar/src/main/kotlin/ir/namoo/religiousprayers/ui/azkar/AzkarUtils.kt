@@ -12,6 +12,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.ActivityCompat
+import androidx.core.app.AlarmManagerCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
@@ -102,12 +103,10 @@ private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Lon
         PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     )
-    when {
-        Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 ->
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
-
-        else -> am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
-    }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms())
+        AlarmManagerCompat.setExactAndAllowWhileIdle(
+            am, AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent
+        )
 }
 
 class AzkarWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {

@@ -1,7 +1,7 @@
 package ir.namoo.commons.model
 
-import android.annotation.SuppressLint
 import android.os.Parcelable
+import com.byagowi.persiancalendar.global.language
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,12 +24,12 @@ class UpdateModel(
     @SerialName("file_title")
     val fileTitle: String,
     @SerialName("updated_at")
-    val _updatedAt: String,
+    val serverFormatUpdatedAt: String,
 ) : Parcelable {
     val updatedAt: Date
-        @SuppressLint("SimpleDateFormat")
         get() {
-            var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(_updatedAt)
+            var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.asSystemLocale())
+                .parse(serverFormatUpdatedAt)
             if (date == null)
                 date = Date()
             return date

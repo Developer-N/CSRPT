@@ -1,6 +1,5 @@
 package ir.namoo.commons
 
-
 const val BASE_API_URL = "https://namoodev.ir/api/v1"
 
 const val appLink = "\r\n https://namoodev.ir/pt"//namoo.ir
@@ -16,7 +15,6 @@ const val PREF_SUMMER_TIME = "summer_time"
 const val DEFAULT_SUMMER_TIME = false
 const val PREF_FIRST_START = "first_start"
 
-const val PREF_LAST_INSTALL_SEND_TIME = "last_install_time"
 const val PREF_LAST_UPDATE_CHECK = "last_update_check"
 
 const val PREF_AZKAR_REINDER = "azkar_reminder"
@@ -41,9 +39,7 @@ const val FILE_PICKER_REQUEST_CODE = "req_code"
 const val ATHAN_ID = "athan_id"
 
 const val PREF_APP_FONT = "app_font"
-const val SYSTEM_DEFAULT_FONT = "fonts/Vazir.ttf"
-
-const val PREF_ORIGINAL_RINGER_MODE = "pref_original_ringer_mode"
+const val SYSTEM_DEFAULT_FONT = "fonts/Vazirmatn.ttf"
 
 const val PREF_PHONE_STATE_PERMISSION = "is_phone_state_permission_showed"
 

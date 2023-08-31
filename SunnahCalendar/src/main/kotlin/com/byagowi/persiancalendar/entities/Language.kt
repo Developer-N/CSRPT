@@ -49,7 +49,6 @@ enum class Language(val code: String, val nativeName: String) {
     val isArabic get() = this == AR
     val isDari get() = this == FA_AF
     val isPersian get() = this == FA
-    val isIranianEnglish get() = this == EN_IR
     val isNepali get() = this == NE
 
     val showNepaliCalendar get() = this == NE
@@ -103,7 +102,7 @@ enum class Language(val code: String, val nativeName: String) {
 
     val betterToUseShortCalendarName: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, AR, TR, TG, RU -> true
+            EN_US, EN_IR, JA, ZH_CN, FR, ES, AR, TR, TG, RU, CKB -> true
             else -> false
         }
 
@@ -160,7 +159,7 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
     // Local digits (۱۲۳) make sense for the locale
-    val canHaveLocalDigits get() = isArabicScript || isIranianEnglish || isNepali
+    val canHaveLocalDigits get() = isArabicScript || isNepali
 
     // Prefers ٤٥٦ over ۴۵۶
     val preferredDigits
@@ -250,18 +249,18 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
     fun getPersianMonths(context: Context): List<String> = when (this) {
-        FA, EN_IR -> persianCalendarMonthsInPersian
+        FA -> persianCalendarMonthsInPersian
         FA_AF -> persianCalendarMonthsInDari
         else -> persianCalendarMonths.map(context::getString)
     }
 
     fun getIslamicMonths(context: Context): List<String> = when (this) {
-        FA, EN_IR, FA_AF -> islamicCalendarMonthsInPersian
+        FA, FA_AF -> islamicCalendarMonthsInPersian
         else -> islamicCalendarMonths.map(context::getString)
     }
 
     fun getGregorianMonths(context: Context, easternGregorianArabicMonths: Boolean) = when (this) {
-        FA, EN_IR -> gregorianCalendarMonthsInPersian
+        FA -> gregorianCalendarMonthsInPersian
         FA_AF -> gregorianCalendarMonthsInDari
         AR -> {
             if (easternGregorianArabicMonths) easternGregorianCalendarMonths
@@ -277,13 +276,14 @@ enum class Language(val code: String, val nativeName: String) {
     }
 
     fun getWeekDays(context: Context): List<String> = when (this) {
-        FA, EN_IR, FA_AF -> weekDaysInPersian
+        FA, FA_AF -> weekDaysInPersian
+        EN_IR -> weekDaysInEnglishIran
         else -> weekDays.map(context::getString)
     }
 
     fun getWeekDaysInitials(context: Context): List<String> = when (this) {
-        EN_IR -> weekDaysInitialsInEnglishIran
         FA, FA_AF -> weekDaysInitialsInPersian
+        EN_IR -> weekDaysInitialsInEnglishIran
         else -> weekDaysInitials.map(context::getString)
     }
 
@@ -379,8 +379,7 @@ enum class Language(val code: String, val nativeName: String) {
         // Based on https://stackoverflow.com/a/28216764 but doesn't seem to work
         private fun guessLanguageFromKeyboards(context: Context): Language = runCatching {
             val imm = context.getSystemService<InputMethodManager>() ?: return EN_US
-            val imeMethods = imm.enabledInputMethodList
-            for (method in imeMethods ?: emptyList()) {
+            for (method in imm.enabledInputMethodList) {
                 for (submethod in imm.getEnabledInputMethodSubtypeList(method, true)) {
                     if (submethod.mode == "keyboard") {
                         val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -399,8 +398,7 @@ enum class Language(val code: String, val nativeName: String) {
             return EN_US
         }.onFailure(logException).getOrNull() ?: EN_US
 
-        fun valueOfLanguageCode(languageCode: String): Language? =
-            enumValues<Language>().find { it.code == languageCode }
+        fun valueOfLanguageCode(languageCode: String) = entries.find { it.code == languageCode }
 
         private val arabicSortReplacements = mapOf(
             'ی' to "ي",
@@ -479,10 +477,16 @@ enum class Language(val code: String, val nativeName: String) {
             "تشرين الأول", "تشرين الثاني", "كانون الأول"
         )
         private val weekDaysInPersian = listOf7Items(
+            // https://apll.ir/wp-content/uploads/2018/10/D-1394.pdf
+            // advices to use یکشنبه and پنجشنبه on "مرکبهایی که بسیطگونه است"
             "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"
         )
         private val weekDaysInitialsInPersian = listOf7Items(
             "ش", "ی", "د", "س", "چ", "پ", "ج"
+        )
+        private val weekDaysInEnglishIran = listOf7Items(
+            "Shanbe", "Yekshanbe", "Doshanbe", "Seshanbe", "Chahaarshanbe",
+            "Panjshanbe", "Jom'e"
         )
         private val weekDaysInitialsInEnglishIran = listOf7Items(
             "Sh", "Ye", "Do", "Se", "Ch", "Pa", "Jo"

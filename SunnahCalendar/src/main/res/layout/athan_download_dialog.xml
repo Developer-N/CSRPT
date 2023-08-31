@@ -16,7 +16,7 @@
         android:padding="4dp"
         android:text="@string/close"
         app:chipIcon="@drawable/ic_cancel"
-        app:chipIconTint="?attr/colorHoliday" />
+        app:chipIconTint="?attr/colorError" />
 
     <androidx.core.widget.ContentLoadingProgressBar
         android:id="@+id/loading"

@@ -62,7 +62,7 @@
     <string name="sagittarius">قوس</string>
     <string name="moonInScorpio">القمر في العقرب</string>
     <string name="events">المناسبات</string>
-    <string name="no_event">تعذّر العثور على أحداث أو مناسبات أو عُطل لليوم.</string>
+    <string name="no_event">تعذّر العثور على أحداث أو مناسبات أو عُطل لليوم</string>
     <string name="warn_if_events_not_set">لإختيار وإظهار المناسبات والعُطل إذهب إلى الإعدادات &gt; المناسبات</string>
     <string name="sunriseSunView">الشروق</string>
     <string name="middaySunView">الظهر</string>
@@ -119,8 +119,8 @@
     <string name="calendars_priority_summary">تغيير التقويم الرئيسي، ترتيب وإخفاء التقاويم الأخرى</string>
     <string name="astronomy">الفلك</string>
     <string name="astronomical_info_summary">إظهار المزيد من المعلومات مثل (الأبراج، أسماء الأعوام، القمر في العقرب)</string>
-    <string name="week_of_year">رقم الأسبوع</string>
-    <string name="week_of_year_summary">إظهار رقم الأسبوع في تقويم الرئيسي</string>
+    <string name="week_number">رقم الأسبوع</string>
+    <string name="week_number_summary">إظهار رقم الأسبوع في تقويم الرئيسي</string>
     <string name="week_start">بداية الأسبوع</string>
     <string name="week_start_summary">إختيار اليوم الذي يبدأ به الأسبوع</string>
     <string name="week_ends">عطلة نهاية الأسبوع</string>

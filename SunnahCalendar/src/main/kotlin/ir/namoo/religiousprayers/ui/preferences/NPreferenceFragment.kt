@@ -59,7 +59,7 @@ import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.LocationsDB
-import ir.namoo.commons.service.PrayTimesService
+import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.getAthansDirectoryPath
 import ir.namoo.commons.utils.getFileNameFromLink
@@ -80,7 +80,7 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
     private lateinit var binding: FragmentNPrefsBinding
     private lateinit var athansAdapter: AthansAdapter
 
-    private val prayTimesService: PrayTimesService by inject()
+    private val prayTimeRepository: PrayTimeRepository by inject()
 
     private val locationsDB: LocationsDB by inject()
 
@@ -303,7 +303,7 @@ class NPreferenceFragment : Fragment(), SharedPreferences.OnSharedPreferenceChan
             }
         } else {
             view.isEnabled = false
-            AthanDownloadDialog(prayTimesService, athanDB, type).show(
+            AthanDownloadDialog(prayTimeRepository, athanDB, type).show(
                 childFragmentManager, AthanDownloadDialog::class.java.name
             )
             view.isEnabled = true

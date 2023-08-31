@@ -22,19 +22,16 @@
 
     <string name="network_error_title">Network error!</string>
     <string name="network_error_message">Please connect to internet.</string>
-    <string name="str_retray">Retry</string>
+    <string name="str_retry">Retry</string>
+    <string name="welcome">Welcome</string>
 
     <string name="available_exact_times">For your city exact pray times are available.</string>
-    <string name="you_edited">You edited pray times for %s and can send it</string>
-    <string name="are_sure_send_times">Are you sure to send pray times?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="send_times">Send pray times</string>
-    <string name="error_sending_times">Error sending files try again!</string>
     <string name="copy">Copy</string>
     <string name="copied">Copied!</string>
 
-    <string name="downloading_azkar">Downloading azkar</string>
     <string name="download_failed_tray_again">Download failed! try again.</string>
     <string name="downloaded">Downloaded</string>
 
@@ -61,7 +58,9 @@
     <string name="previous_page">Previous Page</string>
     <string name="start">Start</string>
     <string name="my_city_not_in_list">My city not exist is list</string>
-    <string name="custom_city">Custom city</string>
+    <string name="custom_location">Custom city</string>
+    <string name="select_city">Select city</string>
+    <string name="downloading_city_list">Downloading city list, please wait …</string>
     <string name="location_not_detected">location not detected correctly!</string>
     <string name="first_setup_location_message">For setup, app need to know your location once.\nafter setup you can clear location permission and disable your location provider!</string>
     <string name="turn_on_location">Please turn on your location for get latitude and longitude.\nafter setup you can turn off it!</string>
@@ -69,7 +68,15 @@
     <string name="gps_network_not_enabled">GPS not enabled</string>
     <string name="intro1_msg">Your city name not found please enter your city name.</string>
 
-    <string name="donate_msg">Doante MSG</string>
+    <string name="donate_msg">
+        All features of this software will remain free forever and God willing, we will continue to develop it in any situation.
+         \n
+         Considering the existing economic conditions, we are facing challenges to provide new facilities, and your financial support will help us to progress faster and improve the quality of services, even if half of the daily active users (users who use the software every day) they do), pay 5 thousand Tomans annually, more than 90% of our problems will be solved and you have this opportunity to participate in this ongoing charity.
+         \n
+         If for any reason you are not able to contribute financially, feel free to use all the features of the program and publishing and introducing it is also a current charity.
+         \n
+         Do not leave us without your good prayers. 😊
+    </string>
     <string name="custom_donate">Custom Donate</string>
     <string name="_50">50$</string>
     <string name="_20">20$</string>
@@ -77,11 +84,7 @@
     <string name="_5">5$</string>
 
     <string name="namoo_developer_group">Namoo Developer Group</string>
-    <string name="srt_info2">about info</string>
     <string name="str_info_msg">string info message</string>
-    <string name="telegram_developer">\@Developer_N</string>
-    <string name="telegram">\@namoo_ir</string>
-    <string name="mail">namoodev@gmail.com</string>
     <string name="send_direct_message">Send direct message</string>
     <string name="your_message">Your Message…</string>
     <string name="send_message">Send Message</string>
@@ -97,23 +100,23 @@
 
     <string name="update_available">New update is a available!</string>
     <string name="download">Download</string>
+    <string name="downloading">Downloading</string>
     <string name="markets">From Markets</string>
 
     <string name="renew_location">Renew Location</string>
     <string name="save_location">Save location</string>
     <string name="enter_city_name">Enter City Name!</string>
+    <string name="select_location_if_not_detect">Select Location if not detect</string>
 
     <string name="athan_settings">Athan Settings (Form more setting click on athans)</string>
     <string name="enable_athan">Enable Athan</string>
     <string name="enable_alarm">Enable Alarm</string>
     <string name="alert_type">Alert Type</string>
     <string name="notification">Notification</string>
-    <string name="notif">Notification</string>
     <string name="just_notification">Just Notification</string>
     <string name="select_alarm">Select Alarm</string>
     <string name="play_alert">Play Alert</string>
     <string name="add_normal_athans">Add normal athan</string>
-    <string name="add_fajr_athan">Add fajr alarm</string>
     <string name="add_alarm">Add Alarm</string>
     <string name="play_athan_problem">If you have problem with play athan change below methods</string>
     <string name="first_method">First Method</string>
@@ -135,7 +138,6 @@
     <string name="play_athan">Play athan</string>
     <string name="reset_athan">Reset athan</string>
     <string name="ok">OK</string>
-    <string name="select_athan_file_title">Select Athan</string>
     <string name="alarm_before">Alarm before</string>
     <string name="enable_alarm_before">Enable or Disable</string>
     <string name="alarm_after">Alarm after</string>
@@ -157,32 +159,25 @@
 
 
     <string name="quran_database_not_exist">Quran database not exist, you must download it!</string>
-    <string name="size_8mb">Size : 8mb</string>
-    <string name="latest_visited">Latest visited : chapter %s verse %s</string>
-    <string name="sura_name">Sura Name</string>
+    <string name="load_quran_chapter_error">Error loading chapter! download again!</string>
     <string name="aya_count">%s verse</string>
     <string name="revelation_order">Revelation order %s</string>
-    <string name="no_note">There is no note!</string>
     <string name="delete">Delete</string>
-    <string name="save">Save</string>
     <string name="go_to_aya">Go to verse</string>
     <string name="your_note">Your note</string>
-    <string name="no_bookmark">No Bookmark!</string>
-    <string name="select_file_for_download">Select file for download</string>
+    <string name="select_quran_audio_for_download">Select</string>
     <string name="select_translates">Select translates</string>
-    <string name="farsi_translate">Farsi translate</string>
     <string name="kurdish_translate">Kurdish translate</string>
-    <string name="english_transliteration">English transliteration</string>
-    <string name="english_translate">English translate</string>
-    <string name="farsi_full_translate">Farsi full translate</string>
-    <string name="select_qari_translate">Select qari and translate to play</string>
+    <string name="farsi_tafsir">Tafsir</string>
+    <string name="select_qari_translate_for_play">Select qari and translate for play</string>
+    <string name="select_qari">Select qari</string>
+    <string name="select_translate_to_play">Select translate to play</string>
     <string name="arabic_translate">Play arabic and translate</string>
     <string name="just_arabic">Just arabic</string>
     <string name="just_translate">Just translate</string>
     <string name="play_type">Play type</string>
     <string name="str_bismillah" translatable="false">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
-    <string name="free_as_in_freedom_logo" translatable="false">Free as in Freedom logo</string>
-    <string name="arabic_font_setting">Arabic font setting</string>
+    <string name="quran_font_setting">Quran font setting</string>
     <string name="english_font_setting">English font setting</string>
     <string name="english_font_preview" translatable="false">English font preview</string>
     <string name="kurdish_font_setting">Kurdish font setting</string>
@@ -197,7 +192,6 @@
     <string name="create_shortcut">Create Shortcut</string>
     <string name="pin_not_supported">Your device doesn\'t support pin shortcuts!</string>
     <string name="shortcut_created">Shortcut created!</string>
-    <string name="playing_verse">playing verse %s</string>
     <string name="sura">Chapter</string>
     <string name="aya">Verse</string>
     <string name="note_saved">Note Saved</string>
@@ -205,10 +199,11 @@
     <string name="audio_files_error">Audio files for this sura and selected qari not exist!</string>
     <string name="audio_translate_files_error">Translate audio files for this sura and selected not exist!</string>
     <string name="result_found">%s result found.</string>
-    <string name="search_head">%s verse %s</string>
+    <string name="search_in_quran_and_translates">Search In quran and translates.</string>
+    <string name="search_in_quran">Search In Quran.</string>
     <string name="alert">Alert!</string>
-    <string name="save_alert_message">Are you sure to save changes?</string>
-    <string name="delete_alert_message">Are you sure want to delete this note?!</string>
+    <string name="delete_note_alert_message">Are you sure want to delete this note?</string>
+    <string name="delete_quran_audio_alert_message">Are you sure want to delete quran files?</string>
     <string name="download_completed_unzip">Download Completed! -> Unzip …</string>
     <string name="sort_order">Chapter sort order</string>
     <string name="go_to_page">Go to page</string>
@@ -221,19 +216,15 @@
     <string name="aya_inc_sort">Verse count (increase)</string>
     <string name="aya_dec_sort">Verse count(decrease )</string>
     <string name="select_page">Select page</string>
-    <string name="page_out_of_bounds">Page out of bounds!!!\nPage must be under 605</string>
+    <string name="page_out_of_bounds">Quran is 604 pages!</string>
     <string name="select_hizb">Select Hizb</string>
     <string name="select_juz">Select Juz</string>
     <string name="meccan">Meccan</string>
     <string name="medinan">Medinan</string>
     <string name="download_quran_db">Donwload Quran Database</string>
-    <string name="download_quran_db_description">Downloading Quran Database</string>
 
     <string name="widget_next_athan_text_color">Widget Next Athan Text Color</string>
     <string name="select_widgets_next_athan_text_color">Select custom color for widgets next athan texts</string>
-    <string name="next_athan">Next athan</string>
-    <string name="till">%1$s till </string>
-    <string name="rem">%1$s till </string>
 
     <string name="support">Support</string>
     <string name="requset_permision">Request Permission</string>
@@ -276,4 +267,9 @@
     <string name="default_image">Default Image</string>
     <string name="eid">Eid</string>
 
+    <string name="internal">Internal</string>
+    <string name="external">External</string>
+
+    <string name="str_welcome">Welcome to Your APP :)</string>
+    <string name="bank_number">Bank number</string>
 </resources>

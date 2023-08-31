@@ -67,6 +67,7 @@ const val PREF_HAS_EVER_VISITED = "PreferenceIsVisitedOnce"
 const val PREF_LAST_APP_VISIT_VERSION = "LastAppVisitVersion"
 const val PREF_SHOW_QIBLA_IN_COMPASS = "showQibla"
 const val PREF_TRUE_NORTH_IN_COMPASS = "trueNorth"
+const val PREF_WALLPAPER_DARK = "WallpaperDark"
 
 const val CHANGE_LANGUAGE_IS_PROMOTED_ONCE = "CHANGE_LANGUAGE_IS_PROMOTED_ONCE"
 
@@ -88,6 +89,7 @@ const val DEFAULT_ATHAN_VOLUME = 3
 const val DEFAULT_ISLAMIC_OFFSET = "0"
 const val DEFAULT_SECONDARY_CALENDAR_IN_TABLE = false
 const val DEFAULT_THEME_GRADIENT = true
+const val DEFAULT_WALLPAPER_DARK = true
 
 const val LOAD_APP_ID = 1000
 const val THREE_HOURS_APP_ID = 1010
@@ -136,6 +138,8 @@ val ATHANS_LIST = listOf(FAJR_KEY, DHUHR_KEY, ASR_KEY, MAGHRIB_KEY, ISHA_KEY)
 
 const val QIBLA_LATITUDE = 21.422522
 const val QIBLA_LONGITUDE = 39.826181
+
+const val AU_IN_KM = 149597871L // astronomical unit, ~earth/sun distance
 
 const val IRAN_TIMEZONE_ID = "Asia/Tehran"
 const val AFGHANISTAN_TIMEZONE_ID = "Asia/Kabul"

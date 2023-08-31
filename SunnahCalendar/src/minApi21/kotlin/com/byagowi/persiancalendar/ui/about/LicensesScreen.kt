@@ -56,7 +56,9 @@ class LicensesScreen : Fragment() {
             LazyColumn {
                 itemsIndexed(sections) { i, (title, license, text) ->
                     val isExpanded = expansionsState[i]
-                    val angle = animateFloatAsState(if (isExpanded) 0f else initialDegree).value
+                    val angle = animateFloatAsState(if (isExpanded) 0f else initialDegree,
+                        label = ""
+                    ).value
                     Column(modifier = Modifier
                         .clickable { expansionsState[i] = !expansionsState[i] }
                         .padding(6.dp)

@@ -31,8 +31,10 @@ import com.byagowi.persiancalendar.ui.common.ArrowView
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.showCoordinatesDialog
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.showGPSLocationDialog
 import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.ui.utils.isLandscape
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
+import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.setupLayoutTransition
 import com.byagowi.persiancalendar.ui.utils.setupUpNavigation
 import com.byagowi.persiancalendar.utils.appPrefs
@@ -44,7 +46,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Date
 import kotlin.math.abs
-import kotlin.math.absoluteValue
 
 class MapScreen : Fragment(R.layout.map_screen) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -93,7 +94,7 @@ class MapScreen : Fragment(R.layout.map_screen) {
             else viewModel.addOneHour()
         }
         binding.endArrow.setOnLongClickListener { viewModel.addDays(10); true }
-        binding.dateParent.setupLayoutTransition()
+        binding.timeBar.setupLayoutTransition()
         binding.date.setOnClickListener {
             val currentJdn =
                 Jdn(Date(viewModel.state.value.time).toGregorianCalendar().toCivilDate())
@@ -115,7 +116,7 @@ class MapScreen : Fragment(R.layout.map_screen) {
         mapTypeButton.onClick {
             if (viewModel.state.value.mapType == MapType.None) {
                 val context = context ?: return@onClick
-                val options = enumValues<MapType>()
+                val options = MapType.entries
                     .drop(1) // Hide "None" option
                     // Hide moon visibilities for now unless is a development build
                     .filter { !it.isCrescentVisibility || BuildConfig.DEVELOPMENT }
@@ -147,7 +148,7 @@ class MapScreen : Fragment(R.layout.map_screen) {
             val longitude = x / mapDraw.mapScaleFactor - 180
             if (abs(latitude) < 90 && abs(longitude) < 180) {
                 // Easter egg like feature, bring sky renderer fragment
-                if (latitude.absoluteValue < 2 && longitude.absoluteValue < 2 && viewModel.state.value.displayGrid) {
+                if (abs(latitude) < 2 && abs(longitude) < 2 && viewModel.state.value.displayGrid) {
                     findNavController().navigateSafe(MapScreenDirections.actionMapToSkyRenderer())
                 } else {
                     val coordinates = Coordinates(latitude.toDouble(), longitude.toDouble(), 0.0)
@@ -170,8 +171,11 @@ class MapScreen : Fragment(R.layout.map_screen) {
         binding.map.contentHeight = mapDraw.mapHeight.toFloat()
         binding.map.maxScale = 512f
 
-        val showKaaba =
-            binding.root.context.appPrefs.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true)
+        // Best effort solution for landscape view till figuring out something better
+        if (resources.isLandscape)
+            binding.map.setBackgroundColor(view.context.resolveColor(R.attr.screenBackgroundColor))
+
+        val showKaaba = view.context.appPrefs.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true)
 
         fun onStateUpdate(state: MapState) {
             mapDraw.drawKaaba = coordinates.value != null && state.displayLocation && showKaaba

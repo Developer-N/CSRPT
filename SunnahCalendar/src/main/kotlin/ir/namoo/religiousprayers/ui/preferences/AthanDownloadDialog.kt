@@ -27,7 +27,7 @@ import ir.namoo.commons.downloader.downloadFile
 import ir.namoo.commons.model.Athan
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.ServerAthanModel
-import ir.namoo.commons.service.PrayTimesService
+import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.getAthansDirectoryPath
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.snackMessage
@@ -37,8 +37,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class AthanDownloadDialog(
-    val prayTimesService: PrayTimesService,
-    val athanDB: AthanDB,
+    private val prayTimeRepository: PrayTimeRepository,
+    private val athanDB: AthanDB,
     val type: Int
 ) : AppCompatDialogFragment() {
     private lateinit var binding: AthanDownloadDialogBinding
@@ -47,7 +47,7 @@ class AthanDownloadDialog(
         binding = AthanDownloadDialogBinding.inflate(requireActivity().layoutInflater)
         lifecycleScope.launch {
             val athanList =
-                if (type == 1) prayTimesService.getAthans() else prayTimesService.getAlarms()
+                if (type == 1) prayTimeRepository.getAthans() else prayTimeRepository.getAlarms()
             for (a in athanList) {
                 val ad = athanDB.athanDAO().getAthan(a.name)
                 if (ad == null)
@@ -161,6 +161,7 @@ class AthanDownloadDialog(
                                     transition
                                 )
                             }
+
                             is DownloadResult.Error -> {
                                 snackMessage(
                                     itemBinding.root,
@@ -176,15 +177,18 @@ class AthanDownloadDialog(
                                     transition
                                 )
                             }
+
                             is DownloadResult.Progress -> {
                                 ObjectAnimator.ofInt(
                                     itemBinding.progressAthanDownload, "progress",
-                                    itemBinding.progressAthanDownload.progress, it.progress
+                                    itemBinding.progressAthanDownload.progress, it.progress.toInt()
                                 ).apply {
                                     interpolator = AccelerateDecelerateInterpolator()
                                     start()
                                 }
                             }
+
+                            is DownloadResult.TotalSize -> {}
                         }
                     }
                 }

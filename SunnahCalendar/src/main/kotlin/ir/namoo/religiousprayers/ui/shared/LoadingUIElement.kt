@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers.ui.shared
 
-import android.graphics.Typeface
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -15,25 +14,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
+import ir.namoo.commons.utils.appFont
 
 @Composable
-fun LoadingUIElement(typeface: Typeface) {
+fun LoadingUIElement() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        val infiniteTransition = rememberInfiniteTransition()
+        val infiniteTransition = rememberInfiniteTransition(label = "infinite alpha")
         val alpha by infiniteTransition.animateFloat(
             initialValue = 0.1f, targetValue = 1f, animationSpec = infiniteRepeatable(
                 animation = tween(500), repeatMode = RepeatMode.Reverse
-            )
+            ), label = "alpha"
         )
         LinearProgressIndicator(
             modifier = Modifier.fillMaxWidth()
@@ -45,7 +44,7 @@ fun LoadingUIElement(typeface: Typeface) {
                 .fillMaxWidth(),
             textAlign = TextAlign.Center,
             text = stringResource(id = R.string.loading),
-            fontFamily = FontFamily(typeface)
+            fontFamily = FontFamily(appFont)
         )
     }
 }

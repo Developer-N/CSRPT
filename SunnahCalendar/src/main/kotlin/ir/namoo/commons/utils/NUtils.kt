@@ -7,6 +7,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -17,6 +18,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -29,6 +31,7 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.utils.formatDate
@@ -46,6 +49,26 @@ import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+var appFont: Typeface = Typeface.SANS_SERIF
+    private set
+var iconColor: Color = Color(27, 94, 32)
+    private set
+var cardColor: Color = Color(232, 245, 233)
+    private set
+var colorAppBar: Color = Color(56, 142, 60)
+    private set
+var colorOnAppBar: Color = Color(232, 245, 233)
+    private set
+
+fun initUtils(context: Context) {
+    appFont = getAppFont(context)
+    iconColor = Color(context.resolveColor(android.R.attr.colorAccent))
+    cardColor =
+        Color(context.resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface))
+    colorAppBar = Color(context.resolveColor(R.attr.screenBackgroundColor))
+    colorOnAppBar = Color(context.resolveColor(R.attr.colorOnAppBar))
+}
 
 fun String.digitsOf(): String {
     val res = StringBuilder()
@@ -280,7 +303,7 @@ fun isPackageInstalled(
                 packageName, PackageManager.PackageInfoFlags.of(flags.toLong())
             )
         } else {
-            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, flags)
+            packageManager.getPackageInfo(packageName, flags)
         }
         true
     }.onFailure(logException).getOrDefault(false)
@@ -310,16 +333,17 @@ fun modelToDBTimes(models: List<PrayTimesModel>): List<DownloadedPrayTimesEntity
             m.maghrib,
             m.isha,
             m.cityID,
-            m.created_at,
-            m.updated_at
+            m.createdAt,
+            m.updatedAt
         )
     )
     return res
 }
 
-@SuppressLint("SimpleDateFormat")
 fun formatServerDate(serverDate: String): String {
-    var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(serverDate)
+    var date = SimpleDateFormat(
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.asSystemLocale()
+    ).parse(serverDate)
     if (date == null) date = Date()
     return formatDate(
         Jdn(date.toGregorianCalendar().toCivilDate().toJdn()).toCalendar(mainCalendar)
@@ -550,8 +574,7 @@ fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
         if (it.state) isAthanNotificationEnable = true
     }
     if (isAthanNotificationEnable && !appPrefsLite.getBoolean(
-            PREF_PHONE_STATE_PERMISSION,
-            false
+            PREF_PHONE_STATE_PERMISSION, false
         ) && ActivityCompat.checkSelfPermission(
             this, Manifest.permission.READ_PHONE_STATE
         ) != PackageManager.PERMISSION_GRANTED
@@ -572,8 +595,7 @@ fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
 }
 
 fun File.logTo(log: String) {
-    if (!exists())
-        createNewFile()
+    if (!exists()) createNewFile()
     val currentText = readText()
     writeText("$currentText\r\n$log")
 }

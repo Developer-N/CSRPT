@@ -91,7 +91,7 @@ fun panoRendo(
     var Z1 = .0
     var Z2 = .0
     var Z3 = .0
-    ((if (zoom > 1) -1 else 0) until y2).forEach { y ->
+    ((if (zoom > 1) -1 else 0)..<y2).forEach { y ->
         val VE = if (y == -1) Math.toRadians(90.0) else (1 - y.toDouble() / y1) * y0
         val fe = 1 - VE * 2 / PI
         val cosV = sin(VE)
@@ -155,7 +155,7 @@ fun panoRendo(
                 (I2 * B).toInt().coerceIn(0, 255),
                 (I3 * B).toInt().coerceIn(0, 255)
             ) else result[
-                    (x1 / 2.0 * (1 + fe * cos(VA))).toInt(), (y1 / 2.0 * (1 + fe * sin(VA))).toInt()
+                (x1 / 2.0 * (1 + fe * cos(VA))).toInt(), (y1 / 2.0 * (1 + fe * sin(VA))).toInt()
             ] = Color.rgb(
                 (I1 * B).toInt().coerceIn(0, 255),
                 (I2 * B).toInt().coerceIn(0, 255),

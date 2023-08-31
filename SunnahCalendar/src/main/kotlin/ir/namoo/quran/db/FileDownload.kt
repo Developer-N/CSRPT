@@ -12,21 +12,22 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @Entity
 data class FileDownloadEntity(
-    @PrimaryKey val id: Int,
+    @PrimaryKey val id: Int=0,
     val downloadRequest: Long,
     val downloadFile: String,
     val folderPath: String,
-    val position: Int
+    val sura: Int
 )
 
 @Dao
 interface FileDownloadDAO {
 
     @Query("SELECT * FROM FileDownloadEntity")
-    suspend fun findAllDownloads(): List<FileDownloadEntity>?
+    suspend fun findAllDownloads(): List<FileDownloadEntity>
 
     @Query("DELETE FROM FileDownloadEntity WHERE id = :id")
     suspend fun removeByFileId(id: Int)
@@ -36,7 +37,7 @@ interface FileDownloadDAO {
 
 }
 
-@Database(version = 3, exportSchema = false, entities = [FileDownloadEntity::class])
+@Database(version = 4, exportSchema = false, entities = [FileDownloadEntity::class])
 abstract class FileDownloadDB : RoomDatabase() {
     abstract fun getFileDownloadDao(): FileDownloadDAO
 
@@ -55,15 +56,23 @@ abstract class FileDownloadDB : RoomDatabase() {
 }
 
 class FileDownloadRepository constructor(private val fileDownloadDAO: FileDownloadDAO) {
-    suspend fun findDownloadByFileId() = withContext(Dispatchers.IO) {
-        fileDownloadDAO.findAllDownloads()
+    suspend fun findDownloadByFileId(): List<FileDownloadEntity> {
+        runCatching {
+            return fileDownloadDAO.findAllDownloads()
+        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }
 
     suspend fun delete(id: Int) = withContext(Dispatchers.IO) {
-        fileDownloadDAO.removeByFileId(id)
+        runCatching {
+            fileDownloadDAO.removeByFileId(id)
+        }
     }
 
     suspend fun insert(fileDownloadEntity: FileDownloadEntity) = withContext(Dispatchers.IO) {
-        fileDownloadDAO.insert(fileDownloadEntity)
+        runCatching {
+            fileDownloadDAO.insert(fileDownloadEntity)
+        }.onFailure { ex ->
+            Timber.tag("NAMOO").e(ex, "insert error -> %s", ex.message)
+        }
     }
 }

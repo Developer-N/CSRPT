@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.util.Linkify
-import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -33,11 +32,12 @@ import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.getAnimatedDrawable
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
+import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
+import com.byagowi.persiancalendar.ui.utils.resolveResourceIdFromTheme
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.byagowi.persiancalendar.utils.formatNumber
-import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 import com.google.android.material.chip.Chip
@@ -88,14 +88,15 @@ class AboutScreen : Fragment(R.layout.about_screen) {
             }
         }
         binding.aboutHeader.text = version
-        binding.icon.also {
+        binding.accessibleVersion.contentDescription = version
+        run {
             val animation =
-                context?.getAnimatedDrawable(R.drawable.splash_icon_animation) ?: return@also
-            it.setImageDrawable(animation)
+                context?.getAnimatedDrawable(R.drawable.splash_icon_animation) ?: return@run
+            binding.icon.setImageDrawable(animation)
             animation.start()
             val clickHandlerDialog = createEasterEggClickHandler(::showPeriodicTableDialog)
-            val clickHandlerIcon = createIconRandomEffects(it)
-            it.setOnClickListener {
+            val clickHandlerIcon = createIconRandomEffects(binding.icon)
+            binding.headerPlaceHolder.setOnClickListener {
                 animation.stop()
                 animation.start()
                 clickHandlerDialog(activity)
@@ -153,13 +154,8 @@ class AboutScreen : Fragment(R.layout.about_screen) {
     private fun setupContributorsList(binding: AboutScreenBinding) {
         val context = binding.root.context
 
-        val chipsIconTintId = TypedValue().apply {
-            context.theme.resolveAttribute(
-                com.google.android.material.R.attr.colorAccent,
-                this,
-                true
-            )
-        }.resourceId
+        val chipsIconTintId =
+            context.resolveResourceIdFromTheme(com.google.android.material.R.attr.colorAccent)
 
         val chipClick = View.OnClickListener {
             (it.tag as? String)?.also { user ->

@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers.ui.about
 
-import android.graphics.Typeface
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -30,29 +29,28 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
+import ir.namoo.commons.utils.appFont
 
 @Composable
-fun InfoUIElement(
-    typeface: Typeface, versionDescription: String
-) {
+fun InfoUIElement(versionDescription: String) {
     Box(
         modifier = Modifier
             .padding(4.dp)
             .fillMaxWidth()
     ) {
         Column {
-            InfoTitle(typeface)
+            InfoTitle()
             Spacer(modifier = Modifier.height(8.dp))
-            InfoVersion(typeface, versionDescription)
+            InfoVersion(versionDescription)
             Spacer(modifier = Modifier.height(8.dp))
-            InfoDescription(typeface)
+            InfoDescription()
         }
 
     }
 }
 
 @Composable
-fun InfoTitle(typeface: Typeface) {
+fun InfoTitle() {
     Text(
         modifier = Modifier
             .padding(4.dp)
@@ -61,13 +59,13 @@ fun InfoTitle(typeface: Typeface) {
         textAlign = TextAlign.Center,
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
-        fontFamily = FontFamily(typeface)
+        fontFamily = FontFamily(appFont)
     )
 }
 
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
-fun InfoVersion(typeface: Typeface, versionDescription: String) {
+fun InfoVersion(versionDescription: String) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             modifier = Modifier
@@ -75,7 +73,7 @@ fun InfoVersion(typeface: Typeface, versionDescription: String) {
                 .weight(2f),
             text = versionDescription,
             fontSize = 12.sp,
-            fontFamily = FontFamily(typeface)
+            fontFamily = FontFamily(appFont)
         )
         val image = AnimatedImageVector.animatedVectorResource(R.drawable.app_icon_animated)
         val state = remember { mutableStateOf(false) }
@@ -96,11 +94,11 @@ fun InfoVersion(typeface: Typeface, versionDescription: String) {
 }
 
 @Composable
-fun InfoDescription(typeface: Typeface) {
+fun InfoDescription() {
     Text(
         modifier = Modifier.padding(6.dp),
         text = stringResource(id = R.string.str_info_msg),
         fontSize = 12.sp,
-        fontFamily = FontFamily(typeface)
+        fontFamily = FontFamily(appFont)
     )
 }

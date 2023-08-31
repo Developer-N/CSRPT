@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="code">ckb</string>
-    <string name="app_name">ڕۆژژمێر + کاتەکانی بانگ</string>
+    <string name="app_name">ڕۆژژمێری فارسی</string>
     <string name="cancel">ھەڵوەشاندنەوە</string>
-    <string name="widget_name">ڕۆژژمێر + کاتەکانی بانگ</string>
-    <string name="widget_mini_name">ڕۆژژمێر + کاتەکانی بانگ (بچووک)</string>
+    <string name="widget_name">ڕۆژژمێری فارسی</string>
+    <string name="widget_mini_name">ڕۆژژمێری فارسی (بچووک)</string>
     <string name="latitude">پاناییی جوگرافی</string>
     <string name="longitude">درێژاییی جوگرافی</string>
     <string name="settings">ڕێکخستن</string>
@@ -83,8 +83,8 @@
     <string name="days_distance">مەودا</string>
     <string name="calendars_priority">ڕۆژژمێری سەرەکی</string>
     <string name="calendars_priority_summary">گۆڕینی ڕۆژژمێری سەرەکی، ڕیزبەندی و چالاکیی ڕۆژژمێرەکان</string>
-    <string name="week_of_year">ژمارەی حەفتە</string>
-    <string name="week_of_year_summary">نیشاندانی ژمارەی حەفتەی ساڵ</string>
+    <string name="week_number">ژمارەی حەفتە</string>
+    <string name="week_number_summary">نیشاندانی ژمارەی حەفتەی ساڵ</string>
     <string name="accept">باشە</string>
     <string name="calendar">ڕۆژژمێر</string>
     <string name="week_start">سەرەتای حەفتە</string>
@@ -128,7 +128,7 @@
     <string name="sunriseSunView">ڕۆژھەڵات</string>
     <string name="middaySunView">نیوەڕۆ</string>
     <string name="sunsetSunView">ڕۆژاوا</string>
-    <string name="no_event">بۆنە یان ڕووداوێک بۆ ئەم ڕۆژە نەدۆزرایەوە.</string>
+    <string name="no_event">بۆنە یان ڕووداوێک بۆ ئەم ڕۆژە نەدۆزرایەوە</string>
     <string name="length_of_day">ڕۆژگار</string>
     <string name="remaining_daylight">ماوەوە</string>
     <string name="n_hours_minutes">%1$sک %2$sخ</string>

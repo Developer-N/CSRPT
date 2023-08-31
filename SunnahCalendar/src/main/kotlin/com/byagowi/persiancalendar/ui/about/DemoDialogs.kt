@@ -17,6 +17,7 @@ import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.graphics.SweepGradient
+import android.graphics.drawable.RippleDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -26,9 +27,12 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.opengl.GLSurfaceView
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -45,6 +49,7 @@ import android.widget.Scroller
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.ColorInt
+import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.appcompat.widget.AppCompatTextView
@@ -59,9 +64,11 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.get
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withTranslation
+import androidx.core.os.postDelayed
 import androidx.core.text.HtmlCompat
 import androidx.core.text.buildSpannedString
 import androidx.core.text.inSpans
+import androidx.core.text.parseAsHtml
 import androidx.core.view.isVisible
 import androidx.core.view.setMargins
 import androidx.core.view.setPadding
@@ -89,7 +96,9 @@ import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.map.GLRenderer
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.ui.utils.resolveResourceIdFromTheme
 import com.byagowi.persiancalendar.ui.utils.sp
+import com.byagowi.persiancalendar.utils.TWO_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.createStatusIcon
 import com.byagowi.persiancalendar.utils.getDayIconResource
 import com.byagowi.persiancalendar.utils.logException
@@ -114,7 +123,6 @@ import org.intellij.lang.annotations.Language
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.absoluteValue
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -147,7 +155,7 @@ fun createEasterEggClickHandler(callback: (FragmentActivity) -> Unit): (Fragment
 fun createIconRandomEffects(view: View): () -> Unit {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return {}
     var clickCount = 0
-    val colorShader by lazy(LazyThreadSafetyMode.NONE) { RuntimeShader(colorShiftEffect) }
+    val colorShader by lazy(LazyThreadSafetyMode.NONE) { RuntimeShader(COLOR_SHIFT_EFFECT) }
     return {
         runCatching {
             view.setRenderEffect(
@@ -164,7 +172,7 @@ fun createIconRandomEffects(view: View): () -> Unit {
 }
 
 @Language("AGSL")
-private const val colorShiftEffect = """
+private const val COLOR_SHIFT_EFFECT = """
 uniform shader content;
 
 uniform float colorShift;
@@ -401,9 +409,9 @@ class CircleColorPickerView(context: Context, attrs: AttributeSet? = null) : Vie
             0x00FFFFFF, Shader.TileMode.CLAMP
         )
         val saturation = (100 - brightness) / 100f
-        val colors = (0 until 360 step 30)
+        val colors = (0..<360 step 30)
             .map { Color.HSVToColor(floatArrayOf(it.toFloat(), saturation, 1f)) }
-            .let { it + listOf(it[0]) } // Adds the first element at the end
+            .let { it + it[0] } // Adds the first element at the end
             .toIntArray()
         val sweepGradient = SweepGradient(radius, radius, colors, null)
         paint.shader = ComposeShader(sweepGradient, radialGradient, PorterDuff.Mode.SRC_OVER)
@@ -565,8 +573,8 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
     }
     zoomableView.onDraw = { canvas, matrix ->
         canvas.withMatrix(matrix) {
-            (0 until 18).forEach { i ->
-                (0 until 9).forEach { j ->
+            (0..<18).forEach { i ->
+                (0..<9).forEach { j ->
                     withTranslation(i * cellSize.toFloat(), j * cellSize.toFloat()) {
                         val index = elementsIndices.getOrNull(i + j * 18) ?: return@withTranslation
                         val details = elements[index - 1].split(",")
@@ -584,11 +592,9 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
     }
 
     fun formatTitle(input: String): Spanned {
-        return HtmlCompat.fromHtml(
-            "<small><small>$input</small></small>"
-                .replace(Regex("([a-zA-Z])(\\d+)"), "$1<sup><small>$2</small></sup>"),
-            HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
+        return "<small><small>$input</small></small>"
+            .replace(Regex("([a-zA-Z])(\\d+)"), "$1<sup><small>$2</small></sup>")
+            .parseAsHtml(HtmlCompat.FROM_HTML_MODE_LEGACY)
     }
 
     val dialog = MaterialAlertDialogBuilder(activity)
@@ -623,8 +629,8 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
 private val elementsColor = buildMap {
     listOf(3, 11, 19, 37, 55, 87).forEach { put(it, 0xffff9d9d) } // Alkali metals
     listOf(4, 12, 20, 38, 56, 88).forEach { put(it, 0xffffdead) } // Alkaline earth metals
-    (57..71).forEach { put(it, 0xffffbfff) } // Lanthanides
-    (89..103).forEach { put(it, 0xffff99cc) } // Actinides
+    for (it in 57..71) put(it, 0xffffbfff) // Lanthanides
+    for (it in 89..103) put(it, 0xffff99cc) // Actinides
     listOf(1, 6, 7, 8, 15, 16, 34).forEach { put(it, 0xffa0ffa0) } // Other nonmetals
     listOf(5, 14, 32, 33, 51, 52).forEach { put(it, 0xffcccc99) } // Metalloids
     // Other nonmetals
@@ -935,7 +941,7 @@ fun showSignalGeneratorDialog(activity: FragmentActivity, viewLifecycle: Lifecyc
         .map { semitone ->
             val frequency = getStandardFrequency(semitone)
             buffer.indices.forEach {
-                val phase = 2 * Math.PI * it / (sampleRate / frequency)
+                val phase = 2 * PI * it / (sampleRate / frequency)
                 buffer[it] = (when (0) {
                     0 -> sin(phase) // Sine
                     1 -> sign(sin(phase)) // Square
@@ -1046,9 +1052,33 @@ fun showSpringDemoDialog(activity: FragmentActivity) {
         private val lifecycle = activity.lifecycleScope
     }
 
-    MaterialAlertDialogBuilder(activity)
+    val dialog = MaterialAlertDialogBuilder(activity)
         .setView(view)
         .show()
+
+    view.setBackgroundResource(
+        activity.resolveResourceIdFromTheme(android.R.attr.selectableItemBackground)
+    )
+    val rippleDrawable = view.background
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
+        rippleDrawable is RippleDrawable
+    ) {
+        val handler = Handler(Looper.getMainLooper())
+        fun next() {
+            val delay = Random.nextLong(10, TWO_SECONDS_IN_MILLIS)
+            handler.postDelayed(delay) {
+                if (!dialog.isShowing) return@postDelayed
+                view.isPressed = false
+                rippleDrawable.setHotspot(
+                    view.width * Random.nextFloat(),
+                    view.height * Random.nextFloat()
+                )
+                view.isPressed = true
+                next()
+            }
+        }
+        next()
+    }
 }
 
 fun showViewDragHelperDemoDialog(activity: FragmentActivity) {
@@ -1130,7 +1160,7 @@ fun showViewDragHelperDemoDialog(activity: FragmentActivity) {
         }
 
         init {
-            (0 until 360 step 40)
+            (0..<360 step 40)
                 .map { Color.HSVToColor(floatArrayOf(it.toFloat(), 100f, 1f)) }
                 .shuffled()
                 .mapIndexed { i, color ->
@@ -1164,7 +1194,7 @@ private fun guitarString(
     val n = (sampleRate / frequency).roundToInt()
 
     // Pick-direction lowpass filter
-    val random = (0 until n).runningFold(Random.nextDouble() * 2 - 1) { lastOut, _ ->
+    val random = (0..<n).runningFold(Random.nextDouble() * 2 - 1) { lastOut, _ ->
         (1 - p) * (Random.nextDouble() * 2 - 1) + p * lastOut
     }
 
@@ -1173,7 +1203,7 @@ private fun guitarString(
     val noise = DoubleArray(random.size) { random[it] - if (it < pick) .0 else random[it - pick] }
 
     val samples = DoubleArray((sampleRate * duration).roundToInt())
-    (0 until n).forEach { samples[it] = noise[it] }
+    (0..<n).forEach { samples[it] = noise[it] }
 
     fun delayLine(i: Int) = samples.getOrNull(i - n) ?: .0
 
@@ -1181,7 +1211,7 @@ private fun guitarString(
     fun stringDamplingFilter(i: Int) = 0.996 * ((1 - s) * delayLine(i) + s * delayLine(i - 1))
 
     // First-order string-tuning allpass filter
-    (n until samples.size).forEach {
+    (n..<samples.size).forEach {
         samples[it] =
             c * (stringDamplingFilter(it) - samples[it - 1]) + stringDamplingFilter(it - 1)
     }
@@ -1190,14 +1220,14 @@ private fun guitarString(
     val wTilde = PI * frequency / sampleRate
     val buffer = DoubleArray(samples.size)
     buffer[0] = wTilde / (1 + wTilde) * samples[0]
-    (1 until samples.size).forEach {
+    (1..<samples.size).forEach {
         buffer[it] =
             wTilde / (1 + wTilde) * (samples[it] + samples[it - 1]) + (1 - wTilde) / (1 + wTilde) * buffer[it - 1]
     }
     samples.indices
         .forEach { samples[it] = ((l.pow(4 / 3.0)) * samples[it]) + (1 - l) * buffer[it] }
 
-    val max = samples.maxOf { it.absoluteValue }
+    val max = samples.maxOf(::abs)
     return samples.map { (it / max * Short.MAX_VALUE).roundToInt().toShort() }.toShortArray()
 }
 
@@ -1242,7 +1272,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
         }
 
         private val paths = List(4) { Path() } // just a hack to make different colors possible
-        private val paintSink = Paint().also {
+        private val paintSink = Paint(Paint.ANTI_ALIAS_FLAG).also {
             it.strokeWidth = 1 * resources.dp
             it.style = Paint.Style.STROKE
             it.color = Color.GRAY
@@ -1251,7 +1281,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val h2 = height / 2
-            val max = log.maxOf { it.maxOfOrNull { it.absoluteValue } ?: 0f }.coerceAtLeast(1f)
+            val max = log.maxOf { it.maxOfOrNull(::abs) ?: 0f }.coerceAtLeast(1f)
             log[0].indices.forEach { n ->
                 val path = paths[n.coerceAtMost(paths.size - 1)]
                 path.rewind()
@@ -1366,34 +1396,107 @@ fun showInputDeviceTestDialog(activity: FragmentActivity) {
 
 // Debug only dialog to check validity of dynamic icons generation
 fun showIconsDemoDialog(activity: FragmentActivity) {
+    val recyclerViewAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
+        override fun getItemCount() = 62
+        override fun getItemViewType(position: Int) = position
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            object : RecyclerView.ViewHolder(ShapeableImageView(activity).apply {
+                val day = viewType / 2 + 1
+                when (viewType % 2) {
+                    0 -> setImageResource(getDayIconResource(day))
+                    1 -> setImageBitmap(createStatusIcon(day))
+                }
+                val dp = resources.dp
+                layoutParams =
+                    ViewGroup.MarginLayoutParams((36 * dp).toInt(), (36 * dp).toInt())
+                        .apply { setMargins((4 * dp).toInt()) }
+                shapeAppearanceModel = ShapeAppearanceModel.Builder()
+                    .setAllCorners(CornerFamily.ROUNDED, 8 * dp)
+                    .setAllEdges(TriangleEdgeTreatment(4 * dp, true))
+                    .build()
+                setBackgroundColor(Color.DKGRAY)
+            }) {}
+    }
     MaterialAlertDialogBuilder(activity)
         .setView(RecyclerView(activity).also {
-            it.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-                override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
-                override fun getItemCount() = 62
-                override fun getItemViewType(position: Int) = position
-                override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-                    object : RecyclerView.ViewHolder(ShapeableImageView(activity).apply {
-                        val day = viewType / 2 + 1
-                        when (viewType % 2) {
-                            0 -> setImageResource(getDayIconResource(day))
-                            1 -> setImageBitmap(createStatusIcon(day))
-                        }
-                        val dp = resources.dp
-                        layoutParams =
-                            ViewGroup.MarginLayoutParams((36 * dp).toInt(), (36 * dp).toInt())
-                                .apply { setMargins((4 * dp).toInt()) }
-                        shapeAppearanceModel = ShapeAppearanceModel.Builder()
-                            .setAllCorners(CornerFamily.ROUNDED, 8 * dp)
-                            .setAllEdges(TriangleEdgeTreatment(4 * dp, true))
-                            .build()
-                        setBackgroundColor(Color.DKGRAY)
-                    }) {}
-            }
+            it.adapter = recyclerViewAdapter
             it.layoutManager = GridLayoutManager(activity, 8)
             it.setBackgroundColor(Color.WHITE)
         })
         .setNegativeButton(R.string.cancel, null)
+        .show()
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+fun showDynamicColorsDialog(activity: FragmentActivity) {
+    val dynamicColors = listOf(
+        android.R.color.system_accent1_0, android.R.color.system_accent1_10,
+        android.R.color.system_accent1_50, android.R.color.system_accent1_100,
+        android.R.color.system_accent1_200, android.R.color.system_accent1_300,
+        android.R.color.system_accent1_400, android.R.color.system_accent1_500,
+        android.R.color.system_accent1_600, android.R.color.system_accent1_700,
+        android.R.color.system_accent1_800, android.R.color.system_accent1_900,
+        android.R.color.system_accent1_1000,
+        android.R.color.system_accent2_0, android.R.color.system_accent2_10,
+        android.R.color.system_accent2_50, android.R.color.system_accent2_100,
+        android.R.color.system_accent2_200, android.R.color.system_accent2_300,
+        android.R.color.system_accent2_400, android.R.color.system_accent2_500,
+        android.R.color.system_accent2_600, android.R.color.system_accent2_700,
+        android.R.color.system_accent2_800, android.R.color.system_accent2_900,
+        android.R.color.system_accent2_1000,
+        android.R.color.system_accent3_0, android.R.color.system_accent3_10,
+        android.R.color.system_accent3_50, android.R.color.system_accent3_100,
+        android.R.color.system_accent3_200, android.R.color.system_accent3_300,
+        android.R.color.system_accent3_400, android.R.color.system_accent3_500,
+        android.R.color.system_accent3_600, android.R.color.system_accent3_700,
+        android.R.color.system_accent3_800, android.R.color.system_accent3_900,
+        android.R.color.system_accent3_1000,
+        android.R.color.system_neutral1_0, android.R.color.system_neutral1_10,
+        android.R.color.system_neutral1_50, android.R.color.system_neutral1_100,
+        android.R.color.system_neutral1_200, android.R.color.system_neutral1_300,
+        android.R.color.system_neutral1_400, android.R.color.system_neutral1_500,
+        android.R.color.system_neutral1_600, android.R.color.system_neutral1_700,
+        android.R.color.system_neutral1_800, android.R.color.system_neutral1_900,
+        android.R.color.system_neutral1_1000,
+        android.R.color.system_neutral2_0, android.R.color.system_neutral2_10,
+        android.R.color.system_neutral2_50, android.R.color.system_neutral2_100,
+        android.R.color.system_neutral2_200, android.R.color.system_neutral2_300,
+        android.R.color.system_neutral2_400, android.R.color.system_neutral2_500,
+        android.R.color.system_neutral2_600, android.R.color.system_neutral2_700,
+        android.R.color.system_neutral2_800, android.R.color.system_neutral2_900,
+        android.R.color.system_neutral2_1000,
+    )
+    val rows = listOf(
+        "", "0", "10", "50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"
+    )
+    val cols = listOf("", "accent1", "accent2", "accent3", "neutral1", "neutral2")
+    val recyclerViewAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
+        override fun getItemCount() = 84
+        override fun getItemViewType(position: Int) = position
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            object : RecyclerView.ViewHolder(TextView(activity).apply {
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+                val dp = resources.dp
+                setAutoSizeTextTypeUniformWithConfiguration(8, 16, 1, dp.toInt())
+                layoutParams = ViewGroup.MarginLayoutParams((50 * dp).toInt(), (25 * dp).toInt())
+                    .apply { setMargins((4 * dp).toInt()) }
+                val col = viewType % 6
+                val row = viewType / 6
+                if (row == 0) text = cols[col]
+                else if (col == 0) text = rows[row]
+                else {
+                    val index = (col - 1) * 13 + row - 1
+                    setBackgroundColor(context.getColor(dynamicColors[index]))
+                }
+            }) {}
+    }
+    MaterialAlertDialogBuilder(activity)
+        .setView(RecyclerView(activity).also {
+            it.adapter = recyclerViewAdapter
+            it.layoutManager = GridLayoutManager(activity, 6)
+        })
         .show()
 }
 
@@ -1402,7 +1505,14 @@ fun showTypographyDemoDialog(activity: FragmentActivity) {
         textAppearances.forEach { (appearanceName, appearanceId) ->
             val textAppearance = TextAppearanceSpan(activity, appearanceId)
             inSpans(textAppearance) { append(appearanceName) }
-            append(" ${(textAppearance.textSize / activity.resources.sp).roundToInt()}sp")
+            val originalSize = if (Build.VERSION.SDK_INT >= 34) {
+                TypedValue.deriveDimension(
+                    TypedValue.COMPLEX_UNIT_SP,
+                    textAppearance.textSize.toFloat(),
+                    activity.resources.displayMetrics
+                )
+            } else textAppearance.textSize / activity.resources.sp(1f)
+            append(" ${originalSize.roundToInt()}sp")
             appendLine()
         }
     }
@@ -1443,4 +1553,41 @@ fun showCarouselDialog(activity: FragmentActivity) {
             it.smoothScrollToPosition(12)
         })
     }).show()
+}
+
+// Lindenmayer system: https://en.wikipedia.org/wiki/L-system
+class LSystem(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    private fun lSystem(startAxiom: String, rules: Map<Char, String>): Sequence<String> = sequence {
+        var result = startAxiom
+        yield(result)
+        while (true) {
+            result = result.map { rules[it] ?: it.toString() }.joinToString("")
+            yield(result)
+        }
+    }
+
+    private val s = lSystem("X", mapOf('X' to "F+[[X]-X]-F[-FX]+X", 'F' to "FF"))
+        .take(7).last()
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    override fun onDraw(canvas: Canvas) {
+        canvas.scale(2f, -2f, width / 2f, height / 2f)
+        canvas.translate(width / 2f, height / 2f)
+        val angle = 25f
+        s.forEach {
+            when (it) {
+                '-' -> canvas.rotate(-angle)
+                '+' -> canvas.rotate(+angle)
+                '[' -> canvas.save()
+                ']' -> canvas.restore()
+
+                else -> {
+                    canvas.drawLine(0f, 0f, 0f, 1f, paint)
+                    canvas.translate(0f, 1f)
+                }
+            }
+        }
+        // postDelayed(1000) { invalidate() }
+    }
 }

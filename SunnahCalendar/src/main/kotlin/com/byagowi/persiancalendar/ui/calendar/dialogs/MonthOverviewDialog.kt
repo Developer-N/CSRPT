@@ -27,11 +27,12 @@ import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.global.secondaryCalendarDigits
 import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.ui.utils.copyToClipboard
+import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
+import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.ui.utils.layoutInflater
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
 import com.byagowi.persiancalendar.ui.utils.resolveColor
-import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
 import com.byagowi.persiancalendar.utils.calendarType
 import com.byagowi.persiancalendar.utils.dayTitleSummary
@@ -39,7 +40,6 @@ import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getEventsTitle
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
 import com.byagowi.persiancalendar.utils.getWeekDayName
-import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
@@ -67,9 +67,9 @@ import kotlinx.html.td
 import kotlinx.html.th
 import kotlinx.html.tr
 import kotlinx.html.unsafe
+import kotlin.math.roundToInt
 
 fun showMonthOverviewDialog(activity: FragmentActivity, date: AbstractDate) {
-    applyAppLanguage(activity)
     val events = createEventsList(activity, date)
 
     BottomSheetDialog(activity, R.style.TransparentBottomSheetDialog).also { dialog ->
@@ -108,7 +108,10 @@ fun showMonthOverviewDialog(activity: FragmentActivity, date: AbstractDate) {
                                     it.layoutParams = FrameLayout.LayoutParams(
                                         FrameLayout.LayoutParams.MATCH_PARENT,
                                         FrameLayout.LayoutParams.WRAP_CONTENT
-                                    ).also { p -> p.gravity = Gravity.CENTER_HORIZONTAL }
+                                    ).also { p ->
+                                        p.gravity = Gravity.CENTER_HORIZONTAL
+                                        p.bottomMargin = (8 * it.context.resources.dp).roundToInt()
+                                    }
                                 }
                             )
                             root.layoutParams = FrameLayout.LayoutParams(
@@ -136,7 +139,7 @@ private fun createEventsList(
 ): Map<Jdn, List<CalendarEvent<*>>> {
     val baseJdn = Jdn(date)
     val deviceEvents = context.readMonthDeviceEvents(baseJdn)
-    return (0 until mainCalendar.getMonthLength(date.year, date.month))
+    return (0..<mainCalendar.getMonthLength(date.year, date.month))
         .map { baseJdn + it }
         .associateWith { eventsRepository?.getEvents(it, deviceEvents) ?: emptyList() }
 }
@@ -223,16 +226,16 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
     table("calendar") {
         tr {
             if (isShowWeekOfYearEnabled) th {}
-            (0..6).forEach { th { +getWeekDayName(revertWeekStartOffsetFromWeekDay(it)) } }
+            for (it in 0..6) th { +getWeekDayName(revertWeekStartOffsetFromWeekDay(it)) }
         }
         val monthLength = date.calendarType.getMonthLength(date.year, date.month)
         val monthStartJdn = Jdn(date)
         val startingDayOfWeek = monthStartJdn.dayOfWeek
         val fixedStartingDayOfWeek = applyWeekStartOffsetToWeekDay(startingDayOfWeek)
         val startOfYearJdn = Jdn(date.calendarType, date.year, 1, 1)
-        (0 until (6 * 7)).map {
+        (0..<6 * 7).map {
             val index = it - fixedStartingDayOfWeek
-            if (index !in (0 until monthLength)) return@map null
+            if (index !in (0..<monthLength)) return@map null
             (index + 1) to (monthStartJdn + index)
         }.chunked(7).map { row ->
             val firstJdnInWeek = row.firstNotNullOfOrNull { it?.second/*jdn*/ } ?: return@map

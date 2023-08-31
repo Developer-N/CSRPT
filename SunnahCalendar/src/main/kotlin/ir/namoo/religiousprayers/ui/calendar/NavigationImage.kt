@@ -21,7 +21,7 @@ enum class NavigationImage(
             return when {
                 jdn.dayOfWeek == 6 -> FRIDAY
                 c.month == 9 -> RAMADAN
-                c.month == 10 && c.dayOfMonth in 1..3 -> EID
+                (c.month == 10 || c.month == 12) && c.dayOfMonth in 1..3 -> EID
                 else -> DEFAULT
             }
         }

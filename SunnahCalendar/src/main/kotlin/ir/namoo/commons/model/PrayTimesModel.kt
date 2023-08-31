@@ -21,6 +21,8 @@ data class PrayTimesModel(
     val isha: String,
     @SerialName("city_id")
     val cityID: Int,
-    val created_at: String,
-    val updated_at: String
+    @SerialName("created_at")
+    val createdAt: String,
+    @SerialName("updated_at")
+    val updatedAt: String
 ) : Parcelable

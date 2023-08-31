@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -25,11 +26,11 @@
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -68,15 +69,15 @@
         android:allowBackup="true"
         android:banner="@mipmap/ic_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/SplashScreenTheme"
-        android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:targetApi="s">
+        tools:targetApi="tiramisu">
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -89,7 +90,7 @@
         </provider>
 
         <activity
-            android:name="ir.namoo.religiousprayers.ui.IntroActivity"
+            android:name="ir.namoo.religiousprayers.ui.intro.IntroActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/SplashScreenTheme">
@@ -139,7 +140,7 @@
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
             android:theme="@style/AthanTheme"
-            android:turnScreenOn="true"/>
+            android:turnScreenOn="true" />
 
         <activity android:name="ir.namoo.religiousprayers.ui.azkar.AzkarActivity" />
 
@@ -170,6 +171,12 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.settings.wallpaper.WallpaperSettingsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop" />
 
         <receiver
             android:name=".Widget1x1"
@@ -359,6 +366,15 @@
         </receiver>
 
         <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <service
             android:name=".service.ApplicationService"
             android:enabled="true"
             android:exported="false"
@@ -367,6 +383,7 @@
         <service
             android:name=".service.AthanNotification"
             android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
             android:label="Athan Service" />
 
         <service
@@ -383,12 +400,8 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
-            <meta-data
-                android:name="android.service.quicksettings.ACTIVE_TILE"
-                android:value="true" />
-            <meta-data
-                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
-                android:value="false" />
+            <!-- Don't ever add additional meta-data such as ACTIVE_TILE=true and TOGGLEABLE_TILE=false
+                 that's how 8.2.5 become a defected release -->
         </service>
 
         <service
@@ -424,14 +437,7 @@
         </service>
 
         <activity
-            android:name="ir.namoo.quran.ui.QuranActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
-            android:exported="true"
-            android:launchMode="singleTop"
-            android:resizeableActivity="true"
-            tools:targetApi="n" />
-        <activity
-            android:name="ir.namoo.quran.ui.SuraViewActivity"
+            android:name="ir.namoo.quran.QuranActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="true"
             android:launchMode="singleTop"
@@ -439,8 +445,21 @@
             tools:targetApi="n" />
 
         <service
-            android:name="ir.namoo.quran.ui.QuranPlayer"
-            android:enabled="true" />
+            android:name="ir.namoo.quran.player.PlayerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="ir.namoo.quran.download.QuranDownloadCompleteReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

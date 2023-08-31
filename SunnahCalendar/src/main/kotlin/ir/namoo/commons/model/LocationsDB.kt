@@ -3,6 +3,7 @@ package ir.namoo.commons.model
 
 import android.content.Context
 import android.os.Parcelable
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -14,6 +15,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import ir.namoo.commons.utils.formatServerDate
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Database(
@@ -45,7 +47,7 @@ abstract class LocationsDB : RoomDatabase() {
 @Dao
 interface CityDAO {
     @Query("select * from city")
-    fun getAllCity(): List<CityModel>
+    suspend fun getAllCity(): List<CityModel>
 
     @Query("select * from city where id=:id")
     suspend fun getCity(id: Int): CityModel
@@ -84,13 +86,21 @@ data class CityModel(
     val name: String,
     val latitude: Double,
     val longitude: Double,
-    val is_hanafi: Int,
-    val province_id: Int,
-    val created_at: String,
-    val updated_at: String,
+    @SerialName("is_hanafi")
+    @ColumnInfo(name = "is_hanafi")
+    val isHanafi: Int,
+    @SerialName("province_id")
+    @ColumnInfo(name = "province_id")
+    val provinceId: Int,
+    @SerialName("created_at")
+    @ColumnInfo(name = "created_at")
+    val createdAt: String,
+    @SerialName("updated_at")
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: String,
 ) : Parcelable {
     val lastUpdate: String
-        get() = formatServerDate(updated_at)
+        get() = formatServerDate(updatedAt)
 }
 
 @Serializable
@@ -102,12 +112,18 @@ data class ProvinceModel(
     val name: String,
     val latitude: Double,
     val longitude: Double,
-    val country_id: Int,
-    val created_at: String,
-    val updated_at: String,
+    @SerialName("country_id")
+    @ColumnInfo(name = "country_id")
+    val countryId: Int,
+    @SerialName("created_at")
+    @ColumnInfo(name = "created_at")
+    val createdAt: String,
+    @SerialName("updated_at")
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: String,
 ) : Parcelable {
     val lastUpdate: String
-        get() = formatServerDate(updated_at)
+        get() = formatServerDate(updatedAt)
 }
 
 @Serializable
@@ -119,10 +135,14 @@ data class CountryModel(
     val name: String,
     val latitude: Double,
     val longitude: Double,
-    val created_at: String,
-    val updated_at: String,
+    @SerialName("created_at")
+    @ColumnInfo(name = "created_at")
+    val createdAt: String,
+    @SerialName("updated_at")
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: String,
 ) : Parcelable {
     val lastUpdate: String
-        get() = formatServerDate(updated_at)
+        get() = formatServerDate(updatedAt)
 }
 

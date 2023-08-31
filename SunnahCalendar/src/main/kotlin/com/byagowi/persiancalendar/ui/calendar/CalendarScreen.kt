@@ -10,9 +10,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.provider.CalendarContract
-import android.text.TextPaint
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -27,8 +24,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.compose.runtime.remember
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import androidx.core.text.buildSpannedString
-import androidx.core.text.inSpans
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnNextLayout
@@ -43,10 +38,12 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.byagowi.persiancalendar.ATHANS_LIST
 import com.byagowi.persiancalendar.BuildConfig
+import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
 import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_DISABLE_OWGHAT
@@ -55,6 +52,7 @@ import com.byagowi.persiancalendar.PREF_LAST_APP_VISIT_VERSION
 import com.byagowi.persiancalendar.PREF_NOTIFY_IGNORED
 import com.byagowi.persiancalendar.PREF_OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.PREF_SECONDARY_CALENDAR_IN_TABLE
+import com.byagowi.persiancalendar.PREF_THEME_GRADIENT
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.CalendarScreenBinding
 import com.byagowi.persiancalendar.databinding.EventsTabContentBinding
@@ -66,6 +64,7 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.enabledCalendars
@@ -91,6 +90,7 @@ import com.byagowi.persiancalendar.ui.utils.considerSystemBarsInsets
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
+import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
@@ -105,14 +105,12 @@ import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.calendarType
 import com.byagowi.persiancalendar.utils.cityName
 import com.byagowi.persiancalendar.utils.dayTitleSummary
+import com.byagowi.persiancalendar.utils.enableDeviceCalendar
 import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.formatNumber
-import com.byagowi.persiancalendar.utils.formatTitle
 import com.byagowi.persiancalendar.utils.getA11yDaySummary
-import com.byagowi.persiancalendar.utils.getEventsTitle
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
-import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
@@ -125,10 +123,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import io.github.persiancalendar.calendar.AbstractDate
 import ir.namoo.commons.NAVIGATE_TO_DOWNLOAD_FRAGMENT
 import ir.namoo.commons.appLink
-import ir.namoo.commons.model.CityModel
-import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
-import ir.namoo.commons.repository.asDataState
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.openUrlInCustomTab
@@ -195,12 +190,57 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
 
     private fun createEventsTab(inflater: LayoutInflater, container: ViewGroup?): View {
         val binding = EventsTabContentBinding.inflate(inflater, container, false)
-        binding.eventsContent.setupLayoutTransition()
+        binding.eventsParent.setupLayoutTransition()
+        binding.events.layoutManager = LinearLayoutManager(binding.events.context)
+        val adapter = EventsRecyclerViewAdapter(
+            isRtl = resources.isRtl, dp = resources.dp,
+            createEventIcon = { context.getCompatDrawable(R.drawable.ic_open_in_new) },
+            onEventClick = { id: Int ->
+                runCatching { viewEvent.launch(id.toLong()) }.onFailure {
+                    Snackbar.make(
+                        binding.root,
+                        R.string.device_does_not_support,
+                        Snackbar.LENGTH_SHORT
+                    ).also { it.considerSystemBarsInsets() }.show()
+                }.onFailure(logException)
+            },
+            applyGradient =
+            inflater.context.appPrefs.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT) &&
+                    Theme.supportsGradient(inflater.context)
+        )
+        binding.events.adapter = adapter
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.selectedDayChangeEvent
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
-                .collectLatest { showEvent(binding, it) }
+                .collectLatest {
+                    val activity = activity ?: return@collectLatest
+                    val shiftWorkTitle = getShiftWorkTitle(it, false)
+                    binding.shiftWorkTitle.isVisible = shiftWorkTitle.isNotEmpty()
+                    binding.shiftWorkTitle.text = shiftWorkTitle
+                    val events = eventsRepository?.getEvents(it, activity.readDayDeviceEvents(it))
+                        ?: emptyList()
+                    binding.noEvent.isVisible = events.isEmpty()
+                    adapter.showEvents(events)
+                }
         }
+
+        if (PREF_HOLIDAY_TYPES !in inflater.context.appPrefs && language.isIranExclusive) {
+            binding.buttonsBar.header.setText(R.string.warn_if_events_not_set)
+            binding.buttonsBar.settings.setOnClickListener {
+                findNavController().navigateSafe(
+                    CalendarScreenDirections.navigateToSettings(
+                        SettingsScreen.INTERFACE_CALENDAR_TAB, PREF_HOLIDAY_TYPES
+                    )
+                )
+            }
+            binding.buttonsBar.discard.setOnClickListener {
+                binding.buttonsBar.root.context.appPrefs.edit {
+                    putStringSet(PREF_HOLIDAY_TYPES, EventsRepository.iranDefault)
+                }
+                binding.buttonsBar.root.isVisible = false
+            }
+        } else binding.buttonsBar.root.isVisible = false
+
         return binding.root
     }
 
@@ -344,7 +384,9 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
         tabsViewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 viewModel.changeSelectedTabIndex(position)
-                makeViewPagerHeightToAtLeastFitTheScreen(binding, tabs)
+                binding.root.doOnNextLayout {
+                    makeViewPagerHeightToAtLeastFitTheScreen(binding, tabs)
+                }
                 if (position == EVENTS_TAB) {
                     binding.addEvent.show()
                     binding.addEvent.postDelayed(THREE_SECONDS_AND_HALF_IN_MILLIS) {
@@ -397,32 +439,30 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
         binding: CalendarScreenBinding,
         tabs: List<Pair<Int, View>>
     ) {
-        binding.root.doOnNextLayout {
-            val width = binding.root.width.takeIf { it != 0 } ?: return@doOnNextLayout
-            val tabWidth = binding.viewPager.width.takeIf { it != 0 } ?: return@doOnNextLayout
-            binding.viewPager.minimumHeight = 0
-            val selectedTab = tabs[binding.viewPager.currentItem].second
-            selectedTab.minimumHeight = 0
-            binding.root.measure(
-                View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            )
-            selectedTab.measure(
-                View.MeasureSpec.makeMeasureSpec(tabWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            )
-            val minimumHeight = listOfNotNull(
-                selectedTab.measuredHeight,
-                binding.portraitContentRoot?.let {
-                    val calendarHeight = binding.calendarPager.measuredHeight
-                    binding.root.measuredHeight -
-                            (calendarHeight + binding.tabLayout.measuredHeight)
-                },
-                (220 * resources.sp).toInt()
-            ).max()
-            binding.viewPager.minimumHeight = minimumHeight
-            selectedTab.minimumHeight = minimumHeight
-        }
+        val width = binding.root.width.takeIf { it != 0 } ?: return
+        val tabWidth = binding.viewPager.width.takeIf { it != 0 } ?: return
+        binding.viewPager.minimumHeight = 0
+        val selectedTab = tabs[binding.viewPager.currentItem].second
+        selectedTab.minimumHeight = 0
+        binding.root.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        selectedTab.measure(
+            View.MeasureSpec.makeMeasureSpec(tabWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val minimumHeight = listOfNotNull(
+            selectedTab.measuredHeight,
+            binding.portraitContentRoot?.let {
+                val calendarHeight = binding.calendarPager.measuredHeight
+                binding.root.measuredHeight -
+                        (calendarHeight + binding.tabLayout.measuredHeight)
+            },
+            resources.sp(220f).toInt()
+        ).max()
+        binding.viewPager.minimumHeight = minimumHeight
+        selectedTab.minimumHeight = minimumHeight
     }
 
     private fun createCalendarsTab(context: Context): View {
@@ -466,7 +506,8 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
                 activity, Manifest.permission.READ_CALENDAR
             ) != PackageManager.PERMISSION_GRANTED
         ) activity.askForCalendarPermission() else {
-            runCatching { addEvent.launch(jdn) }.onFailure(logException).onFailure {
+            if (!isShowDeviceCalendarEvents) enableDeviceCalendar(activity, findNavController())
+            else runCatching { addEvent.launch(jdn) }.onFailure(logException).onFailure {
                 Snackbar.make(
                     view ?: return, R.string.device_does_not_support,
                     Snackbar.LENGTH_SHORT
@@ -520,31 +561,6 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
         if (isShowDeviceCalendarEvents) mainBinding?.calendarPager?.refresh(isEventsModified = true)
     }
 
-    private fun getDeviceEventsTitle(dayEvents: List<CalendarEvent<*>>) = buildSpannedString {
-        dayEvents.filterIsInstance<CalendarEvent.DeviceCalendarEvent>().forEachIndexed { i, event ->
-            if (i != 0) appendLine()
-            inSpans(object : ClickableSpan() {
-                override fun onClick(textView: View) {
-                    runCatching { viewEvent.launch(event.id.toLong()) }.onFailure {
-                        Snackbar.make(
-                            textView,
-                            R.string.device_does_not_support,
-                            Snackbar.LENGTH_SHORT
-                        ).also { it.considerSystemBarsInsets() }.show()
-                    }.onFailure(logException)
-                }
-
-                override fun updateDrawState(ds: TextPaint) {
-                    super.updateDrawState(ds)
-                    runCatching {
-                        // should be turned to long then int otherwise gets stupid alpha
-                        if (event.color.isNotEmpty()) ds.color = event.color.toLong().toInt()
-                    }.onFailure(logException)
-                }
-            }) { append(event.formatTitle()) }
-        }
-    }
-
     private val viewModel by viewModels<CalendarViewModel>()
     private fun bringDate(
         jdn: Jdn, highlight: Boolean = true, monthChange: Boolean = true,
@@ -564,85 +580,6 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
             ),
             Snackbar.LENGTH_SHORT
         ).also { it.considerSystemBarsInsets() }.show()
-    }
-
-    private fun showEvent(eventsBinding: EventsTabContentBinding, jdn: Jdn) {
-        val activity = activity ?: return
-
-        eventsBinding.shiftWorkTitle.text = getShiftWorkTitle(jdn, false)
-        val events =
-            eventsRepository?.getEvents(jdn, activity.readDayDeviceEvents(jdn)) ?: emptyList()
-        val holidays = getEventsTitle(
-            events,
-            holiday = true, compact = false, showDeviceCalendarEvents = false, insertRLM = false,
-            addIsHoliday = true
-        )
-        val nonHolidays = getEventsTitle(
-            events,
-            holiday = false, compact = false, showDeviceCalendarEvents = false, insertRLM = false,
-            addIsHoliday = false
-        )
-        val deviceEvents = getDeviceEventsTitle(events)
-        val contentDescription = StringBuilder()
-
-        eventsBinding.noEvent.isVisible =
-            listOf(holidays, deviceEvents, nonHolidays).all { it.isEmpty() }
-
-        if (holidays.isNotEmpty()) {
-            eventsBinding.holidayTitle.text = holidays
-            val holidayContent = getString(R.string.holiday_reason, holidays)
-            eventsBinding.holidayTitle.contentDescription = holidayContent
-            contentDescription.append(holidayContent)
-            eventsBinding.holidayTitle.isVisible = true
-        } else {
-            eventsBinding.holidayTitle.isVisible = false
-        }
-
-        if (deviceEvents.isNotEmpty()) {
-            eventsBinding.deviceEventTitle.text = deviceEvents
-            contentDescription
-                .appendLine()
-                .appendLine(getString(R.string.show_device_calendar_events))
-                .append(deviceEvents)
-
-            eventsBinding.deviceEventTitle.let {
-                it.movementMethod = LinkMovementMethod.getInstance()
-                it.isVisible = true
-            }
-        } else {
-            eventsBinding.deviceEventTitle.isVisible = false
-        }
-
-        if (nonHolidays.isNotEmpty()) {
-            eventsBinding.eventTitle.text = nonHolidays
-            contentDescription
-                .appendLine()
-                .appendLine(getString(R.string.events))
-                .append(nonHolidays)
-
-            eventsBinding.eventTitle.isVisible = true
-        } else {
-            eventsBinding.eventTitle.isVisible = false
-        }
-
-        if (PREF_HOLIDAY_TYPES !in activity.appPrefs && language.isIranExclusive) {
-            eventsBinding.buttonsBar.header.setText(R.string.warn_if_events_not_set)
-            eventsBinding.buttonsBar.settings.setOnClickListener {
-                findNavController().navigateSafe(
-                    CalendarScreenDirections.navigateToSettings(
-                        SettingsScreen.INTERFACE_CALENDAR_TAB, PREF_HOLIDAY_TYPES
-                    )
-                )
-            }
-            eventsBinding.buttonsBar.discard.setOnClickListener {
-                activity.appPrefs.edit {
-                    putStringSet(PREF_HOLIDAY_TYPES, EventsRepository.iranDefault)
-                }
-                eventsBinding.buttonsBar.root.isVisible = false
-            }
-        } else eventsBinding.buttonsBar.root.isVisible = false
-
-        eventsBinding.root.contentDescription = contentDescription
     }
 
     private fun setOwghat(owghatBinding: OwghatTabContentBinding, jdn: Jdn, isToday: Boolean) {
@@ -864,7 +801,7 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
                     }
                 }
                 tbody {
-                    (0 until mainCalendar.getMonthLength(date.year, date.month)).forEach { day ->
+                    (0..<mainCalendar.getMonthLength(date.year, date.month)).forEach { day ->
                         tr {
                             var prayTimes = coordinates.calculatePrayTimes(
                                 Jdn(mainCalendar.createDate(date.year, date.month, day))
@@ -960,30 +897,22 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
         if (!isNetworkConnected(requireContext()) || PrayTimeProvider.ptFrom != 0) return
         runCatching {
             lifecycleScope.launch(Dispatchers.IO) {
-                prayTimeRepository.getAddedCities().collect {
-                    when (it.asDataState()) {
-                        is DataState.Error -> {}
-                        DataState.Loading -> {}
-                        is DataState.Success -> {
-                            val list = (it.asDataState() as DataState.Success<List<CityModel>>).data
-                            val currentCity = requireContext().appPrefs.cityName
-                            currentCity?.let { cityName ->
-                                list.find { city -> city.name == cityName }?.let {
-                                    withContext(Dispatchers.Main) {
-                                        snackMessage(
-                                            view = mainBinding?.root,
-                                            message = getString(R.string.available_exact_times),
-                                            clickAction = {
-                                                requireContext().sendBroadcast(
-                                                    Intent(NAVIGATE_TO_DOWNLOAD_FRAGMENT)
-                                                )
-                                            },
-                                            snackAction = getString(R.string.download),
-                                            snackTime = Snackbar.LENGTH_LONG
-                                        )
-                                    }
-                                }
-                            }
+                val list = prayTimeRepository.getLocalCityList()
+                val currentCity = requireContext().appPrefs.cityName
+                currentCity?.let { cityName ->
+                    list.find { city -> city.name == cityName }?.let {
+                        withContext(Dispatchers.Main) {
+                            snackMessage(
+                                view = mainBinding?.root,
+                                message = getString(R.string.available_exact_times),
+                                clickAction = {
+                                    requireContext().sendBroadcast(
+                                        Intent(NAVIGATE_TO_DOWNLOAD_FRAGMENT)
+                                    )
+                                },
+                                snackAction = getString(R.string.download),
+                                snackTime = Snackbar.LENGTH_LONG
+                            )
                         }
                     }
                 }

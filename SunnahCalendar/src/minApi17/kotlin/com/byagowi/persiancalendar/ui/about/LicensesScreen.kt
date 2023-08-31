@@ -74,7 +74,7 @@ Nepali Events: ${nepaliEvents.size + 1}
 Irregular Recurring Events: ${irregularRecurringEvents.size + 1}
 
 Sources:
-${enumValues<EventType>().joinToString("\n") { "${it.name}: ${it.source}" }}"""
+${EventType.entries.joinToString("\n") { "${it.name}: ${it.source}" }}"""
         Linkify.addLinks(binding.eventsStats, Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES)
         val sideSheet = SideSheetBehavior.from(binding.standardSideSheet)
         sideSheet.addCallback(object : SideSheetCallback() {
@@ -124,7 +124,7 @@ ${enumValues<EventType>().joinToString("\n") { "${it.name}: ${it.source}" }}"""
 
         // Based on https://stackoverflow.com/a/34623367
         class BadgeSpan : ReplacementSpan() {
-            private val sidePadding = 6 * resources.sp
+            private val sidePadding = resources.sp(6f)
 
             override fun getSize(
                 paint: Paint, text: CharSequence?, start: Int, end: Int, fm: Paint.FontMetricsInt?
@@ -134,7 +134,7 @@ ${enumValues<EventType>().joinToString("\n") { "${it.name}: ${it.source}" }}"""
                 canvas: Canvas, text: CharSequence?, start: Int, end: Int, x: Float, top: Int,
                 y: Int, bottom: Int, paint: Paint
             ) {
-                val verticalReduce = 5 * resources.sp
+                val verticalReduce = resources.sp(5f)
                 val rect = RectF(
                     x, top + verticalReduce,
                     x + getSize(paint, text, start, end, null), bottom.toFloat()

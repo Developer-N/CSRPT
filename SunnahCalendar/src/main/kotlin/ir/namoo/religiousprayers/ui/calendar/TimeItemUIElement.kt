@@ -3,7 +3,7 @@ package ir.namoo.religiousprayers.ui.calendar
 import android.graphics.Typeface
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -51,11 +52,11 @@ fun TimeItemUIElement(
 ) {
     val coroutine = rememberCoroutineScope()
     val scale = remember { Animatable(1.1f) }
-    val infinity = rememberInfiniteTransition()
-    val alpha = infinity.animateFloat(
+    val infinity = rememberInfiniteTransition(label = "infinite")
+    val alpha by infinity.animateFloat(
         initialValue = 0.1f, targetValue = 1f, animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Reverse
-        )
+            animation = tween(1000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
+        ), label = "alpha-animation"
     )
     Card(
         modifier = modifier
@@ -91,7 +92,7 @@ fun TimeItemUIElement(
             Text(
                 modifier = Modifier
                     .weight(4f)
-                    .alpha(if (timeState.remaining.isBlank()) 1f else alpha.value),
+                    .alpha(if (timeState.remaining.isEmpty()) 1f else alpha),
                 text = timeState.remaining,
                 fontSize = 12.sp,
                 fontFamily = FontFamily(textFont),

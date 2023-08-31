@@ -15,13 +15,13 @@ import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.LocationsDB
-import ir.namoo.commons.model.PrayTimesModel
-import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
-import ir.namoo.commons.repository.asDataState
-import ir.namoo.commons.utils.modelToDBTimes
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesDAO
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class DownloadPrayTimesViewModel constructor(
@@ -30,104 +30,75 @@ class DownloadPrayTimesViewModel constructor(
     private val locationsDB: LocationsDB
 ) : ViewModel() {
 
-    var serverCitiesList by mutableStateOf((listOf<CityModel>()))
-        private set
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _query = MutableStateFlow("")
+    val query = _query.asStateFlow()
+
+    private val _addedCities = MutableStateFlow(emptyList<CityModel>())
+    val addedCities = query.combine(_addedCities) { text, list ->
+        when {
+            text.isEmpty() -> list
+            else -> list.filter { it.name.contains(text) }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), _addedCities.value)
+
     private var downloadCitiesID by mutableStateOf(listOf<Int>())
-    var isLoading by mutableStateOf(true)
-        private set
-    var citiesState by mutableStateOf(listOf<CityItemState>())
-        private set
-    var searchQuery by mutableStateOf("")
-        private set
-    private var getCitiesJob: Job? = null
 
-    fun loadAddedCities() {
-        runCatching {
-            isLoading = true
-            getCitiesJob?.cancel()
-            getCitiesJob = viewModelScope.launch {
-                prayTimesRepository.getAddedCities().collect {
-                    when (it.asDataState()) {
-                        is DataState.Error -> {
-                            isLoading = false
-                        }
+    private val _cityItemState = MutableStateFlow(emptyList<CityItemState>())
+    val cityIteState = _cityItemState.asStateFlow()
 
-                        DataState.Loading -> {
-                            isLoading = true
-                        }
+    private val _selectedCity = MutableStateFlow("")
+    val selectedCity = _selectedCity.asStateFlow()
 
-                        is DataState.Success -> {
-                            serverCitiesList =
-                                (it.asDataState() as DataState.Success<List<CityModel>>).data.sortedBy { city -> city.name }
-                            downloadCitiesID = downloadedPrayTimesDAO.getCities()
-                            citiesState = mutableListOf<CityItemState>().apply {
-                                for (c in serverCitiesList) add(CityItemState().apply {
-                                    if (downloadCitiesID.contains(c.id)) isDownloaded = true
-                                })
-                            }
-                            isLoading = false
-                        }
-                    }
-                }
+    fun loadData(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _selectedCity.value = context.appPrefs.getString(PREF_GEOCODED_CITYNAME, "") ?: ""
+            _addedCities.value =
+                prayTimesRepository.getAddedCity().sortedBy { city -> city.name }
+            downloadCitiesID = downloadedPrayTimesDAO.getCities()
+            val tmp = mutableListOf<CityItemState>().apply {
+                for (c in _addedCities.value) add(CityItemState().apply {
+                    if (downloadCitiesID.contains(c.id)) isDownloaded = true
+                })
             }
-        }.onFailure { logException }
-    }
-
-    fun selectCity(cityName: String?) {
-        runCatching {
-            citiesState.forEach {
-                if (it.isSelected) it.isSelected = false
-            }
-            val index = serverCitiesList.indexOf(serverCitiesList.find { it.name == cityName })
-            citiesState[index].isSelected = true
-        }.onFailure(logException)
+            _cityItemState.value = tmp
+            _isLoading.value = false
+        }
     }
 
     fun download(city: CityModel, context: Context) {
         viewModelScope.launch {
             runCatching {
                 if (locationsDB.cityDAO().getAllCity().find { it.id == city.id } == null) {
-                    locationsDB.countryDAO().insert(prayTimesRepository.getAllCountries())
-                    locationsDB.provinceDAO().insert(prayTimesRepository.getAllProvinces())
-                    locationsDB.cityDAO().insert(prayTimesRepository.getAllCities())
+                    prayTimesRepository.updateAndGetCityList()
                 }
-                val index = serverCitiesList.indexOf(city)
-                citiesState[index].isDownloading = true
-                prayTimesRepository.getPrayTimeFor(city.id).collect {
-                    when (it.asDataState()) {
-                        is DataState.Error -> {
-                            citiesState[index].isDownloading = false
-                        }
+                val index = addedCities.value.indexOf(city)
+                cityIteState.value[index].isDownloading = true
 
-                        DataState.Loading -> {
-                            citiesState[index].isDownloading = true
-                        }
+                val isDownloaded = prayTimesRepository.getTimesForCityAndSaveToLocalDB(city)
 
-                        is DataState.Success -> {
-                            downloadedPrayTimesDAO.clearDownloadFor(city.id)
-                            downloadedPrayTimesDAO.insertToDownload(
-                                modelToDBTimes(
-                                    (it.asDataState() as DataState.Success<List<PrayTimesModel>>).data
-                                )
-                            )
-                            downloadCitiesID = downloadedPrayTimesDAO.getCities()
-                            context.appPrefs.edit {
-                                putString(PREF_GEOCODED_CITYNAME, city.name)
-                                putString(PREF_LATITUDE, city.latitude.toString())
-                                putString(PREF_LONGITUDE, city.longitude.toString())
-                                putString(PREF_SELECTED_LOCATION, "")
-                            }
-                            citiesState[index].isDownloaded = true
-                            citiesState[index].isDownloading = false
-                            selectCity(city.name)
-                        }
-                    }
+                downloadCitiesID = downloadedPrayTimesDAO.getCities()
+                context.appPrefs.edit {
+                    putString(PREF_GEOCODED_CITYNAME, city.name)
+                    putString(PREF_LATITUDE, city.latitude.toString())
+                    putString(PREF_LONGITUDE, city.longitude.toString())
+                    putString(PREF_SELECTED_LOCATION, "")
                 }
+                cityIteState.value[index].isDownloaded = isDownloaded
+                cityIteState.value[index].isDownloading = false
+                _selectedCity.value = city.name
             }.onFailure(logException)
         }
     }
 
     fun search(query: String) {
-        searchQuery = query
+        viewModelScope.launch {
+            _isLoading.value = true
+            _query.value = query
+            _isLoading.value = false
+        }
     }
 }//end of class

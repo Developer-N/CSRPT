@@ -60,7 +60,7 @@
     <string name="sagittarius">Стрелец</string>
     <string name="moonInScorpio">Луна в Скорпионе</string>
     <string name="events">События</string>
-    <string name="no_event">Нет событий или встреч на этот день.</string>
+    <string name="no_event">Нет событий или встреч на этот день</string>
     <string name="warn_if_events_not_set">Чтобы выбрать и отобразить предпочтительные праздники и события, посетите Настройки</string>
     <string name="sunriseSunView">Восход</string>
     <string name="middaySunView">Полдень</string>
@@ -113,8 +113,8 @@
     <string name="calendars_priority_summary">Установите календари, чтобы показать приоритет или скрыть их</string>
     <string name="astronomy">Астрономия</string>
     <string name="astronomical_info_summary">Показать дополнительную информацию, такую как созвездие, древние названия лет и луна в скорпионе</string>
-    <string name="week_of_year">Неделя года</string>
-    <string name="week_of_year_summary">Показать неделю года в календаре</string>
+    <string name="week_number">Неделя года</string>
+    <string name="week_number_summary">Показать неделю года в календаре</string>
     <string name="week_start">Начало недели</string>
     <string name="week_start_summary">Выберите день начала недели</string>
     <string name="week_ends">выходные</string>

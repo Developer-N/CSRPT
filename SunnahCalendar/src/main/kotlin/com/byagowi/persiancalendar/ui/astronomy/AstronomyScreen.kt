@@ -35,12 +35,12 @@ import com.byagowi.persiancalendar.ui.calendar.dialogs.showDayPickerDialog
 import com.byagowi.persiancalendar.ui.common.ArrowView
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
+import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
 import com.byagowi.persiancalendar.ui.utils.setupLayoutTransition
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.byagowi.persiancalendar.utils.formatDateAndTime
-import com.byagowi.persiancalendar.utils.isRtl
 import com.byagowi.persiancalendar.utils.isSouthernHemisphere
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
@@ -100,7 +100,7 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
         binding.railView.itemIconTintList = null // makes it to not apply tint on modes icons
         binding.railView.menu.also { menu ->
             val buttons =
-                enumValues<AstronomyMode>().associateWith { menu.add(it.title).setIcon(it.icon) }
+                AstronomyMode.entries.associateWith { menu.add(it.title).setIcon(it.icon) }
             binding.railView.post { // Needs to be done in .post so selected button is applied correctly
                 buttons.forEach { (mode, item) ->
                     if (viewModel.mode.value == mode) item.isChecked = true
@@ -118,9 +118,11 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
 
         val seasonsCache = lruCache(1024, create = ::seasons)
         val headerCache = lruCache(1024, create = { jdn: Jdn ->
-            val context = context
-            if (context == null) "" else viewModel.astronomyState.value.generateHeader(context, jdn)
+            val context = context ?: return@lruCache listOf("", "", "")
+            viewModel.astronomyState.value.generateHeader(context, jdn)
         })
+
+        val headerTextViews = listOf(binding.solarEclipse, binding.lunarEclipse, binding.yearNames)
 
         fun update(state: AstronomyState) {
             binding.solarView.setTime(state)
@@ -142,9 +144,9 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
 
             val civilDate = state.date.toCivilDate()
             val jdn = Jdn(civilDate)
-            binding.headerInformation.text = headerCache[jdn]
+            headerTextViews.zip(headerCache[jdn]) { textView, line -> textView.text = line }
 
-            (1..4).forEach { i ->
+            for (i in 1..4) {
                 when (i) {
                     1 -> binding.firstSeason
                     2 -> binding.secondSeason
@@ -276,6 +278,8 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
 
         binding.firstColumn.setupLayoutTransition()
         binding.secondColumn.setupLayoutTransition()
+
+        binding.contentRoot.setupLayoutTransition()
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.contentRoot) { _, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())

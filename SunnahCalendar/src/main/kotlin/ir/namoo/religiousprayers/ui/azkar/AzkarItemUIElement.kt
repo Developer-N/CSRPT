@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,14 +37,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
+import ir.namoo.commons.utils.appFont
+import ir.namoo.commons.utils.cardColor
+import ir.namoo.commons.utils.iconColor
+import ir.namoo.religiousprayers.ui.azkar.data.AzkarItem
+import ir.namoo.religiousprayers.ui.azkar.data.AzkarReference
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -49,9 +57,6 @@ fun AzkarItemUIElement(
     item: AzkarItem,
     reference: AzkarReference,
     lang: String,
-    cardColor: Color,
-    iconColor: Color,
-    typeface: Typeface,
     arabicTypeface: Typeface,
     soundFile: File,
     itemState: AzkarItemState,
@@ -68,6 +73,7 @@ fun AzkarItemUIElement(
         modifier = Modifier
             .padding(4.dp, 2.dp)
             .fillMaxWidth()
+            .animateContentSize(animationSpec = spring())
             .padding(4.dp, 2.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
         elevation = CardDefaults.cardElevation(1.dp)
@@ -91,7 +97,8 @@ fun AzkarItemUIElement(
                     text = item.arabic ?: "---",
                     fontFamily = FontFamily(arabicTypeface),
                     fontSize = 22.sp,
-                    lineHeight = 35.sp
+                    lineHeight = 35.sp,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
             if (lang != Language.AR.code) SelectionContainer {
@@ -103,7 +110,7 @@ fun AzkarItemUIElement(
                         Language.FA.code -> item.persian
                         else -> item.kurdish
                     } ?: "---",
-                    fontFamily = FontFamily(typeface)
+                    fontFamily = FontFamily(appFont)
                 )
             }
             Row(
@@ -125,7 +132,7 @@ fun AzkarItemUIElement(
                     label = {
                         Text(
                             text = stringResource(id = R.string.reference),
-                            fontFamily = FontFamily(typeface)
+                            fontFamily = FontFamily(appFont)
                         )
                     },
                     trailingIcon = {
@@ -156,12 +163,10 @@ fun AzkarItemUIElement(
                         }, modifier = Modifier.scale(playScale.value)
                     ) {
                         Icon(
-                            painterResource(
-                                id = if (soundFile.exists()) {
-                                    if (itemState.isPlaying) R.drawable.ic_baseline_stop_24
-                                    else R.drawable.ic_baseline_play_circle_filled
-                                } else R.drawable.ic_download
-                            ),
+                            imageVector = if (soundFile.exists()) {
+                                if (itemState.isPlaying) Icons.Filled.StopCircle
+                                else Icons.Filled.PlayCircle
+                            } else Icons.Filled.CloudDownload,
                             contentDescription = stringResource(id = R.string.play),
                             tint = iconColor,
                             modifier = Modifier.size(30.dp)
@@ -172,7 +177,9 @@ fun AzkarItemUIElement(
                     CircularProgressIndicator(
                         modifier = Modifier
                             .size(32.dp)
-                            .padding(4.dp, 1.dp)
+                            .padding(4.dp, 1.dp),
+                        strokeCap = StrokeCap.Round,
+                        strokeWidth = 4.dp
                     )
                 }
             }
@@ -186,7 +193,7 @@ fun AzkarItemUIElement(
                         Language.FA.code -> reference.persian
                         else -> reference.arabic
                     }) ?: "--",
-                    fontFamily = FontFamily(typeface)
+                    fontFamily = FontFamily(appFont)
                 )
             }
         }

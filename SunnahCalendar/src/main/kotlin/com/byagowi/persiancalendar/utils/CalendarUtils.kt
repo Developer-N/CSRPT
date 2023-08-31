@@ -8,9 +8,13 @@ import android.content.res.Resources
 import android.provider.CalendarContract
 import androidx.annotation.PluralsRes
 import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
+import androidx.core.text.parseAsHtml
+import androidx.navigation.NavController
 import com.byagowi.persiancalendar.EN_DASH
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
+import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.RLM
 import com.byagowi.persiancalendar.entities.CalendarEvent
@@ -33,9 +37,12 @@ import com.byagowi.persiancalendar.global.numericalDatePreferred
 import com.byagowi.persiancalendar.global.preferredDigits
 import com.byagowi.persiancalendar.global.spacedAndInDates
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.global.spacedOr
 import com.byagowi.persiancalendar.global.weekDays
 import com.byagowi.persiancalendar.global.weekDaysInitials
 import com.byagowi.persiancalendar.global.weekStartOffset
+import com.byagowi.persiancalendar.ui.calendar.CalendarScreenDirections
+import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
@@ -46,6 +53,7 @@ import java.util.Date
 import java.util.GregorianCalendar
 import java.util.TimeZone
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 val supportedYearOfIranCalendar: Int get() = IranianIslamicDateConverter.latestSupportedYearOfIran
 
@@ -168,7 +176,8 @@ private fun readDeviceEvents(
             CalendarContract.Instances.END, // 4
             CalendarContract.Instances.VISIBLE, // 5
             CalendarContract.Instances.ALL_DAY, // 6
-            CalendarContract.Instances.EVENT_COLOR // 7
+            CalendarContract.Instances.EVENT_COLOR, // 7
+            CalendarContract.Instances.DISPLAY_COLOR // 8
         ), null, null, null
     )?.use {
         generateSequence { if (it.moveToNext()) it else null }.filter {
@@ -182,8 +191,8 @@ private fun readDeviceEvents(
             CalendarEvent.DeviceCalendarEvent(
                 id = it.getInt(0),
                 title =
-                if (it.getString(6) == "1") "\uD83D\uDCC5 ${it.getString(1) ?: ""}"
-                else "\uD83D\uDD53 ${it.getString(1) ?: ""} (${startCalendar.clock()}${
+                if (it.getString(6) == "1") it.getString(1) ?: ""
+                else "${it.getString(1) ?: ""} (${startCalendar.clock()}${
                     (if (it.getLong(3) != it.getLong(4) && it.getLong(4) != 0L)
                         "-${endCalendar.clock()}"
                     else "")
@@ -192,7 +201,7 @@ private fun readDeviceEvents(
                 start = startDate,
                 end = endDate,
                 date = startCalendar.toCivilDate(),
-                color = it.getString(7) ?: "",
+                color = it.getString(7) ?: it.getString(8) ?: "",
                 isHoliday = false
             )
         }.take(1000 /* let's put some limitation */).toList()
@@ -218,7 +227,7 @@ fun Context.getAllEnabledAppointments() = readDeviceEvents(
 
 fun CalendarEvent.DeviceCalendarEvent.formatTitle(): String =
     (title + if (description.isNotBlank())
-        " (${HtmlCompat.fromHtml(description, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()})"
+        " (${description.parseAsHtml(HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()})"
     else "").replace("\n", " ").trim()
 
 
@@ -265,7 +274,9 @@ fun calculateDatePartsDifference(
 
 fun calculateDaysDifference(
     resources: Resources, jdn: Jdn,
-    baseJdn: Jdn = Jdn.today(), calendarType: CalendarType = mainCalendar
+    baseJdn: Jdn = Jdn.today(),
+    calendarType: CalendarType = mainCalendar,
+    isInWidget: Boolean = false
 ): String {
     val baseDate = baseJdn.toCalendar(calendarType)
     val date = jdn.toCalendar(calendarType)
@@ -273,14 +284,22 @@ fun calculateDaysDifference(
         if (baseJdn > jdn) baseDate else date, if (baseJdn > jdn) date else baseDate, calendarType
     )
     val days = abs(baseJdn - jdn)
-        .let { resources.getQuantityString(R.plurals.n_days, it, formatNumber(it)) }
-    return if (months == 0 && years == 0) days else language.inParentheses.format(days, listOf(
-        R.plurals.n_years to years,
-        R.plurals.n_months to months,
-        R.plurals.n_days to daysOfMonth
-    ).filter { (_, n) -> n != 0 }.joinToString(spacedAndInDates) { (@PluralsRes pluralId, n) ->
-        resources.getQuantityString(pluralId, n, formatNumber(n))
-    })
+    val daysString = resources.getQuantityString(R.plurals.n_days, days, formatNumber(days))
+    val weeks = if (isInWidget || days < 7) 0 else (days / 7.0).roundToInt()
+    val result = listOfNotNull(
+        if (months == 0 && years == 0) null else listOf(
+            R.plurals.n_years to years,
+            R.plurals.n_months to months,
+            R.plurals.n_days to daysOfMonth
+        ).filter { (_, n) -> n != 0 }.joinToString(spacedAndInDates) { (@PluralsRes pluralId, n) ->
+            resources.getQuantityString(pluralId, n, formatNumber(n))
+        },
+        if (weeks == 0) null
+        else (if (days % 7 == 0) "" else "~")
+                + resources.getQuantityString(R.plurals.n_weeks, weeks, formatNumber(weeks)),
+    )
+    if (result.isEmpty()) return daysString
+    return language.inParentheses.format(daysString, result.joinToString(spacedOr))
 }
 
 fun formatDate(
@@ -329,3 +348,12 @@ private fun getCalendarNameAbbr(date: AbstractDate) =
 
 fun dateStringOfOtherCalendars(jdn: Jdn, separator: String) =
     enabledCalendars.drop(1).joinToString(separator) { formatDate(jdn.toCalendar(it)) }
+
+fun enableDeviceCalendar(context: Context, navController: NavController?) {
+    val isGranted = ActivityCompat.checkSelfPermission(
+        context, Manifest.permission.READ_CALENDAR
+    ) == PackageManager.PERMISSION_GRANTED
+    context.appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, isGranted) }
+    if (isGranted && navController != null && navController.currentDestination?.id == R.id.calendar)
+        navController.navigateSafe(CalendarScreenDirections.navigateToSelf())
+}

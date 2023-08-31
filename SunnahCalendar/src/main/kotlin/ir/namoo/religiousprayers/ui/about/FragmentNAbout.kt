@@ -21,9 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -37,7 +35,6 @@ import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
 import com.byagowi.persiancalendar.ui.utils.navigateSafe
 import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
@@ -45,7 +42,7 @@ import com.google.accompanist.themeadapter.material3.Mdc3Theme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import ir.namoo.commons.appLink
-import ir.namoo.commons.utils.getAppFont
+import ir.namoo.commons.utils.cardColor
 import ir.namoo.commons.utils.snackMessage
 
 class FragmentNAbout : Fragment() {
@@ -122,16 +119,11 @@ class FragmentNAbout : Fragment() {
         val versionDescription = formatNumber(
             "${getString(R.string.app_name)}: ${
                 String.format(getString(R.string.version, version))
-            }\nنسخه مناسب سال 1401 - 1402"
+            }\nنسخه مناسب سال 1402"
         )
 
         binding.info.setContent {
             Mdc3Theme {
-                val appFont = remember { getAppFont(requireContext()) }
-                val iconColor =
-                    remember { Color(requireContext().resolveColor(android.R.attr.colorAccent)) }
-                val cardColor =
-                    remember { Color(requireContext().resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface)) }
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
@@ -140,16 +132,13 @@ class FragmentNAbout : Fragment() {
                         .verticalScroll(scrollState)
                         .padding(4.dp, 10.dp)
                 ) {
-                    InfoUIElement(appFont, versionDescription)
+                    InfoUIElement(versionDescription)
                     Divider(
                         modifier = Modifier
                             .padding(8.dp)
                             .fillMaxWidth(), thickness = 2.dp
                     )
                     ContactUIElement(
-                        typeface = appFont,
-                        iconColor = iconColor,
-                        cardColor = cardColor,
                         namooClick = { openTG(binding.root) },
                         developerNClick = { openTGDeveloper(binding.root) },
                         mailTo = { mailTo() }
@@ -168,9 +157,7 @@ class FragmentNAbout : Fragment() {
                     packageName, PackageManager.PackageInfoFlags.of(0)
                 )
             } else {
-                @Suppress("DEPRECATION") packageManager.getPackageInfo(
-                    packageName, 0
-                )
+                packageManager.getPackageInfo(packageName, 0)
             }.versionName
         }.onFailure(logException).getOrDefault("")
 

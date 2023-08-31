@@ -6,7 +6,7 @@
     <string name="azkar">اذکار</string>
     <string name="edit_times">ویرایش اوقات</string>
     <string name="download_upload">دانلود اوقات</string>
-    <string name="donate">پشتیبانی مالی</string>
+    <string name="donate">صدقه جاریه</string>
 
     <string name="search">جستجو</string>
     <string name="available_cities_list">لیست شهرهای در دسترس جهت دانلود اوقات دقیق</string>
@@ -21,20 +21,17 @@
     <string name="clear_change">پاک کردن تغییرات</string>
 
     <string name="network_error_title">خطا!</string>
-    <string name="network_error_message">لطفا اتصال اینترنت را بررسی کنید.</string>
-    <string name="str_retray">تلاش مجدد</string>
+    <string name="network_error_message">لطفا اتصال اینترنت را بررسی کنید!</string>
+    <string name="str_retry">تلاش مجدد</string>
+    <string name="welcome">خوش آمدید</string>
 
     <string name="available_exact_times">اوقات دقیق محلی برای شهر شما در دسترس است!</string>
-    <string name="you_edited">شما برای شهر %s اوقات را ویرایش کردید و می توانید آن را برای ما بفرستید تا در دسترس همه قرار بگیرد.(ترجیحا از طریق تلگرام به ای دی @Developer_N بفرستید.)</string>
-    <string name="are_sure_send_times">از ارسال اوقات مطمئن هستید؟</string>
     <string name="yes">بله</string>
     <string name="no">بیخیال</string>
     <string name="send_times">ارسال اوقات</string>
-    <string name="error_sending_times">خطایی رخ داده! دوباره تلاش کنید.</string>
     <string name="copy">رونوشت</string>
     <string name="copied">رونوشت شد!</string>
 
-    <string name="downloading_azkar">در حال دانلود اذکار</string>
     <string name="download_failed_tray_again">دانلود با شکست مواجه شد! لطفا دوباره تلاش کنید.</string>
     <string name="downloaded">دانلود تمام شد!</string>
 
@@ -56,13 +53,15 @@
     <string name="str_dialog_clear_edited_message">آیا مطمئن هستید می خواهید تمام اوقات ویرایش شده را حذف کنید؟</string>
     <string name="please_wait">لطفا صبر کنید</string>
 
-    <string name="welcome_please_select_your_city">خوش آمدید، لطفا شهر خود را انتخاب کنید!</string>
+    <string name="welcome_please_select_your_city">اوقات شهرهای زیر دقیق است و دستی ثبت شده اند، در صورتی که شهر شما در لیست زیر وجود ندارد از قسمت موقعیت دلخواه، شهر خود را ثبت کنید.</string>
     <string name="next_page">صفحه بعد</string>
     <string name="previous_page">صفحه قبل</string>
     <string name="start">شروع</string>
     <string name="my_city_not_in_list">شهر من در لیست پایین وجود ندارد</string>
-    <string name="custom_city">وارد کردن شهر دلخواه</string>
-    <string name="location_not_detected">موقعیت مکانی به درستی تشخیص داده نشده است!</string>
+    <string name="custom_location">موقعیت دلخواه</string>
+    <string name="select_city">انتخاب شهر</string>
+    <string name="downloading_city_list">در حال دانلود لیست شهرها، منتظر بمانید…</string>
+    <string name="location_not_detected">موقعیت مکانی به درستی تشخیص داده نشده است! از روشن بودن موقعیت مکانی مطمئن شوید و دوباره تلاش کنید!</string>
     <string name="first_setup_location_message">برنامه جهت آماده سازی تنظیمات برای محاسبه اوقات نماز یک بار نیاز به اطلاعات موقعیت مکانی شما دارد، برای ادامه باید مجوز مربوطه را به برنامه بدهید.
         \n
     بعد از اتمام مراحل اولیه و ورود به برنامه می توانید مجوز مربوطه را غیر فعال کنید!
@@ -76,7 +75,13 @@
     <string name="intro1_msg">برنامه قادر به تشخیص نام شهر شما نیست، لطفا نام شهر را دستی وارد کنید!</string>
 
     <string name="donate_msg">
-        برای به روز آوری امکانات و توسعه حوزه کاری به همت و کمک مالی شما عزیزان نیاز داریم. با هر مقداری که در توان دارید ما را یاری دهید.
+        تمام امکانات این نرم افزار برای همیشه رایگان خواهد ماند و ان شاءالله در هر شرایطی به توسعه آن ادامه خواهیم داد.
+        \n
+        با توجه به شرایط اقتصادی موجود برای تهیه ی امکانات جدید با چالش هایی روبرو هستیم و پشتیبانی مالی شما عزیزان به ما جهت پیشرفت سریعتر و بهتر شدن کیفیت خدمات کمک خواهد کرد، حتی اگر نصف کاربران فعال روزانه(کاربرانی که هر روز از نرم افزار استفاده می کنند)، سالانه 5 هزار تومان پرداخت کنند، بالای 90 درصد مشکلات ما حل خواهد شد و این فرصت در اختیار شما هم قرار دارد تا در این صدقه جاریه مشارکت کنید.
+        \n
+        اگر به هر دلیلی امکان مشارکت مالی ندارید با خیال راحت از تمام امکانات برنامه استفاده کنید و نشر و معرفی آن نیز صدقه جاریه است.
+        \n
+        ما را از دعاهای خیرتان بی نصیب نگذارید. 😊
     </string>
     <string name="custom_donate">مبلغ دلخواه</string>
     <string name="_50">50 هزار</string>
@@ -85,16 +90,12 @@
     <string name="_5">5 هزار </string>
 
     <string name="namoo_developer_group">گروه توسعه دهنده نامۆ</string>
-    <string name="srt_info2">با حمایت کانون فرهنگی هنری حضرت محمدﷺ، مسجد حضرت ابوبکر صدیق (رضی الله عنه)، شهرستان سردشت.</string>
-    <string name="str_info_msg">با ارسال اشکالات و پیشنهادات ما را در راستای ارتقای خدماتمان یاری کنید.
+    <string name="str_info_msg">با ارسال اشکالات و پیشنهادات ما را در راستای بهبود خدماتمان یاری کنید.
         \n
         کپی حلال و تبلیغ و نشر برنامه صدقه جاریه است.
         \n
     خبرها و آموزش های برنامه را از طریق کانال تلگرام دنبال کنید.
     </string>
-    <string name="telegram_developer">\@Developer_N</string>
-    <string name="telegram">\@namoo_ir</string>
-    <string name="mail">namoodev@gmail.com</string>
     <string name="send_direct_message">مستقیم برای ما پیغام بفرستید.</string>
     <string name="your_message">پیام شما…</string>
     <string name="send_message">ارسال پیام</string>
@@ -107,6 +108,23 @@
     <string name="send_mail">ارسال ایمیل</string>
     <string name="str_changes_title">تغییرات</string>
     <string name="changes">
+
+        \n----تغییرات نسخه : 10.8.1----\n
+1.	باز طراحی صفحات شروع اولیه برنامه\n
+2.	باز طراحی بخش قرآن\n
+____1.	ظاهر جدید و بروز شده\n
+____2.	بهبود پخش کننده ی قرآن\n
+____3.	دانلود بهینه تر فایل ها\n
+____4.	امکان حذف فایل های دانلود شده\n
+____5.	جستجوی بهینه تر در قرآن و ترجمه ها\n
+____6.	ترجمه های بیشتر به زبان کردی\n
+____7.	فونت های بیشتر\n
+____8.	امکانات بیشتر مثل نمایش سوره ها در حالت مصحف و … ان شاءالله در آپدیت های بعدی اضافه خواهد شد.\n
+3.	بروزرسانی تقویم\n
+4.	سازگاری نسبی با اندروید 14\n
+5.	رفع مشکل خارج شدن گوشی از حالت سایلنت بعد از زمان تعیین شده هنگام پخش اذان\n
+6.	رفع مشکلات گزارش شده دیگر و بهبود کارایی\n
+
 
         \n----تغییرات نسخه : 10.6.2----\n
 1.	بروزرسانی ظاهر برنامه و استفاده از طیف رنگی برای پوسته ها\n
@@ -297,23 +315,23 @@
 
     <string name="update_available">آپدیت جدید از راه رسید لطفا برنامه را آپدیت کنید!</string>
     <string name="download">دانلود</string>
+    <string name="downloading">در حال دانلود</string>
     <string name="markets">بروزرسانی از مارکت</string>
 
     <string name="renew_location">تازه کردن موقعیت</string>
     <string name="save_location">ذخیره</string>
     <string name="enter_city_name">نام شهر را وارد کنید!</string>
+    <string name="select_location_if_not_detect">اگر موقعیت مکانی شما تشخیص داده نشد از لیست زیر انتخاب کنید.</string>
 
     <string name="athan_settings">تنظیمات اذان ها(برای تنظیمات بیشتر روی اذان ها کلیک کنید)</string>
     <string name="enable_athan">اذان پخش شود</string>
     <string name="enable_alarm">هشدار پخش شود</string>
     <string name="alert_type">حالت پخش</string>
     <string name="notification">پخش در نوار اعلان</string>
-    <string name="notif">اعلان</string>
     <string name="just_notification">فقط اعلان</string>
     <string name="select_alarm">انتخاب هشدار</string>
     <string name="play_alert">پخش هشدار</string>
     <string name="add_normal_athans">اضافه کردن اذان</string>
-    <string name="add_fajr_athan">اضافه کردن اذان صبح</string>
     <string name="add_alarm">اضافه کردن صدای هشدار</string>
     <string name="play_athan_problem">اگر تنظیمات گوشی را از طریق راهنما انجام داده اید و هنوز در پخش به موقع اذان مشکل دارید، متدهای زیر را عوض کنید.</string>
     <string name="first_method">متد اول(پیش فرض)</string>
@@ -335,7 +353,6 @@
     <string name="play_athan">پخش اذان</string>
     <string name="reset_athan">اذان پیشفرض</string>
     <string name="ok">خیلی خب</string>
-    <string name="select_athan_file_title">اذان را انتخاب کنید</string>
     <string name="alarm_before">هشدار قبل از اذان</string>
     <string name="enable_alarm_before">فعال کردن هشدار</string>
     <string name="alarm_after">هشدار بعد از اذان</string>
@@ -356,31 +373,25 @@
     <string name="done">انجام شد</string>
 
 
-    <string name="quran_database_not_exist">پایگاه داده قرآن وجود ندارد باید ابتدا آن را دانلود کنید!</string>
-    <string name="size_8mb">حجم دانلود : 8 مگابایت</string>
-    <string name="latest_visited">آخرین بازدید : سوره %s آیه %s</string>
-    <string name="sura_name">نام سوره</string>
+    <string name="quran_database_not_exist">باید ابتدا فایل های قرآن را دانلود کنید!</string>
+    <string name="load_quran_chapter_error">مشکلی در بارگذاری اطلاعات اتفاق افتاد!\n برنامه را ببندید و دوباره باز کنید اگر مشکل حل نشد برای دانلود دوباره فایل ها کلیک کنید.</string>
     <string name="aya_count">%s آیه</string>
     <string name="revelation_order">شماره نزول %s</string>
-    <string name="no_note">هیچ یادداشتی وجود ندارد!</string>
     <string name="delete">حذف</string>
-    <string name="save">ذخیره</string>
     <string name="go_to_aya">برو به آیه</string>
     <string name="your_note">یادداشت شما</string>
-    <string name="no_bookmark">هیچ آیه ای علامت گذاری نشده است!</string>
-    <string name="select_file_for_download">نوع فایل ها برای دانلود را انتخاب کنید:</string>
-    <string name="select_translates">انتخاب ترجمه ها</string>
-    <string name="farsi_translate">ترجمه فارسی</string>
+    <string name="select_quran_audio_for_download">انتخاب کنید:</string>
+    <string name="select_translates">انتخاب ترجمه ها برای نمایش زیر آیات</string>
     <string name="kurdish_translate">ترجمه کوردی</string>
-    <string name="english_transliteration">تلفظ انگلیسی</string>
-    <string name="english_translate">ترجمه انگلیسی</string>
-    <string name="farsi_full_translate">ترجمه کامل فارسی</string>
-    <string name="select_qari_translate">انتخاب قاری و ترجمه برای پخش</string>
+    <string name="farsi_tafsir">تفسیر</string>
+    <string name="select_qari_translate_for_play">انتخاب قاری و ترجمه جهت پخش</string>
+    <string name="select_qari">انتخاب قاری</string>
+    <string name="select_translate_to_play">انتخاب ترجمه</string>
     <string name="arabic_translate">قرآن و ترجمه</string>
     <string name="just_arabic">فقط قرآن</string>
     <string name="just_translate">فقط ترجمه</string>
     <string name="play_type">حالت پخش</string>
-    <string name="arabic_font_setting">تنظیم فونت عربی</string>
+    <string name="quran_font_setting">تنظیم فونت قرآن</string>
     <string name="english_font_setting">تنظیم فونت انگلیسی</string>
     <string name="kurdish_font_setting">تنظیم فونت کوردی</string>
     <string name="farsi_font_setting">تنظیم فونت فارسی</string>
@@ -392,7 +403,6 @@
     <string name="create_shortcut">اضافه کردن میانبر</string>
     <string name="pin_not_supported">دستگاه شما از میانبرهای داخل برنامه ای پشتیبانی نمی کند!</string>
     <string name="shortcut_created">میانبر اضافه شد!</string>
-    <string name="playing_verse">در حال پخش آیه %s</string>
     <string name="sura">سوره</string>
     <string name="aya">آیه</string>
     <string name="note_saved">یادداشت ذخیره شد</string>
@@ -400,10 +410,11 @@
     <string name="audio_files_error">فایل های صوتی برای قاری انتخابی و این سوره هنوز دانلود نشده اند!</string>
     <string name="audio_translate_files_error">فایل های صوتی ترجمه برای این سوره هنوز دانلود نشده اند!</string>
     <string name="result_found">تعداد %s نتیجه پیدا شد.</string>
-    <string name="search_head">%s آیه %s</string>
+    <string name="search_in_quran_and_translates">جستجو در قرآن و ترجمه ها</string>
+    <string name="search_in_quran">جستجو در قرآن</string>
     <string name="alert">هشدار!</string>
-    <string name="save_alert_message">آیا از ثبت تغییرات مطمئن هستید؟</string>
-    <string name="delete_alert_message">آیا از حذف یادداشت مطمئن هستید؟!</string>
+    <string name="delete_note_alert_message">آیا از حذف یادداشت مطمئن هستید؟</string>
+    <string name="delete_quran_audio_alert_message">آیا از حذف فایل های صوتی مطمئن هستید؟</string>
     <string name="download_completed_unzip">دانلود تمام شد! -> در حال استخراج فایل ها …</string>
     <string name="sort_order">مرتب سازی فهرست</string>
     <string name="go_to_page">برو به صفحه</string>
@@ -416,23 +427,15 @@
     <string name="aya_inc_sort">تعداد آیه(صعودی)</string>
     <string name="aya_dec_sort">تعداد آیه(نزولی)</string>
     <string name="select_page">انتخاب صفحه</string>
-    <string name="page_out_of_bounds">
-		خطا!!!
-		\n
-		صفحه باید کمتر از 605 باشد.
-	</string>
+    <string name="page_out_of_bounds">قرآن 604 صفحه است!</string>
     <string name="select_hizb">انتخاب حزب</string>
     <string name="select_juz">انتخاب جزء</string>
     <string name="meccan">مکی</string>
     <string name="medinan">مدنی</string>
     <string name="download_quran_db">دانلود پایگاه داده قرآن</string>
-    <string name="download_quran_db_description">در حال دانلود پایگاه داده قرآن، لطفا صبر کنید…</string>
 
     <string name="widget_next_athan_text_color">رنگ‌نوشته‌ اذان بعدی ویجت</string>
     <string name="select_widgets_next_athan_text_color">انتخاب رنگ دلخواه برای نوشته‌ اذان بعدی ویجت</string>
-    <string name="next_athan">اذان بعدی</string>
-    <string name="till">%1$s تا </string>
-    <string name="rem">%1$s مانده </string>
 
     <string name="support">پشتیبانی</string>
     <string name="requset_permision">درخواست مجوز</string>
@@ -473,5 +476,21 @@
 
     <string name="default_image">Default Image</string>
     <string name="eid">عید</string>
+
+    <string name="internal">حافظه داخلی</string>
+    <string name="external">کارت حافظه</string>
+
+    <string name="str_welcome">
+        این نرم افزار، یک توسعه از نرم افزار تقویم فارسی با تمرکز روی اوقات دقیق نماز و ارائه ی امکاناتی بیشتر برای مسلمانان است.
+        \n
+        با توجه به اینکه اوقات محاسبه شده توسط الگوریتم ها بر پایه موقعیت مکانی و دارای خطا است، سعی می کنیم اوقات دقیق شهرها را به صورتی دستی ثبت کنیم.
+        \n
+        اگر اوقات دقیق شهر شما ثبت نشده بود، برای ثبت اوقات از قسمت *درباره ما* می توانید با ما در تماس باشید.
+        \n
+        برای ادامه شهر خود را نتخاب کنید.
+    </string>
+
+    <string name="bank_number">کارت به کارت</string>
+
 
 </resources>
