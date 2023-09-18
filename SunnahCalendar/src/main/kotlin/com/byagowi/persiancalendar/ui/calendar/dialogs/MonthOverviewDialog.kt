@@ -226,7 +226,7 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
     table("calendar") {
         tr {
             if (isShowWeekOfYearEnabled) th {}
-            for (it in 0..6) th { +getWeekDayName(revertWeekStartOffsetFromWeekDay(it)) }
+            repeat(7) { th { +getWeekDayName(revertWeekStartOffsetFromWeekDay(it)) } }
         }
         val monthLength = date.calendarType.getMonthLength(date.year, date.month)
         val monthStartJdn = Jdn(date)
@@ -237,14 +237,14 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
             val index = it - fixedStartingDayOfWeek
             if (index !in (0..<monthLength)) return@map null
             (index + 1) to (monthStartJdn + index)
-        }.chunked(7).map { row ->
-            val firstJdnInWeek = row.firstNotNullOfOrNull { it?.second/*jdn*/ } ?: return@map
+        }.chunked(7).forEach { row ->
+            val firstJdnInWeek = row.firstNotNullOfOrNull { it?.second/*jdn*/ } ?: return@forEach
             tr {
                 if (isShowWeekOfYearEnabled) {
                     val weekOfYear = firstJdnInWeek.getWeekOfYear(startOfYearJdn)
                     th { sub { small { +formatNumber(weekOfYear) } } }
                 }
-                row.map { pair ->
+                row.forEach { pair ->
                     td {
                         val (dayOfMonth, jdn) = pair ?: return@td
                         span(generateDayClasses(jdn, true)) {
@@ -256,7 +256,7 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
                                 val digits = secondaryCalendarDigits
                                 formatNumber(secondaryDateDay, digits)
                             },
-                            getShiftWorkTitle(jdn, false).takeIf { it.isNotEmpty() }
+                            getShiftWorkTitle(jdn)
                         ).joinToString(" ").takeIf { it.isNotEmpty() }?.let { sup { +" $it" } }
                     }
                 }

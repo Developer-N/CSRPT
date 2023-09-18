@@ -33,7 +33,7 @@ class IntroDownloadViewModel(
             text.isNotEmpty() -> list.filter { it.name.contains(text) }
             else -> list
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), _addedCityList.value)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _addedCityList.value)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()

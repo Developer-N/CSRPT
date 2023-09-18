@@ -42,7 +42,7 @@ class DownloadPrayTimesViewModel constructor(
             text.isEmpty() -> list
             else -> list.filter { it.name.contains(text) }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), _addedCities.value)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _addedCities.value)
 
     private var downloadCitiesID by mutableStateOf(listOf<Int>())
 

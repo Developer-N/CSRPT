@@ -59,7 +59,7 @@ class NAthanNotification : Service() {
 
     private val notificationId = if (BuildConfig.DEVELOPMENT) Random.nextInt(2000, 4000) else 3000
     private var notificationManager: NotificationManager? = null
-    private lateinit var setting: AthanSetting
+    private var setting: AthanSetting? = null
 
     private val ascendingVolumeStep = 6
     private var currentVolumeSteps = 1
@@ -71,7 +71,7 @@ class NAthanNotification : Service() {
     private var isDoaPlayed = false
     private var doaPlayer: MediaPlayer? = null
     private var stopAtHalfMinute = false
-    private lateinit var prayerKey: String
+    private var prayerKey: String? = null
     private val preventPhoneCallIntervention = PreventPhoneCallIntervention(::onDestroy)
     private var bFajrCount = 0
     private val stopTask = object : Runnable {
@@ -106,8 +106,7 @@ class NAthanNotification : Service() {
     override fun onBind(intent: Intent): IBinder? = null
 
     @Suppress("Deprecation")
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent ?: return super.onStartCommand(intent, flags, startId)
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -120,8 +119,7 @@ class NAthanNotification : Service() {
                             }
                         }
                     })
-            } else if (telephonyManager?.callState != TelephonyManager.CALL_STATE_IDLE)
-                stopSelf()
+            } else if (telephonyManager?.callState != TelephonyManager.CALL_STATE_IDLE) stopSelf()
             else {
                 //do nothing
             }
@@ -140,10 +138,10 @@ class NAthanNotification : Service() {
 
             notificationManager = getSystemService()
             setting = AthanSettingsDB.getInstance(applicationContext).athanSettingsDAO()
-                .getAllAthanSettings().find { prayerKey.contains(it.athanKey) }
+                .getAllAthanSettings().find { prayerKey?.contains(it.athanKey) == true }
                 ?: return super.onStartCommand(intent, flags, startId)
             val soundUri = getAthanUri(setting, prayerKey, applicationContext)
-            if (prayerKey.startsWith("B") || (prayerKey.startsWith("A") && prayerKey != ASR_KEY) || !setting.playDoa) isDoaPlayed =
+            if (prayerKey?.startsWith("B") == true || (prayerKey?.startsWith("A") == true && prayerKey != ASR_KEY) || setting?.playDoa == false) isDoaPlayed =
                 true
             runCatching {
                 // ensure custom reminder sounds play well
@@ -198,7 +196,7 @@ class NAthanNotification : Service() {
 
             val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
             notificationBuilder.setOngoing(true).setWhen(System.currentTimeMillis())
-                .setSilent(setting.playType != 2)//silent if not just notification
+                .setSilent(setting?.playType != 2)//silent if not just notification
                 .setSmallIcon(R.mipmap.ic_launcher).setContentTitle(title).setContentText(subtitle)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -222,15 +220,15 @@ class NAthanNotification : Service() {
             startForeground(notificationId, notificationBuilder.build())
             preventPhoneCallIntervention.startListener(this)
             //########################################################## Play Athan
-            if (setting.playType == 1) {
+            if (setting?.playType == 1) {
                 val isFajr = prayerKey == FAJR_KEY
                 var goMute = false
 
                 getSystemService<AudioManager>()?.let { audioManager ->
                     originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-                    if (setting.athanVolume != DEFAULT_ATHAN_VOLUME) // Don't change alarm volume if isn't set in-app
+                    if (setting?.athanVolume != DEFAULT_ATHAN_VOLUME) // Don't change alarm volume if isn't set in-app
                         audioManager.setStreamVolume(
-                            AudioManager.STREAM_ALARM, setting.athanVolume, 0
+                            AudioManager.STREAM_ALARM, setting?.athanVolume ?: 1, 0
                         )
                     // Mute if system alarm is set to lowest, ringer mode is silent/vibration and it isn't Fajr
                     if (originalVolume == 1 && !isFajr && audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) goMute =
@@ -252,10 +250,10 @@ class NAthanNotification : Service() {
                             }
                 }.onFailure(logException)
                 handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
-                if (setting.isAscending) handler.post(ascendVolume)
+                if (setting?.isAscending == true) handler.post(ascendVolume)
 
             }
-            return super.onStartCommand(intent, flags, startId)
+            return START_STICKY
         }
     }
 
@@ -276,14 +274,14 @@ class NAthanNotification : Service() {
             }
         }.onFailure(logException)
 
-        if (setting.isAscending) handler.removeCallbacks(ascendVolume)
+        if (setting?.isAscending == true) handler.removeCallbacks(ascendVolume)
         handler.removeCallbacks(stopTask)
         super.onDestroy()
     }
 
     private fun playDoa() {
         isDoaPlayed = true
-        if (setting.playDoa)//play doa
+        if (setting?.playDoa == true)//play doa
             doaPlayer = MediaPlayer().apply {
                 runCatching {
                     setDataSource(

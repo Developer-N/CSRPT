@@ -146,7 +146,8 @@ fun IntroHomeScreen(
                         .clickable {
                             isNetworkConnected = isNetworkConnected(context)
                         },
-                    text = stringResource(id = R.string.network_error_message),
+                    text = stringResource(id = R.string.network_error_message) + "\n"
+                            + stringResource(id = R.string.recheck),
                     fontFamily = FontFamily(appFont),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onErrorContainer,

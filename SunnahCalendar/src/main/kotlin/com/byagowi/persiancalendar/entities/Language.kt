@@ -259,11 +259,16 @@ enum class Language(val code: String, val nativeName: String) {
         else -> islamicCalendarMonths.map(context::getString)
     }
 
-    fun getGregorianMonths(context: Context, easternGregorianArabicMonths: Boolean) = when (this) {
-        FA -> gregorianCalendarMonthsInPersian
+    fun getGregorianMonths(context: Context, alternativeGregorianMonths: Boolean) = when (this) {
+        FA -> {
+            if (alternativeGregorianMonths) gregorianCalendarMonthsInDari
+            else gregorianCalendarMonthsInPersian
+        }
+
         FA_AF -> gregorianCalendarMonthsInDari
+
         AR -> {
-            if (easternGregorianArabicMonths) easternGregorianCalendarMonths
+            if (alternativeGregorianMonths) easternGregorianCalendarMonths
             else gregorianCalendarMonths.map(context::getString)
         }
 
@@ -361,6 +366,7 @@ enum class Language(val code: String, val nativeName: String) {
         fun getPreferredDefaultLanguage(context: Context): Language {
             return when (userDeviceLanguage) {
                 FA.code -> if (userDeviceCountry == "AF") FA_AF else FA
+
                 "en", EN_US.code ->
                     guessLanguageFromTimezoneId() ?: guessLanguageFromKeyboards(context)
 
@@ -379,14 +385,14 @@ enum class Language(val code: String, val nativeName: String) {
         // Based on https://stackoverflow.com/a/28216764 but doesn't seem to work
         private fun guessLanguageFromKeyboards(context: Context): Language = runCatching {
             val imm = context.getSystemService<InputMethodManager>() ?: return EN_US
-            for (method in imm.enabledInputMethodList) {
-                for (submethod in imm.getEnabledInputMethodSubtypeList(method, true)) {
+            imm.enabledInputMethodList.forEach outer@{ method ->
+                imm.getEnabledInputMethodSubtypeList(method, true).forEach { submethod ->
                     if (submethod.mode == "keyboard") {
                         val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             submethod.languageTag
                         } else @Suppress("DEPRECATION") submethod.locale
                         debugLog("Language: '$locale' is available in keyboards")
-                        if (locale.isEmpty()) continue
+                        if (locale.isEmpty()) return@forEach
                         val language = valueOfLanguageCode(locale)
                             ?: valueOfLanguageCode(locale.split("-").firstOrNull() ?: "")
                         // Use the knowledge only to detect Persian language
@@ -460,17 +466,16 @@ enum class Language(val code: String, val nativeName: String) {
             "رجب", "شعبان", "رمضان", "شوال", "ذی‌القعده", "ذی‌الحجه"
         )
         private val gregorianCalendarMonthsInPersian = listOf12Items(
-            "ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن", "ژوئیه", "اوت", "سپتامبر", "اکتبر",
-            "نوامبر", "دسامبر"
+            "ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن",
+            "ژوئیه", "اوت", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
         )
         private val persianCalendarMonthsInDari = listOf12Items(
             "حمل", "ثور", "جوزا", "سرطان", "اسد", "سنبله",
-            "میزان", "عقرب", "قوس", "جدی", "دلو",
-            "حوت"
+            "میزان", "عقرب", "قوس", "جدی", "دلو", "حوت"
         )
         private val gregorianCalendarMonthsInDari = listOf12Items(
-            "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون", "جولای", "آگست", "سپتمبر", "اکتبر",
-            "نومبر", "دیسمبر"
+            "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
+            "جولای", "آگست", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
         )
         private val easternGregorianCalendarMonths = listOf12Items(
             "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول",

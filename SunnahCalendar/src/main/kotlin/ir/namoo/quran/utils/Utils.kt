@@ -7,7 +7,6 @@ import android.os.Environment
 import android.text.Html
 import android.text.SpannableString
 import android.text.Spanned
-import android.util.Log
 import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
 import ir.namoo.commons.utils.appPrefsLite
@@ -36,6 +35,8 @@ var farsiFontSize = 0.0f
 
 var uthmanTahaFont: Typeface = Typeface.SANS_SERIF
     private set
+
+var chapterException: Throwable? = null
 
 fun initQuranUtils(context: Context) {
     val prefs = context.appPrefsLite

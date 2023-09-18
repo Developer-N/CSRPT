@@ -25,7 +25,7 @@ value class Jdn(val value: Long) {
     // 0 means Saturday in it, see #`test day of week from jdn`() in the testsuite
     val dayOfWeek: Int get() = ((value + 2L) % 7L).toInt()
 
-    fun isWeekEnd() = weekEnds[dayOfWeek]
+    fun isWeekEnd() = weekEnds[this.dayOfWeek]
 
     fun toCalendar(calendar: CalendarType): AbstractDate = when (calendar) {
         CalendarType.ISLAMIC -> toIslamicDate()
@@ -68,6 +68,9 @@ value class Jdn(val value: Long) {
         return this - seasonBeginningJdn + 1 to
                 Jdn(seasonBeginning.monthStartOfMonthsDistance(3)) - seasonBeginningJdn
     }
+
+    operator fun rangeTo(toJdn: Jdn): Sequence<Jdn> =
+        (this.value..toJdn.value).asSequence().map(::Jdn)
 
     companion object {
         fun today() = Jdn(Date().toGregorianCalendar().toCivilDate())

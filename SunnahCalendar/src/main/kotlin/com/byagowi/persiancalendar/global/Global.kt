@@ -4,6 +4,8 @@ import android.content.Context
 import android.view.accessibility.AccessibilityManager
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_AM
+import com.byagowi.persiancalendar.DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
+import com.byagowi.persiancalendar.DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.DEFAULT_HIGH_LATITUDES_METHOD
 import com.byagowi.persiancalendar.DEFAULT_HOLIDAY
 import com.byagowi.persiancalendar.DEFAULT_IRAN_TIME
@@ -25,6 +27,7 @@ import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_CENTER_ALIGN_WIDGETS
 import com.byagowi.persiancalendar.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
+import com.byagowi.persiancalendar.PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.PREF_HIGH_LATITUDES_METHOD
 import com.byagowi.persiancalendar.PREF_IRAN_TIME
 import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET
@@ -121,8 +124,7 @@ var highLatitudesMethod = HighLatitudesMethod.NightMiddle
     private set
 var language = Language.FA
     private set
-var easternGregorianArabicMonths = false
-    private set
+private var alternativeGregorianMonths = false
 private val coordinates_ = MutableStateFlow<Coordinates?>(null)
 val coordinates: StateFlow<Coordinates?> = coordinates_
 var enabledCalendars = listOf(CalendarType.SHAMSI, CalendarType.GREGORIAN, CalendarType.ISLAMIC)
@@ -224,7 +226,7 @@ fun loadLanguageResources(context: Context) {
     debugLog("Utils: loadLanguageResources is called")
     persianMonths = language.getPersianMonths(context)
     islamicMonths = language.getIslamicMonths(context)
-    gregorianMonths = language.getGregorianMonths(context, easternGregorianArabicMonths)
+    gregorianMonths = language.getGregorianMonths(context, alternativeGregorianMonths)
     nepaliMonths = language.getNepaliMonths()
     weekDays = language.getWeekDays(context)
     weekDaysInitials = language.getWeekDaysInitials(context)
@@ -236,7 +238,18 @@ fun updateStoredPreference(context: Context) {
 
     language = prefs.getString(PREF_APP_LANGUAGE, null)?.let(Language::valueOfLanguageCode)
         ?: Language.getPreferredDefaultLanguage(context)
-    easternGregorianArabicMonths = prefs.getBoolean(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false)
+    alternativeGregorianMonths = when {
+        language.isPersian -> prefs.getBoolean(
+            PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS, DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
+        )
+
+        language.isArabic -> prefs.getBoolean(
+            PREF_EASTERN_GREGORIAN_ARABIC_MONTHS,
+            DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
+        )
+
+        else -> false
+    }
 
     preferredDigits = if (!prefs.getBoolean(
             PREF_LOCAL_DIGITS,

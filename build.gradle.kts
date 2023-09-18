@@ -1,15 +1,16 @@
 plugins {
-    id("com.android.application") version "8.1.1" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.0" apply false
-    id("androidx.navigation.safeargs.kotlin") version "2.5.1" apply false
-    id("com.google.devtools.ksp") version "1.9.0-1.0.11" apply false
+    alias(libs.plugins.com.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.androidx.navigation.safeargs.kotlin) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.kotlin.parcelize) apply false
 
     //FireBase
-    id("com.google.gms.google-services") version "4.3.15" apply false
-    id("com.google.firebase.firebase-perf") version "1.4.2" apply false
-    id("com.google.firebase.crashlytics") version "2.9.8" apply false
+    alias(libs.plugins.google.gms) apply false
+    alias(libs.plugins.firebase.pref) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }
 
 task("clean") {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }

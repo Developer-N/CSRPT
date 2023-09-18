@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -60,6 +61,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.lingala.zip4j.ZipFile
 import java.io.File
 
 class SuraViewModel(
@@ -81,12 +83,11 @@ class SuraViewModel(
     val chapter = _chapter.asStateFlow()
 
     private val _quranList = MutableStateFlow(listOf<QuranEntity>())
-    val quranList =
-        _resultIDs.combine(_quranList) { idList, quranList ->
-            quranList.filter { idList.contains(it.id) }
-        }.stateIn(
-            viewModelScope, SharingStarted.WhileSubscribed(5000), _quranList.value
-        )
+    val quranList = _resultIDs.combine(_quranList) { idList, quranList ->
+        quranList.filter { idList.contains(it.id) }
+    }.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), _quranList.value
+    )
 
     private val _enabledTranslates = MutableStateFlow(listOf<List<TranslateItem>>())
     val enabledTranslates = _enabledTranslates.asStateFlow()
@@ -197,28 +198,29 @@ class SuraViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _query.update { query }
+            if (query.isDigitsOnly()) {
+                _isLoading.value = false
+                return@launch
+            }
             withContext(Dispatchers.IO) {
                 val tmp = mutableListOf<Int>()
-                if (query.getWordsForSearch().isEmpty())
+                if (query.getWordsForSearch().isEmpty()) _quranList.value.forEach {
+                    if (!tmp.contains(it.id)) tmp.add(it.id)
+                }
+                else query.getWordsForSearch().forEach { word ->
                     _quranList.value.forEach {
-                        if (!tmp.contains(it.id)) tmp.add(it.id)
+                        if (!tmp.contains(it.id) && it.quranClean.contains(word)) tmp.add(it.id)
                     }
-                else
-                    query.getWordsForSearch().forEach { word ->
-                        _quranList.value.forEach {
-                            if (!tmp.contains(it.id) && it.quranClean.contains(word)) tmp.add(it.id)
-                        }
-                        _enabledTranslates.value.forEach { tList ->
-                            tList.forEach { translate ->
-                                if (translate.text.contains(word)) {
-                                    val id =
-                                        quranList.value.find { it.verseID == translate.ayaID }?.id
-                                            ?: -1
-                                    if (id > 0 && !tmp.contains(id)) tmp.add(id)
-                                }
+                    _enabledTranslates.value.forEach { tList ->
+                        tList.forEach { translate ->
+                            if (translate.text.contains(word)) {
+                                val id =
+                                    quranList.value.find { it.verseID == translate.ayaID }?.id ?: -1
+                                if (id > 0 && !tmp.contains(id)) tmp.add(id)
                             }
                         }
                     }
+                }
                 _resultIDs.value = tmp
             }
             _isLoading.value = false
@@ -288,10 +290,8 @@ class SuraViewModel(
     fun updatePlayingAya(aya: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            if (searchBarState == SearchBarState.CLOSED)
-                _playingAya.value = aya
-            else
-                _playingAya.value = 0
+            if (searchBarState == SearchBarState.CLOSED) _playingAya.value = aya
+            else _playingAya.value = 0
             _isLoading.value = false
         }
     }
@@ -319,10 +319,10 @@ class SuraViewModel(
                 mediaItem?.let {
                     val sura = it.mediaMetadata.title.toString().split("|")[0].digitsOf().toInt()
                     val aya = it.mediaMetadata.title.toString().split("|")[1].digitsOf().toInt()
-                    if (chapter.value?.sura != sura && _playingAya.value > 0)
-                        updatePlayingAya(0)
-                    else if (chapter.value?.sura == sura && _playingAya.value != aya)
-                        updatePlayingAya(aya)
+                    if (chapter.value?.sura != sura && _playingAya.value > 0) updatePlayingAya(0)
+                    else if (chapter.value?.sura == sura && _playingAya.value != aya) updatePlayingAya(
+                        aya
+                    )
                     _playingSura.value = sura
                 }
             }
@@ -342,23 +342,35 @@ class SuraViewModel(
         val playType = prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE)
         val q = _qariList.value.find { folderName.contains(it.folderName) }
         val t = _qariList.value.find { translateFolderName.contains(it.folderName) }
-        if ((sura != 1 && sura != 9) && aya == 1 &&
-            prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) != 3
+        if ((sura != 1 && sura != 9) && aya == 1 && prefs.getInt(
+                PREF_PLAY_TYPE,
+                DEFAULT_PLAY_TYPE
+            ) != 3
         ) {
             result.add(
                 MediaItem.Builder().setMediaMetadata(
                     MediaMetadata.Builder().setTitle(
-                        " 📖 " + context.getString(R.string.str_bismillah) + " 📖 " +
-                                formatNumber(sura) + "|" + formatNumber(1)
+                        " 📖 " + context.getString(R.string.str_bismillah) + " 📖 " + formatNumber(
+                            sura
+                        ) + "|" + formatNumber(1)
                     ).setArtist(q?.name)
-                        .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri()).build()
+                        .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri())
+                        .build()
                 ).setUri(
                     when {
-                        File("$folderName/" + getAyaFileName(sura, 0)).exists() ->
-                            ("$folderName/" + getAyaFileName(sura, 0)).toUri()
+                        File(
+                            "$folderName/" + getAyaFileName(
+                                sura,
+                                0
+                            )
+                        ).exists() -> ("$folderName/" + getAyaFileName(sura, 0)).toUri()
 
-                        File("$folderName/" + getAyaFileName(1, 1)).exists() ->
-                            ("$folderName/" + getAyaFileName(1, 1)).toUri()
+                        File(
+                            "$folderName/" + getAyaFileName(
+                                1,
+                                1
+                            )
+                        ).exists() -> ("$folderName/" + getAyaFileName(1, 1)).toUri()
 
                         else -> (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.resources.getResourcePackageName(
                             R.raw.bismillah
@@ -372,22 +384,25 @@ class SuraViewModel(
 
         for (i in aya..(chapter.value?.ayaCount ?: aya)) {
             val title =
-                " 📖 " + chapter.value?.nameArabic + " 📖 " +
-                        formatNumber(sura) + " | " + formatNumber(i)
+                " 📖 " + chapter.value?.nameArabic + " 📖 " + formatNumber(sura) + " | " + formatNumber(
+                    i
+                )
             when (playType) {
                 1 -> {
                     result.add(
                         MediaItem.Builder().setMediaMetadata(
                             MediaMetadata.Builder().setTitle(title).setArtist(q?.name)
-                                .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri())
-                                .build()
+                                .setArtworkUri(
+                                    context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri()
+                                ).build()
                         ).setUri(("$folderName/" + getAyaFileName(sura, i)).toUri()).build()
                     )
                     result.add(
                         MediaItem.Builder().setMediaMetadata(
                             MediaMetadata.Builder().setTitle(title).setArtist(t?.name)
-                                .setArtworkUri(context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri())
-                                .build()
+                                .setArtworkUri(
+                                    context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri()
+                                ).build()
                         ).setUri(("$translateFolderName/" + getAyaFileName(sura, i)).toUri())
                             .build()
                     )
@@ -398,8 +413,9 @@ class SuraViewModel(
                     result.add(
                         MediaItem.Builder().setMediaMetadata(
                             MediaMetadata.Builder().setTitle(title).setArtist(q?.name)
-                                .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri())
-                                .build()
+                                .setArtworkUri(
+                                    context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri()
+                                ).build()
                         ).setUri(("$folderName/" + getAyaFileName(sura, i)).toUri()).build()
                     )
 
@@ -409,8 +425,9 @@ class SuraViewModel(
                     result.add(
                         MediaItem.Builder().setMediaMetadata(
                             MediaMetadata.Builder().setTitle(title).setArtist(t?.name)
-                                .setArtworkUri(context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri())
-                                .build()
+                                .setArtworkUri(
+                                    context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri()
+                                ).build()
                         ).setUri(("$translateFolderName/" + getAyaFileName(sura, i)).toUri())
                             .build()
                     )
@@ -424,17 +441,58 @@ class SuraViewModel(
     fun isQuranDownloaded(context: Context, sura: Int): Boolean {
         if (prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) == 3) return true
         if (File(
-                getQuranDirectoryInInternal(context) + "/" + context.appPrefsLite.getString(
+                getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
                     PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
                 ) + "/" + getAyaFileName(sura, 1)
             ).exists()
         ) return true
         if (File(
-                getQuranDirectoryInSD(context) + "/" + context.appPrefsLite.getString(
+                getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
                     PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
                 ) + "/" + getAyaFileName(sura, 1)
             ).exists()
         ) return true
+        //if zip file is exist extract it and then recheck
+        val internalZip =
+            getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
+                PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
+            ) + File.separator + getSuraFileName(
+                sura
+            )
+        File(internalZip).let {
+            if (it.exists()) {
+                ZipFile(it).extractAll(it.parent)
+                it.delete()
+            }
+        }
+
+        if (File(
+                getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
+                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
+                ) + "/" + getAyaFileName(sura, 1)
+            ).exists()
+        ) return true
+
+        val externalZip =
+            getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
+                PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
+            ) + File.separator + getSuraFileName(
+                sura
+            )
+        File(externalZip).let {
+            if (it.exists()) {
+                ZipFile(it).extractAll(it.parent)
+                it.delete()
+            }
+        }
+
+        if (File(
+                getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
+                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
+                ) + "/" + getAyaFileName(sura, 1)
+            ).exists()
+        ) return true
+
         return false
     }
 
@@ -446,12 +504,52 @@ class SuraViewModel(
                 ) + "/" + getAyaFileName(sura, 1)
             ).exists()
         ) return true
+
         if (File(
                 getQuranDirectoryInSD(context) + "/" + context.appPrefsLite.getString(
                     PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
                 ) + "/" + getAyaFileName(sura, 1)
             ).exists()
         ) return true
+        //if zip file is exist extract it and then recheck
+        val internalZip =
+            getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
+                PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
+            ) + File.separator + getSuraFileName(
+                sura
+            )
+        File(internalZip).let {
+            if (it.exists()) {
+                ZipFile(it).extractAll(it.parent)
+                it.delete()
+            }
+        }
+        if (File(
+                getQuranDirectoryInInternal(context) + "/" + context.appPrefsLite.getString(
+                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
+                ) + "/" + getAyaFileName(sura, 1)
+            ).exists()
+        ) return true
+
+        val externalZip =
+            getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
+                PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
+            ) + File.separator + getSuraFileName(
+                sura
+            )
+        File(externalZip).let {
+            if (it.exists()) {
+                ZipFile(it).extractAll(it.parent)
+                it.delete()
+            }
+        }
+        if (File(
+                getQuranDirectoryInSD(context) + "/" + context.appPrefsLite.getString(
+                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
+                ) + "/" + getAyaFileName(sura, 1)
+            ).exists()
+        ) return true
+
         return false
     }
 
@@ -480,9 +578,9 @@ class SuraViewModel(
                 downloadRepository.delete(it.id)
             }
             val destFile =
-                getSelectedQuranDirectoryPath(context) + File.separator +
-                        qari.folderName + File.separator +
-                        getSuraFileName(sura)
+                getSelectedQuranDirectoryPath(context) + File.separator + qari.folderName + File.separator + getSuraFileName(
+                    sura
+                )
 
             runCatching { if (File(destFile).exists()) File(destFile).delete() }
             val url = qari.suraZipsBaseLink + getSuraFileName(sura)
@@ -493,10 +591,7 @@ class SuraViewModel(
                 qari = qari.name
             )
             val downloadEntity = FileDownloadEntity(
-                downloadRequest = id,
-                downloadFile = url,
-                folderPath = destFile,
-                sura = sura
+                downloadRequest = id, downloadFile = url, folderPath = destFile, sura = sura
             )
             downloadRepository.insert(downloadEntity)
         }
@@ -517,11 +612,12 @@ class SuraViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             if (lastVisitedAya.value > 0) {
                 val lastVisitedList = lastVisitedRepository.getAllLastVisited().sortedBy { it.id }
-                if (lastVisitedList.size >= 20)
-                    lastVisitedRepository.delete(lastVisitedList.first())
+                if (lastVisitedList.size >= 20) lastVisitedRepository.delete(lastVisitedList.first())
                 chapter.value?.let { chapter ->
-                    if (lastVisitedList.find { (it.suraID == chapter.sura && it.ayaID == lastVisitedAya.value) } == null)
-                        lastVisitedRepository.insert(lastVisitedAya.value, chapter.sura)
+                    if (lastVisitedList.find { (it.suraID == chapter.sura && it.ayaID == lastVisitedAya.value) } == null) lastVisitedRepository.insert(
+                        lastVisitedAya.value,
+                        chapter.sura
+                    )
                 }
             }
         }

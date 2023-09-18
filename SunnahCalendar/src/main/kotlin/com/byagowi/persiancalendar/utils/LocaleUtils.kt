@@ -14,12 +14,14 @@ fun applyAppLanguage(context: Context) {
     val locale = language.asSystemLocale()
     AppCompatDelegate.setApplicationLocales(LocaleListCompat.create(locale))
 //    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-        Locale.setDefault(locale)
-        val resources = context.resources
-        val config = resources.configuration
-        config.setLocale(locale)
+    Locale.setDefault(locale)
+    val resources = context.resources
+    val config = resources.configuration
+    config.setLocale(locale)
+    runCatching {
         config.setLayoutDirection(if (language.isLessKnownRtl) Language.FA.asSystemLocale() else locale)
-        resources.updateConfiguration(config, resources.displayMetrics)
+    }.onFailure(logException)
+    resources.updateConfiguration(config, resources.displayMetrics)
 //    }
 }
 

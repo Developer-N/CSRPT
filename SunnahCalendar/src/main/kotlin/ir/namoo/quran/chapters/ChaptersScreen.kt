@@ -15,7 +15,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,9 +60,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -73,6 +75,7 @@ import ir.namoo.commons.utils.appFont
 import ir.namoo.commons.utils.colorAppBar
 import ir.namoo.commons.utils.colorOnAppBar
 import ir.namoo.commons.utils.iconColor
+import ir.namoo.quran.utils.chapterException
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -149,12 +152,12 @@ fun ChaptersScreen(
                 }
             }
             if (!isLoading && query.isEmpty() && chapters.isEmpty()) {
-                Row(
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     val context = LocalContext.current
                     Button(onClick = {
@@ -169,6 +172,17 @@ fun ChaptersScreen(
                             textAlign = TextAlign.Center,
                             fontSize = 18.sp
                         )
+                    }
+
+                    chapterException?.let {
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(4.dp),
+                                text = it.message + "\n" + it.toString()
+                            )
+                        }
                     }
                 }
             }

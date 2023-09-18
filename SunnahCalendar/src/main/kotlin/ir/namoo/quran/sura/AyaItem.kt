@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.rounded.BookmarkAdd
@@ -153,28 +156,45 @@ fun AyaItem(
                 shape = MaterialTheme.shapes.extraSmall,
                 elevation = CardDefaults.elevatedCardElevation()
             ) {
-                if (quran.verseID == 1 && quran.surahID != 1 && quran.surahID != 9) Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 2.dp),
-                    text = stringResource(id = R.string.str_bismillah),
-                    fontFamily = FontFamily(quranFont),
-                    fontSize = quranFontSize.sp,
-                    lineHeight = (quranFontSize * 1.7).sp,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 2.dp),
-                    text = quranText,
-                    fontFamily = FontFamily(quranFont),
-                    fontSize = quranFontSize.sp,
-                    lineHeight = (quranFontSize * 1.7).sp,
-                    softWrap = true,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                if (quran.verseID == 1 && quran.surahID != 1 && quran.surahID != 9)
+                    CompositionLocalProvider(
+                        LocalTextSelectionColors provides TextSelectionColors(
+                            handleColor = MaterialTheme.colorScheme.secondaryContainer,
+                            backgroundColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp, 2.dp),
+                            text = stringResource(id = R.string.str_bismillah),
+                            fontFamily = FontFamily(quranFont),
+                            fontSize = quranFontSize.sp,
+                            lineHeight = (quranFontSize * 1.7).sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                CompositionLocalProvider(
+                    LocalTextSelectionColors provides TextSelectionColors(
+                        handleColor = MaterialTheme.colorScheme.secondaryContainer,
+                        backgroundColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    SelectionContainer {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp, 2.dp),
+                            text = quranText,
+                            fontFamily = FontFamily(quranFont),
+                            fontSize = quranFontSize.sp,
+                            lineHeight = (quranFontSize * 1.7).sp,
+                            softWrap = true,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
                 content += quranText
                 content += "\n\n"
             }
@@ -193,29 +213,31 @@ fun AyaItem(
                 content += t.name
                 content += ": "
                 CompositionLocalProvider(values = arrayOf(if (t.translateType == TranslateType.ENGLISH) LocalLayoutDirection provides LayoutDirection.Ltr else LocalLayoutDirection provides LayoutDirection.Rtl)) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp, 0.dp),
-                        text = t.text.trim(),
-                        fontFamily = FontFamily(
-                            when (t.translateType) {
-                                TranslateType.KURDISH -> kurdishFont
-                                TranslateType.FARSI -> farsiFont
-                                TranslateType.ENGLISH -> englishFont
-                            }
-                        ),
-                        fontSize = when (t.translateType) {
-                            TranslateType.KURDISH -> kurdishFontSize
-                            TranslateType.FARSI -> farsiFontSize
-                            TranslateType.ENGLISH -> englishFontSize
-                        }.sp,
-                        lineHeight = (when (t.translateType) {
-                            TranslateType.KURDISH -> kurdishFontSize
-                            TranslateType.FARSI -> farsiFontSize
-                            TranslateType.ENGLISH -> englishFontSize
-                        } * 1.7).sp
-                    )
+                    SelectionContainer {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp, 0.dp),
+                            text = t.text.trim(),
+                            fontFamily = FontFamily(
+                                when (t.translateType) {
+                                    TranslateType.KURDISH -> kurdishFont
+                                    TranslateType.FARSI -> farsiFont
+                                    TranslateType.ENGLISH -> englishFont
+                                }
+                            ),
+                            fontSize = when (t.translateType) {
+                                TranslateType.KURDISH -> kurdishFontSize
+                                TranslateType.FARSI -> farsiFontSize
+                                TranslateType.ENGLISH -> englishFontSize
+                            }.sp,
+                            lineHeight = (when (t.translateType) {
+                                TranslateType.KURDISH -> kurdishFontSize
+                                TranslateType.FARSI -> farsiFontSize
+                                TranslateType.ENGLISH -> englishFontSize
+                            } * 1.7).sp
+                        )
+                    }
                     content += t.text.trim()
                     content += "\n\n"
                 }

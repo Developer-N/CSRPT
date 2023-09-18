@@ -51,6 +51,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
@@ -124,7 +125,7 @@ fun SuraScreen(
             enter = expandVertically(),
             exit = shrinkVertically()
         ) {
-            SearchAppBar(viewModel)
+            SearchAppBar(viewModel, query)
         }
     }) { contentPadding ->
         Box(
@@ -143,6 +144,10 @@ fun SuraScreen(
             }
             LaunchedEffect(key1 = playingAya) {
                 if (playingAya > 1) listState.animateScrollToItem(playingAya - 1, 0)
+            }
+            LaunchedEffect(key1 = query) {
+                if (query.isNotEmpty() && query.isDigitsOnly() && query.toInt() > 1 && query.toInt() < quranList.size + 1)
+                    listState.animateScrollToItem(query.toInt() - 1, 0)
             }
             AnimatedVisibility(visible = isLoading) {
                 LinearProgressIndicator(
@@ -260,8 +265,7 @@ fun SuraScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchAppBar(viewModel: SuraViewModel) {
-    val query by viewModel.query.collectAsState()
+fun SearchAppBar(viewModel: SuraViewModel, query: String) {
     val focus = LocalFocusManager.current
     Box(
         modifier = Modifier

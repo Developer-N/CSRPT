@@ -43,7 +43,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.byagowi.persiancalendar.ATHANS_LIST
 import com.byagowi.persiancalendar.BuildConfig
-import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
 import com.byagowi.persiancalendar.POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_DISABLE_OWGHAT
@@ -52,7 +51,6 @@ import com.byagowi.persiancalendar.PREF_LAST_APP_VISIT_VERSION
 import com.byagowi.persiancalendar.PREF_NOTIFY_IGNORED
 import com.byagowi.persiancalendar.PREF_OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.PREF_SECONDARY_CALENDAR_IN_TABLE
-import com.byagowi.persiancalendar.PREF_THEME_GRADIENT
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.CalendarScreenBinding
 import com.byagowi.persiancalendar.databinding.EventsTabContentBinding
@@ -64,7 +62,6 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.enabledCalendars
@@ -111,6 +108,7 @@ import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getA11yDaySummary
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
+import com.byagowi.persiancalendar.utils.getShiftWorksInDaysDistance
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
@@ -203,21 +201,21 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
                         Snackbar.LENGTH_SHORT
                     ).also { it.considerSystemBarsInsets() }.show()
                 }.onFailure(logException)
-            },
-            applyGradient =
-            inflater.context.appPrefs.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT) &&
-                    Theme.supportsGradient(inflater.context)
+            }
         )
         binding.events.adapter = adapter
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.selectedDayChangeEvent
                 .flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
-                .collectLatest {
+                .collectLatest { jdn ->
                     val activity = activity ?: return@collectLatest
-                    val shiftWorkTitle = getShiftWorkTitle(it, false)
-                    binding.shiftWorkTitle.isVisible = shiftWorkTitle.isNotEmpty()
+                    val shiftWorkTitle = getShiftWorkTitle(jdn)
+                    binding.shiftWorkTitle.isVisible = shiftWorkTitle != null
                     binding.shiftWorkTitle.text = shiftWorkTitle
-                    val events = eventsRepository?.getEvents(it, activity.readDayDeviceEvents(it))
+                    val shiftWorkInDaysDistance = getShiftWorksInDaysDistance(jdn, activity)
+                    binding.shiftWorkInDaysDistance.isVisible = shiftWorkInDaysDistance != null
+                    binding.shiftWorkInDaysDistance.text = shiftWorkInDaysDistance
+                    val events = eventsRepository?.getEvents(jdn, activity.readDayDeviceEvents(jdn))
                         ?: emptyList()
                     binding.noEvent.isVisible = events.isEmpty()
                     adapter.showEvents(events)
@@ -738,29 +736,32 @@ class CalendarScreen : Fragment(R.layout.calendar_screen) {
                 }
             }
         }
-        toolbar.menu.addSubMenu(R.string.show_secondary_calendar).also { menu ->
-            val groupId = Menu.FIRST
-            val prefs = context.appPrefs
-            (listOf(null) + enabledCalendars.drop(1)).forEach {
-                val item = menu.add(groupId, Menu.NONE, Menu.NONE, it?.title ?: R.string.none)
-                item.isChecked = it == secondaryCalendar
-                item.onClick {
-                    prefs.edit {
-                        if (it == null) remove(PREF_SECONDARY_CALENDAR_IN_TABLE)
-                        else {
-                            putBoolean(PREF_SECONDARY_CALENDAR_IN_TABLE, true)
-                            putString(
-                                PREF_OTHER_CALENDARS_KEY,
-                                // Put the chosen calendars at the first of calendars priorities
-                                (listOf(it) + (enabledCalendars.drop(1) - it)).joinToString(",")
-                            )
+        // It doesn't have any effect in talkback ui, let's disable it there to avoid the confusion
+        if (!isTalkBackEnabled) {
+            toolbar.menu.addSubMenu(R.string.show_secondary_calendar).also { menu ->
+                val groupId = Menu.FIRST
+                val prefs = context.appPrefs
+                (listOf(null) + enabledCalendars.drop(1)).forEach {
+                    val item = menu.add(groupId, Menu.NONE, Menu.NONE, it?.title ?: R.string.none)
+                    item.isChecked = it == secondaryCalendar
+                    item.onClick {
+                        prefs.edit {
+                            if (it == null) remove(PREF_SECONDARY_CALENDAR_IN_TABLE)
+                            else {
+                                putBoolean(PREF_SECONDARY_CALENDAR_IN_TABLE, true)
+                                putString(
+                                    PREF_OTHER_CALENDARS_KEY,
+                                    // Put the chosen calendars at the first of calendars priorities
+                                    (listOf(it) + (enabledCalendars.drop(1) - it)).joinToString(",")
+                                )
+                            }
                         }
+                        updateStoredPreference(context)
+                        findNavController().navigateSafe(CalendarScreenDirections.navigateToSelf())
                     }
-                    updateStoredPreference(context)
-                    findNavController().navigateSafe(CalendarScreenDirections.navigateToSelf())
                 }
+                menu.setGroupCheckable(groupId, true, true)
             }
-            menu.setGroupCheckable(groupId, true, true)
         }
     }
 

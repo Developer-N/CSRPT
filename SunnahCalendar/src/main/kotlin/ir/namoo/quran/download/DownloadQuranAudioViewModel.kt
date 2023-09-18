@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.util.Timer
 import kotlin.concurrent.timer
@@ -55,8 +56,7 @@ class DownloadQuranAudioViewModel(
             runCatching {
                 timer = timer(period = 500) {
                     _inProgressDownload.value.forEach {
-                        if (it.folderPath.contains(_selectedQari.value))
-                            updateProgress(it.sura)
+                        if (it.folderPath.contains(_selectedQari.value)) updateProgress(it.sura)
                     }
                 }
             }
@@ -83,8 +83,7 @@ class DownloadQuranAudioViewModel(
             }
             _selectedQari.value = _qariList.value.first().folderName
             _inProgressDownload.value = downloadRepository.findDownloadByFileId().toMutableList()
-            for (sura in 1..114)
-                checkFiles(context, _selectedQari.value, sura)
+            for (sura in 1..114) checkFiles(context, _selectedQari.value, sura)
             _isLoading.value = false
         }
     }
@@ -99,8 +98,7 @@ class DownloadQuranAudioViewModel(
                 qList.add(QuranDownloadItemState(chapter.sura).apply { isChecking = true })
             }
             _selectedStateList.value = qList
-            for (sura in 1..114)
-                checkFiles(context, _selectedQari.value, sura)
+            for (sura in 1..114) checkFiles(context, _selectedQari.value, sura)
             _isLoading.value = false
         }
     }
@@ -111,8 +109,9 @@ class DownloadQuranAudioViewModel(
             val qari =
                 _qariList.value.find { it.folderName == _selectedQari.value } ?: return@launch
             val destFile =
-                getSelectedQuranDirectoryPath(context) + File.separator +
-                        qari.folderName + File.separator + getSuraFileName(sura)
+                getSelectedQuranDirectoryPath(context) + File.separator + qari.folderName + File.separator + getSuraFileName(
+                    sura
+                )
 
             runCatching { if (File(destFile).exists()) File(destFile).delete() }
             val url = qari.suraZipsBaseLink + getSuraFileName(sura)
@@ -123,10 +122,7 @@ class DownloadQuranAudioViewModel(
                 qari = _qariList.value.find { it.folderName == _selectedQari.value }?.name ?: "-"
             )
             val downloadEntity = FileDownloadEntity(
-                downloadRequest = id,
-                downloadFile = url,
-                folderPath = destFile,
-                sura = sura
+                downloadRequest = id, downloadFile = url, folderPath = destFile, sura = sura
             )
             downloadRepository.insert(downloadEntity)
             _inProgressDownload.value.add(downloadEntity)
@@ -166,10 +162,8 @@ class DownloadQuranAudioViewModel(
                         sura, aya
                     )
                 )
-                if (internalFile.exists())
-                    internalFile.delete()
-                if (externalFile.exists())
-                    externalFile.delete()
+                if (internalFile.exists()) internalFile.delete()
+                if (externalFile.exists()) externalFile.delete()
             }
             _selectedStateList.value.find { it.sura == sura }?.apply {
                 isDownloaded = false
@@ -214,6 +208,26 @@ class DownloadQuranAudioViewModel(
             runCatching {
                 val chapter = _chapters.value.find { it.sura == sura } ?: return@launch
                 withContext(Dispatchers.IO) {
+                    val internalZip =
+                        getQuranDirectoryInInternal(context) + File.separator + folderName + File.separator + getSuraFileName(
+                            sura
+                        )
+                    File(internalZip).let {
+                        if (it.exists()) {
+                            ZipFile(it).extractAll(it.parent)
+                            it.delete()
+                        }
+                    }
+                    val externalZip =
+                        getQuranDirectoryInSD(context) + File.separator + folderName + File.separator + getSuraFileName(
+                            sura
+                        )
+                    File(externalZip).let {
+                        if (it.exists()) {
+                            ZipFile(it).extractAll(it.parent)
+                            it.delete()
+                        }
+                    }
                     for (aya in 1..chapter.ayaCount) {
                         val internalFile = File(
                             getQuranDirectoryInInternal(context) + File.separator + folderName + File.separator + getAyaFileName(

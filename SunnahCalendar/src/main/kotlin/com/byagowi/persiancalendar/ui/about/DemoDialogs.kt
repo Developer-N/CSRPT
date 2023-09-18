@@ -33,7 +33,6 @@ import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -56,7 +55,6 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.getSystemService
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import androidx.core.graphics.PathParser
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.component1
 import androidx.core.graphics.component2
@@ -86,7 +84,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.databinding.ShaderSandboxBinding
 import com.byagowi.persiancalendar.generated.sandboxFragmentShader
@@ -240,31 +237,31 @@ fun showHiddenUiDialog(activity: FragmentActivity) {
         )
     })
 
-    val morphedPathView = object : View(activity) {
-        private val pathMorph = MorphedPath(
-            "m 100 0 l -100 100 l 100 100 l 100 -100 z",
-            "m 50 50 l 0 100 l 100 0 l 0 -100 z"
-        )
-        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.color = Color.BLACK }
-
-        init {
-            val scale = (100 * resources.dp).toInt()
-            layoutParams = LinearLayout.LayoutParams(scale, scale).also {
-                it.gravity = Gravity.CENTER_HORIZONTAL
-            }
-        }
-
-        override fun onDraw(canvas: Canvas) = canvas.drawPath(pathMorph.path, paint)
-
-        fun setFraction(value: Float) {
-            pathMorph.interpolateTo(value)
-            invalidate()
-        }
-    }
-    root.addView(morphedPathView)
-    root.addView(Slider(activity).also {
-        it.addOnChangeListener { _, value, _ -> morphedPathView.setFraction(value) }
-    })
+//    val morphedPathView = object : View(activity) {
+//        private val pathMorph = MorphedPath(
+//            "m 100 0 l -100 100 l 100 100 l 100 -100 z",
+//            "m 50 50 l 0 100 l 100 0 l 0 -100 z"
+//        )
+//        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.color = Color.BLACK }
+//
+//        init {
+//            val scale = (100 * resources.dp).toInt()
+//            layoutParams = LinearLayout.LayoutParams(scale, scale).also {
+//                it.gravity = Gravity.CENTER_HORIZONTAL
+//            }
+//        }
+//
+//        override fun onDraw(canvas: Canvas) = canvas.drawPath(pathMorph.path, paint)
+//
+//        fun setFraction(value: Float) {
+//            pathMorph.interpolateTo(value)
+//            invalidate()
+//        }
+//    }
+//    root.addView(morphedPathView)
+//    root.addView(Slider(activity).also {
+//        it.addOnChangeListener { _, value, _ -> morphedPathView.setFraction(value) }
+//    })
 
     root.addView(ProgressBar(activity).also { progressBar ->
         progressBar.isIndeterminate = true
@@ -288,24 +285,24 @@ fun showHiddenUiDialog(activity: FragmentActivity) {
     BottomSheetDialog(activity).also { it.setContentView(root) }.show()
 }
 
-class MorphedPath(fromPath: String, toPath: String) {
-    val path = Path()
-
-    private val nodesFrom = PathParser.createNodesFromPathData(fromPath)
-    private val currentNodes = PathParser.deepCopyNodes(nodesFrom)
-    private val nodesTo = PathParser.createNodesFromPathData(toPath)
-
-    init {
-        if (BuildConfig.DEVELOPMENT) check(PathParser.canMorph(nodesFrom, nodesTo))
-        interpolateTo(0f)
-    }
-
-    fun interpolateTo(fraction: Float) {
-        PathParser.interpolatePathDataNodes(currentNodes, nodesFrom, nodesTo, fraction)
-        path.rewind()
-        PathParser.PathDataNode.nodesToPath(currentNodes, path)
-    }
-}
+//class MorphedPath(fromPath: String, toPath: String) {
+//    val path = Path()
+//
+//    private val nodesFrom = PathParser.createNodesFromPathData(fromPath)
+//    private val currentNodes = PathParser.deepCopyNodes(nodesFrom)
+//    private val nodesTo = PathParser.createNodesFromPathData(toPath)
+//
+//    init {
+//        if (BuildConfig.DEVELOPMENT) check(PathParser.canMorph(nodesFrom, nodesTo))
+//        interpolateTo(0f)
+//    }
+//
+//    fun interpolateTo(fraction: Float) {
+//        PathParser.interpolatePathDataNodes(currentNodes, nodesFrom, nodesTo, fraction)
+//        path.rewind()
+//        PathParser.PathDataNode.nodesToPath(currentNodes, path)
+//    }
+//}
 
 fun showShaderSandboxDialog(activity: FragmentActivity) {
     val frame = object : FrameLayout(activity) {
@@ -629,8 +626,8 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
 private val elementsColor = buildMap {
     listOf(3, 11, 19, 37, 55, 87).forEach { put(it, 0xffff9d9d) } // Alkali metals
     listOf(4, 12, 20, 38, 56, 88).forEach { put(it, 0xffffdead) } // Alkaline earth metals
-    for (it in 57..71) put(it, 0xffffbfff) // Lanthanides
-    for (it in 89..103) put(it, 0xffff99cc) // Actinides
+    (57..71).forEach { put(it, 0xffffbfff) } // Lanthanides
+    (89..103).forEach { put(it, 0xffff99cc) } // Actinides
     listOf(1, 6, 7, 8, 15, 16, 34).forEach { put(it, 0xffa0ffa0) } // Other nonmetals
     listOf(5, 14, 32, 33, 51, 52).forEach { put(it, 0xffcccc99) } // Metalloids
     // Other nonmetals
@@ -639,14 +636,14 @@ private val elementsColor = buildMap {
     listOf(2, 10, 18, 36, 54, 86, 118).forEach { put(it, 0xffc0ffff) } // Noble gases
 }.withDefault { 0xffffc0c0 } // Transition metals
 
-private val elementsIndices = buildList {
+private val elementsIndices = buildList<Int?> {
     var i = 1
     add(i++)
-    addAll(List(16) { null })
+    addAll(arrayOfNulls(16))
     add(i++)
     repeat(2) {
         addAll(List(2) { i++ })
-        addAll(List(10) { null })
+        addAll(arrayOfNulls(10))
         addAll(List(6) { i++ })
     }
     repeat(2) { addAll(List(18) { i++ }) }
@@ -657,9 +654,9 @@ private val elementsIndices = buildList {
     }
     repeat(2) {
         i = if (it == 0) 57 else 89
-        addAll(List(2) { null })
+        addAll(arrayOfNulls(2))
         addAll(List(14) { i++ })
-        addAll(List(2) { null })
+        addAll(arrayOfNulls(2))
     }
 }
 

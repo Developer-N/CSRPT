@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
     android:orientation="vertical">
 
     <TextView
@@ -14,6 +16,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_item"
         android:orientation="horizontal">
 
         <Button
@@ -21,17 +24,20 @@
             style="@style/AppOutlinedButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/padding_item"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
-            android:text="@string/ignore" />
+            android:text="@string/ignore"
+            android:textSize="14sp" />
 
-        <Button
+        <Button xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/settings"
+            style="@style/commonAutoSize"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/padding_item"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:text="@string/settings" />
+            android:text="@string/settings"
+            app:autoSizeMaxTextSize="14sp" />
 
     </LinearLayout>
 

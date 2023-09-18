@@ -16,11 +16,14 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.byagowi.persiancalendar.DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
+import com.byagowi.persiancalendar.DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.DEFAULT_ISLAMIC_OFFSET
 import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
+import com.byagowi.persiancalendar.PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET
 import com.byagowi.persiancalendar.PREF_LOCAL_DIGITS
@@ -67,6 +70,7 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat(),
 
         preferenceScreen = preferenceManager.createPreferenceScreen(activity).build {
             section(R.string.pref_interface) {
+                themeSelect()
 //                clickable(onClick = { showLanguagePreferenceDialog(activity) }) {
 //                    if (destination == PREF_APP_LANGUAGE) title = "Language"
 //                    else title(R.string.language)
@@ -83,13 +87,22 @@ class InterfaceCalendarFragment : PreferenceFragmentCompat(),
                     SYSTEM_DEFAULT_FONT,
                     R.string.select_font
                 ) { title(R.string.select_font) }
-                switch(PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, false) {
+                switch(
+                    PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
+                ) {
                     if (language.isArabic) {
                         title = "السنة الميلادية بالاسماء الشرقية"
                         summary = "كانون الثاني، شباط، آذار، …"
                     } else isVisible = false
                 }
-                themeSelect()
+                switch(
+                    PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS, DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
+                ) {
+                    if (language.isPersian) {
+                        title = "ماه‌های میلادی با نام انگلیسی"
+                        summary = "جون، جولای، آگست، …"
+                    } else isVisible = false
+                }
                 // TODO: To be integrated into the language selection dialog one day
                 switch(PREF_LOCAL_DIGITS, true) {
                     title(R.string.native_digits)

@@ -30,13 +30,14 @@ class LocalPrayTimeRepository(
     }
 
     suspend fun getAllCity(): List<CityModel> {
-        runCatching { return locationsDB.cityDAO().getAllCity() }
-            .onFailure { return emptyList() }.getOrElse { return emptyList() }
+        runCatching { return locationsDB.cityDAO().getAllCity() }.onFailure { return emptyList() }
+            .getOrElse { return emptyList() }
     }
 
     suspend fun getAllProvinces(): List<ProvinceModel> {
-        runCatching { return locationsDB.provinceDAO().getAllProvinces() }
-            .onFailure { return emptyList() }.getOrElse { return emptyList() }
+        runCatching {
+            return locationsDB.provinceDAO().getAllProvinces()
+        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }
 
     suspend fun clearDownloadFor(id: Int) {
@@ -50,6 +51,4 @@ class LocalPrayTimeRepository(
             downloadPrayTimeDB.downloadedPrayTimes().insertToDownload(prayTimesList)
         }.onFailure { }
     }
-
-
 }

@@ -41,48 +41,51 @@ class QuranDownloadViewModel(private val qariRepository: QariRepository) : ViewM
 
     @SuppressLint("SdCardPath")
     fun download(context: Context, checkFile: () -> Unit) {
-        viewModelScope.launch {
-            _isDownloading.value = true
+        runCatching {
+            viewModelScope.launch {
+                _isDownloading.value = true
+                withContext(Dispatchers.IO) {
+                    qariRepository.getQariList()//first download qari list
+                }
 
-            qariRepository.getQariList()//first download qari list
+                File("/data/data/${context.packageName}/databases/quran_v3.zip").apply {
+                    if (exists()) delete()
+                }
+                val downloadedFile = File(getQuranDBDownloadFolder(context), "quran_v3.zip")
+                val ktor = HttpClient(Android)
+                ktor.downloadFile(downloadedFile, DB_LINK).collect {
+                    when (it) {
+                        is DownloadResult.Success -> {
+                            _message.value = context.getString(R.string.download_completed_unzip)
+                            _isDownloading.value = false
+                            _isUnzipping.value = true
+                            if (unzip(context)) {
+                                _message.value = context.getString(R.string.downloaded)
+                                checkFile()
+                            } else _message.value =
+                                context.getString(R.string.download_failed_tray_again)
+                            _isUnzipping.value = false
+                            _progress.value = 0f
+                        }
 
-            File("/data/data/${context.packageName}/databases/quran_v3.zip").apply {
-                if (exists()) delete()
-            }
-            val downloadedFile = File(getQuranDBDownloadFolder(context), "quran_v3.zip")
-            val ktor = HttpClient(Android)
-            ktor.downloadFile(downloadedFile, DB_LINK).collect {
-                when (it) {
-                    is DownloadResult.Success -> {
-                        _message.value = context.getString(R.string.download_completed_unzip)
-                        _isDownloading.value = false
-                        _isUnzipping.value = true
-                        if (unzip(context)) {
-                            _message.value = context.getString(R.string.downloaded)
-                            checkFile()
-                        } else _message.value =
-                            context.getString(R.string.download_failed_tray_again)
-                        _isUnzipping.value = false
-                        _progress.value = 0f
-                    }
+                        is DownloadResult.Error -> {
+                            _message.value = context.getString(R.string.download_failed_tray_again)
+                            _progress.value = 0f
+                            _isDownloading.value = false
+                        }
 
-                    is DownloadResult.Error -> {
-                        _message.value = context.getString(R.string.download_failed_tray_again)
-                        _progress.value = 0f
-                        _isDownloading.value = false
-                    }
+                        is DownloadResult.Progress -> {
+                            _progress.value = it.progress / 100f
+                            _message.update { context.getString(R.string.downloading) }
+                        }
 
-                    is DownloadResult.Progress -> {
-                        _progress.value = it.progress / 100f
-                        _message.update { context.getString(R.string.downloading) }
-                    }
-
-                    is DownloadResult.TotalSize -> {
-                        _totalSize.value = it.totalSize
+                        is DownloadResult.TotalSize -> {
+                            _totalSize.value = it.totalSize
+                        }
                     }
                 }
             }
-        }
+        }.onFailure(logException)
     }
 
     @SuppressLint("SdCardPath")

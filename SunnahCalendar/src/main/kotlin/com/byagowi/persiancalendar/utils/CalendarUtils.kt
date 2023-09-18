@@ -84,8 +84,8 @@ fun getA11yDaySummary(
 
     if (withTitle) appendLine().append(dayTitleSummary(jdn, mainDate))
 
-    val shift = getShiftWorkTitle(jdn, false)
-    if (shift.isNotEmpty()) appendLine().append(shift)
+    val shift = getShiftWorkTitle(jdn)
+    if (shift != null) appendLine().append(shift)
 
     if (withOtherCalendars) {
         val otherCalendars = dateStringOfOtherCalendars(jdn, spacedComma)
@@ -256,18 +256,18 @@ val AbstractDate.calendarType: CalendarType
     }
 
 fun calculateDatePartsDifference(
-    higher: AbstractDate, lower: AbstractDate, calendar: CalendarType
+    fromDate: AbstractDate, toDate: AbstractDate, calendar: CalendarType
 ): Triple<Int, Int, Int> {
-    var y = higher.year - lower.year
-    var m = higher.month - lower.month
-    var d = higher.dayOfMonth - lower.dayOfMonth
+    var y = toDate.year - fromDate.year
+    var m = toDate.month - fromDate.month
+    var d = toDate.dayOfMonth - fromDate.dayOfMonth
     if (d < 0) {
         m--
-        d += calendar.getMonthLength(lower.year, lower.month)
+        d += calendar.getMonthLength(fromDate.year, fromDate.month)
     }
     if (m < 0) {
         y--
-        m += calendar.getYearMonths(lower.year)
+        m += calendar.getYearMonths(fromDate.year)
     }
     return Triple(y, m, d)
 }
@@ -281,13 +281,14 @@ fun calculateDaysDifference(
     val baseDate = baseJdn.toCalendar(calendarType)
     val date = jdn.toCalendar(calendarType)
     val (years, months, daysOfMonth) = calculateDatePartsDifference(
-        if (baseJdn > jdn) baseDate else date, if (baseJdn > jdn) date else baseDate, calendarType
+        if (baseJdn > jdn) date else baseDate, if (baseJdn > jdn) baseDate else date, calendarType
     )
     val days = abs(baseJdn - jdn)
     val daysString = resources.getQuantityString(R.plurals.n_days, days, formatNumber(days))
     val weeks = if (isInWidget || days < 7) 0 else (days / 7.0).roundToInt()
     val result = listOfNotNull(
-        if (months == 0 && years == 0) null else listOf(
+        if (months == 0 && years == 0) null
+        else listOf(
             R.plurals.n_years to years,
             R.plurals.n_months to months,
             R.plurals.n_days to daysOfMonth
@@ -297,6 +298,14 @@ fun calculateDaysDifference(
         if (weeks == 0) null
         else (if (days % 7 == 0) "" else "~")
                 + resources.getQuantityString(R.plurals.n_weeks, weeks, formatNumber(weeks)),
+        run {
+            if (years != 0 || isInWidget) return@run null
+            val workDays = eventsRepository?.calculateWorkDays(
+                if (baseJdn > jdn) jdn else baseJdn, if (baseJdn > jdn) baseJdn else jdn
+            ) ?: 0
+            if (workDays == days) return@run null
+            resources.getQuantityString(R.plurals.n_work_days, workDays, formatNumber(workDays))
+        }
     )
     if (result.isEmpty()) return daysString
     return language.inParentheses.format(daysString, result.joinToString(spacedOr))

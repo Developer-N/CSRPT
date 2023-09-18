@@ -22,6 +22,7 @@
 
     <string name="network_error_title">Network error!</string>
     <string name="network_error_message">Please connect to internet.</string>
+    <string name="recheck">For recheck click again.</string>
     <string name="str_retry">Retry</string>
     <string name="welcome">Welcome</string>
 
@@ -205,6 +206,7 @@
     <string name="delete_note_alert_message">Are you sure want to delete this note?</string>
     <string name="delete_quran_audio_alert_message">Are you sure want to delete quran files?</string>
     <string name="download_completed_unzip">Download Completed! -> Unzip …</string>
+    <string name="files_are_ready">Files are ready.</string>
     <string name="sort_order">Chapter sort order</string>
     <string name="go_to_page">Go to page</string>
     <string name="go_to_juz">Go to juz</string>

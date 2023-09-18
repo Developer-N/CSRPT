@@ -159,12 +159,12 @@ fun update(context: Context, updateDate: Boolean) {
         readAndStoreDeviceCalendarEventsOfTheDay(context)
     }
 
-    val shiftWorkTitle = getShiftWorkTitle(jdn, false)
+    val shiftWorkTitle = getShiftWorkTitle(jdn)
     val title = dayTitleSummary(jdn, date) +
-            if (shiftWorkTitle.isEmpty()) "" else " ($shiftWorkTitle)"
+            if (shiftWorkTitle == null) "" else " ($shiftWorkTitle)"
     val widgetTitle = dayTitleSummary(
         jdn, date, calendarNameInLinear = OTHER_CALENDARS_KEY in whatToShowOnWidgets
-    ) + if (shiftWorkTitle.isEmpty()) "" else " ($shiftWorkTitle)"
+    ) + if (shiftWorkTitle == null) "" else " ($shiftWorkTitle)"
     val subtitle = dateStringOfOtherCalendars(jdn, spacedComma)
 
     val prefs = context.appPrefs

@@ -64,7 +64,7 @@ class IntroCustomLocationViewModel(
         if (province == null) emptyList()
         else
             cities.filter { it.provinceId == province.id }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), _cityList.value)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _cityList.value)
 
     private val _selectedCity = MutableStateFlow<CityModel?>(null)
     val selectedCity = _selectedCity.asStateFlow()

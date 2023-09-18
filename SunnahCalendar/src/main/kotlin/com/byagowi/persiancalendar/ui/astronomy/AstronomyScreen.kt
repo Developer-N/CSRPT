@@ -69,10 +69,12 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
             it.isVisible = false
         }
 
-        val viewModel by navGraphViewModels<AstronomyViewModel>(R.id.astronomy)
-        if (viewModel.minutesOffset.value == AstronomyViewModel.DEFAULT_TIME) viewModel.animateToAbsoluteDayOffset(
-            navArgs<AstronomyScreenArgs>().value.dayOffset
-        )
+        // Just that our UI tests don't have access to the nav controllers, let's don't access nav there
+        val ifNavAvailable = runCatching { findNavController() }.getOrNull() != null
+        val viewModel =
+            if (ifNavAvailable) navGraphViewModels<AstronomyViewModel>(R.id.astronomy).value else AstronomyViewModel()
+        if (ifNavAvailable && viewModel.minutesOffset.value == AstronomyViewModel.DEFAULT_TIME)
+            viewModel.animateToAbsoluteDayOffset(navArgs<AstronomyScreenArgs>().value.dayOffset)
 
         var clickCount = 0
         binding.solarView.setOnClickListener {
@@ -146,7 +148,7 @@ class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
             val jdn = Jdn(civilDate)
             headerTextViews.zip(headerCache[jdn]) { textView, line -> textView.text = line }
 
-            for (i in 1..4) {
+            (1..4).forEach { i ->
                 when (i) {
                     1 -> binding.firstSeason
                     2 -> binding.secondSeason

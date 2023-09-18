@@ -495,8 +495,9 @@ fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
     context.resources.getResourceEntryName(R.raw.doa)
 ).toUri()
 
-fun getAthanUri(setting: AthanSetting, key: String, context: Context): Uri {
-    return if (key.startsWith("B") || (key.startsWith("A") && key != ASR_KEY) || key == "SUNRISE") if (setting.alertURI == "") getDefaultAlertUri(
+fun getAthanUri(setting: AthanSetting?, key: String?, context: Context): Uri {
+    return if (setting == null || key == null) getDefaultAthanUri(context)
+    else if (key.startsWith("B") || (key.startsWith("A") && key != ASR_KEY) || key == "SUNRISE") if (setting.alertURI == "") getDefaultAlertUri(
         context
     )
     else setting.alertURI.toUri()

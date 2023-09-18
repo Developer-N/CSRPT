@@ -22,6 +22,7 @@
 
     <string name="network_error_title">خطا!</string>
     <string name="network_error_message">لطفا اتصال اینترنت را بررسی کنید!</string>
+    <string name="recheck">برای بررسی مجدد کلیک کنید.</string>
     <string name="str_retry">تلاش مجدد</string>
     <string name="welcome">خوش آمدید</string>
 
@@ -108,6 +109,12 @@
     <string name="send_mail">ارسال ایمیل</string>
     <string name="str_changes_title">تغییرات</string>
     <string name="changes">
+
+        \n----تغییرات نسخه : 10.8.2----\n
+1.	امکان پرش مستقیم به آیه (در کادر جستجو شماره آیه را وارد کنید)\n
+2.	امکان انتخاب قسمتی از متن آیه و ترجمه ها\n
+3.	رفع مشکلات گزارش شده و بهبود کارایی\n
+
 
         \n----تغییرات نسخه : 10.8.1----\n
 1.	باز طراحی صفحات شروع اولیه برنامه\n
@@ -416,6 +423,7 @@ ____8.	امکانات بیشتر مثل نمایش سوره ها در حالت �
     <string name="delete_note_alert_message">آیا از حذف یادداشت مطمئن هستید؟</string>
     <string name="delete_quran_audio_alert_message">آیا از حذف فایل های صوتی مطمئن هستید؟</string>
     <string name="download_completed_unzip">دانلود تمام شد! -> در حال استخراج فایل ها …</string>
+    <string name="files_are_ready">فایل ها آماده هستند.</string>
     <string name="sort_order">مرتب سازی فهرست</string>
     <string name="go_to_page">برو به صفحه</string>
     <string name="go_to_juz">برو به جزء</string>
