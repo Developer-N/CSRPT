@@ -38,7 +38,7 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21 // if (enableFirebaseInNightlyBuilds) 19 else 17
         targetSdk = 34
-        versionCode = 10820
+        versionCode = 10821
         versionName = "10.8.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         if (!isMinApi21Build) vectorDrawables.useSupportLibrary = true

@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Theme
 import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
@@ -45,8 +46,12 @@ import ir.namoo.commons.utils.toastMessage
 import ir.namoo.quran.home.DownloadQuranDBScreen
 import ir.namoo.quran.home.QuranDownloadViewModel
 import ir.namoo.quran.home.QuranHomeScreen
+import ir.namoo.quran.qari.getQariFolder
 import ir.namoo.quran.utils.initQuranUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
+import java.io.File
 
 class QuranActivity : AppCompatActivity() {
 
@@ -129,6 +134,10 @@ class QuranActivity : AppCompatActivity() {
                         )
                     }
             }
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            val noMediaFile = File("${getQariFolder()}/.nomedia")
+            if(!noMediaFile.exists()) noMediaFile.createNewFile()
         }
     }//end of onCreate
 
