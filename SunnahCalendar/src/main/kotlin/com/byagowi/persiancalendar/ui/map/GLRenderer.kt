@@ -26,7 +26,7 @@ class GLRenderer(
     private var xHandle = 0
     private var yHandle = 0
     private var zoomHandle = 0
-    private var verticesHandle = 0
+    private var arrayBufferHandle = 0
     private var textureHandle = 0
     private var textureUniformHandle = 0
     private var isSurfaceCreated = false
@@ -47,29 +47,27 @@ class GLRenderer(
         this.width = width.toFloat()
         this.height = height.toFloat()
 
-        val vertexBuffer = ByteBuffer
-            .allocateDirect(rectangleVertices.size * 4).order(ByteOrder.nativeOrder())
-            .asFloatBuffer().put(rectangleVertices).position(0)
-        val handle = IntArray(1)
-        GLES20.glGenBuffers(1, handle, 0)
-        verticesHandle = handle[0]
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, verticesHandle)
+        val bufferHandles = IntArray(1)
+        GLES20.glGenBuffers(1, bufferHandles, 0)
+        arrayBufferHandle = bufferHandles[0]
+        val buffer = ByteBuffer
+            .allocateDirect(rectangleVertices.size * floatSize).order(ByteOrder.nativeOrder())
+        val floatBuffer = buffer.asFloatBuffer().put(rectangleVertices).position(0)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, arrayBufferHandle)
         GLES20.glBufferData(
-            GLES20.GL_ARRAY_BUFFER, vertexBuffer.limit() * 4, vertexBuffer, GLES20.GL_STATIC_DRAW
+            GLES20.GL_ARRAY_BUFFER, buffer.limit(), floatBuffer, GLES20.GL_STATIC_DRAW
         )
     }
 
     private val rectangleVertices = floatArrayOf(
-        -1f, -1f, 0f,
-        1f, -1f, 0f,
-        -1f, 1f, 0f,
-        1f, -1f, 0f,
-        1f, 1f, 0f,
-        -1f, 1f, 0f
+        -1f, -1f, .999f,
+        3f, -1f, .999f,
+        -1f, 3f, .999f,
     )
+    private val floatSize = 4
     private val perVertex = 3
-    private val vertexStride = perVertex * 4
-    private val vertexCount = rectangleVertices.size / perVertex
+    private val vertexStride = perVertex * floatSize
+    private val vertexCount = 3
 
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
@@ -81,7 +79,7 @@ class GLRenderer(
             GLES20.glUniform1i(textureUniformHandle, 0)
         }
         GLES20.glEnableVertexAttribArray(positionHandle)
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, verticesHandle)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, arrayBufferHandle)
         GLES20.glVertexAttribPointer(
             positionHandle, perVertex, GLES20.GL_FLOAT, false, vertexStride, 0
         )
@@ -92,7 +90,6 @@ class GLRenderer(
         GLES20.glUniform1f(yHandle, overriddenY)
         GLES20.glUniform1f(zoomHandle, overriddenZoom)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
-        GLES20.glDisableVertexAttribArray(positionHandle)
     }
 
     fun compileProgram() {
@@ -141,10 +138,10 @@ class GLRenderer(
         if (textureHandle[0] != 0) {
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0])
             GLES20.glTexParameteri(
-                GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST
+                GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
             )
             GLES20.glTexParameteri(
-                GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST
+                GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
             )
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
         }

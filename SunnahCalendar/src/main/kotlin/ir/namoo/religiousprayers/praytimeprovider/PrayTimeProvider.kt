@@ -1,7 +1,6 @@
 package ir.namoo.religiousprayers.praytimeprovider
 
 import android.content.Context
-import android.util.Log
 import com.byagowi.persiancalendar.DEFAULT_CITY
 import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.entities.Clock
@@ -15,22 +14,25 @@ import ir.namoo.commons.DEFAULT_SUMMER_TIME
 import ir.namoo.commons.PREF_ENABLE_EDIT
 import ir.namoo.commons.PREF_SUMMER_TIME
 import ir.namoo.commons.model.LocationsDB
+import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.getDayNum
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
 
-class PrayTimeProvider constructor(private val context: Context) {
-    companion object {
-        var ptFrom = 0 // 0=calculated 1=exact 2=edited 3=just asr calculated
-    }
+// 0=calculated 1=exact 2=edited 3=just asr calculated
+private val _prayTimesFrom = MutableStateFlow(0)
+val prayTimesFrom = _prayTimesFrom.asStateFlow()
 
-    private var prayTimesDAO: DownloadedPrayTimesDAO =
-        DownloadedPrayTimesDB.getInstance(context.applicationContext).downloadedPrayTimes()
-    private var editedPrayTimesDAO: PrayTimesDAO =
-        PrayTimesDB.getInstance(context.applicationContext).prayTimes()
-    private var locationsDB = LocationsDB.getInstance(context.applicationContext)
 
-    fun nReplace(prayTimes: PrayTimes?, jdn: Jdn): PrayTimes? {
+class PrayTimeProvider(
+    private val context: Context,
+    private val prayTimesRepository: PrayTimeRepository,
+    private val locationsDB: LocationsDB
+) {
+
+    fun replace(prayTimes: PrayTimes?, jdn: Jdn): PrayTimes? {
         prayTimes ?: return null
         return runCatching {
             val persianCalendar = jdn.toPersianDate()
@@ -39,23 +41,25 @@ class PrayTimeProvider constructor(private val context: Context) {
                 context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
             val result = when {
                 context.isExistAndEnabledEdit() -> {
-                    ptFrom = 2
+                    _prayTimesFrom.value = 2
                     replaceWithEdited(prayTimes, dayNumber)
                 }
+
                 isExistExactTimes(cityName) -> {
-                    ptFrom = 1
+                    _prayTimesFrom.value = 1
                     replaceWithExact(prayTimes, cityName, dayNumber)
                 }
+
                 else -> {
-                    ptFrom = 0
+                    _prayTimesFrom.value = 0
                     prayTimes
                 }
             }
-            if (ptFrom == 0 && context.appPrefs.getBoolean(
+            if (prayTimesFrom.value == 0 && context.appPrefs.getBoolean(
                     PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME
                 ) && dayNumber in 2..185
             ) result.addSummerTime()
-            else if (ptFrom == 0 ||
+            else if (prayTimesFrom.value == 0 ||
                 context.appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME)
                 || dayNumber !in 2..185
             ) result
@@ -141,14 +145,13 @@ class PrayTimeProvider constructor(private val context: Context) {
         return this
     }
 
-    // TODO check this for correctly run
     private fun replaceWithExact(
         prayTimes: PrayTimes, cityName: String, dayNumber: Int
     ): PrayTimes {
 
         val exactTimes = runBlocking(Dispatchers.IO) {
             val city = locationsDB.cityDAO().getCity(cityName)
-            prayTimesDAO.getDownloadFor(city!!.id, dayNumber)
+            prayTimesRepository.getDownloadedTimesForCity(city!!.id, dayNumber)
         }
         exactTimes ?: return prayTimes
 
@@ -165,13 +168,13 @@ class PrayTimeProvider constructor(private val context: Context) {
         fajr.set(prayTimes, exactTimes.toDouble(exactTimes.fajr))
         sunrise.set(prayTimes, exactTimes.toDouble(exactTimes.sunrise))
         dhuhr.set(prayTimes, exactTimes.toDouble(exactTimes.dhuhr))
-        if (asrMethod == AsrMethod.Standard && exactTimes.asr != "00:00:00") asr.set(
+        if (asrMethod.value == AsrMethod.Standard && exactTimes.asr != "00:00:00") asr.set(
             prayTimes, exactTimes.toDouble(exactTimes.asr)
         )
-        else if (asrMethod == AsrMethod.Hanafi && exactTimes.asrHanafi != "00:00:00") asr.set(
+        else if (asrMethod.value == AsrMethod.Hanafi && exactTimes.asrHanafi != "00:00:00") asr.set(
             prayTimes, exactTimes.toDouble(exactTimes.asrHanafi)
         )
-        else ptFrom = 3
+        else _prayTimesFrom.value = 3
         sunset.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         maghrib.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         isha.set(prayTimes, exactTimes.toDouble(exactTimes.isha))
@@ -179,11 +182,11 @@ class PrayTimeProvider constructor(private val context: Context) {
         return prayTimes
     }
 
-    // TODO check this for correctly run
     private fun replaceWithEdited(
         prayTimes: PrayTimes, dayNumber: Int
     ): PrayTimes {
-        val editedTimes = runBlocking(Dispatchers.IO) { editedPrayTimesDAO.getEdited(dayNumber) }
+        val editedTimes =
+            runBlocking(Dispatchers.IO) { prayTimesRepository.getEditedTime(dayNumber) }
         editedTimes ?: return prayTimes
 
         val imsak = prayTimes.javaClass.getDeclaredField("imsak").apply { isAccessible = true }
@@ -211,13 +214,13 @@ class PrayTimeProvider constructor(private val context: Context) {
     private fun isExistExactTimes(cityName: String): Boolean {
         val dTimes = runBlocking {
             val city = locationsDB.cityDAO().getCity(cityName) ?: return@runBlocking null
-            prayTimesDAO.getDownloadFor(city.id)
+            prayTimesRepository.getDownloadedTimesForCity(city.id)
         }
         return !dTimes.isNullOrEmpty() && dTimes.size == 366
     }
 
     private fun Context.isExistAndEnabledEdit(): Boolean =
-        runBlocking { editedPrayTimesDAO.getAllEdited() }?.size == 366 && appPrefs.getBoolean(
+        runBlocking { prayTimesRepository.getAllEditedTimes() }.size == 366 && appPrefs.getBoolean(
             PREF_ENABLE_EDIT, false
         )
 

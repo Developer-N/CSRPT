@@ -31,16 +31,15 @@ import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
 import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.cityName
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.getPrayTimeName
 import com.byagowi.persiancalendar.utils.logException
@@ -50,13 +49,14 @@ import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
 import ir.namoo.commons.utils.getDefaultDOAUri
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
+import org.koin.android.ext.android.get
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 private const val ACTION_STOP = "ir.namoo.religiousprayers.ACTION_STOP"
 
 class NAthanNotification : Service() {
-
+    private val prayTimeProvider: PrayTimeProvider = get()
     private val notificationId = if (BuildConfig.DEVELOPMENT) Random.nextInt(2000, 4000) else 3000
     private var notificationManager: NotificationManager? = null
     private var setting: AthanSetting? = null
@@ -106,7 +106,8 @@ class NAthanNotification : Service() {
     override fun onBind(intent: Intent): IBinder? = null
 
     @Suppress("Deprecation")
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent ?: return START_NOT_STICKY
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -167,13 +168,13 @@ class NAthanNotification : Service() {
             }
 
 
-            val cityName = this.appPrefs.cityName
+            val cityName = cityName.value
             val prayTimeName = getString(getPrayTimeName(prayerKey))
             val title = if (cityName == null) prayTimeName
             else "$prayTimeName$spacedComma${getString(R.string.in_city_time, cityName)}"
 
             var prayTimes = coordinates.value?.calculatePrayTimes()
-            prayTimes = PrayTimeProvider(this).nReplace(prayTimes, Jdn.today())
+            prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())
             val subtitle = when (prayerKey) {
                 FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
                 DHUHR_KEY -> listOf(R.string.asr, R.string.maghrib)
@@ -205,7 +206,7 @@ class NAthanNotification : Service() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val cv = RemoteViews(applicationContext?.packageName, R.layout.custom_notification)
-                cv.setDirection(R.id.custom_notification_root, this)
+                cv.setDirection(R.id.custom_notification_root, this.resources)
                 cv.setTextViewText(R.id.title, title)
                 if (subtitle.isEmpty()) {
                     cv.setViewVisibility(R.id.body, View.GONE)
@@ -218,6 +219,7 @@ class NAthanNotification : Service() {
             }
 
             startForeground(notificationId, notificationBuilder.build())
+
             preventPhoneCallIntervention.startListener(this)
             //########################################################## Play Athan
             if (setting?.playType == 1) {

@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -13,37 +14,38 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.quran.settings.QariSelector
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.colorAppBar
-import ir.namoo.commons.utils.colorOnAppBar
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -65,7 +67,6 @@ fun DownloadScreen(
         TopAppBar(title = {
             Text(
                 text = stringResource(id = R.string.download_audios),
-                fontFamily = FontFamily(appFont),
                 fontSize = 16.sp
             )
         }, navigationIcon = {
@@ -80,91 +81,105 @@ fun DownloadScreen(
                     imageVector = Icons.Filled.Menu, contentDescription = "Menu"
                 )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorAppBar,
-            titleContentColor = colorOnAppBar,
-            navigationIconContentColor = colorOnAppBar,
-            actionIconContentColor = colorOnAppBar
+        }, colors = appTopAppBarColors()
         )
-        )
-    }) { contentPadding ->
-        Column(
-            modifier = Modifier.padding(contentPadding)
+    }) { paddingValues ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding()),
+            shape = materialCornerExtraLargeTop()
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+            ) {
 
-            AnimatedVisibility(visible = isLoading) {
-                LinearProgressIndicator(
+                AnimatedVisibility(visible = isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                            .width(4.dp),
+                        strokeCap = StrokeCap.Round
+                    )
+                }
+                ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(4.dp)
-                        .width(4.dp),
-                    strokeCap = StrokeCap.Round
-                )
-            }
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-                elevation = CardDefaults.elevatedCardElevation()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = stringResource(id = R.string.select_quran_audio_for_download),
-                        fontFamily = FontFamily(appFont),
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    QariSelector(title = qariList.find { it.folderName == selectedQari }?.name
-                        ?: "-",
-                        enable = !isLoading,
-                        list = qariList,
-                        selected = selectedQari,
-                        onSelectChange = { viewModel.updateSelectedQari(context, it) })
-                }
-            }
-            //################################################
-            if (chapters.isNotEmpty() && selectedStates.isNotEmpty())
-                LazyColumn(state = rememberLazyListState()) {
-                    items(items = chapters, key = { it.sura }) { chapter ->
-                        QuranDownloadItem(
-                            modifier = Modifier,
-                            title = chapter.nameArabic,
-                            state = selectedStates.find { it.sura == chapter.sura }
-                                ?: QuranDownloadItemState(1),
-                            onDownload = {
-                                if (isNetworkConnected(context))
-                                    viewModel.downloadFiles(context, chapter.sura)
-                                else
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.network_error_message),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                            },
-                            onDelete = {
-                                MaterialAlertDialogBuilder(context).apply {
-                                    setTitle(R.string.warning)
-                                    setMessage(R.string.delete_quran_audio_alert_message)
-                                    setPositiveButton(R.string.yes) { _, _ ->
-                                        viewModel.deleteFiles(context, chapter.sura)
-                                    }
-                                    setNegativeButton(R.string.no) { dialog, _ ->
-                                        dialog.dismiss()
-                                    }
-                                    show()
-                                }
-                            },
-                            onCancel = { viewModel.cancelDownload(chapter.sura) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(4.dp),
+                            text = stringResource(id = R.string.select_quran_audio_for_download),
+                            fontSize = 16.sp
                         )
+                        Spacer(modifier = Modifier.weight(1f))
+                        QariSelector(title = qariList.find { it.folderName == selectedQari }?.name
+                            ?: "-",
+                            enable = !isLoading,
+                            list = qariList,
+                            selected = selectedQari,
+                            onSelectChange = { viewModel.updateSelectedQari(context, it) })
                     }
                 }
+                //################################################
+                if (chapters.isNotEmpty() && selectedStates.isNotEmpty())
+                    LazyColumn(state = rememberLazyListState()) {
+                        items(items = chapters, key = { it.sura }) { chapter ->
+                            var showDeleteDialog by remember { mutableStateOf(false) }
+                            QuranDownloadItem(
+                                modifier = Modifier,
+                                title = "${chapter.sura}: ${chapter.nameArabic}",
+                                state = selectedStates.find { it.sura == chapter.sura }
+                                    ?: QuranDownloadItemState(1),
+                                onDownload = {
+                                    if (isNetworkConnected(context))
+                                        viewModel.downloadFiles(context, chapter.sura)
+                                    else
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.network_error_message),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                },
+                                onDelete = { showDeleteDialog = true },
+                                onCancel = { viewModel.cancelDownload(chapter.sura) }
+                            )
+                            if (showDeleteDialog) {
+                                AlertDialog(
+                                    icon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Warning,
+                                            contentDescription = ""
+                                        )
+                                    },
+                                    title = { Text(text = stringResource(id = R.string.warning)) },
+                                    text = { Text(text = stringResource(id = R.string.delete_quran_audio_alert_message)) },
+                                    onDismissRequest = { showDeleteDialog = false },
+                                    confirmButton = {
+                                        TextButton(onClick = {
+                                            showDeleteDialog = false
+                                            viewModel.deleteFiles(context, chapter.sura)
+                                        }) {
+                                            Text(text = stringResource(id = R.string.yes))
+                                        }
+                                    }, dismissButton = {
+                                        TextButton(onClick = { showDeleteDialog = false }) {
+                                            Text(text = stringResource(id = R.string.no))
+                                        }
+                                    })
+                            }
+                        }
+                    }
+            }
         }
     }
 }

@@ -10,6 +10,8 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.annotation.ColorInt
+import androidx.compose.ui.util.lerp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withMatrix
@@ -23,9 +25,7 @@ import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.variants.debugLog
-import com.google.android.material.math.MathUtils
 import java.util.GregorianCalendar
 import java.util.Locale
 import kotlin.math.PI
@@ -37,7 +37,6 @@ import kotlin.math.roundToLong
 import kotlin.math.sign
 
 class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(context, attrs) {
-
     private var state = AstronomyState(GregorianCalendar())
 
     var mode: AstronomyMode = AstronomyMode.entries[0]
@@ -51,35 +50,33 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         invalidate()
     }
 
+    private val tropicalAnimator = ValueAnimator.ofFloat(0f, 1f).also { animator ->
+        animator.duration =
+            resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
+        animator.interpolator = AccelerateDecelerateInterpolator()
+        animator.addUpdateListener { _ ->
+            val fraction = animator.animatedFraction
+            monthsIndicator.color =
+                ColorUtils.setAlphaComponent(0x808080, (0x78 * fraction).roundToInt())
+            ranges.indices.forEach {
+                ranges[it][0] = lerp(iauRanges[it][0], tropicalRanges[it][0], fraction)
+                ranges[it][1] = lerp(iauRanges[it][1], tropicalRanges[it][1], fraction)
+            }
+            invalidate()
+        }
+    }
+
     var isTropicalDegree = false
         set(value) {
             if (value == field) return
-            ValueAnimator.ofFloat(if (value) 0f else 1f, if (value) 1f else 0f).also { animator ->
-                animator.duration =
-                    resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
-                animator.interpolator = AccelerateDecelerateInterpolator()
-                animator.addUpdateListener { _ ->
-                    val fraction = animator.animatedValue as? Float ?: 0f
-                    monthsIndicator.color =
-                        ColorUtils.setAlphaComponent(0x808080, (0x78 * fraction).roundToInt())
-                    ranges.indices.forEach {
-                        ranges[it][0] = MathUtils.lerp(
-                            iauRanges[it][0], tropicalRanges[it][0], fraction
-                        )
-                        ranges[it][1] = MathUtils.lerp(
-                            iauRanges[it][1], tropicalRanges[it][1], fraction
-                        )
-                    }
-                    invalidate()
-                }
-            }.start()
+            if (value) tropicalAnimator.start() else tropicalAnimator.reverse()
             field = value
         }
     private val tropicalRanges = Zodiac.entries.map { it.tropicalRange.map(Double::toFloat) }
     private val iauRanges = Zodiac.entries.map { it.iauRange.map(Double::toFloat) }
     private val ranges = iauRanges.map { it.toFloatArray() }
 
-    private val labels = Zodiac.entries.map { it.format(context, false, short = true) }
+    private val labels = Zodiac.entries.map { it.format(resources, false, short = true) }
 
     init {
         onDraw = { canvas, matrix ->
@@ -152,11 +149,6 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         return true
     }
 
-    private val colorTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.textAlign = Paint.Align.CENTER
-        it.color = context.resolveColor(android.R.attr.textColorPrimary)
-    }
-
     private val textPath = Path()
     private val textPathRect = RectF()
     private fun drawSolarSystemPlanetsView(canvas: Canvas) {
@@ -195,10 +187,11 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         }
     }
 
+    private val dp = resources.dp
     private val moonTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.style = Paint.Style.FILL
         it.textAlign = Paint.Align.CENTER
-        it.textSize = 40f
+        it.textSize = 14 * dp
         it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
     }
 
@@ -248,7 +241,6 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         }
     }
 
-    private val dp = resources.dp
     private val trianglePath = Path().also {
         it.moveTo(0f, 6 * dp)
         it.lineTo(-5 * dp, .5f * dp)
@@ -285,9 +277,20 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
     }
     private val circlesPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val zodiacSeparatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = context.resolveColor(com.google.android.material.R.attr.colorSurface)
         it.strokeWidth = .5f * dp
         it.style = Paint.Style.STROKE
+    }
+
+    fun setSurfaceColor(@ColorInt color: Int) {
+        zodiacSeparatorPaint.color = color
+    }
+
+    private val colorTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+        it.textAlign = Paint.Align.CENTER
+    }
+
+    fun setContentColor(@ColorInt color: Int) {
+        colorTextPaint.color = color
     }
 
     private val zodiacPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
@@ -302,5 +305,5 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         it.color = 0x40808080
     }
 
-    private val solarDraw = SolarDraw(context)
+    private val solarDraw = SolarDraw(resources)
 }

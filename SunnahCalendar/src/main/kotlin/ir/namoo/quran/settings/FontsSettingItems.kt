@@ -2,9 +2,8 @@ package ir.namoo.quran.settings
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.cardColor
 import ir.namoo.quran.utils.englishFontNames
 import ir.namoo.quran.utils.englishFonts
 import ir.namoo.quran.utils.farsiFontNames
@@ -38,12 +36,10 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
     val englishFontSize by viewModel.englishFontSize.collectAsState()
 
 
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
+            .padding(2.dp)
     ) {
         // -------------------------------------------------------------------- Quran
         MyFontSelector(modifier = Modifier.padding(2.dp),
@@ -55,7 +51,7 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = quranFontSize,
             onFontFamilyChanged = { viewModel.updateQuranFontName(it) },
             onFontSizeChanged = { viewModel.updateQuranFontSize(it) })
-        Divider(modifier = Modifier.padding(16.dp, 0.dp))
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- Kurdish
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.kurdish_font_setting),
@@ -66,7 +62,7 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = kurdishFontSize,
             onFontFamilyChanged = { viewModel.updateKurdishFontName(it) },
             onFontSizeChanged = { viewModel.updateKurdishFontSize(it) })
-        Divider(modifier = Modifier.padding(16.dp, 0.dp))
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- Farsi
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.farsi_font_setting),
@@ -77,7 +73,7 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = farsiFontSize,
             onFontFamilyChanged = { viewModel.updateFarsiFontName(it) },
             onFontSizeChanged = { viewModel.updateFarsiFontSize(it) })
-        Divider(modifier = Modifier.padding(16.dp, 0.dp))
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- English
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.english_font_setting),

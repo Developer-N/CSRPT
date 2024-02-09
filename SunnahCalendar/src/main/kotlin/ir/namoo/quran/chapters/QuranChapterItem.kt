@@ -1,7 +1,6 @@
 package ir.namoo.quran.chapters
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,8 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +22,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -33,9 +30,6 @@ import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.chapters.data.ChapterEntity
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.iconColor
 import kotlinx.coroutines.launch
 
 @Composable
@@ -49,16 +43,10 @@ fun QuranChapterItem(
 ) {
     val scale = remember { Animatable(1.3f) }
     val coroutineScope = rememberCoroutineScope()
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(4.dp, 1.dp)
-            .clickable {
-                cardClick()
-            },
-        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
-    ) {
+    ElevatedCard(modifier = modifier
+        .fillMaxWidth()
+        .padding(4.dp, 2.dp),
+        onClick = { cardClick() }) {
         Row(
             modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
         ) {
@@ -82,9 +70,9 @@ fun QuranChapterItem(
                     .weight(3f)
                     .padding(12.dp, 2.dp),
                 text = suraName,
-                fontFamily = FontFamily(appFont),
-                fontSize = 22.sp,
-                textAlign = TextAlign.Start
+                fontSize = 20.sp,
+                textAlign = TextAlign.Start,
+                fontWeight = FontWeight.SemiBold
             )
 
             Column(
@@ -97,22 +85,22 @@ fun QuranChapterItem(
                     text = if (chapter.type == "Meccan") stringResource(id = R.string.meccan) else stringResource(
                         id = R.string.medinan
                     ),
-                    fontFamily = FontFamily(appFont),
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     modifier = Modifier.padding(0.dp), text = formatNumber(
                         String.format(
                             stringResource(id = R.string.aya_count), chapter.ayaCount
                         )
-                    ), fontFamily = FontFamily(appFont), fontSize = 12.sp
+                    ), fontSize = 12.sp, fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     modifier = Modifier.padding(0.dp), text = formatNumber(
                         String.format(
                             stringResource(id = R.string.revelation_order), chapter.revelationOrder
                         )
-                    ), fontFamily = FontFamily(appFont), fontSize = 12.sp
+                    ), fontSize = 12.sp, fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -127,10 +115,8 @@ fun QuranChapterItem(
             }) {
                 Icon(
                     imageVector = if (chapter.fav == 1) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = stringResource(
-                        id = R.string.favorite
-                    ),
-                    tint = iconColor
+                    contentDescription = stringResource(id = R.string.favorite),
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

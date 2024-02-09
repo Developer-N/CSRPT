@@ -15,6 +15,7 @@ import ir.namoo.quran.utils.DEFAULT_FARSI_FONT
 import ir.namoo.quran.utils.DEFAULT_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.DEFAULT_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.DEFAULT_PLAY_TYPE
 import ir.namoo.quran.utils.DEFAULT_QURAN_FONT
 import ir.namoo.quran.utils.DEFAULT_QURAN_FONT_SIZE
@@ -27,6 +28,7 @@ import ir.namoo.quran.utils.PREF_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
 import ir.namoo.quran.utils.PREF_KURDISH_FONT
 import ir.namoo.quran.utils.PREF_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.PREF_PLAY_TYPE
 import ir.namoo.quran.utils.PREF_QURAN_FONT
 import ir.namoo.quran.utils.PREF_QURAN_FONT_SIZE
@@ -111,6 +113,9 @@ class SettingViewModel(
     private val _englishFontSize = MutableStateFlow(14f)
     val englishFontSize = _englishFontSize.asStateFlow()
 
+    private val _playNextSura = MutableStateFlow(DEFAULT_PLAY_NEXT_SURA)
+    val playNextSura = _playNextSura.asStateFlow()
+
     // ---------------------------------------------------------------
     fun loadPaths(context: Context) {
         viewModelScope.launch {
@@ -126,6 +131,7 @@ class SettingViewModel(
         viewModelScope.launch {
             _isQariLoading.value = true
             _isLoading.value = true
+            _playNextSura.value = prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)
             _isFullFarsiEnabled.value = prefs.getBoolean(PREF_FARSI_FULL_TRANSLATE, false)
             _translates.value = quranSettingRepository.getTranslatesSettings()
             for (t in translates.value.filter { it.id > 2 }) {
@@ -140,8 +146,7 @@ class SettingViewModel(
 
             _quranFontName.value =
                 prefs.getString(PREF_QURAN_FONT, DEFAULT_QURAN_FONT) ?: DEFAULT_QURAN_FONT
-            _quranFontSize.value =
-                prefs.getFloat(PREF_QURAN_FONT_SIZE, DEFAULT_QURAN_FONT_SIZE)
+            _quranFontSize.value = prefs.getFloat(PREF_QURAN_FONT_SIZE, DEFAULT_QURAN_FONT_SIZE)
 
             _kurdishFontName.value =
                 prefs.getString(PREF_KURDISH_FONT, DEFAULT_KURDISH_FONT) ?: DEFAULT_KURDISH_FONT
@@ -310,6 +315,15 @@ class SettingViewModel(
             prefs.edit { putString(PREF_TRANSLATE_TO_PLAY, qari) }
             _selectedTranslateToPlay.value = qari
             _isQariLoading.value = false
+        }
+    }
+
+    fun updatePlayNextSura(play: Boolean) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _playNextSura.value = play
+            prefs.edit { putBoolean(PREF_PLAY_NEXT_SURA, play) }
+            _isLoading.value = false
         }
     }
 

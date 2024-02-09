@@ -18,6 +18,7 @@
     <string name="about">درباره</string>
     <string name="gpl_logo">نشان پروانهٔ جامع همگانی گنو</string>
     <string name="date_converter">تبدیل تاریخ</string>
+    <string name="converter">مبدل</string>
     <string name="widget_text_color">رنگ نوشته‌های ویجت</string>
     <string name="select_widgets_text_color">انتخاب رنگ دلخواه برای نوشته‌های ویجت</string>
     <string name="notify_date">فعال‌کردن اعلان</string>
@@ -58,9 +59,9 @@
     <string name="sunrise">طلوع</string>
     <string name="sunset">غروب</string>
     <string name="midnight">نیمه‌شب</string>
-    <string name="owghat">اوقات شرعی</string>
-    <string name="events">مناسبت‌ها</string>
-    <string name="events_summary">چه نوع مناسبت‌هایی در تقویم نمایش داده شود</string>
+    <string name="times">اوقات</string>
+    <string name="events">رویدادها</string>
+    <string name="events_summary">چه نوع رویدادها و مناسبت‌هایی در تقویم نمایش داده شود</string>
     <string name="today">امروز</string>
     <string name="return_to_today">بازگشت به امروز</string>
     <string name="select_type_date">انتخاب گونهٔ تاریخ</string>
@@ -80,6 +81,7 @@
     <string name="notify_date_lock_screen">نمایش اعلان در قفل صفحه</string>
     <string name="notify_date_lock_screen_summary">فقط هنگامی که شیوه‌ای برای محافظت از گوشی تنظیم شده باشد کار می‌کند.</string>
     <string name="warn_if_events_not_set">جهت فعال‌کردن رویدادها و مناسبت‌ها و نیز انتخاب مناسبت‌های مورد نظرتان به تنظیمات مراجعه کنید</string>
+    <string name="ask_for_calendar_permission">مایلید رویدادهای شخصی‌تان از تقویم دستگاه نمایش داده شود؟</string>
     <string name="days_distance">فاصله</string>
     <string name="calendars_priority">اولویت نمایش تقویم‌ها</string>
     <string name="calendars_priority_summary">تنظیم تقویم اصلی و اولویت نمایش یا عدم نمایش تقویم‌ها</string>
@@ -176,7 +178,7 @@
     <string name="location_access">دسترسی به موقعیت مکانی</string>
     <string name="phone_location_required">این بخش از برنامه نیازمند گرفتن دسترسی مکان است، در غیر این‌صورت می‌بایست طول و عرض جفرافیایی خود را به صورت دستی وارد کنید.</string>
     <string name="calendar_access">دسترسی به تقویم دستگاه</string>
-    <string name="phone_calendar_required">ابتدا باید مجوز دسترسی به تقویم دستگاه را بدهید، اگر اجازه دسترسی به تقویم دستگاه دهید برنامه می‌تواند رویدادهای شخصی شما را در تقویم فارسی نمایش دهد.</string>
+    <string name="phone_calendar_required">ابتدا نیاز است دسترسی برنامه به تقویم دستگاه مجاز شود، در اینصورت برنامه می‌تواند رویدادهای شخصی شما را نمایش دهد.</string>
     <string name="previous_x">%1$s قبل</string>
     <string name="next_x">%1$s بعد</string>
     <string name="week_days_name_column">ستون %1$s در جدول روزها</string>
@@ -400,4 +402,12 @@
     <string name="color_gradient">طیف رنگی</string>
     <string name="time_zones">مناطق زمانی</string>
     <string name="qr_code">کیوآر کد</string>
+    <string name="navigate_up">پیمایش به بالا</string>
+    <string name="open_drawer">باز کردن کشوی پیمایش</string>
+    <string name="more_options">گزینه‌های بیشتر</string>
+    <string name="yes">بله</string>
+    <string name="sample_inputs">ورودی‌های نمونه</string>
+    <string name="year_view">نمای سال</string>
+    <string name="exempt_app_battery_optimization">مایلید جهت عملکرد صحیح اعلان تاریخ، برنامه را به فهرست استثنا از بهینه‌سازی باتری بیافزایید؟</string>
+    <string name="widget_background_transparency">شفافیت پس‌زمینهٔ ویجت</string>
 </resources>

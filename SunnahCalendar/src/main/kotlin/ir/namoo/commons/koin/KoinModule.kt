@@ -36,22 +36,27 @@ import ir.namoo.quran.qari.QariDB
 import ir.namoo.quran.qari.QariRepository
 import ir.namoo.quran.qari.RemoteQariRepository
 import ir.namoo.quran.search.SearchViewModel
+import ir.namoo.quran.settings.ReorderTranslatesViewModel
 import ir.namoo.quran.settings.SettingViewModel
 import ir.namoo.quran.settings.data.QuranSettingDB
 import ir.namoo.quran.settings.data.QuranSettingRepository
 import ir.namoo.quran.sura.SuraViewModel
 import ir.namoo.quran.sura.data.QuranRepository
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesDB
+import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimesDB
 import ir.namoo.religiousprayers.ui.azkar.AzkarActivityViewModel
 import ir.namoo.religiousprayers.ui.azkar.AzkarViewModel
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarDB
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarRepository
 import ir.namoo.religiousprayers.ui.downloadtimes.DownloadPrayTimesViewModel
-import ir.namoo.religiousprayers.ui.edit.EditViewModel
+import ir.namoo.religiousprayers.ui.edit.EditPrayTimeViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroCustomLocationViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroDownloadViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroHomeViewModel
+import ir.namoo.religiousprayers.ui.settings.athan.AthanDownloadDialogViewModel
+import ir.namoo.religiousprayers.ui.settings.athan.AthanSettingsViewModel
+import ir.namoo.religiousprayers.ui.settings.location.LocationSettingViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.Cache
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -88,7 +93,9 @@ val koinModule = module {
     single { AthanDB.getInstance(get()) }
     single { AthanSettingsDB.getInstance(get()) }
     single { RemotePrayTimeRepository(get()) }
-    single { LocalPrayTimeRepository(get(), get()) }
+    single { LocalPrayTimeRepository(get(), get(), get()) }
+
+    single { PrayTimeProvider(get(), get(), get()) }
 
     // NetworkModule
     factory { Cache(get<Context>().cacheDir, 10L * 1024 * 1024) }
@@ -139,16 +146,21 @@ val koinModule = module {
     viewModel { NotesViewModel(get(), get()) }
     viewModel { SearchViewModel(get(), get(), get()) }
     viewModel { DownloadQuranAudioViewModel(get(), get(), get(), get()) }
+    viewModel { ReorderTranslatesViewModel(get()) }
     factory { FileDownloadRepository(get<FileDownloadDB>().getFileDownloadDao()) }
 
     //calendar
     viewModel { AzkarViewModel(get(), get()) }
     viewModel { AzkarActivityViewModel(get(), get()) }
     viewModel { DownloadPrayTimesViewModel(get(), get(), get()) }
-    viewModel { EditViewModel(get()) }
+    viewModel { EditPrayTimeViewModel(get()) }
 
     viewModel { IntroHomeViewModel() }
     viewModel { IntroDownloadViewModel(get()) }
     viewModel { IntroCustomLocationViewModel(get(), get()) }
 
+    viewModel { LocationSettingViewModel(get(), get()) }
+
+    viewModel { AthanDownloadDialogViewModel(get(), get()) }
+    viewModel { AthanSettingsViewModel(get(), get()) }
 }//end of module

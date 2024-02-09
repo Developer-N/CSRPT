@@ -54,9 +54,6 @@
         android:name="android.hardware.location.gps"
         android:required="false" />
     <uses-feature
-        android:name="android.software.leanback"
-        android:required="false" />
-    <uses-feature
         android:name="android.software.live_wallpaper"
         android:required="false" />
     <!-- Used for 3d globe view in map screen, a niche feature -->
@@ -99,7 +96,6 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
             <meta-data
@@ -107,15 +103,12 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
-        <activity android:name="ir.namoo.religiousprayers.ui.AthanSettingActivity" />
-
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|screenSize|screenLayout"
             android:exported="true"
             android:launchMode="singleTop"
             android:resizeableActivity="true"
-            android:windowSoftInputMode="adjustResize"
             tools:ignore="UnusedAttribute" />
 
         <activity
@@ -127,7 +120,6 @@
             android:showForAllUsers="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
-            android:theme="@style/AthanTheme"
             android:turnScreenOn="true" />
 
         <activity
@@ -139,7 +131,6 @@
             android:showForAllUsers="true"
             android:showOnLockScreen="true"
             android:showWhenLocked="true"
-            android:theme="@style/AthanTheme"
             android:turnScreenOn="true" />
 
         <activity android:name="ir.namoo.religiousprayers.ui.azkar.AzkarActivity" />
@@ -174,6 +165,12 @@
 
         <activity
             android:name=".ui.settings.wallpaper.WallpaperSettingsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop" />
+
+        <activity
+            android:name=".ui.settings.wallpaper.DreamSettingsActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="true"
             android:launchMode="singleTop" />
@@ -366,15 +363,6 @@
         </receiver>
 
         <service
-            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
-            android:enabled="false"
-            android:exported="false">
-            <meta-data
-                android:name="autoStoreLocales"
-                android:value="true" />
-        </service>
-
-        <service
             android:name=".service.ApplicationService"
             android:enabled="true"
             android:exported="false"
@@ -442,10 +430,20 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:resizeableActivity="true"
-            tools:targetApi="n" />
+            android:showForAllUsers="true"
+            android:turnScreenOn="true" />
 
         <service
-            android:name="ir.namoo.quran.player.PlayerService"
+            android:name="ir.namoo.quran.player.QuranPlayerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="ir.namoo.religiousprayers.ui.athan.AthanPlayerService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>

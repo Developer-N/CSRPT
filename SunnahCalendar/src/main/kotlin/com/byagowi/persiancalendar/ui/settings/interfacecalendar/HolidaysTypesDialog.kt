@@ -1,100 +1,237 @@
 package com.byagowi.persiancalendar.ui.settings.interfacecalendar
 
-import android.text.method.LinkMovementMethod
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TriStateCheckbox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import androidx.core.text.HtmlCompat
-import androidx.core.text.parseAsHtml
-import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentActivity
+import androidx.core.net.toUri
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.HolidaysTypesDialogBinding
 import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.generated.EventType
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.ui.common.AppDialog
+import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.utils.appPrefs
-import com.google.android.material.checkbox.MaterialCheckBox
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.byagowi.persiancalendar.utils.logException
+import org.jetbrains.annotations.VisibleForTesting
 
-fun showHolidaysTypesDialog(activity: FragmentActivity) {
-    val binding = HolidaysTypesDialogBinding.inflate(activity.layoutInflater)
+@Composable
+fun HolidaysTypesDialog(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    val language by language.collectAsState()
+    val enabledTypes = rememberSaveable(
+        saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })
+    ) { EventsRepository.getEnabledTypes(context.appPrefs, language).toMutableStateList() }
+    AppDialog(title = { Text(stringResource(R.string.events)) }, dismissButton = {
+        TextButton(onClick = onDismissRequest) {
+            Text(stringResource(R.string.cancel))
+        }
+    }, confirmButton = {
+        TextButton(onClick = {
+            onDismissRequest()
+            context.appPrefs.edit { putStringSet(PREF_HOLIDAY_TYPES, enabledTypes.toSet()) }
+        }) { Text(stringResource(R.string.accept)) }
+    }, onDismissRequest = onDismissRequest
+    ) {
+        CompositionLocalProvider(
+            LocalTextStyle provides MaterialTheme.typography.bodyMedium
+        ) {
+            if (!language.showNepaliCalendar) {
+                @Composable
+                fun Iran() {
+                    CountryEvents(
+                        stringResource(R.string.iran_official_events),
+                        EventType.Iran.source,
+                        stringResource(R.string.iran_holidays),
+                        stringResource(R.string.iran_others),
+                        enabledTypes,
+                        EventsRepository.iranHolidaysKey,
+                        EventsRepository.iranOthersKey,
+                    )
+                }
 
-    val pattern = """%s$spacedComma<a href="%s">${activity.getString(R.string.view_source)}</a>"""
-    binding.iran.text = pattern.format(
-        activity.getString(R.string.iran_official_events), EventType.Iran.source
-    ).parseAsHtml(HtmlCompat.FROM_HTML_MODE_COMPACT)
-    binding.afghanistan.text = pattern.format(
-        activity.getString(R.string.afghanistan_events), EventType.Afghanistan.source
-    ).parseAsHtml(HtmlCompat.FROM_HTML_MODE_COMPACT)
+                @Composable
+                fun Afghanistan() {
+                    CountryEvents(
+                        stringResource(R.string.afghanistan_events),
+                        EventType.Afghanistan.source,
+                        stringResource(R.string.afghanistan_holidays),
+                        stringResource(R.string.afghanistan_others),
+                        enabledTypes,
+                        EventsRepository.afghanistanHolidaysKey,
+                        EventsRepository.afghanistanOthersKey,
+                    )
+                }
 
-    // Make links work
-    binding.iran.movementMethod = LinkMovementMethod.getInstance()
-    binding.afghanistan.movementMethod = LinkMovementMethod.getInstance()
-
-    // Update view from stored settings
-    val checkboxToKeyPairs = listOf(
-        binding.iranHolidays to EventsRepository.iranHolidaysKey,
-        binding.iranOthers to EventsRepository.iranOthersKey,
-        binding.afghanistanHolidays to EventsRepository.afghanistanHolidaysKey,
-        binding.afghanistanOthers to EventsRepository.afghanistanOthersKey,
-        binding.nepalHolidays to EventsRepository.nepalHolidaysKey,
-        binding.nepalOthers to EventsRepository.nepalOthersKey,
-        binding.iranAncient to EventsRepository.iranAncientKey,
-        binding.international to EventsRepository.internationalKey
-    )
-    val enabledTypes = EventsRepository.getEnabledTypes(activity.appPrefs, language)
-    checkboxToKeyPairs.forEach { (checkbox, key) -> checkbox.isChecked = key in enabledTypes }
-
-    // Check boxes hierarchy
-    val hierarchy = listOf(
-        binding.iran to listOf(binding.iranHolidays, binding.iranOthers),
-        binding.afghanistan to listOf(binding.afghanistanHolidays, binding.afghanistanOthers),
-        binding.nepal to listOf(binding.nepalHolidays, binding.nepalOthers)
-    )
-
-    if (language.showNepaliCalendar) {
-        listOf(
-            binding.iran, binding.iranHolidays, binding.iranOthers,
-            binding.afghanistan, binding.afghanistanHolidays, binding.afghanistanOthers,
-            binding.other, binding.iranAncient, binding.international,
-        ).forEach { it.isVisible = false }
-        listOf(binding.nepal, binding.nepalHolidays, binding.nepalOthers)
-            .forEach { it.isVisible = true }
-    }
-
-    // Parents update logic
-    fun updateParents() = hierarchy.forEach { (parent, children) ->
-        val isChecked = children.any { it.isChecked }
-        val isMixed = isChecked && !children.all { it.isChecked }
-        parent.checkedState = when {
-            isMixed -> MaterialCheckBox.STATE_INDETERMINATE
-            isChecked -> MaterialCheckBox.STATE_CHECKED
-            else -> MaterialCheckBox.STATE_UNCHECKED
+                if (language.isAfghanistanExclusive) {
+                    Afghanistan()
+                    Iran()
+                } else {
+                    Iran()
+                    Afghanistan()
+                }
+            } else {
+                CountryEvents(
+                    stringResource(R.string.nepal),
+                    EventType.Nepal.source,
+                    stringResource(R.string.holiday),
+                    stringResource(R.string.other_holidays),
+                    enabledTypes,
+                    EventsRepository.nepalHolidaysKey,
+                    EventsRepository.nepalOthersKey,
+                )
+            }
+            Box(
+                Modifier.defaultMinSize(minHeight = HolidaysSettingsItemHeight.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    stringResource(R.string.other_holidays),
+                    modifier = Modifier.padding(horizontal = SettingsHorizontalPaddingItem.dp),
+                )
+            }
+            if (!language.isAfghanistanExclusive) IndentedCheckBox(
+                stringResource(R.string.iran_ancient),
+                enabledTypes,
+                EventsRepository.iranAncientKey,
+            )
+            IndentedCheckBox(
+                stringResource(R.string.international),
+                enabledTypes,
+                EventsRepository.internationalKey,
+            )
         }
     }
-    updateParents()
-    hierarchy.forEach { (parent, children) ->
-        // Add check click listeners
-        parent.setOnCheckedChangeListener { _, _ ->
-            if (!parent.isPressed) return@setOnCheckedChangeListener // Skip non user initiated changes
-            val destination =
-                !children.all { it.isChecked } // turn clear or mixed state to all checked
-            children.forEach { it.isChecked = destination }
-            updateParents()
-        }
-        children.forEach { it.setOnCheckedChangeListener { _, _ -> updateParents() } }
-    }
-
-    // Run the dialog
-    MaterialAlertDialogBuilder(activity)
-        .setTitle(R.string.events)
-        .setView(binding.root)
-        .setPositiveButton(R.string.accept) { _, _ ->
-            val result = checkboxToKeyPairs
-                .mapNotNull { (checkBox, key) -> if (checkBox.isChecked) key else null }.toSet()
-            activity.appPrefs.edit { putStringSet(PREF_HOLIDAY_TYPES, result) }
-        }
-        .setNegativeButton(R.string.cancel, null)
-        .show()
 }
+
+@Preview
+@Composable
+private fun HolidaysTypesDialogPreview() = HolidaysTypesDialog {}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+@VisibleForTesting
+fun CountryEvents(
+    calendarCenterName: String,
+    sourceLink: String,
+    holidaysTitle: String,
+    nonHolidaysTitle: String,
+    enabledTypes: SnapshotStateList<String>,
+    holidaysKey: String,
+    nonHolidaysKey: String,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (holidaysKey in enabledTypes && nonHolidaysKey in enabledTypes) {
+                    enabledTypes.remove(holidaysKey)
+                    enabledTypes.remove(nonHolidaysKey)
+                } else {
+                    if (holidaysKey !in enabledTypes) enabledTypes.add(holidaysKey)
+                    if (nonHolidaysKey !in enabledTypes) enabledTypes.add(nonHolidaysKey)
+                }
+            }
+            .defaultMinSize(minHeight = HolidaysSettingsItemHeight.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TriStateCheckbox(
+            state = when {
+                holidaysKey in enabledTypes && nonHolidaysKey in enabledTypes -> ToggleableState.On
+
+                holidaysKey in enabledTypes || nonHolidaysKey in enabledTypes -> ToggleableState.Indeterminate
+
+                else -> ToggleableState.Off
+            },
+            onClick = null,
+            modifier = Modifier
+                .padding(start = SettingsHorizontalPaddingItem.dp)
+                .align(Alignment.CenterVertically),
+        )
+        Spacer(modifier = Modifier.width(HolidaysHorizontalPaddingItem.dp))
+        FlowRow(verticalArrangement = Arrangement.Center) {
+            Text(calendarCenterName, modifier = Modifier.align(Alignment.CenterVertically))
+            val context = LocalContext.current
+            if (sourceLink.isNotEmpty()) {
+                Text(spacedComma)
+                ClickableText(
+                    AnnotatedString(stringResource(R.string.view_source)),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline
+                    ),
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                ) {
+                    runCatching {
+                        CustomTabsIntent.Builder().build().launchUrl(context, sourceLink.toUri())
+                    }.onFailure(logException)
+                }
+            }
+        }
+    }
+    IndentedCheckBox(holidaysTitle, enabledTypes, holidaysKey)
+    IndentedCheckBox(nonHolidaysTitle, enabledTypes, nonHolidaysKey)
+}
+
+@Composable
+private fun IndentedCheckBox(
+    label: String,
+    enabledTypes: SnapshotStateList<String>,
+    key: String,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (key in enabledTypes) enabledTypes.remove(key) else enabledTypes.add(key)
+            }
+            .defaultMinSize(minHeight = HolidaysSettingsItemHeight.dp)
+            .padding(
+                start = (24/*checkbox size*/ + HolidaysHorizontalPaddingItem + SettingsHorizontalPaddingItem).dp,
+                end = HolidaysHorizontalPaddingItem.dp,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(key in enabledTypes, onCheckedChange = null)
+        Spacer(modifier = Modifier.width(HolidaysHorizontalPaddingItem.dp))
+        Text(label)
+    }
+}
+
+private const val HolidaysSettingsItemHeight = 40
+private const val HolidaysHorizontalPaddingItem = 16

@@ -1,14 +1,15 @@
 package ir.namoo.commons
 
+import com.byagowi.persiancalendar.BuildConfig
+
 const val BASE_API_URL = "https://namoodev.ir/api/v1"
 
-const val appLink = "\r\n https://namoodev.ir/pt"//namoo.ir
-
-//const val appLink = "\r\n https://zaya.io/deft7"//cafebazar
-//const val appLink="\r\n https://zaya.io/62dnv"//myket
-//const val appLink = "\r\n https://zaya.io/jkebd"//charkhoneh
-const val TAG = "NAMOO"
-const val NAVIGATE_TO_DOWNLOAD_FRAGMENT = "ir.namoo.srp.download"
+val APP_LINK = when (BuildConfig.FLAVOR) {
+    "namooIR" -> "\r\n https://namoodev.ir/pt"//namoo.ir
+    "cafebazar" -> "\r\n https://zaya.io/deft7"//cafebazar
+    "myket" -> "\r\n https://zaya.io/62dnv"//myket
+    else -> "\r\n https://zaya.io/jkebd"//charkhoneh
+}
 
 const val PREF_ENABLE_EDIT = "enable_edit"
 const val PREF_SUMMER_TIME = "summer_time"

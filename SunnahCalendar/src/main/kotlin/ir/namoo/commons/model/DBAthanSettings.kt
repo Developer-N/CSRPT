@@ -91,15 +91,15 @@ abstract class AthanSettingsDB : RoomDatabase() {
         }
 
         private val MIGRATION_5_6: Migration = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE athans_settings ADD COLUMN is_after_enabled INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE athans_settings ADD COLUMN after_minute INTEGER NOT NULL DEFAULT 10")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE athans_settings ADD COLUMN is_after_enabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE athans_settings ADD COLUMN after_minute INTEGER NOT NULL DEFAULT 10")
             }
         }
         private val Migration_6_7: Migration = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE athans_settings ADD COLUMN is_silent_enabled INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE athans_settings ADD COLUMN silent_minute INTEGER NOT NULL DEFAULT 20")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE athans_settings ADD COLUMN is_silent_enabled INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE athans_settings ADD COLUMN silent_minute INTEGER NOT NULL DEFAULT 20")
             }
         }
     }

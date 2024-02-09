@@ -10,20 +10,25 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -32,22 +37,29 @@ fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
     val translates by viewModel.translates.collectAsState()
     val fullFarsi by viewModel.isFullFarsiEnabled.collectAsState()
     val isKurdishEnabled by viewModel.isKurdishEnabled.collectAsState()
-
-    Card(
+    var showReorderDialog by remember { mutableStateOf(false) }
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
+            .padding(4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(4.dp)
-        ) {
-            Text(
-                text = stringResource(id = R.string.select_translates),
-                fontFamily = FontFamily(appFont),
-                fontSize = 16.sp
-            )
+        Column(modifier = Modifier.padding(4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.weight(4f),
+                    text = stringResource(id = R.string.select_translates), fontSize = 16.sp
+                )
+                IconButton(modifier = Modifier.weight(1f), onClick = { showReorderDialog = true }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.Sort,
+                        contentDescription = "Sort",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
 
             //Farsi Translate
             translates.find { it.id == 1 }?.let {
@@ -88,15 +100,16 @@ fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     translates.filter { it.id > 2 }.forEach { item ->
-                        MySwitchBox(checked = item.isActive,
-                            label = item.name,
-                            onCheckChanged = {
-                                viewModel.updateSetting(item.apply {
-                                    isActive = it
-                                })
+                        MySwitchBox(checked = item.isActive, label = item.name, onCheckChanged = {
+                            viewModel.updateSetting(item.apply {
+                                isActive = it
                             })
+                        })
                     }
                 }
+            }
+            AnimatedVisibility(visible = showReorderDialog) {
+                ReorderTranslates(onDismiss = { showReorderDialog = false })
             }
         }
     }

@@ -15,11 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
 
 @Composable
 fun LoadingUIElement() {
@@ -43,8 +41,7 @@ fun LoadingUIElement() {
                 .padding(4.dp)
                 .fillMaxWidth(),
             textAlign = TextAlign.Center,
-            text = stringResource(id = R.string.loading),
-            fontFamily = FontFamily(appFont)
+            text = stringResource(id = R.string.loading)
         )
     }
 }

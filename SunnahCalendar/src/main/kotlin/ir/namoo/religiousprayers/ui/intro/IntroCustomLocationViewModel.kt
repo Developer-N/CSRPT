@@ -116,7 +116,7 @@ class IntroCustomLocationViewModel(
                                 _latitude.value = l.latitude.toString()
                                 _longitude.value = l.longitude.toString()
 
-                                val geocoder = Geocoder(context, language.asSystemLocale())
+                                val geocoder = Geocoder(context, language.value.asSystemLocale())
 
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) geocoder.getFromLocation(
                                     l.latitude,

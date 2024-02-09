@@ -55,15 +55,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.colorAppBar
-import ir.namoo.commons.utils.colorOnAppBar
 import ir.namoo.commons.utils.isNetworkConnected
 import org.koin.androidx.compose.koinViewModel
 
@@ -146,9 +142,9 @@ fun IntroHomeScreen(
                         .clickable {
                             isNetworkConnected = isNetworkConnected(context)
                         },
-                    text = stringResource(id = R.string.network_error_message) + "\n"
-                            + stringResource(id = R.string.recheck),
-                    fontFamily = FontFamily(appFont),
+                    text = stringResource(id = R.string.network_error_message) + "\n" + stringResource(
+                        id = R.string.recheck
+                    ),
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize
@@ -177,10 +173,10 @@ fun IntroHomeTabs(
     tabSelected: IntroScreen,
     onTabSelected: (IntroScreen) -> Unit
 ) {
+    val colorOnAppBar = MaterialTheme.colorScheme.onPrimary
     TabRow(selectedTabIndex = tabSelected.ordinal,
         modifier = modifier,
-        containerColor = colorAppBar,
-        contentColor = colorOnAppBar,
+        containerColor = MaterialTheme.colorScheme.primary,
         indicator = { tabPositions: List<TabPosition> ->
             Box(
                 Modifier
@@ -208,13 +204,12 @@ fun IntroHomeTabs(
             val selected = index == tabSelected.ordinal
             Tab(modifier = Modifier
                 .padding(top = 35.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
-                .clip(MaterialTheme.shapes.extraLarge),
-                selected = selected,
-                onClick = {
-                    onTabSelected(IntroScreen.values()[index])
-                }) {
+                .clip(MaterialTheme.shapes.extraLarge), selected = selected, onClick = {
+                onTabSelected(IntroScreen.entries[index])
+            }) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp, vertical = 8.dp),
                     verticalAlignment = CenterVertically
                 ) {
                     AnimatedVisibility(
@@ -226,7 +221,7 @@ fun IntroHomeTabs(
                             modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
                             text = title.first,
                             fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            fontFamily = FontFamily(appFont)
+                            color = colorOnAppBar
                         )
                     }
                     Icon(

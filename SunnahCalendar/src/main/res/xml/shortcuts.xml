@@ -47,20 +47,6 @@
 
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/sc_converter"
-        android:shortcutId="CONVERTER"
-        android:shortcutLongLabel="@string/date_converter"
-        android:shortcutShortLabel="@string/date_converter">
-
-        <intent
-            android:action="CONVERTER"
-            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
-            android:targetPackage="ir.namoo.religiousprayers" />
-
-    </shortcut>
-
-    <shortcut
-        android:enabled="true"
         android:icon="@drawable/sc_level"
         android:shortcutId="LEVEL"
         android:shortcutLongLabel="@string/level"
@@ -68,6 +54,20 @@
 
         <intent
             android:action="LEVEL"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_converter"
+        android:shortcutId="CONVERTER"
+        android:shortcutLongLabel="@string/converter"
+        android:shortcutShortLabel="@string/converter">
+
+        <intent
+            android:action="CONVERTER"
             android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
             android:targetPackage="ir.namoo.religiousprayers" />
 

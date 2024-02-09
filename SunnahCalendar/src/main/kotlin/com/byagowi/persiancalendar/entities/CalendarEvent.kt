@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.entities
 
+import com.byagowi.persiancalendar.global.language
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
@@ -23,9 +24,29 @@ sealed class CalendarEvent<T : AbstractDate>(
         CalendarEvent<NepaliDate>(title, isHoliday, date)
 
     class DeviceCalendarEvent(
-        date: CivilDate, title: String, isHoliday: Boolean, val id: Int, val description: String,
-        val start: Date, val end: Date, val color: String
+        date: CivilDate, title: String, isHoliday: Boolean, val id: Long, val description: String,
+        val start: Date, val end: Date, val color: String, val time: String?,
     ) : CalendarEvent<CivilDate>(title, isHoliday, date)
+
+    val oneLinerTitleWithTime
+        get() = when (this) {
+            is DeviceCalendarEvent -> if (time == null) title else {
+                language.value.inParentheses.format(title, time)
+            }
+
+            else -> title
+        }
+
+    val formattedTitle
+        get() = when (this) {
+            is GregorianCalendarEvent,
+            is IslamicCalendarEvent,
+            is PersianCalendarEvent,
+            is NepaliCalendarEvent -> title
+
+            is DeviceCalendarEvent -> oneLinerTitleWithTime +
+                    if (description.isNotBlank()) "$title ($description)" else ""
+        }
 
     override fun equals(other: Any?): Boolean {
         return other is CalendarEvent<*>

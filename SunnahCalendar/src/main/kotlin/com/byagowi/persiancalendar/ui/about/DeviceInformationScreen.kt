@@ -1,15 +1,8 @@
 package com.byagowi.persiancalendar.ui.about
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+import android.app.Activity
 import android.app.ActivityManager
-import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapShader
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Shader
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.opengl.EGL14
@@ -18,47 +11,69 @@ import android.opengl.GLES10
 import android.opengl.GLES20
 import android.os.BatteryManager
 import android.os.Build
-import android.os.Bundle
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.util.AttributeSet
 import android.view.InputDevice
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import androidx.annotation.ColorInt
-import androidx.browser.customtabs.CustomTabsIntent
+import android.view.RoundedCorner
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.Motorcycle
+import androidx.compose.material.icons.filled.PermDeviceInformation
+import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
-import androidx.core.graphics.applyCanvas
-import androidx.core.graphics.createBitmap
-import androidx.core.net.toUri
-import androidx.core.text.buildSpannedString
-import androidx.core.text.inSpans
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.DeviceInformationItemBinding
-import com.byagowi.persiancalendar.databinding.DeviceInformationScreenBinding
-import com.byagowi.persiancalendar.ui.utils.copyToClipboard
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
-import com.byagowi.persiancalendar.ui.utils.layoutInflater
-import com.byagowi.persiancalendar.ui.utils.onClick
+import com.byagowi.persiancalendar.ui.common.AppIconButton
+import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.getActivity
+import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
-import com.byagowi.persiancalendar.ui.utils.setupUpNavigation
 import com.byagowi.persiancalendar.ui.utils.shareTextFile
 import com.byagowi.persiancalendar.utils.logException
-import com.google.android.material.circularreveal.CircularRevealCompat
-import com.google.android.material.circularreveal.CircularRevealWidget
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.html.body
 import kotlinx.html.h1
 import kotlinx.html.head
@@ -74,126 +89,146 @@ import kotlinx.html.thead
 import kotlinx.html.tr
 import kotlinx.html.unsafe
 import java.util.Locale
-import kotlin.math.hypot
 
-/**
- * @author MEHDI DIMYADI
- * MEHDIMYADI
- */
-class DeviceInformationScreen : Fragment(R.layout.device_information_screen) {
+@Preview
+@Composable
+private fun DeviceInformationScreenPreview() = DeviceInformationScreen {}
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val binding = DeviceInformationScreenBinding.bind(view)
-        binding.toolbar.setTitle(R.string.device_information)
-        binding.toolbar.setupUpNavigation()
-
-        binding.root.circularRevealFromMiddle()
-
-        binding.recyclerView.let {
-            it.setHasFixedSize(true)
-            it.layoutManager = LinearLayoutManager(view.context)
-            it.addItemDecoration(
-                DividerItemDecoration(view.context, LinearLayoutManager.VERTICAL)
-            )
-            val adapter = DeviceInformationAdapter(activity ?: return@let)
-            it.adapter = adapter
-            binding.toolbar.menu.add(R.string.share).also { menu ->
-                menu.icon = binding.toolbar.context.getCompatDrawable(R.drawable.ic_baseline_share)
-                menu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            }.onClick {
-                activity?.shareTextFile(
-                    adapter.asHtml(),
-                    "device.html",
-                    "text/html"
-                )
-            }
-            binding.toolbar.menu.add("Print").also { menu ->
-                menu.setIcon(R.drawable.ic_print)
-                menu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            }.onClick { context?.openHtmlInBrowser(adapter.asHtml()) }
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun DeviceInformationScreen(navigateUp: () -> Unit) {
+    val scrollBehavior = exitUntilCollapsedScrollBehavior()
+    Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) {
+        val context = LocalContext.current
+        val items = remember {
+            createItemsList(context.getActivity() ?: return@remember emptyList())
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.toolbar.menu.add("Game").also {
-                it.icon = binding.toolbar.context.getCompatDrawable(R.drawable.ic_esports)
-                it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            }.onClick {
-                runCatching {
-                    startActivity(
-                        Intent(Intent.ACTION_MAIN).setClassName(
-                            "com.android.systemui", "com.android.systemui.egg.MLandActivity"
-                        ).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-                }.onFailure(logException).onFailure {
-                    Snackbar.make(
-                        binding.root,
-                        R.string.device_does_not_support,
-                        Snackbar.LENGTH_SHORT
-                    ).show()
+        LargeTopAppBar(
+            scrollBehavior = scrollBehavior,
+            title = { Text(stringResource(R.string.device_information)) },
+            colors = appTopAppBarColors(),
+            navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
+            actions = {
+                AppIconButton(
+                    icon = Icons.Default.Share,
+                    title = stringResource(R.string.share),
+                ) { context.shareTextFile(generateHtmlReport(items), "device.html", "text/html") }
+                AppIconButton(
+                    icon = Icons.Default.Print,
+                    title = "Print",
+                ) { context.openHtmlInBrowser(generateHtmlReport(items)) }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AppIconButton(
+                    icon = Icons.Default.SportsEsports,
+                    title = "Game",
+                ) {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_MAIN).setClassName(
+                                "com.android.systemui",
+                                "com.android.systemui.egg.MLandActivity"
+                            ).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }.onFailure(logException).onFailure {
+                        Toast.makeText(
+                            context, R.string.device_does_not_support, Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            },
+        )
+        Surface(shape = materialCornerExtraLargeTop()) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                LazyColumn {
+                    item { Spacer(Modifier.height(16.dp)) }
+                    item { OverviewTopBar(Modifier.padding(horizontal = 16.dp)) }
+                    itemsIndexed(items) { i, item ->
+                        if (i > 0) HorizontalDivider(
+                            Modifier.padding(horizontal = 20.dp),
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = .5f)
+                        )
+                        Column(Modifier.padding(vertical = 4.dp, horizontal = 24.dp)) {
+                            Text(item.title, fontWeight = FontWeight.Bold)
+                            Row {
+                                SelectionContainer { Text(item.content.toString()) }
+                                Spacer(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth(),
+                                )
+                                Text(item.version)
+                            }
+                        }
+                    }
+                    item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
                 }
             }
         }
+    }
+}
 
-        binding.bottomNavigation.menu.also {
-            listOf(
-                Triple(R.drawable.ic_developer, Build.VERSION.RELEASE, ::showHiddenUiDialog),
+@Composable
+private fun OverviewTopBar(modifier: Modifier = Modifier) {
+    var showScheduleDialog by rememberSaveable { mutableStateOf(false) }
+    if (showScheduleDialog) ScheduleAlarm { showScheduleDialog = false }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+        val keyItems = remember {
+            listOf<Triple<ImageVector, String, (ComponentActivity) -> Unit>>(
+                Triple(Icons.Default.Android, Build.VERSION.RELEASE) { showScheduleDialog = true },
                 Triple(
-                    R.drawable.ic_settings,
-                    "API " + Build.VERSION.SDK_INT,
-                    ::showSensorTestDialog
+                    Icons.Default.Settings, "API " + Build.VERSION.SDK_INT, ::showSensorTestDialog
                 ),
                 Triple(
-                    R.drawable.ic_motorcycle,
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) Build.SUPPORTED_ABIS[0]
-                    else @Suppress("DEPRECATION") Build.CPU_ABI,
-                    ::showInputDeviceTestDialog
+                    Icons.Default.Motorcycle, Build.SUPPORTED_ABIS[0], ::showInputDeviceTestDialog
                 ),
                 Triple(
-                    R.drawable.ic_device_information_white,
-                    Build.MODEL,
-                    ::showColorPickerDialog
+                    Icons.Default.PermDeviceInformation, Build.MODEL, ::showColorPickerDialog
                 ),
-            ).forEach { (icon, title, dialog) ->
-                val clickHandler = createEasterEggClickHandler(dialog)
-                it.add(title).setIcon(icon).onClick { clickHandler(activity) }
-            }
+            )
         }
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            binding.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-            }
-            binding.bottomNavigation.updatePadding(bottom = insets.bottom)
-            binding.recyclerView.updatePadding(bottom = insets.bottom)
-            WindowInsetsCompat.CONSUMED
+        var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+        keyItems.forEachIndexed { i, (icon, title, action) ->
+            val context = LocalContext.current
+            val clickHandler = remember { createEasterEggClickHandler(action) }
+            NavigationRailItem(
+                selected = i == selectedIndex,
+                onClick = {
+                    selectedIndex = i
+                    clickHandler(context.getActivity())
+                },
+                label = { Text(title) },
+                icon = {
+                    Icon(
+                        modifier = Modifier.padding(start = 8.dp, end = 4.dp),
+                        imageVector = icon,
+                        contentDescription = stringResource(R.string.help),
+                    )
+                },
+            )
         }
     }
 }
 
 // https://stackoverflow.com/a/52557989
-fun <T> T.circularRevealFromMiddle() where T : View?, T : CircularRevealWidget {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return
-    post {
-        val viewWidth = width
-        val viewHeight = height
-        val diagonal = hypot(viewWidth.toDouble(), viewHeight.toDouble()).toInt()
-        AnimatorSet().also {
-            it.playTogether(
-                CircularRevealCompat.createCircularReveal(
-                    this, viewWidth / 2f, viewHeight / 2f, 10f, diagonal / 2f
-                ),
-                ObjectAnimator.ofArgb(
-                    this,
-                    CircularRevealWidget.CircularRevealScrimColorProperty.CIRCULAR_REVEAL_SCRIM_COLOR,
-                    Color.GRAY, Color.TRANSPARENT
-                )
-            )
-            it.duration = 500
-        }.start()
-    }
-}
+//fun <T> T.circularRevealFromMiddle() where T : View?, T : CircularRevealWidget {
+//    post {
+//        val viewWidth = width
+//        val viewHeight = height
+//        val diagonal = hypot(viewWidth.toDouble(), viewHeight.toDouble()).toInt()
+//        AnimatorSet().also {
+//            it.playTogether(
+//                CircularRevealCompat.createCircularReveal(
+//                    this, viewWidth / 2f, viewHeight / 2f, 10f, diagonal / 2f
+//                ),
+//                ObjectAnimator.ofArgb(
+//                    this,
+//                    CircularRevealWidget.CircularRevealScrimColorProperty.CIRCULAR_REVEAL_SCRIM_COLOR,
+//                    Color.GRAY, Color.TRANSPARENT
+//                )
+//            )
+//            it.duration = resources.getInteger(android.R.integer.config_longAnimTime).toLong()
+//        }.start()
+//    }
+//}
 
 // @Language("AGSL")
 // private const val demoRuntimeShader = """
@@ -219,53 +254,51 @@ fun <T> T.circularRevealFromMiddle() where T : View?, T : CircularRevealWidget {
 // }
 // """
 
-class CheckerBoard(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val checkerBoard = createCheckerRoundedBoard(40f, 8f, Color.parseColor("#100A0A0A"))
-    // private val startTime = System.nanoTime()
-    // private val shader by lazy(LazyThreadSafetyMode.NONE) {
-    //     runCatching {
-    //         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@runCatching null
-    //         RuntimeShader(demoRuntimeShader).also {
-    //             val width = context.resources?.displayMetrics?.widthPixels?.toFloat() ?: 800f
-    //             val height = context.resources?.displayMetrics?.heightPixels?.toFloat() ?: 800f
-    //             it.setFloatUniform("iResolution", width, height)
-    //         }
-    //     }.onFailure(logException).getOrNull().debugAssertNotNull
-    // }
-    // private val shaderPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-    //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    //         it.shader = shader
-    //     }
-    // }
-
-    override fun onDraw(canvas: Canvas) {
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        //     shader?.setFloatUniform("iTime", (System.nanoTime() - startTime) / 1e9f)
-        //     canvas.drawPaint(shaderPaint)
-        //     invalidate()
-        // } else
-        canvas.drawPaint(checkerBoard)
-    }
-}
+//class CheckerBoard(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+//    private val checkerBoard = createCheckerRoundedBoard(40f, 8f, Color.parseColor("#100A0A0A"))
+//    // private val startTime = System.nanoTime()
+//    // private val shader by lazy(LazyThreadSafetyMode.NONE) {
+//    //     runCatching {
+//    //         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@runCatching null
+//    //         RuntimeShader(demoRuntimeShader).also {
+//    //             val width = context.resources?.displayMetrics?.widthPixels?.toFloat() ?: 800f
+//    //             val height = context.resources?.displayMetrics?.heightPixels?.toFloat() ?: 800f
+//    //             it.setFloatUniform("iResolution", width, height)
+//    //         }
+//    //     }.onFailure(logException).getOrNull().debugAssertNotNull
+//    // }
+//    // private val shaderPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+//    //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//    //         it.shader = shader
+//    //     }
+//    // }
+//
+//    override fun onDraw(canvas: Canvas) {
+//        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//        //     shader?.setFloatUniform("iTime", (System.nanoTime() - startTime) / 1e9f)
+//        //     canvas.drawPaint(shaderPaint)
+//        //     invalidate()
+//        // } else
+//        canvas.drawPaint(checkerBoard)
+//    }
+//}
 
 // https://stackoverflow.com/a/58471997
-@Suppress("SameParameterValue")
-private fun createCheckerRoundedBoard(
-    tileSize: Float, r: Float, @ColorInt color: Int
-) = Paint(Paint.ANTI_ALIAS_FLAG).also { paint ->
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return@also
-    val tileSize2x = tileSize.toInt() * 2
-    val fill = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.style = Paint.Style.FILL
-        it.color = color
-    }
-    val bitmap = createBitmap(tileSize2x, tileSize2x).applyCanvas {
-        drawRoundRect(0f, 0f, tileSize, tileSize, r, r, fill)
-        drawRoundRect(tileSize, tileSize, tileSize * 2f, tileSize * 2f, r, r, fill)
-    }
-    paint.shader = BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
-}
-
+//@Suppress("SameParameterValue")
+//private fun createCheckerRoundedBoard(
+//    tileSize: Float, r: Float, @ColorInt color: Int
+//) = Paint(Paint.ANTI_ALIAS_FLAG).also { paint ->
+//    val tileSize2x = tileSize.toInt() * 2
+//    val fill = Paint(Paint.ANTI_ALIAS_FLAG).also {
+//        it.style = Paint.Style.FILL
+//        it.color = color
+//    }
+//    val bitmap = createBitmap(tileSize2x, tileSize2x).applyCanvas {
+//        drawRoundRect(0f, 0f, tileSize, tileSize, r, r, fill)
+//        drawRoundRect(tileSize, tileSize, tileSize * 2f, tileSize * 2f, r, r, fill)
+//    }
+//    paint.shader = BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+//}
 
 // https://stackoverflow.com/a/68822715
 // instead android.text.format.Formatter.formatShortFileSize() to control its locale
@@ -276,243 +309,212 @@ private fun humanReadableByteCountBin(bytes: Long): String = when {
     else -> "$bytes bytes"
 }
 
-private class DeviceInformationAdapter(private val activity: FragmentActivity) :
-    ListAdapter<DeviceInformationAdapter.Item, DeviceInformationAdapter.ViewHolder>(
-        object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(old: Item, new: Item) = old.title == new.title
-            override fun areContentsTheSame(old: Item, new: Item) = old == new
-        }
-    ) {
+private data class Item(val title: String, val content: CharSequence?, val version: String = "")
 
-    data class Item(val title: String, val content: CharSequence?, val version: String = "")
-
-    private val deviceInformationItems = listOf(
-        Item(
-            "CPU Instructions Sets", (when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> Build.SUPPORTED_ABIS
-                else -> @Suppress("DEPRECATION") arrayOf(Build.CPU_ABI, Build.CPU_ABI2)
-            }).joinToString(", ")
-        ),
-        Item(
-            "Android Version", Build.VERSION.CODENAME + " " + Build.VERSION.RELEASE,
-            Build.VERSION.SDK_INT.toString()
-        ),
-        Item("Model", Build.MODEL),
-        Item("Product", Build.PRODUCT),
-        Item(
-            "Screen Resolution", activity.windowManager?.let {
-                "%d*%d pixels".format(
-                    Locale.ENGLISH,
-                    activity.resources?.displayMetrics?.widthPixels ?: 0,
-                    activity.resources?.displayMetrics?.heightPixels ?: 0
-                )
-            }, "%.1fHz".format(
-                Locale.ENGLISH, when {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> activity.display?.refreshRate
-                    else ->
-                        @Suppress("DEPRECATION")
-                        activity.windowManager?.defaultDisplay?.refreshRate
-                } ?: ""
+private fun createItemsList(activity: Activity) = listOf(
+    Item("CPU Instructions Sets", Build.SUPPORTED_ABIS.joinToString(", ")),
+    Item(
+        "Android Version", Build.VERSION.CODENAME + " " + Build.VERSION.RELEASE,
+        Build.VERSION.SDK_INT.toString()
+    ),
+    Item("Model", Build.MODEL),
+    Item("Product", Build.PRODUCT),
+    Item(
+        "Screen Resolution", activity.windowManager?.let {
+            "%d*%d pixels".format(
+                Locale.ENGLISH,
+                activity.resources?.displayMetrics?.widthPixels ?: 0,
+                activity.resources?.displayMetrics?.heightPixels ?: 0
             )
-        ),
-        Item("DPI", activity.resources?.displayMetrics?.densityDpi?.toString()),
-        Item("Available Processors", Runtime.getRuntime()?.availableProcessors()?.toString()),
-        Item("Instruction Architecture", Build.DEVICE),
-        Item("Manufacturer", Build.MANUFACTURER),
-        Item("Brand", Build.BRAND),
-        Item("Android Id", Build.ID),
-        Item("Board", Build.BOARD),
-        Item("Radio Firmware Version", Build.getRadioVersion()),
-        Item("Build User", Build.USER),
-        Item("Host", Build.HOST),
-        Item("Boot Loader", Build.BOOTLOADER),
-        Item("Device", Build.DEVICE),
-        Item("Tags", Build.TAGS),
-        Item("Hardware", Build.HARDWARE),
-        Item("Type", Build.TYPE),
-        Item("Display", Build.DISPLAY),
-        Item("Device Fingerprints", Build.FINGERPRINT),
-        Item(
-            "RAM", humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
-                activity.getSystemService<ActivityManager>()?.getMemoryInfo(it)
-            }.totalMem)
-        ),
-        Item(
-            "Battery", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                activity.getSystemService<BatteryManager>()?.let {
-                    listOf("Charging: ${it.isCharging}") + listOf(
-                        "Capacity" to BatteryManager.BATTERY_PROPERTY_CAPACITY,
-                        "Charge Counter" to BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER,
-                        "Current Avg" to BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,
-                        "Current Now" to BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,
-                        "Energy Counter" to BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER
-                    ).map { (title: String, id: Int) -> "$title: ${it.getLongProperty(id)}" }
-                }?.joinToString("\n") else ""
-        ),
-        Item("App Standby Bucket", appStandbyStatus(activity)),
-        Item("Display Metrics", activity.resources?.displayMetrics?.toString() ?: ""),
-        Item(
-            "Display Cutout", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) run {
-                val cutout = activity.window?.decorView?.rootWindowInsets?.displayCutout
-                    ?: return@run "None"
-                listOf(
-                    "Safe Inset Top" to cutout.safeInsetTop,
-                    "Safe Inset Right" to cutout.safeInsetRight,
-                    "Safe Inset Bottom" to cutout.safeInsetBottom,
-                    "Safe Inset Left" to cutout.safeInsetLeft,
-                    "Rects" to cutout.boundingRects.joinToString(",")
-                ).joinToString("\n") { (key, value) -> "$key: $value" }
-            } else "None"
-        ),
-        Item(
-            "Install Source of ${activity.packageName}", runCatching {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    activity.packageManager?.getInstallSourceInfo(activity.packageName)?.run {
-                        """
-                        |Initiating Package Name: $initiatingPackageName
-                        |Installing Package Name: $installingPackageName
-                        |Originating Package Name: $originatingPackageName
-                        |Initiating Package Signing Info: $initiatingPackageSigningInfo
-                        |Installer Package Name: ${
-                            @Suppress("DEPRECATION")
-                            activity.packageManager?.getInstallerPackageName(activity.packageName) ?: ""
-                        }
-                        """.trimMargin("|").trim()
-                    }
-                } else
+        }, "%.1fHz".format(
+            Locale.ENGLISH, when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> activity.display?.refreshRate
+                else ->
                     @Suppress("DEPRECATION")
-                    activity.packageManager?.getInstallerPackageName(activity.packageName) ?: ""
-            }.onFailure(logException).getOrNull()
-        ),
-        Item(
-            "Sensors", activity.getSystemService<SensorManager>()
-                ?.getSensorList(Sensor.TYPE_ALL)?.joinToString("\n")
-        ),
-        Item("Input Device", InputDevice.getDeviceIds().map(InputDevice::getDevice).joinToString()),
-        Item(
-            "System Features",
-            activity.packageManager?.systemAvailableFeatures?.joinToString("\n")
+                    activity.windowManager?.defaultDisplay?.refreshRate
+            } ?: ""
         )
-    ) + (runCatching {
-        // Quick Kung-fu to create gl context, https://stackoverflow.com/a/27092070
-        val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-        val versions = IntArray(2)
-        EGL14.eglInitialize(display, versions, 0, versions, 1)
-        val configAttr = intArrayOf(
-            EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER,
-            EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
-            EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE
-        )
-        val configs = arrayOfNulls<EGLConfig?>(1)
-        val configsCount = IntArray(1)
-        EGL14.eglChooseConfig(display, configAttr, 0, configs, 0, 1, configsCount, 0)
-        if (configsCount[0] != 0) {
-            val surf = EGL14.eglCreatePbufferSurface(
-                display, configs[0],
-                intArrayOf(EGL14.EGL_WIDTH, 64, EGL14.EGL_HEIGHT, 64, EGL14.EGL_NONE), 0
-            )
-            EGL14.eglMakeCurrent(
-                display, surf, surf, EGL14.eglCreateContext(
-                    display, configs[0], EGL14.EGL_NO_CONTEXT,
-                    intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE), 0
-                )
-            )
-        }
-        listOf(
-            Item(
-                "OpenGL", (listOf(
-                    "GL_VERSION" to GLES20.GL_VERSION, "GL_RENDERER" to GLES20.GL_RENDERER,
-                    "GL_VENDOR" to GLES20.GL_VENDOR
-                ).map { (title: String, id: Int) -> "$title: ${GLES20.glGetString(id)}" } + listOf(
-                    "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-                    "GL_MAX_CUBE_MAP_TEXTURE_SIZE" to GLES20.GL_MAX_CUBE_MAP_TEXTURE_SIZE,
-                    "GL_MAX_FRAGMENT_UNIFORM_VECTORS" to GLES20.GL_MAX_FRAGMENT_UNIFORM_VECTORS,
-                    "GL_MAX_RENDERBUFFER_SIZE" to GLES20.GL_MAX_RENDERBUFFER_SIZE,
-                    "GL_MAX_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_TEXTURE_IMAGE_UNITS,
-                    "GL_MAX_TEXTURE_SIZE" to GLES20.GL_MAX_TEXTURE_SIZE,
-                    "GL_MAX_VARYING_VECTORS" to GLES20.GL_MAX_VARYING_VECTORS,
-                    "GL_MAX_VERTEX_ATTRIBS" to GLES20.GL_MAX_VERTEX_ATTRIBS,
-                    "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS,
-                    "GL_MAX_VERTEX_UNIFORM_VECTORS" to GLES20.GL_MAX_VERTEX_UNIFORM_VECTORS,
-                    "GL_MAX_VIEWPORT_DIMS" to GLES20.GL_MAX_VIEWPORT_DIMS
-                ).map { (title: String, id: Int) ->
-                    val intBuffer = IntArray(1)
-                    GLES10.glGetIntegerv(id, intBuffer, 0)
-                    "$title: ${intBuffer[0]}"
-                }).joinToString("\n")
-            ),
-            Item(
-                "OpenGL Extensions", buildSpannedString {
-                    val extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS).trim().split(" ")
-                    val regex = Regex("GL_([a-zA-Z]+)_(.+)")
-                    extensions.forEachIndexed { i, it ->
-                        if (i != 0) appendLine()
-
-                        if (!regex.matches(it)) append(it)
-                        else inSpans(object : ClickableSpan() {
-                            override fun onClick(textView: View) {
-                                runCatching {
-                                    val pattern =
-                                        "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
-                                    CustomTabsIntent.Builder().build().launchUrl(
-                                        activity, it.replace(regex, pattern).toUri()
-                                    )
-                                }.onFailure(logException)
-                            }
-                        }) { append(it) }
+    ),
+    Item("DPI", activity.resources?.displayMetrics?.densityDpi?.toString()),
+    Item("Available Processors", Runtime.getRuntime()?.availableProcessors()?.toString()),
+    Item("Instruction Architecture", Build.DEVICE),
+    Item("Manufacturer", Build.MANUFACTURER),
+    Item("Brand", Build.BRAND),
+    Item("Android Id", Build.ID),
+    Item("Board", Build.BOARD),
+    Item("Radio Firmware Version", Build.getRadioVersion()),
+    Item("Build User", Build.USER),
+    Item("Host", Build.HOST),
+    Item("Boot Loader", Build.BOOTLOADER),
+    Item("Device", Build.DEVICE),
+    Item("Tags", Build.TAGS),
+    Item("Hardware", Build.HARDWARE),
+    Item("Type", Build.TYPE),
+    Item("Display", Build.DISPLAY),
+    Item("Device Fingerprints", Build.FINGERPRINT),
+    Item(
+        "RAM", humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
+            activity.getSystemService<ActivityManager>()?.getMemoryInfo(it)
+        }.totalMem)
+    ),
+    Item(
+        "Battery", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            activity.getSystemService<BatteryManager>()?.let {
+                listOf("Charging: ${it.isCharging}") + listOf(
+                    "Capacity" to BatteryManager.BATTERY_PROPERTY_CAPACITY,
+                    "Charge Counter" to BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER,
+                    "Current Avg" to BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,
+                    "Current Now" to BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,
+                    "Energy Counter" to BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER
+                ).map { (title: String, id: Int) -> "$title: ${it.getLongProperty(id)}" }
+            }?.joinToString("\n") else ""
+    ),
+    Item("App Standby Bucket", appStandbyStatus(activity)),
+    Item("Display Metrics", activity.resources?.displayMetrics?.toString() ?: ""),
+    Item(
+        "Display Cutout", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) run {
+            val cutout = activity.window?.decorView?.rootWindowInsets?.displayCutout
+                ?: return@run "None"
+            listOf(
+                "Safe Inset Top" to cutout.safeInsetTop,
+                "Safe Inset Right" to cutout.safeInsetRight,
+                "Safe Inset Bottom" to cutout.safeInsetBottom,
+                "Safe Inset Left" to cutout.safeInsetLeft,
+                "Rects" to cutout.boundingRects.joinToString(",")
+            ).joinToString("\n") { (key, value) -> "$key: $value" }
+        } else "None"
+    ),
+    Item(
+        "Display Rounded Corners", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) run {
+            val insets = activity.window?.decorView?.rootWindowInsets ?: return@run "None"
+            listOf(
+                "Top Left Corner" to RoundedCorner.POSITION_TOP_LEFT,
+                "Top Right Corner" to RoundedCorner.POSITION_TOP_RIGHT,
+                "Bottom Right Corner" to RoundedCorner.POSITION_BOTTOM_RIGHT,
+                "Bottom Left Corner" to RoundedCorner.POSITION_BOTTOM_LEFT,
+            ).joinToString("\n") { (title, id) ->
+                val corner = insets.getRoundedCorner(id) ?: return@joinToString "$title: null"
+                "$title: radius=${corner.radius} center=${corner.center}"
+            }
+        } else "None"
+    ),
+    Item(
+        "Install Source of ${activity.packageName}", runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity.packageManager?.getInstallSourceInfo(activity.packageName)?.run {
+                    """
+                    |Initiating Package Name: $initiatingPackageName
+                    |Installing Package Name: $installingPackageName
+                    |Originating Package Name: $originatingPackageName
+                    |Initiating Package Signing Info: $initiatingPackageSigningInfo
+                    |Installer Package Name: ${
+                        @Suppress("DEPRECATION")
+                        activity.packageManager?.getInstallerPackageName(activity.packageName) ?: ""
                     }
+                    """.trimMargin("|").trim()
                 }
-            )
-        )
-    }.onFailure(logException).getOrDefault(emptyList()))
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-        DeviceInformationItemBinding.inflate(parent.context.layoutInflater, parent, false)
+            } else
+                @Suppress("DEPRECATION")
+                activity.packageManager?.getInstallerPackageName(activity.packageName) ?: ""
+        }.onFailure(logException).getOrNull()
+    ),
+    Item(
+        "Sensors", activity.getSystemService<SensorManager>()
+            ?.getSensorList(Sensor.TYPE_ALL)?.joinToString("\n")
+    ),
+    Item("Input Device", InputDevice.getDeviceIds().map(InputDevice::getDevice).joinToString()),
+    Item(
+        "System Features",
+        activity.packageManager?.systemAvailableFeatures?.joinToString("\n")
     )
+) + (runCatching {
+    // Quick Kung-fu to create gl context, https://stackoverflow.com/a/27092070
+    val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
+    val versions = IntArray(2)
+    EGL14.eglInitialize(display, versions, 0, versions, 1)
+    val configAttr = intArrayOf(
+        EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER,
+        EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+        EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE
+    )
+    val configs = arrayOfNulls<EGLConfig?>(1)
+    val configsCount = IntArray(1)
+    EGL14.eglChooseConfig(display, configAttr, 0, configs, 0, 1, configsCount, 0)
+    if (configsCount[0] != 0) {
+        val surf = EGL14.eglCreatePbufferSurface(
+            display, configs[0],
+            intArrayOf(EGL14.EGL_WIDTH, 64, EGL14.EGL_HEIGHT, 64, EGL14.EGL_NONE), 0
+        )
+        EGL14.eglMakeCurrent(
+            display, surf, surf, EGL14.eglCreateContext(
+                display, configs[0], EGL14.EGL_NO_CONTEXT,
+                intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE), 0
+            )
+        )
+    }
+    listOf(
+        Item(
+            "OpenGL", (listOf(
+                "GL_VERSION" to GLES20.GL_VERSION, "GL_RENDERER" to GLES20.GL_RENDERER,
+                "GL_VENDOR" to GLES20.GL_VENDOR
+            ).map { (title: String, id: Int) -> "$title: ${GLES20.glGetString(id)}" } + listOf(
+                "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+                "GL_MAX_CUBE_MAP_TEXTURE_SIZE" to GLES20.GL_MAX_CUBE_MAP_TEXTURE_SIZE,
+                "GL_MAX_FRAGMENT_UNIFORM_VECTORS" to GLES20.GL_MAX_FRAGMENT_UNIFORM_VECTORS,
+                "GL_MAX_RENDERBUFFER_SIZE" to GLES20.GL_MAX_RENDERBUFFER_SIZE,
+                "GL_MAX_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_TEXTURE_IMAGE_UNITS,
+                "GL_MAX_TEXTURE_SIZE" to GLES20.GL_MAX_TEXTURE_SIZE,
+                "GL_MAX_VARYING_VECTORS" to GLES20.GL_MAX_VARYING_VECTORS,
+                "GL_MAX_VERTEX_ATTRIBS" to GLES20.GL_MAX_VERTEX_ATTRIBS,
+                "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS" to GLES20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS,
+                "GL_MAX_VERTEX_UNIFORM_VECTORS" to GLES20.GL_MAX_VERTEX_UNIFORM_VECTORS,
+                "GL_MAX_VIEWPORT_DIMS" to GLES20.GL_MAX_VIEWPORT_DIMS
+            ).map { (title: String, id: Int) ->
+                val intBuffer = IntArray(1)
+                GLES10.glGetIntegerv(id, intBuffer, 0)
+                "$title: ${intBuffer[0]}"
+            }).joinToString("\n")
+        ),
+        Item(
+            "OpenGL Extensions", buildAnnotatedString {
+                val extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS).trim().split(" ")
+                val regex = Regex("GL_([a-zA-Z]+)_(.+)")
+                extensions.forEachIndexed { i, it ->
+                    if (i != 0) appendLine()
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
+                    if (!regex.matches(it)) append(it)
+                    else append(it) // TODO: Make this clickable
+                    // runCatching {
+                    //     val pattern =
+                    //         "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
+                    //     CustomTabsIntent.Builder().build().launchUrl(
+                    //         activity, it.replace(regex, pattern).toUri()
+                    //     )
+                    // }.onFailure(logException)
+                }
+            }
+        )
+    )
+}.onFailure(logException).getOrDefault(emptyList()))
 
-    override fun getItemCount() = deviceInformationItems.size
-
-    fun asHtml() = createHTML().html {
-        head {
-            meta(charset = "utf8")
-            style { unsafe { +"td { padding: .5em; border-top: 1px solid lightgray }" } }
-        }
-        body {
-            h1 { +"Device Information" }
-            table {
-                thead { tr { th { +"Item" }; th { +"Value" } } }
-                tbody {
-                    deviceInformationItems.forEach {
-                        tr {
-                            th { +(it.title + if (it.version.isEmpty()) "" else " (${it.version})") }
-                            th { +it.content.toString() }
-                        }
+private fun generateHtmlReport(items: List<Item>) = createHTML().html {
+    head {
+        meta(charset = "utf8")
+        style { unsafe { +"td { padding: .5em; border-top: 1px solid lightgray }" } }
+    }
+    body {
+        h1 { +"Device Information" }
+        table {
+            thead { tr { th { +"Item" }; th { +"Value" } } }
+            tbody {
+                items.forEach {
+                    tr {
+                        th { +(it.title + if (it.version.isEmpty()) "" else " (${it.version})") }
+                        th { +it.content.toString() }
                     }
                 }
             }
-            script { unsafe { +"print()" } }
         }
-    }
-
-    inner class ViewHolder(private val binding: DeviceInformationItemBinding) :
-        RecyclerView.ViewHolder(binding.root), View.OnClickListener {
-
-        init {
-            binding.root.setOnClickListener(this)
-        }
-
-        fun bind(position: Int) {
-            deviceInformationItems[position].also {
-                binding.title.text = it.title
-                binding.content.text = it.content ?: "Unknown"
-                binding.version.text = it.version
-            }
-            binding.content.movementMethod = LinkMovementMethod.getInstance()
-        }
-
-        override fun onClick(v: View?) =
-            activity.copyToClipboard(deviceInformationItems[bindingAdapterPosition].content)
+        script { unsafe { +"print()" } }
     }
 }

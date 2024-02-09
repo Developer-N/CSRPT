@@ -1,9 +1,6 @@
 package ir.namoo.quran.chapters
 
 import android.annotation.SuppressLint
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.namoo.quran.chapters.data.ChapterEntity
@@ -45,7 +42,8 @@ class ChapterViewModel(
     private val _lastVisitedList = MutableStateFlow(emptyList<LastVisitedEntity>())
     val lastVisitedList = _lastVisitedList.asStateFlow()
 
-    var searchBarState by mutableStateOf(SearchBarState.CLOSED)
+    private val _isSearchBarOpen = MutableStateFlow(false)
+    val isSearchBarOpen = _isSearchBarOpen.asStateFlow()
 
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
@@ -168,5 +166,13 @@ class ChapterViewModel(
 
     suspend fun getHizb(hizb: Int): HizbEntity {
         return chapterRepository.getHizb(hizb)
+    }
+
+    fun openSearchBar() {
+        _isSearchBarOpen.value = true
+    }
+
+    fun closeSearchBar() {
+        _isSearchBarOpen.value = false
     }
 }//end of class ChapterViewModel

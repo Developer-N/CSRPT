@@ -1,49 +1,43 @@
 package ir.namoo.quran.sura
 
 import android.content.ComponentName
-import android.content.ContentResolver
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
+import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import androidx.navigation.NavController
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.digitsOf
-import ir.namoo.quran.chapters.SearchBarState
 import ir.namoo.quran.chapters.data.ChapterEntity
 import ir.namoo.quran.db.FileDownloadEntity
 import ir.namoo.quran.db.FileDownloadRepository
 import ir.namoo.quran.db.LastVisitedRepository
 import ir.namoo.quran.download.QuranDownloader
-import ir.namoo.quran.player.PlayerService
+import ir.namoo.quran.player.QuranPlayerService
+import ir.namoo.quran.player.getPlayList
 import ir.namoo.quran.qari.QariEntity
 import ir.namoo.quran.qari.QariRepository
-import ir.namoo.quran.qari.getQariLocalPhotoFile
 import ir.namoo.quran.settings.data.QuranSettingRepository
 import ir.namoo.quran.sura.data.QuranEntity
 import ir.namoo.quran.sura.data.QuranRepository
 import ir.namoo.quran.sura.data.TafsirEntity
 import ir.namoo.quran.sura.data.TranslateItem
 import ir.namoo.quran.sura.data.TranslateType
-import ir.namoo.quran.utils.DEFAULT_PLAY_TYPE
+import ir.namoo.quran.utils.DEFAULT_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.DEFAULT_SELECTED_QARI
 import ir.namoo.quran.utils.DEFAULT_TRANSLATE_TO_PLAY
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
-import ir.namoo.quran.utils.PREF_PLAY_TYPE
+import ir.namoo.quran.utils.PREF_IS_SURA_VIEW_IS_OPEN
+import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.PREF_SELECTED_QARI
 import ir.namoo.quran.utils.PREF_TRANSLATE_TO_PLAY
 import ir.namoo.quran.utils.getAyaFileName
@@ -61,7 +55,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.ZipFile
 import java.io.File
 
 class SuraViewModel(
@@ -73,7 +66,8 @@ class SuraViewModel(
     private val downloadRepository: FileDownloadRepository,
     private val lastVisitedRepository: LastVisitedRepository
 ) : ViewModel() {
-    var searchBarState by mutableStateOf(SearchBarState.CLOSED)
+    private val _isSearchBarOpen = MutableStateFlow(false)
+    val isSearchBarOpen = _isSearchBarOpen.asStateFlow()
 
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
@@ -99,9 +93,15 @@ class SuraViewModel(
     private val _lastVisitedAya = MutableStateFlow(0)
     private val lastVisitedAya = _lastVisitedAya.asStateFlow()
 
-    fun loadDate(sura: Int) {
+    private val _sura = MutableStateFlow(1)
+    val sura = _sura.asStateFlow()
+
+    private var _navController: NavController? = null
+    fun loadDate(sura: Int, navController: NavController) {
         viewModelScope.launch {
             _isLoading.value = true
+            _navController = navController
+            _sura.value = sura
             _chapter.value = quranRepository.getChapter(sura)
             _quranList.value = quranRepository.getQuran(sura)
             _tafsirs.value = quranRepository.getTafsir(sura)
@@ -198,7 +198,7 @@ class SuraViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _query.update { query }
-            if (query.isDigitsOnly()) {
+            if (query.isNotEmpty() && query.isDigitsOnly()) {
                 _isLoading.value = false
                 return@launch
             }
@@ -246,11 +246,11 @@ class SuraViewModel(
             _isLoading.value = true
             runCatching {
                 val sessionToken =
-                    SessionToken(context, ComponentName(context, PlayerService::class.java))
+                    SessionToken(context, ComponentName(context, QuranPlayerService::class.java))
                 mediaController = MediaController.Builder(context, sessionToken).buildAsync()
                 mediaController.addListener({
                     controller = mediaController.get()
-                    initController()
+                    initController(context)
                 }, MoreExecutors.directExecutor())
 
                 loadFolders(context, getAyaFileName(1, 1))
@@ -290,7 +290,7 @@ class SuraViewModel(
     fun updatePlayingAya(aya: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            if (searchBarState == SearchBarState.CLOSED) _playingAya.value = aya
+            if (!isSearchBarOpen.value) _playingAya.value = aya
             else _playingAya.value = 0
             _isLoading.value = false
         }
@@ -306,13 +306,24 @@ class SuraViewModel(
             }
             if (controller.isPlaying) controller.stop()
             if (controller.mediaItemCount > 0) controller.clearMediaItems()
-            controller.addMediaItems(getPlayList(context, sura, aya))
+            controller.addMediaItems(
+                getPlayList(
+                    context,
+                    sura,
+                    aya,
+                    folderName,
+                    translateFolderName,
+                    _qariList.value,
+                    chapter.value
+                )
+            )
             controller.prepare()
             controller.play()
+            _playingSura.value = sura
         }
     }
 
-    private fun initController() {
+    private fun initController(context: Context) {
         controller.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
@@ -331,226 +342,21 @@ class SuraViewModel(
                 super.onPlaybackStateChanged(playbackState)
                 if (playbackState == Player.STATE_ENDED) {
                     updatePlayingAya(0)
-                    controller.stop()
+                    if (prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)) {
+                        if (_playingSura.value == sura.value)
+                            _navController?.navigate("sura/${if (_playingSura.value == 114) 1 else (_playingSura.value + 1)}/1?play=true") {
+                                popUpTo("chapters")
+                            }
+                        else
+                            onPlay(
+                                context,
+                                if (_playingSura.value == 114) 1 else (_playingSura.value + 1),
+                                1
+                            )
+                    } else controller.stop()
                 }
             }
         })
-    }
-
-    private fun getPlayList(context: Context, sura: Int, aya: Int): List<MediaItem> {
-        val result = mutableListOf<MediaItem>()
-        val playType = prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE)
-        val q = _qariList.value.find { folderName.contains(it.folderName) }
-        val t = _qariList.value.find { translateFolderName.contains(it.folderName) }
-        if ((sura != 1 && sura != 9) && aya == 1 && prefs.getInt(
-                PREF_PLAY_TYPE,
-                DEFAULT_PLAY_TYPE
-            ) != 3
-        ) {
-            result.add(
-                MediaItem.Builder().setMediaMetadata(
-                    MediaMetadata.Builder().setTitle(
-                        " 📖 " + context.getString(R.string.str_bismillah) + " 📖 " + formatNumber(
-                            sura
-                        ) + "|" + formatNumber(1)
-                    ).setArtist(q?.name)
-                        .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri())
-                        .build()
-                ).setUri(
-                    when {
-                        File(
-                            "$folderName/" + getAyaFileName(
-                                sura,
-                                0
-                            )
-                        ).exists() -> ("$folderName/" + getAyaFileName(sura, 0)).toUri()
-
-                        File(
-                            "$folderName/" + getAyaFileName(
-                                1,
-                                1
-                            )
-                        ).exists() -> ("$folderName/" + getAyaFileName(1, 1)).toUri()
-
-                        else -> (ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.resources.getResourcePackageName(
-                            R.raw.bismillah
-                        ) + "/" + context.resources.getResourceTypeName(R.raw.bismillah) + "/" + context.resources.getResourceEntryName(
-                            R.raw.bismillah
-                        )).toUri()
-                    }
-                ).build()
-            )
-        }
-
-        for (i in aya..(chapter.value?.ayaCount ?: aya)) {
-            val title =
-                " 📖 " + chapter.value?.nameArabic + " 📖 " + formatNumber(sura) + " | " + formatNumber(
-                    i
-                )
-            when (playType) {
-                1 -> {
-                    result.add(
-                        MediaItem.Builder().setMediaMetadata(
-                            MediaMetadata.Builder().setTitle(title).setArtist(q?.name)
-                                .setArtworkUri(
-                                    context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri()
-                                ).build()
-                        ).setUri(("$folderName/" + getAyaFileName(sura, i)).toUri()).build()
-                    )
-                    result.add(
-                        MediaItem.Builder().setMediaMetadata(
-                            MediaMetadata.Builder().setTitle(title).setArtist(t?.name)
-                                .setArtworkUri(
-                                    context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri()
-                                ).build()
-                        ).setUri(("$translateFolderName/" + getAyaFileName(sura, i)).toUri())
-                            .build()
-                    )
-
-                }
-
-                2 -> {
-                    result.add(
-                        MediaItem.Builder().setMediaMetadata(
-                            MediaMetadata.Builder().setTitle(title).setArtist(q?.name)
-                                .setArtworkUri(
-                                    context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri()
-                                ).build()
-                        ).setUri(("$folderName/" + getAyaFileName(sura, i)).toUri()).build()
-                    )
-
-                }
-
-                else -> {
-                    result.add(
-                        MediaItem.Builder().setMediaMetadata(
-                            MediaMetadata.Builder().setTitle(title).setArtist(t?.name)
-                                .setArtworkUri(
-                                    context.getQariLocalPhotoFile(t?.photoLink?.trim())?.toUri()
-                                ).build()
-                        ).setUri(("$translateFolderName/" + getAyaFileName(sura, i)).toUri())
-                            .build()
-                    )
-
-                }
-            }
-        }
-        return result
-    }
-
-    fun isQuranDownloaded(context: Context, sura: Int): Boolean {
-        if (prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) == 3) return true
-        if (File(
-                getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
-                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-        if (File(
-                getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
-                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-        //if zip file is exist extract it and then recheck
-        val internalZip =
-            getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
-                PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-            ) + File.separator + getSuraFileName(
-                sura
-            )
-        File(internalZip).let {
-            if (it.exists()) {
-                ZipFile(it).extractAll(it.parent)
-                it.delete()
-            }
-        }
-
-        if (File(
-                getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
-                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-
-        val externalZip =
-            getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
-                PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-            ) + File.separator + getSuraFileName(
-                sura
-            )
-        File(externalZip).let {
-            if (it.exists()) {
-                ZipFile(it).extractAll(it.parent)
-                it.delete()
-            }
-        }
-
-        if (File(
-                getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
-                    PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-
-        return false
-    }
-
-    fun isTranslateDownloaded(context: Context, sura: Int): Boolean {
-        if (prefs.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE) == 2) return true
-        if (File(
-                getQuranDirectoryInInternal(context) + "/" + context.appPrefsLite.getString(
-                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-
-        if (File(
-                getQuranDirectoryInSD(context) + "/" + context.appPrefsLite.getString(
-                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-        //if zip file is exist extract it and then recheck
-        val internalZip =
-            getQuranDirectoryInInternal(context) + File.separator + context.appPrefsLite.getString(
-                PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-            ) + File.separator + getSuraFileName(
-                sura
-            )
-        File(internalZip).let {
-            if (it.exists()) {
-                ZipFile(it).extractAll(it.parent)
-                it.delete()
-            }
-        }
-        if (File(
-                getQuranDirectoryInInternal(context) + "/" + context.appPrefsLite.getString(
-                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-
-        val externalZip =
-            getQuranDirectoryInSD(context) + File.separator + context.appPrefsLite.getString(
-                PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-            ) + File.separator + getSuraFileName(
-                sura
-            )
-        File(externalZip).let {
-            if (it.exists()) {
-                ZipFile(it).extractAll(it.parent)
-                it.delete()
-            }
-        }
-        if (File(
-                getQuranDirectoryInSD(context) + "/" + context.appPrefsLite.getString(
-                    PREF_TRANSLATE_TO_PLAY, DEFAULT_TRANSLATE_TO_PLAY
-                ) + "/" + getAyaFileName(sura, 1)
-            ).exists()
-        ) return true
-
-        return false
     }
 
     fun downloadQuranFiles(context: Context) {
@@ -615,12 +421,26 @@ class SuraViewModel(
                 if (lastVisitedList.size >= 20) lastVisitedRepository.delete(lastVisitedList.first())
                 chapter.value?.let { chapter ->
                     if (lastVisitedList.find { (it.suraID == chapter.sura && it.ayaID == lastVisitedAya.value) } == null) lastVisitedRepository.insert(
-                        lastVisitedAya.value,
-                        chapter.sura
+                        lastVisitedAya.value, chapter.sura
                     )
                 }
             }
         }
     }
 
+    fun updateSureViewSate(isOpen: Boolean) {
+        viewModelScope.launch {
+            prefs.edit {
+                putBoolean(PREF_IS_SURA_VIEW_IS_OPEN, isOpen)
+            }
+        }
+    }
+
+    fun openSearchBar() {
+        _isSearchBarOpen.value = true
+    }
+
+    fun closeSearchBar() {
+        _isSearchBarOpen.value = false
+    }
 }//end of class SuraViewModel

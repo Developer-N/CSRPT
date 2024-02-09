@@ -8,203 +8,226 @@ import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.getSystemService
-import androidx.core.os.postDelayed
-import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.GpsLocationDialogBinding
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.ui.utils.askForLocationPermission
-import com.byagowi.persiancalendar.ui.utils.copyToClipboard
-import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
+import com.byagowi.persiancalendar.global.spacedColon
+import com.byagowi.persiancalendar.ui.common.AppDialog
+import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
+import com.byagowi.persiancalendar.utils.TWO_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.appPrefs
-import com.byagowi.persiancalendar.utils.formatCoordinate
 import com.byagowi.persiancalendar.utils.formatCoordinateISO6709
 import com.byagowi.persiancalendar.utils.friendlyName
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.saveLocation
-import com.byagowi.persiancalendar.variants.debugLog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.openlocationcode.OpenLocationCode
 import io.github.persiancalendar.praytimes.Coordinates
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.Locale
 
-fun showGPSLocationDialog(activity: FragmentActivity, viewLifecycleOwner: LifecycleOwner) {
+@Composable
+private fun AskForLocationPermissionDialog(setGranted: (Boolean) -> Unit) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return setGranted(true)
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { setGranted(it.entries.any()) }
+
+    var showDialog by rememberSaveable { mutableStateOf(true) }
+    if (showDialog) AlertDialog(
+        title = { Text(stringResource(R.string.location_access)) },
+        confirmButton = {
+            TextButton(onClick = {
+                showDialog = false
+                launcher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }) { Text(stringResource(R.string.continue_button)) }
+        },
+        dismissButton = {
+            TextButton(onClick = { setGranted(false) }) { Text(stringResource(R.string.cancel)) }
+        },
+        onDismissRequest = { setGranted(false) },
+        text = { Text(stringResource(R.string.phone_location_required)) }
+    )
+}
+
+@Composable
+fun GPSLocationDialog(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    var isGranted by remember { mutableStateOf<Boolean?>(null) }
     if (ActivityCompat.checkSelfPermission(
-            activity, Manifest.permission.ACCESS_FINE_LOCATION
+            context, Manifest.permission.ACCESS_FINE_LOCATION
         ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            activity, Manifest.permission.ACCESS_COARSE_LOCATION
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
         ) != PackageManager.PERMISSION_GRANTED
     ) {
-        activity.askForLocationPermission()
-        return
+        return if (isGranted == null) AskForLocationPermissionDialog { isGranted = it }
+        else onDismissRequest()
     }
 
-    val coordinatesFlow = MutableStateFlow<Coordinates?>(null)
-    var cityName: String? = null
-    var countryCode: String? = null
-    val binding = GpsLocationDialogBinding.inflate(activity.layoutInflater)
-    listOf(binding.cityName, binding.coordinates, binding.coordinatesIso6709, binding.plusLink)
-        .forEach { it.setOnClickListener { _ -> activity.copyToClipboard(it.text) } }
+    var message by remember { mutableStateOf(context.getString(R.string.pleasewaitgps)) }
+    var coordinates by remember { mutableStateOf<Coordinates?>(null) }
+    var cityName by remember { mutableStateOf<String?>(null) }
+    var countryCode by remember { mutableStateOf<String?>(null) }
+    var isOneProviderEnabled by remember { mutableStateOf(false) }
+    val locationManager = remember { context.getSystemService<LocationManager>() }
+        ?: return onDismissRequest()
 
-    // This is preference fragment view lifecycle but ideally we should've used
-    // dialog's view lifecycle which resultTextView.findViewTreeLifecycleOwner()
-    // won't give it to us probably because AlertDialog isn't fragment based
-    val viewLifecycleScope = viewLifecycleOwner.lifecycleScope
-
-    val distinctCoordinatesFlow = coordinatesFlow
-        .filterNotNull()
-        .onEach { debugLog("GPSLocationDialog: A location is received") }
-        .distinctUntilChanged { old, new ->
-            old.latitude == new.latitude && old.longitude == new.longitude &&
-                    old.elevation == new.elevation
-        }
-
-    val updateCoordinatesJob = distinctCoordinatesFlow
-        .onEach { coordinates ->
-            binding.message.isVisible = false
-            binding.coordinatesBox.isVisible = true
-            binding.coordinates.text = formatCoordinate(activity, coordinates, "\n")
-            binding.coordinatesIso6709.text = formatCoordinateISO6709(
-                coordinates.latitude, coordinates.longitude, coordinates.elevation
-            )
-            binding.plusLink.text = listOf(
-                "https://plus.codes/",
-                OpenLocationCode.encode(coordinates.latitude, coordinates.longitude)
-            ).joinToString("")
-        }
-        .flowOn(Dispatchers.Main.immediate)
-        .catch { logException(it) }
-        .launchIn(viewLifecycleScope)
-
-    val updateGeocoderResultJob = distinctCoordinatesFlow
-        .mapNotNull { coordinates ->
+    run {
+        var showPhoneSettingsDialog by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            delay(TWO_SECONDS_IN_MILLIS)
+            if (isOneProviderEnabled) delay(TEN_SECONDS_IN_MILLIS)
             runCatching {
-                val result = Geocoder(activity, language.asSystemLocale())
-                    .getFromLocation(coordinates.latitude, coordinates.longitude, 1)
-                    ?.firstOrNull()
-                countryCode = result?.countryCode
-                result?.friendlyName
-            }.onFailure(logException).getOrNull()
+                if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    showPhoneSettingsDialog = true
+                }
+            }.onFailure(logException)
         }
-        .flowOn(Dispatchers.IO)
-        .onEach { friendlyLocationName ->
-            binding.cityName.isVisible = true
-            binding.cityName.text = friendlyLocationName
-            cityName = friendlyLocationName
-        }
-        .flowOn(Dispatchers.Main.immediate)
-        .catch { logException(it) }
-        .launchIn(viewLifecycleScope)
-
-    val locationManager = activity.getSystemService<LocationManager>() ?: return
-
-    fun checkGPSProvider() {
-        if (coordinatesFlow.value != null) return
-
-        runCatching {
-            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                MaterialAlertDialogBuilder(activity)
-                    .setMessage(R.string.gps_internet_desc)
-                    .setPositiveButton(R.string.accept) { _, _ ->
+        if (showPhoneSettingsDialog) {
+            return AlertDialog(
+                text = { Text(stringResource(R.string.gps_internet_desc)) },
+                onDismissRequest = onDismissRequest,
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDismissRequest()
                         runCatching {
-                            activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                         }.onFailure(logException)
-                    }
-                    .show()
+                    }) { Text(stringResource(R.string.accept)) }
+                }
+            )
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val locationListener = object : LocationListener {
+            @Deprecated("")
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
             }
-        }.onFailure(logException)
-    }
 
-    var isOneProviderEnabled = false
-    val locationListener = object : LocationListener {
-        @Deprecated("")
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+            override fun onLocationChanged(location: Location) {
+                coordinates =
+                    Coordinates(location.latitude, location.longitude, location.altitude)
+            }
+
+            override fun onProviderEnabled(provider: String) {
+                isOneProviderEnabled = true
+                message = context.getString(R.string.pleasewaitgps)
+            }
+
+            override fun onProviderDisabled(provider: String) {
+                if (!isOneProviderEnabled)
+                    message = context.getString(R.string.enable_location_services)
+            }
         }
 
-        override fun onLocationChanged(location: Location) {
-            coordinatesFlow.value =
-                Coordinates(location.latitude, location.longitude, location.altitude)
+        if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 0, 0f, locationListener
+            )
+        }
+        if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
+            locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER, 0, 0f, locationListener
+            )
         }
 
-        override fun onProviderEnabled(provider: String) {
-            isOneProviderEnabled = true
-            binding.message.setText(R.string.pleasewaitgps)
+        onDispose {
+            @SuppressLint("MissingPermission")
+            if (ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) locationManager.removeUpdates(locationListener)
         }
+    }
 
-        override fun onProviderDisabled(provider: String) {
-            if (!isOneProviderEnabled) binding.message.setText(R.string.enable_location_services)
+    coordinates?.also { coord ->
+        LaunchedEffect(coord.latitude, coord.longitude) {
+            launch(Dispatchers.IO) {
+                runCatching {
+                    val result = Geocoder(context, language.value.asSystemLocale())
+                        .getFromLocation(coord.latitude, coord.longitude, 1)
+                        ?.firstOrNull()
+                    countryCode = result?.countryCode
+                    cityName = result?.friendlyName
+                }.onFailure(logException).getOrNull()
+            }
         }
-    }
-
-    if (LocationManager.GPS_PROVIDER in locationManager.allProviders) {
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER, 0, 0f, locationListener
-        )
-    }
-    if (LocationManager.NETWORK_PROVIDER in locationManager.allProviders) {
-        locationManager.requestLocationUpdates(
-            LocationManager.NETWORK_PROVIDER, 0, 0f, locationListener
-        )
-    }
-
-    val handler = Handler(Looper.getMainLooper())
-    val checkGPSProviderCallback =
-        handler.postDelayed(THIRTY_SECONDS_IN_MILLIS) { checkGPSProvider() }
-    val dialog = MaterialAlertDialogBuilder(activity)
-        .setView(binding.root)
-        .create()
-
-    val lifeCycleObserver = LifecycleEventObserver { _, event ->
-        if (event == Lifecycle.Event.ON_PAUSE) dialog.dismiss()
-    }
-
-    viewLifecycleOwner.lifecycle.addObserver(lifeCycleObserver)
-    dialog.setOnDismissListener {
-        debugLog("GPSLocationDialog: Dialog is dismissed")
-        coordinatesFlow.value?.let { (latitude, longitude) ->
+        LaunchedEffect(coord.latitude, coord.longitude) {
             // Don't set elevation/altitude even from GPS, See #1011
-            val coordinate = Coordinates(latitude, longitude, 0.0)
-            activity.appPrefs.saveLocation(coordinate, cityName ?: "", countryCode ?: "")
+            val coordinate = Coordinates(coord.latitude, coord.longitude, .0)
+            context.appPrefs.saveLocation(coordinate, cityName ?: "", countryCode ?: "")
         }
-
-        // AGP 7 has false alarms claims removeUpdates can't be called here
-        // but that's incorrect and we are exactly checking permission before
-        // trying to remove the listener
-        @SuppressLint("MissingPermission")
-        if (ActivityCompat.checkSelfPermission(
-                activity, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                activity, Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) locationManager.removeUpdates(locationListener)
-
-        handler.removeCallbacks(checkGPSProviderCallback)
-        viewLifecycleOwner.lifecycle.removeObserver(lifeCycleObserver)
-
-        // This wasn't necessary if we had a proper view lifecycle scope, yet, this is more
-        // preferred than going for a fragment based dialog for now.
-        updateCoordinatesJob.cancel()
-        updateGeocoderResultJob.cancel()
     }
 
-    dialog.show()
+    AppDialog(
+        onDismissRequest = onDismissRequest,
+        dismissButton = coordinates?.run {
+            {
+                TextButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.close)) }
+            }
+        },
+    ) {
+        val textModifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+        val coord =
+            coordinates ?: return@AppDialog Text(
+                message,
+                textModifier,
+                textAlign = TextAlign.Center
+            )
+        val text = buildAnnotatedString {
+            appendLine(
+                "%s$spacedColon%.2f%s%s$spacedColon%.7f".format(
+                    Locale.getDefault(),
+                    stringResource(R.string.latitude), coord.latitude, "\n",
+                    stringResource(R.string.longitude), coord.longitude
+                )
+            )
+            appendLine(formatCoordinateISO6709(coord.latitude, coord.longitude, coord.elevation))
+            cityName?.also(::appendLine)
+            countryCode?.also(::appendLine)
+            append("https://plus.codes/")
+            append(OpenLocationCode.encode(coord.latitude, coord.longitude))
+        }
+        SelectionContainer { Text(text, modifier = textModifier, textAlign = TextAlign.Center) }
+    }
 }

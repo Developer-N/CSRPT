@@ -2,30 +2,41 @@ package ir.namoo.quran.home
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AppShortcut
 import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.NoteAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Shortcut
-import androidx.compose.material.icons.rounded.ExitToApp
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -33,29 +44,31 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.byagowi.persiancalendar.R
-import com.google.accompanist.themeadapter.material3.Mdc3Theme
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.iconColor
+import com.byagowi.persiancalendar.ui.theme.AppTheme
+import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
+import com.byagowi.persiancalendar.ui.utils.isLight
 import ir.namoo.quran.bookmarks.BookmarksScreen
 import ir.namoo.quran.chapters.ChaptersScreen
 import ir.namoo.quran.download.DownloadScreen
@@ -66,177 +79,103 @@ import ir.namoo.quran.sura.SuraScreen
 import kotlinx.coroutines.launch
 
 @Composable
-fun QuranHomeScreen(exit: () -> Unit, createShortcut: () -> Unit, checkFiles: () -> Unit) {
+fun QuranHomeScreen(
+    startSura: Int = -1,
+    startAya: Int = -1,
+    exit: () -> Unit,
+    createShortcut: () -> Unit,
+    checkFiles: () -> Unit
+) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var selectedPage by remember { mutableIntStateOf(1) }
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     ModalNavigationDrawer(
         modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                Row(
-                    modifier = Modifier.padding(4.dp, 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        modifier = Modifier.clip(ShapeDefaults.ExtraLarge),
-                        painter = painterResource(id = R.drawable.quran_drawer),
-                        contentDescription = stringResource(
-                            id = R.string.quran
-                        )
+            ModalDrawerSheet(windowInsets = WindowInsets(0, 0, 0, 0)) {
+                run {
+                    val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
+                    val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
+                    val needsVisibleStatusBarPlaceHolder =
+                        !isBackgroundColorLight && isSurfaceColorLight
+                    Spacer(
+                        Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (needsVisibleStatusBarPlaceHolder) Modifier.background(
+                                    Brush.verticalGradient(
+                                        0f to Color(0x70000000), 1f to Color.Transparent
+                                    )
+                                ) else Modifier
+                            )
+                            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top)),
                     )
                 }
-                // Chapter
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.chapter),
-                        fontFamily = FontFamily(appFont),
-                        fontWeight = if (selectedPage == 1) FontWeight.SemiBold else FontWeight.Normal
-                    )
-                }, selected = selectedPage == 1, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.List,
-                        contentDescription = stringResource(id = R.string.chapter),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("chapters")
-                    scope.launch {
-                        drawerState.close()
+
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    //Header
+                    Row(
+                        modifier = Modifier.padding(8.dp, 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(ShapeDefaults.ExtraLarge),
+                            painter = painterResource(id = R.drawable.quran_drawer),
+                            contentDescription = stringResource(
+                                id = R.string.quran
+                            ), contentScale = ContentScale.FillWidth
+
+                        )
                     }
-                })
-                //Search
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.search_the_whole_quran),
-                        fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 2, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = stringResource(id = R.string.search_the_whole_quran),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("search")
-                    scope.launch {
-                        drawerState.close()
+                    // Items
+                    navItems.forEach { (id, icon, title) ->
+                        NavigationDrawerItem(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            icon = {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            label = {
+                                AnimatedContent(
+                                    targetState = stringResource(title),
+                                    label = "title",
+                                    transitionSpec = appCrossfadeSpec,
+                                ) { state -> Text(state) }
+                            },
+                            selected = navBackStackEntry?.destination?.route == id,
+                            onClick = {
+                                when (id) {
+                                    exitRoute -> exit()
+                                    shortcutRoute -> {
+                                        createShortcut()
+                                        scope.launch { drawerState.close() }
+                                    }
+
+                                    else -> scope.launch {
+                                        drawerState.close()
+                                        if (navBackStackEntry?.destination?.route != id) {
+                                            navController.navigate(id)
+                                        }
+                                    }
+                                }
+                            },
+                        )
                     }
-                })
-                //Notes
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.notes), fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 3, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Notes,
-                        contentDescription = stringResource(id = R.string.notes),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("notes")
-                    scope.launch {
-                        drawerState.close()
-                    }
-                })
-                //Bookmarks
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.bookmarks),
-                        fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 4, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Bookmarks,
-                        contentDescription = stringResource(id = R.string.bookmarks),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("bookmarks")
-                    scope.launch {
-                        drawerState.close()
-                    }
-                })
-                //Download
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.download_audios),
-                        fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 5, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.CloudDownload,
-                        contentDescription = stringResource(id = R.string.download_audios),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("download")
-                    scope.launch {
-                        drawerState.close()
-                    }
-                })
-                //Settings
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.settings),
-                        fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 6, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = stringResource(id = R.string.settings),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    navController.navigate("setting")
-                    scope.launch {
-                        drawerState.close()
-                    }
-                })
-                //Shortcut
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.create_shortcut),
-                        fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 7, icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Shortcut,
-                        contentDescription = stringResource(id = R.string.create_shortcut),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    createShortcut()
-                    scope.launch {
-                        drawerState.close()
-                    }
-                })
-                //Exit
-                NavigationDrawerItem(modifier = Modifier.padding(horizontal = 8.dp), label = {
-                    Text(
-                        text = stringResource(id = R.string.exit), fontFamily = FontFamily(appFont)
-                    )
-                }, selected = selectedPage == 8, icon = {
-                    Icon(
-                        imageVector = Icons.Rounded.ExitToApp,
-                        contentDescription = stringResource(id = R.string.exit),
-                        tint = iconColor
-                    )
-                }, onClick = {
-                    exit()
-                })
+                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
+                }
             }
         }) {
-        NavHost(navController = navController, startDestination = "chapters",
+        NavHost(navController = navController, startDestination = chapterRoute,
             enterTransition = {
                 fadeIn(animationSpec = tween()) + expandVertically(animationSpec = tween())
             },
@@ -244,47 +183,46 @@ fun QuranHomeScreen(exit: () -> Unit, createShortcut: () -> Unit, checkFiles: ()
                 fadeOut(animationSpec = tween()) + shrinkVertically(animationSpec = tween())
             }) {
             //Chapters Screen
-            composable(route = "chapters") {
-                selectedPage = 1
+            composable(route = chapterRoute) {
                 ChaptersScreen(drawerState, navController, checkFiles)
             }
             //Sura Screen
             composable(
-                route = "sura/{sura}/{aya}",
+                route = "sura/{sura}/{aya}?play={play}",
                 arguments = listOf(navArgument("sura") { type = NavType.IntType },
-                    navArgument("aya") { type = NavType.IntType })
+                    navArgument("aya") { type = NavType.IntType },
+                    navArgument("play") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    }
+                )
             ) { backStackEntry ->
-                selectedPage = 1
                 SuraScreen(
-                    sura = backStackEntry.arguments?.getInt("sura") ?: 1,
+                    startSura = backStackEntry.arguments?.getInt("sura") ?: 1,
                     aya = backStackEntry.arguments?.getInt("aya") ?: 1,
+                    play = backStackEntry.arguments?.getBoolean("play") ?: false,
                     drawerState = drawerState,
                     navController = navController
                 )
             }
             //Search Screen
-            composable(route = "search") {
-                selectedPage = 2
+            composable(route = searchRoute) {
                 SearchScreen(navController = navController)
             }
             //Notes Screen
-            composable(route = "notes") {
-                selectedPage = 3
+            composable(route = notesRoute) {
                 NotesScreen(drawerState = drawerState, navController = navController)
             }
             //Bookmarks Screen
-            composable(route = "bookmarks") {
-                selectedPage = 4
+            composable(route = bookmarksRoute) {
                 BookmarksScreen(drawerState = drawerState, navController = navController)
             }
             //Download Screen
-            composable(route = "download") {
-                selectedPage = 5
+            composable(route = downloadRoute) {
                 DownloadScreen(drawerState = drawerState)
             }
             //Setting Screen
-            composable(route = "setting") {
-                selectedPage = 6
+            composable(route = settingsRoute) {
                 SettingsScreen(drawerState)
             }
         }
@@ -294,13 +232,41 @@ fun QuranHomeScreen(exit: () -> Unit, createShortcut: () -> Unit, checkFiles: ()
             }
         }
     }
+
+    LaunchedEffect(key1 = "startFromNotification") {
+        if (startSura != -1 && startAya != -1)
+            navController.navigate("sura/$startSura/$startAya") {
+                popUpTo(chapterRoute)
+            }
+    }
 }
+
+private const val chapterRoute = "chapters"
+private const val searchRoute = "search"
+private const val notesRoute = "notes"
+private const val bookmarksRoute = "bookmarks"
+private const val downloadRoute = "download"
+private const val settingsRoute = "setting"
+private const val shortcutRoute = "shortcut"
+private const val exitRoute = "exit"
+
+@Stable
+private val navItems: List<Triple<String, ImageVector, Int>> = listOf(
+    Triple(chapterRoute, Icons.Filled.Menu, R.string.chapter),
+    Triple(searchRoute, Icons.Filled.Search, R.string.search_the_whole_quran),
+    Triple(notesRoute, Icons.Filled.NoteAlt, R.string.notes),
+    Triple(bookmarksRoute, Icons.Filled.Bookmarks, R.string.bookmarks),
+    Triple(downloadRoute, Icons.Filled.CloudDownload, R.string.download_audios),
+    Triple(settingsRoute, Icons.Filled.Settings, R.string.settings),
+    Triple(shortcutRoute, Icons.Filled.AppShortcut, R.string.create_shortcut),
+    Triple(exitRoute, Icons.Default.Cancel, R.string.exit),
+)
 
 @Preview(name = "day", showBackground = true, locale = "fa")
 @Preview(name = "night", showBackground = true, locale = "fa", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun HomePrev() {
-    Mdc3Theme {
+    AppTheme {
         QuranHomeScreen(exit = {}, createShortcut = {}, checkFiles = {})
     }
 }

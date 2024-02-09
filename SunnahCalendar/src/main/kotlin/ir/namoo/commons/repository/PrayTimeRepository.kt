@@ -5,6 +5,8 @@ import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.ProvinceModel
 import ir.namoo.commons.model.ServerAthanModel
 import ir.namoo.commons.utils.modelToDBTimes
+import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
+import ir.namoo.religiousprayers.praytimeprovider.EditedPrayTimesEntity
 import kotlinx.coroutines.flow.flow
 
 class PrayTimeRepository(
@@ -82,4 +84,24 @@ class PrayTimeRepository(
     suspend fun getAthans(): List<ServerAthanModel> = remoteRepository.getAthans()
 
     suspend fun getAlarms(): List<ServerAthanModel> = remoteRepository.getAlarms()
+
+    suspend fun getDownloadedTimesForCity(cityId: Int): List<DownloadedPrayTimesEntity> =
+        localRepository.getDownloadedTimesFor(cityId)
+
+    suspend fun getDownloadedTimesForCity(cityId: Int, dayNumber: Int): DownloadedPrayTimesEntity? =
+        localRepository.getDownloadedTimeForCity(cityId, dayNumber)
+
+    suspend fun getEditedTime(dayNumber: Int): EditedPrayTimesEntity? =
+        localRepository.getEdited(dayNumber)
+
+    suspend fun getAllEditedTimes(): List<EditedPrayTimesEntity> =
+        localRepository.getAllEditedTimes()
+
+    suspend fun insertEdit(newEditTimes: List<EditedPrayTimesEntity>) =
+        localRepository.insertEdit(newEditTimes)
+
+    suspend fun clearEditTimes() = localRepository.clearEditTimes()
+
+    suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
+        localRepository.updateEditedTimes(times)
 }

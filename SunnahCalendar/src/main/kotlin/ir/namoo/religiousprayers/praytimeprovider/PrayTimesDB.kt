@@ -58,7 +58,7 @@ interface PrayTimesDAO {
 
     //    $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     @Query("select * from EditedPrayTimes")
-    suspend fun getAllEdited(): MutableList<EditedPrayTimesEntity>?
+    suspend fun getAllEdited(): List<EditedPrayTimesEntity>
 
     @Query("select * from EditedPrayTimes where dayNumber=:dayNumber")
     suspend fun getEdited(dayNumber: Int): EditedPrayTimesEntity?
@@ -70,7 +70,7 @@ interface PrayTimesDAO {
     suspend fun updateEdited(prayTimes: List<EditedPrayTimesEntity>)
 
     @Query("delete from EditedPrayTimes")
-    suspend fun cleanEditedPrayTimes()
+    suspend fun clearEditedPrayTimes()
 
 }
 

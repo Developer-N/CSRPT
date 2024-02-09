@@ -8,7 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -21,8 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.iconColor
 
 @Composable
 fun ContactUIElement(
@@ -69,12 +68,7 @@ fun ContactsButtons(
                             contentDescription = "namoo_ir",
                             modifier = Modifier.size(24.dp)
                         )
-                    },
-                    elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = cardColor,
-                        trailingIconContentColor = iconColor
-                    )
+                    }
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 ElevatedAssistChip(
@@ -88,12 +82,7 @@ fun ContactsButtons(
                             contentDescription = "Developer_N",
                             modifier = Modifier.size(24.dp)
                         )
-                    },
-                    elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = cardColor,
-                        trailingIconContentColor = iconColor
-                    )
+                    }
                 )
             }
             ElevatedAssistChip(
@@ -103,16 +92,11 @@ fun ContactsButtons(
                 },
                 trailingIcon = {
                     Icon(
-                        painterResource(id = R.drawable.ic_gmail),
+                        imageVector = Icons.Default.Mail,
                         contentDescription = "namoo_ir",
                         modifier = Modifier.size(24.dp)
                     )
-                },
-                elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = cardColor,
-                    trailingIconContentColor = iconColor
-                )
+                }
             )
         }
     }

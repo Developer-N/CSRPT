@@ -8,93 +8,23 @@
     <color name="splash_icon_color_ribbon">#de2f14</color>
 
     <color name="ic_launcher_background">#00bcd4</color>
-    <color name="converter_spinner_background">#48888888</color>
-
-    <color name="primary_container_light">#E0E0E0</color>
-    <color name="primary_container_dark">#404040</color>
-
-    <color name="secondary_container_light">#E0E0E0</color>
-    <color name="secondary_container_dark">#404040</color>
 
     <color name="compass_marker_color">#888</color>
     <color name="north_arrow">#F00</color>
     <color name="widget_divider">#46ffffff</color>
     <color name="widget_refresh_icon_color">#ddd</color>
 
-    <color name="dark_primary">#2F3133</color>
-    <color name="dark_accent">#74BBEF</color>
-    <color name="dark_gradient_start">#3E4042</color>
-    <color name="dark_gradient_end">#191C1E</color>
-    <color name="dark_text_holiday">#ef6c00</color>
-    <color name="dark_holiday">#e65100</color>
-    <color name="dark_text_day">#ffffff</color>
-    <color name="dark_surface_background">#191c1e</color>
-    <color name="dark_current_day">#82B1FF</color>
-    <color name="dark_selected_day">#e0e0e0</color>
-    <color name="dark_event_indicator">#e0e0e0</color>
-
-    <color name="black_primary">#000000</color>
-    <color name="black_accent">#74BBEF</color>
-    <color name="black_gradient_start">#000000</color>
-    <color name="black_gradient_end">#000000</color>
-    <color name="black_text_holiday">#ef6c00</color>
-    <color name="black_holiday">#e65100</color>
-    <color name="black_text_day">#ffffff</color>
-    <color name="black_surface_background">#000000</color>
-    <color name="black_current_day">#82B1FF</color>
-    <color name="black_selected_day">#e0e0e0</color>
-    <color name="black_event_indicator">#e0e0e0</color>
-
-    <color name="light_primary">#00695c</color>
-    <color name="light_accent">#00796b</color>
-    <color name="light_gradient_start">#00796B</color>
-    <color name="light_gradient_end">#004D40</color>
-    <color name="light_text_holiday">#d84315</color>
-    <color name="light_holiday">#ff8a65</color>
-    <color name="light_text_day">#ffffff</color>
-    <color name="light_surface_background">#fafafa</color>
-    <color name="light_current_day">#ff7043</color>
-    <color name="light_selected_day">#eff2f1</color>
-    <color name="light_event_indicator">#eff2f1</color>
-
-    <color name="aqua_primary">#00838f</color>
-    <color name="aqua_accent">#1a237e</color>
-    <color name="aqua_gradient_start">#00838F</color>
-    <color name="aqua_gradient_end">#1a237e</color>
-    <color name="aqua_text_holiday">#d84315</color>
-    <color name="aqua_holiday">#ff8a65</color>
-    <color name="aqua_text_day">#ffffff</color>
-    <color name="aqua_surface_background">#fafafa</color>
-    <color name="aqua_current_day">#ff7043</color>
-    <color name="aqua_selected_day">#F5F5F5</color>
-    <color name="aqua_event_indicator">#eff2f1</color>
-
-    <color name="modern_primary">#fafafa</color>
-    <color name="modern_accent">#376E9F</color>
-    <color name="modern_gradient_start">#FFFFFF</color>
-    <color name="modern_gradient_end">#E1E3E5</color>
-    <color name="modern_text_holiday">#E51C23</color>
-    <color name="modern_holiday">#E51C23</color>
-    <color name="modern_text_day">#000000</color>
-    <color name="modern_surface_background">#fafafa</color>
-    <color name="modern_current_day">#42AFBF</color>
-    <color name="modern_selected_day">#DDDEE2</color>
-    <color name="modern_event_indicator">#000000</color>
-
     <!-- override of these exist in values-v31/colors.xml -->
     <color name="remote_view_holiday_color">#ff8a65</color>
 
     <!-- == SunView == -->
-    <color name="sun_view_sunrise_text_color">#FF9800</color>
-    <color name="sun_view_midday_text_color">#FFC107</color>
-    <color name="sun_view_sunset_text_color">#F22424</color>
     <color name="sun_view_night_color">#383C7C</color>
     <color name="sun_view_day_color">#74BBEF</color>
     <color name="sun_view_midday_color">#B2D5F1</color>
     <!-- override of these exist in values-v31/colors.xml -->
-    <color name="sun_view_widget_night_color">@color/sun_view_night_color</color>
-    <color name="sun_view_widget_day_color">@color/sun_view_day_color</color>
-    <color name="sun_view_widget_midday_color">@color/sun_view_midday_color</color>
+    <color name="sun_view_dynamic_night_color">@color/sun_view_night_color</color>
+    <color name="sun_view_dynamic_day_color">@color/sun_view_day_color</color>
+    <color name="sun_view_dynamic_midday_color">@color/sun_view_midday_color</color>
 
     <!-- == Level == -->
     <color name="black_reflect">#FF666666</color>
@@ -109,11 +39,11 @@
     <!-- Bubble -->
     <color name="bubble_center">@android:color/white</color>
     <color name="bubble_border">@color/level_liquid_dark</color>
-    <!-- LCD -->
-    <color name="lcd_front">#FF00FF00</color>
-    <color name="lcd_back">#44FFFFFF</color>
     <!-- Display -->
     <color name="display_border">#FF333333</color>
     <color name="display_dark">@android:color/black</color>
     <color name="display_reflect">@color/black_reflect</color>
+
+    <color name="cyan_primary">#00ACC1</color>
+
 </resources>

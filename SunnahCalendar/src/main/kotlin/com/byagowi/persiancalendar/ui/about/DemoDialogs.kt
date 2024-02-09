@@ -1,23 +1,20 @@
 package com.byagowi.persiancalendar.ui.about
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ComposeShader
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.Point
 import android.graphics.PorterDuff
 import android.graphics.RadialGradient
-import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.graphics.SweepGradient
-import android.graphics.drawable.RippleDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -27,88 +24,52 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.opengl.GLSurfaceView
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
+import android.text.Html
 import android.text.Spanned
-import android.text.style.TextAppearanceSpan
+import android.text.SpannedString
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.LinearInterpolator
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.Scroller
+import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.annotation.ColorInt
 import androidx.annotation.RequiresApi
-import androidx.appcompat.widget.AppCompatEditText
-import androidx.appcompat.widget.AppCompatSpinner
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.getSystemService
-import androidx.core.graphics.BlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.applyCanvas
-import androidx.core.graphics.component1
-import androidx.core.graphics.component2
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.get
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withTranslation
-import androidx.core.os.postDelayed
-import androidx.core.text.HtmlCompat
-import androidx.core.text.buildSpannedString
-import androidx.core.text.inSpans
-import androidx.core.text.parseAsHtml
 import androidx.core.view.isVisible
-import androidx.core.view.setMargins
 import androidx.core.view.setPadding
 import androidx.core.widget.doAfterTextChanged
-import androidx.customview.widget.ViewDragHelper
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.PagerSnapHelper
-import androidx.recyclerview.widget.RecyclerView
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.ShaderSandboxBinding
 import com.byagowi.persiancalendar.generated.sandboxFragmentShader
-import com.byagowi.persiancalendar.ui.SeasonsAdapter
 import com.byagowi.persiancalendar.ui.common.BaseSlider
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.map.GLRenderer
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.resolveResourceIdFromTheme
-import com.byagowi.persiancalendar.ui.utils.sp
-import com.byagowi.persiancalendar.utils.TWO_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.createStatusIcon
-import com.byagowi.persiancalendar.utils.getDayIconResource
+import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
 import com.byagowi.persiancalendar.utils.logException
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.carousel.CarouselLayoutManager
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.shape.CornerFamily
-import com.google.android.material.shape.ShapeAppearanceModel
-import com.google.android.material.shape.TriangleEdgeTreatment
-import com.google.android.material.slider.Slider
-import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
@@ -137,9 +98,9 @@ import kotlin.random.Random
 // These are somehow a sandbox to test things not used in the app yet and can be removed anytime.
 //
 
-fun createEasterEggClickHandler(callback: (FragmentActivity) -> Unit): (FragmentActivity?) -> Unit {
+fun createEasterEggClickHandler(callback: (ComponentActivity) -> Unit): (ComponentActivity?) -> Unit {
     var clickCount = 0
-    return { activity: FragmentActivity? ->
+    return { activity: ComponentActivity? ->
         if (activity != null) runCatching {
             when (++clickCount % 10) {
                 0 -> callback(activity)
@@ -149,22 +110,18 @@ fun createEasterEggClickHandler(callback: (FragmentActivity) -> Unit): (Fragment
     }
 }
 
-fun createIconRandomEffects(view: View): () -> Unit {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return {}
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+fun createIconRandomEffects(): () -> RenderEffect? {
     var clickCount = 0
     val colorShader by lazy(LazyThreadSafetyMode.NONE) { RuntimeShader(COLOR_SHIFT_EFFECT) }
     return {
-        runCatching {
-            view.setRenderEffect(
-                if (clickCount++ % 2 == 0) {
-                    colorShader.setFloatUniform("colorShift", Random.nextFloat())
-                    RenderEffect.createRuntimeShaderEffect(colorShader, "content")
-                } else {
-                    val r = Random.nextFloat() * 30
-                    RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP)
-                }
-            )
-        }.onFailure(logException)
+        if (clickCount++ % 2 == 0) {
+            colorShader.setFloatUniform("colorShift", Random.nextFloat())
+            RenderEffect.createRuntimeShaderEffect(colorShader, "content")
+        } else {
+            val r = Random.nextFloat() * 30
+            RenderEffect.createBlurEffect(r, r, Shader.TileMode.CLAMP)
+        }
     }
 }
 
@@ -199,132 +156,40 @@ half4 main(float2 fragCoord) {
 }
 """
 
-fun showHiddenUiDialog(activity: FragmentActivity) {
-    val root = LinearLayout(activity)
-    root.orientation = LinearLayout.VERTICAL
-    root.addView(
-        TabLayout(activity, null, R.style.TabLayoutColored).also { tabLayout ->
-            listOf(
-                R.drawable.ic_developer to -1,
-                R.drawable.ic_translator to 0,
-                R.drawable.ic_motorcycle to 1,
-                R.drawable.ic_help to 33,
-                R.drawable.ic_bug to 9999
-            ).map { (iconId: Int, badgeNumber: Int) ->
-                tabLayout.addTab(tabLayout.newTab().also { tab ->
-                    tab.setIcon(iconId)
-                    tab.orCreateBadge.also { badge ->
-                        badge.isVisible = badgeNumber >= 0
-                        if (badgeNumber > 0) badge.number = badgeNumber
-                    }
-                })
-            }
-            tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-                override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
-                override fun onTabReselected(tab: TabLayout.Tab?) = Unit
-                override fun onTabSelected(tab: TabLayout.Tab?) {
-                    tab?.orCreateBadge?.isVisible = false
-                }
-            })
-            tabLayout.setSelectedTabIndicator(R.drawable.cat_tabs_pill_indicator)
-            tabLayout.setSelectedTabIndicatorGravity(TabLayout.INDICATOR_GRAVITY_STRETCH)
-        })
-    root.addView(LinearProgressIndicator(activity).also { indicator ->
-        indicator.isIndeterminate = true
-        indicator.setIndicatorColor(Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE)
-        indicator.layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    })
-
-//    val morphedPathView = object : View(activity) {
-//        private val pathMorph = MorphedPath(
-//            "m 100 0 l -100 100 l 100 100 l 100 -100 z",
-//            "m 50 50 l 0 100 l 100 0 l 0 -100 z"
-//        )
-//        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.color = Color.BLACK }
-//
-//        init {
-//            val scale = (100 * resources.dp).toInt()
-//            layoutParams = LinearLayout.LayoutParams(scale, scale).also {
-//                it.gravity = Gravity.CENTER_HORIZONTAL
-//            }
-//        }
-//
-//        override fun onDraw(canvas: Canvas) = canvas.drawPath(pathMorph.path, paint)
-//
-//        fun setFraction(value: Float) {
-//            pathMorph.interpolateTo(value)
-//            invalidate()
-//        }
-//    }
-//    root.addView(morphedPathView)
-//    root.addView(Slider(activity).also {
-//        it.addOnChangeListener { _, value, _ -> morphedPathView.setFraction(value) }
-//    })
-
-    root.addView(ProgressBar(activity).also { progressBar ->
-        progressBar.isIndeterminate = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ValueAnimator.ofArgb(
-            Color.RED, Color.YELLOW, Color.GREEN, Color.BLUE
-        ).also { valueAnimator ->
-            valueAnimator.duration = 3000
-            valueAnimator.interpolator = LinearInterpolator()
-            valueAnimator.repeatMode = ValueAnimator.REVERSE
-            valueAnimator.repeatCount = 1
-            valueAnimator.addUpdateListener {
-                progressBar.indeterminateDrawable?.colorFilter =
-                    BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                        it.animatedValue as? Int ?: 0, BlendModeCompat.SRC_ATOP
-                    )
-            }
-        }.start()
-        progressBar.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 600)
-    })
-
-    BottomSheetDialog(activity).also { it.setContentView(root) }.show()
-}
-
-//class MorphedPath(fromPath: String, toPath: String) {
-//    val path = Path()
-//
-//    private val nodesFrom = PathParser.createNodesFromPathData(fromPath)
-//    private val currentNodes = PathParser.deepCopyNodes(nodesFrom)
-//    private val nodesTo = PathParser.createNodesFromPathData(toPath)
-//
-//    init {
-//        if (BuildConfig.DEVELOPMENT) check(PathParser.canMorph(nodesFrom, nodesTo))
-//        interpolateTo(0f)
-//    }
-//
-//    fun interpolateTo(fraction: Float) {
-//        PathParser.interpolatePathDataNodes(currentNodes, nodesFrom, nodesTo, fraction)
-//        path.rewind()
-//        PathParser.PathDataNode.nodesToPath(currentNodes, path)
-//    }
-//}
-
-fun showShaderSandboxDialog(activity: FragmentActivity) {
+fun showShaderSandboxDialog(activity: ComponentActivity) {
     val frame = object : FrameLayout(activity) {
         // Just to let AlertDialog know there is an editor here so it needs to show the soft keyboard
         override fun onCheckIsTextEditor() = true
     }
     frame.post {
-        val binding = ShaderSandboxBinding.inflate(activity.layoutInflater)
-        binding.glView.setEGLContextClientVersion(2)
+        val linear = LinearLayout(activity).also { it.orientation = LinearLayout.VERTICAL }
+        val inputText = EditText(activity).also {
+            it.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0
+            ).apply { weight = 1f }
+            it.layoutDirection = View.LAYOUT_DIRECTION_LTR
+            linear.addView(it)
+        }
+        val glView = GLSurfaceView(activity).also {
+            it.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0
+            ).apply { weight = 1f }
+            linear.addView(it)
+        }
+        glView.setEGLContextClientVersion(2)
         val renderer = GLRenderer(onError = {
             activity.runOnUiThread { Toast.makeText(activity, it, Toast.LENGTH_LONG).show() }
         })
-        binding.glView.setRenderer(renderer)
-        binding.glView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-        binding.inputText.doAfterTextChanged {
-            renderer.fragmentShader = binding.inputText.text?.toString() ?: ""
-            binding.glView.queueEvent { renderer.compileProgram(); binding.glView.requestRender() }
+        glView.setRenderer(renderer)
+        glView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+        inputText.doAfterTextChanged {
+            renderer.fragmentShader = inputText.text?.toString() ?: ""
+            glView.queueEvent { renderer.compileProgram(); glView.requestRender() }
         }
-        binding.inputText.setText(sandboxFragmentShader)
-        frame.addView(binding.root)
+        inputText.setText(sandboxFragmentShader)
+        frame.addView(linear)
     }
-    val dialog = MaterialAlertDialogBuilder(activity)
+    val dialog = AlertDialog.Builder(activity)
         .setView(frame)
         .show()
     // Just close the dialog when activity is paused so we don't get ANR after app switch and etc.
@@ -333,7 +198,7 @@ fun showShaderSandboxDialog(activity: FragmentActivity) {
     })
 }
 
-fun showColorPickerDialog(activity: FragmentActivity) {
+fun showColorPickerDialog(activity: ComponentActivity) {
     val view = LinearLayout(activity).apply {
         orientation = LinearLayout.VERTICAL
         val layoutParams = ViewGroup.LayoutParams(
@@ -342,14 +207,18 @@ fun showColorPickerDialog(activity: FragmentActivity) {
         )
         val colorCircle = CircleColorPickerView(activity).also { it.layoutParams = layoutParams }
         addView(colorCircle)
-        addView(Slider(activity).also {
+        addView(SeekBar(activity).also {
             it.layoutParams = layoutParams
-            it.addOnChangeListener { _, value, _ -> colorCircle.setBrightness(value) }
-            it.valueFrom = 0f
-            it.valueTo = 100f
+            it.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onProgressChanged(
+                    seekBar: SeekBar?, progress: Int, fromUser: Boolean
+                ) = colorCircle.setBrightness(progress.toFloat())
+            })
         })
     }
-    MaterialAlertDialogBuilder(activity)
+    AlertDialog.Builder(activity)
         .setView(view)
         .show()
 }
@@ -443,11 +312,12 @@ class CircleColorPickerView(context: Context, attrs: AttributeSet? = null) : Vie
     }
 }
 
-fun showFlingDemoDialog(activity: FragmentActivity) {
+fun showFlingDemoDialog(activity: ComponentActivity) {
     val x = FloatValueHolder()
     val horizontalFling = FlingAnimation(x)
     val y = FloatValueHolder()
     val verticalFling = FlingAnimation(y)
+
     val view = object : View(activity) {
         private var r = 0f
         private var previousX = 0f
@@ -457,6 +327,9 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
         private var storedVelocityY = 0f
 
         init {
+//            setBackgroundResource(
+//                activity.resolveResourceIdFromTheme(android.R.attr.selectableItemBackground)
+//            )
             horizontalFling.addUpdateListener { _, _, velocity ->
                 storedVelocityX = velocity
                 invalidate()
@@ -476,7 +349,16 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
             path.moveTo(x.value, y.value)
         }
 
-        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also { it.color = Color.GRAY }
+        private var shader: RuntimeShader? = null
+        private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+            it.color = Color.GRAY
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                it.color = context.getColor(android.R.color.system_accent1_500)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                shader = RuntimeShader(shaderSource).also { shader -> it.shader = shader }
+            }
+        }
         private val linesPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
             it.color = Color.GRAY
             it.style = Paint.Style.STROKE
@@ -485,7 +367,18 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
         override fun onDraw(canvas: Canvas) {
             path.lineTo(x.value, y.value)
             canvas.drawPath(path, linesPaint)
-            canvas.drawCircle(x.value, y.value, r, paint)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                shader?.also {
+                    it.setFloatUniform("center", x.value, y.value)
+                    it.setFloatUniform("bounds", width.toFloat(), height.toFloat())
+                    it.setFloatUniform("radius", r)
+                    it.setColorUniform("color", paint.color)
+                    it.setIntUniform("mode", counter % 3)
+                }
+                canvas.drawPaint(paint)
+            } else {
+                canvas.drawCircle(x.value, y.value, r, paint)
+            }
             var isWallHit = false
             if (x.value < r) {
                 x.value = r
@@ -511,8 +404,24 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
                 verticalFling.setStartVelocity(-storedVelocityY).start()
                 isWallHit = true
             }
-            if (isWallHit) lifecycle.launch { playSoundTick(Random.nextDouble() * 20) }
+            if (isWallHit) {
+                performHapticFeedbackVirtualKey()
+                val index = ++counter % diatonicScale.size
+                lifecycle.launch { playSoundTick(diatonicScale[index].toDouble()) }
+
+//                val rippleDrawable = background
+//                if (rippleDrawable is RippleDrawable) {
+//                    isPressed = false
+//                    rippleDrawable.setColor(ColorStateList.valueOf(getRandomTransparentColor()))
+//                    rippleDrawable.setHotspot(x.value, y.value)
+//                    isPressed = true
+//                }
+            }
         }
+
+        private var counter = 0
+
+        private val diatonicScale = listOf(0, 2, 4, 5, 7, 9, 11, 12, 11, 9, 7, 5, 4, 2)
 
         private val lifecycle = activity.lifecycleScope
 
@@ -544,12 +453,42 @@ fun showFlingDemoDialog(activity: FragmentActivity) {
         }
     }
 
-    MaterialAlertDialogBuilder(activity)
+    AlertDialog.Builder(activity)
         .setView(view)
         .show()
 }
 
-fun showPeriodicTableDialog(activity: FragmentActivity) {
+@Language("AGSL")
+val shaderSource = """
+uniform float2 center;
+uniform float2 bounds;
+uniform float radius;
+uniform int mode;
+layout(color) uniform vec4 color;
+
+float smin(float a, float b, float k) { // https://www.mayerowitz.io/blog/a-journey-into-shaders
+    float h = max(k - abs(a - b), 0) / k;
+    return min(a, b) - h * h * k / 4;
+}
+
+float sdBox(vec2 p, vec2 b) { // https://iquilezles.org/articles/distfunctions2d/
+    vec2 d = abs(p) - b;
+    return length(max(d, 0)) + min(max(d.x, d.y), 0);
+}
+
+float4 main(float2 fragCoord) {
+    float d1 = (distance(fragCoord, center) - radius) / min(bounds.x, bounds.y);
+    float d2;
+    if (mode == 0) d2 = (distance(bounds - fragCoord, center) - radius) / min(bounds.x, bounds.y);
+    else if (mode == 1) d2 = -sdBox(fragCoord * 2 * .99 - bounds * .99, bounds) / min(bounds.x, bounds.y);
+    else d2 = 1 - (-sdBox(fragCoord * 2 * .99 - bounds * .99, bounds) / min(bounds.x, bounds.y));
+    // return vec4(vec3(d2), 1.0);
+    float d = smoothstep(0., 0.01, smin(d1, d2, 1 / 3. + 0.001));
+    return d < 1 ? color : vec4(0);
+}
+"""
+
+fun showPeriodicTableDialog(activity: ComponentActivity) {
     val zoomableView = ZoomableView(activity)
     val cellSize = 100
     zoomableView.contentWidth = 100f * 18
@@ -589,12 +528,15 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
     }
 
     fun formatTitle(input: String): Spanned {
-        return "<small><small>$input</small></small>"
-            .replace(Regex("([a-zA-Z])(\\d+)"), "$1<sup><small>$2</small></sup>")
-            .parseAsHtml(HtmlCompat.FROM_HTML_MODE_LEGACY)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return SpannedString(input)
+        return Html.fromHtml(
+            "<small><small>$input</small></small>"
+                .replace(Regex("([a-zA-Z])(\\d+)"), "$1<sup><small>$2</small></sup>"),
+            Html.FROM_HTML_MODE_LEGACY
+        )
     }
 
-    val dialog = MaterialAlertDialogBuilder(activity)
+    val dialog = AlertDialog.Builder(activity)
         .setTitle(
             formatTitle(
                 "1s2 | 2s2 2p6 | 3s2 3p6 | 3d10 4s2 4p6 | 4d10 5s2 5p6 | 4f14 5d10 6s2 6p6 | 5f14 6d10 7s2 7p6"
@@ -610,7 +552,7 @@ fun showPeriodicTableDialog(activity: FragmentActivity) {
             dialog.setTitle(formatTitle("$atomicNumber ${info[0]} ${info[1]}<br>${info[2]}"))
         }
         if (index == 161) {
-            MaterialAlertDialogBuilder(activity)
+            AlertDialog.Builder(activity)
                 .setView(EditText(activity).also {
                     it.layoutDirection = View.LAYOUT_DIRECTION_LTR
                     it.textDirection = View.TEXT_DIRECTION_LTR
@@ -791,7 +733,7 @@ Ubc,Unbipentium,
 Ubh,Unbihexium,[Og] 5g2 6f3 8s2 8p1
 """.trim().split("\n")
 
-fun showRotationalSpringDemoDialog(activity: FragmentActivity) {
+fun showRotationalSpringDemoDialog(activity: ComponentActivity) {
     val radius = FloatValueHolder()
     val radiusSpring = SpringAnimation(radius)
     radiusSpring.spring = SpringForce(0f)
@@ -859,7 +801,7 @@ fun showRotationalSpringDemoDialog(activity: FragmentActivity) {
         }
     }
 
-    MaterialAlertDialogBuilder(activity)
+    AlertDialog.Builder(activity)
         .setView(view)
         .show()
 }
@@ -885,7 +827,7 @@ var SOLFEGE_NOTATION = listOf(
 fun getAbcNoteLabel(note: Int) = ABC_NOTATION[note % 12] + ((note / 12) - 1)
 fun getSolfegeNoteLabel(note: Int) = SOLFEGE_NOTATION[note % 12] + ((note / 12) - 1)
 
-fun showSignalGeneratorDialog(activity: FragmentActivity, viewLifecycle: Lifecycle) {
+fun showSignalGeneratorDialog(activity: ComponentActivity, viewLifecycle: Lifecycle) {
     val currentSemitone = MutableStateFlow(MIDDLE_A_SEMITONE)
 
     val view = object : BaseSlider(activity) {
@@ -966,7 +908,7 @@ fun showSignalGeneratorDialog(activity: FragmentActivity, viewLifecycle: Lifecyc
         .flowOn(Dispatchers.Unconfined)
         .launchIn(viewLifecycle.coroutineScope)
 
-    val dialog = MaterialAlertDialogBuilder(activity)
+    val dialog = AlertDialog.Builder(activity)
         .setView(view)
         .setOnCancelListener { previousAudioTrack?.stop() }
         .show()
@@ -976,7 +918,7 @@ fun showSignalGeneratorDialog(activity: FragmentActivity, viewLifecycle: Lifecyc
     })
 }
 
-fun showSpringDemoDialog(activity: FragmentActivity) {
+fun showSpringDemoDialog(activity: ComponentActivity) {
     val x = FloatValueHolder()
     val horizontalSpring = SpringAnimation(x)
     horizontalSpring.spring = SpringForce(0f)
@@ -1040,6 +982,7 @@ fun showSpringDemoDialog(activity: FragmentActivity) {
                     verticalSpring.animateToFinalPosition(height / 2f)
 
                     val angle = atan2(y.value - height / 2f, x.value - width / 2f)
+                    performHapticFeedbackVirtualKey()
                     lifecycle.launch { playSoundTick(angle * 10.0) }
                 }
             }
@@ -1049,133 +992,136 @@ fun showSpringDemoDialog(activity: FragmentActivity) {
         private val lifecycle = activity.lifecycleScope
     }
 
-    val dialog = MaterialAlertDialogBuilder(activity)
+    val dialog = AlertDialog.Builder(activity)
         .setView(view)
         .show()
 
-    view.setBackgroundResource(
-        activity.resolveResourceIdFromTheme(android.R.attr.selectableItemBackground)
-    )
-    val rippleDrawable = view.background
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-        rippleDrawable is RippleDrawable
-    ) {
-        val handler = Handler(Looper.getMainLooper())
-        fun next() {
-            val delay = Random.nextLong(10, TWO_SECONDS_IN_MILLIS)
-            handler.postDelayed(delay) {
-                if (!dialog.isShowing) return@postDelayed
-                view.isPressed = false
-                rippleDrawable.setHotspot(
-                    view.width * Random.nextFloat(),
-                    view.height * Random.nextFloat()
-                )
-                view.isPressed = true
-                next()
-            }
-        }
-        next()
-    }
+//    view.setBackgroundResource(
+//        activity.resolveResourceIdFromTheme(android.R.attr.selectableItemBackground)
+//    )
+//    val rippleDrawable = view.background
+//    if (rippleDrawable is RippleDrawable) {
+//        val handler = Handler(Looper.getMainLooper())
+//        fun next() {
+//            val delay = Random.nextLong(10, TWO_SECONDS_IN_MILLIS)
+//            handler.postDelayed(delay) {
+//                if (!dialog.isShowing) return@postDelayed
+//                view.isPressed = false
+//                rippleDrawable.setColor(ColorStateList.valueOf(getRandomTransparentColor()))
+//                rippleDrawable.setHotspot(
+//                    view.width * Random.nextFloat(),
+//                    view.height * Random.nextFloat()
+//                )
+//                view.isPressed = true
+//                next()
+//            }
+//        }
+//        next()
+//    }
 }
 
-fun showViewDragHelperDemoDialog(activity: FragmentActivity) {
-    // This id based on https://gist.github.com/pskink/b747e89c1e1a1e314ca6 but relatively changed
-    val view = object : ViewGroup(activity) {
-        private val bounds = List(9) { Rect() }
-        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {}
-        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-            super.onSizeChanged(w, h, oldw, oldh)
-            val w3 = w / 3
-            val h3 = h / 3
-            bounds.forEachIndexed { i, r ->
-                r.set(0, 0, w3, h3)
-                r.offset(w3 * (i % 3), h3 * (i / 3))
-                getChildAt(i).layout(r.left, r.top, r.right, r.bottom)
-            }
-        }
-
-        private val callback = object : ViewDragHelper.Callback() {
-            override fun tryCaptureView(view: View, i: Int): Boolean = true
-            override fun onViewPositionChanged(
-                changedView: View, left: Int, top: Int, dx: Int, dy: Int
-            ) = invalidate()
-
-            override fun getViewHorizontalDragRange(child: View): Int = width
-            override fun getViewVerticalDragRange(child: View): Int = height
-            override fun onViewCaptured(capturedChild: View, activePointerId: Int) =
-                bringChildToFront(capturedChild)
-
-            override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
-                val (x, y) = computeFinalPosition(releasedChild, xvel, yvel)
-                dragHelper.settleCapturedViewAt(x, y)
-                invalidate()
-            }
-
-            private fun computeFinalPosition(child: View, xvel: Float, yvel: Float): Point {
-                val r = Rect()
-                child.getHitRect(r)
-                var cx = r.centerX()
-                var cy = r.centerY()
-                if (xvel != 0f || yvel != 0f) {
-                    val s =
-                        Scroller(context) // Creating a view just to use its computation doesn't look cool
-                    val w2: Int = r.width() / 2
-                    val h2: Int = r.height() / 2
-                    s.fling(cx, cy, xvel.toInt(), yvel.toInt(), w2, width - w2, h2, height - h2)
-                    cx = s.finalX
-                    cy = s.finalY
-                }
-                bounds.forEach { if (it.contains(cx, cy)) return Point(it.left, it.top) }
-                return Point()
-            }
-
-            override fun clampViewPositionHorizontal(child: View, left: Int, dx: Int): Int =
-                left.coerceIn(0, width - child.width)
-
-            override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int =
-                top.coerceIn(0, height - child.height)
-        }
-        private val dragHelper: ViewDragHelper = ViewDragHelper.create(this, callback)
-
-        override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-            val action = event.action
-            if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
-                dragHelper.cancel()
-                return false
-            }
-            return dragHelper.shouldInterceptTouchEvent(event)
-        }
-
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouchEvent(event: MotionEvent): Boolean {
-            dragHelper.processTouchEvent(event)
-            return true
-        }
-
-        override fun computeScroll() {
-            if (dragHelper.continueSettling(true)) invalidate()
-        }
-
-        init {
-            (0..<360 step 40)
-                .map { Color.HSVToColor(floatArrayOf(it.toFloat(), 100f, 1f)) }
-                .shuffled()
-                .mapIndexed { i, color ->
-                    TextView(context).also {
-                        it.textSize = 32f
-                        it.textAlignment = View.TEXT_ALIGNMENT_CENTER
-                        it.setBackgroundColor(color)
-                        var clickedCount = i
-                        it.text = clickedCount.toString()
-                        it.setOnClickListener { _ -> it.text = (++clickedCount).toString() }
-                    }
-                }.forEach(::addView)
-        }
-    }
-    MaterialAlertDialogBuilder(activity)
-        .setView(view)
-        .show()
+private fun getRandomTransparentColor(): Int {
+    return Color.argb(0x10, Random.nextInt(256), Random.nextInt(256), Random.nextInt(256))
 }
+
+//fun showViewDragHelperDemoDialog(activity: ComponentActivity) {
+//    // This id based on https://gist.github.com/pskink/b747e89c1e1a1e314ca6 but relatively changed
+//    val view = object : ViewGroup(activity) {
+//        private val bounds = List(9) { Rect() }
+//        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {}
+//        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+//            super.onSizeChanged(w, h, oldw, oldh)
+//            val w3 = w / 3
+//            val h3 = h / 3
+//            bounds.forEachIndexed { i, r ->
+//                r.set(0, 0, w3, h3)
+//                r.offset(w3 * (i % 3), h3 * (i / 3))
+//                getChildAt(i).layout(r.left, r.top, r.right, r.bottom)
+//            }
+//        }
+//
+//        private val callback = object : ViewDragHelper.Callback() {
+//            override fun tryCaptureView(view: View, i: Int): Boolean = true
+//            override fun onViewPositionChanged(
+//                changedView: View, left: Int, top: Int, dx: Int, dy: Int
+//            ) = invalidate()
+//
+//            override fun getViewHorizontalDragRange(child: View): Int = width
+//            override fun getViewVerticalDragRange(child: View): Int = height
+//            override fun onViewCaptured(capturedChild: View, activePointerId: Int) =
+//                bringChildToFront(capturedChild)
+//
+//            override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
+//                val (x, y) = computeFinalPosition(releasedChild, xvel, yvel)
+//                dragHelper.settleCapturedViewAt(x, y)
+//                invalidate()
+//            }
+//
+//            private fun computeFinalPosition(child: View, xvel: Float, yvel: Float): Point {
+//                val r = Rect()
+//                child.getHitRect(r)
+//                var cx = r.centerX()
+//                var cy = r.centerY()
+//                if (xvel != 0f || yvel != 0f) {
+//                    val s =
+//                        Scroller(context) // Creating a view just to use its computation doesn't look cool
+//                    val w2: Int = r.width() / 2
+//                    val h2: Int = r.height() / 2
+//                    s.fling(cx, cy, xvel.toInt(), yvel.toInt(), w2, width - w2, h2, height - h2)
+//                    cx = s.finalX
+//                    cy = s.finalY
+//                }
+//                bounds.forEach { if (it.contains(cx, cy)) return Point(it.left, it.top) }
+//                return Point()
+//            }
+//
+//            override fun clampViewPositionHorizontal(child: View, left: Int, dx: Int): Int =
+//                left.coerceIn(0, width - child.width)
+//
+//            override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int =
+//                top.coerceIn(0, height - child.height)
+//        }
+//        private val dragHelper: ViewDragHelper = ViewDragHelper.create(this, callback)
+//
+//        override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+//            val action = event.action
+//            if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+//                dragHelper.cancel()
+//                return false
+//            }
+//            return dragHelper.shouldInterceptTouchEvent(event)
+//        }
+//
+//        @SuppressLint("ClickableViewAccessibility")
+//        override fun onTouchEvent(event: MotionEvent): Boolean {
+//            dragHelper.processTouchEvent(event)
+//            return true
+//        }
+//
+//        override fun computeScroll() {
+//            if (dragHelper.continueSettling(true)) invalidate()
+//        }
+//
+//        init {
+//            (0..<360 step 40)
+//                .map { Color.HSVToColor(floatArrayOf(it.toFloat(), 100f, 1f)) }
+//                .shuffled()
+//                .mapIndexed { i, color ->
+//                    TextView(context).also {
+//                        it.textSize = 32f
+//                        it.textAlignment = View.TEXT_ALIGNMENT_CENTER
+//                        it.setBackgroundColor(color)
+//                        var clickedCount = i
+//                        it.text = clickedCount.toString()
+//                        it.setOnClickListener { _ -> it.text = (++clickedCount).toString() }
+//                    }
+//                }.forEach(::addView)
+//        }
+//    }
+//    AlertDialog.Builder(activity)
+//        .setView(view)
+//        .show()
+//}
 
 // Based on https://habr.com/ru/post/514844/ and https://timiskhakov.github.io/posts/programming-guitar-music
 private fun guitarString(
@@ -1245,10 +1191,10 @@ suspend fun playSoundTick(offset: Double) {
     }
 }
 
-fun showSensorTestDialog(activity: FragmentActivity) {
+fun showSensorTestDialog(activity: ComponentActivity) {
     val sensorManager = activity.getSystemService<SensorManager>() ?: return
     val root = LinearLayout(activity)
-    val spinner = AppCompatSpinner(activity)
+    val spinner = Spinner(activity)
     root.orientation = LinearLayout.VERTICAL
     root.addView(spinner)
     var width = 1
@@ -1261,7 +1207,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
         log.addAll(List(width) { emptyFloat })
     }
 
-    val textView = object : AppCompatTextView(activity) {
+    val textView = object : TextView(activity) {
         override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
             super.onSizeChanged(w, h, oldw, oldh)
             width = w
@@ -1299,7 +1245,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
     root.addView(textView)
     val sensors = sensorManager.getSensorList(Sensor.TYPE_ALL)
     spinner.adapter = ArrayAdapter(
-        spinner.context, androidx.appcompat.R.layout.support_simple_spinner_dropdown_item,
+        spinner.context, android.R.layout.simple_spinner_dropdown_item,
         listOf("Select a sensor") + sensors
     )
     textView.setPadding((8 * activity.resources.dp).toInt())
@@ -1350,7 +1296,7 @@ fun showSensorTestDialog(activity: FragmentActivity) {
             listenToSensor()
     }
 
-    MaterialAlertDialogBuilder(activity)
+    AlertDialog.Builder(activity)
         .setView(root)
         .setPositiveButton(R.string.close, null)
         .setCancelable(false)
@@ -1358,199 +1304,57 @@ fun showSensorTestDialog(activity: FragmentActivity) {
         .show()
 }
 
-
-fun showInputDeviceTestDialog(activity: FragmentActivity) {
-    MaterialAlertDialogBuilder(activity)
-        .setView(object : AppCompatEditText(activity) {
-            init {
-                setPadding((8 * resources.dp).toInt())
-                textSize = 4 * resources.dp
-                text?.append("Input Devices Monitor:")
-            }
-
-            fun log(any: Any?) {
-                text?.appendLine()
-                text?.appendLine(any.toString())
-            }
-
-            override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
-                log(event)
-                return super.onGenericMotionEvent(event)
-            }
-
-            override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-                log(event)
-                return super.onKeyDown(keyCode, event)
-            }
-
-            override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-                log(event)
-                return super.onKeyUp(keyCode, event)
-            }
-        })
-        .show()
-}
-
-// Debug only dialog to check validity of dynamic icons generation
-fun showIconsDemoDialog(activity: FragmentActivity) {
-    val recyclerViewAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
-        override fun getItemCount() = 62
-        override fun getItemViewType(position: Int) = position
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            object : RecyclerView.ViewHolder(ShapeableImageView(activity).apply {
-                val day = viewType / 2 + 1
-                when (viewType % 2) {
-                    0 -> setImageResource(getDayIconResource(day))
-                    1 -> setImageBitmap(createStatusIcon(day))
+fun showInputDeviceTestDialog(activity: ComponentActivity) {
+    AlertDialog.Builder(activity)
+        .setView(
+            object : EditText(activity) {
+                init {
+                    setPadding((8 * resources.dp).toInt())
+                    textSize = 4 * resources.dp
+                    text?.append("Input Devices Monitor:")
                 }
-                val dp = resources.dp
-                layoutParams =
-                    ViewGroup.MarginLayoutParams((36 * dp).toInt(), (36 * dp).toInt())
-                        .apply { setMargins((4 * dp).toInt()) }
-                shapeAppearanceModel = ShapeAppearanceModel.Builder()
-                    .setAllCorners(CornerFamily.ROUNDED, 8 * dp)
-                    .setAllEdges(TriangleEdgeTreatment(4 * dp, true))
-                    .build()
-                setBackgroundColor(Color.DKGRAY)
-            }) {}
-    }
-    MaterialAlertDialogBuilder(activity)
-        .setView(RecyclerView(activity).also {
-            it.adapter = recyclerViewAdapter
-            it.layoutManager = GridLayoutManager(activity, 8)
-            it.setBackgroundColor(Color.WHITE)
-        })
-        .setNegativeButton(R.string.cancel, null)
-        .show()
-}
 
-@RequiresApi(Build.VERSION_CODES.S)
-fun showDynamicColorsDialog(activity: FragmentActivity) {
-    val dynamicColors = listOf(
-        android.R.color.system_accent1_0, android.R.color.system_accent1_10,
-        android.R.color.system_accent1_50, android.R.color.system_accent1_100,
-        android.R.color.system_accent1_200, android.R.color.system_accent1_300,
-        android.R.color.system_accent1_400, android.R.color.system_accent1_500,
-        android.R.color.system_accent1_600, android.R.color.system_accent1_700,
-        android.R.color.system_accent1_800, android.R.color.system_accent1_900,
-        android.R.color.system_accent1_1000,
-        android.R.color.system_accent2_0, android.R.color.system_accent2_10,
-        android.R.color.system_accent2_50, android.R.color.system_accent2_100,
-        android.R.color.system_accent2_200, android.R.color.system_accent2_300,
-        android.R.color.system_accent2_400, android.R.color.system_accent2_500,
-        android.R.color.system_accent2_600, android.R.color.system_accent2_700,
-        android.R.color.system_accent2_800, android.R.color.system_accent2_900,
-        android.R.color.system_accent2_1000,
-        android.R.color.system_accent3_0, android.R.color.system_accent3_10,
-        android.R.color.system_accent3_50, android.R.color.system_accent3_100,
-        android.R.color.system_accent3_200, android.R.color.system_accent3_300,
-        android.R.color.system_accent3_400, android.R.color.system_accent3_500,
-        android.R.color.system_accent3_600, android.R.color.system_accent3_700,
-        android.R.color.system_accent3_800, android.R.color.system_accent3_900,
-        android.R.color.system_accent3_1000,
-        android.R.color.system_neutral1_0, android.R.color.system_neutral1_10,
-        android.R.color.system_neutral1_50, android.R.color.system_neutral1_100,
-        android.R.color.system_neutral1_200, android.R.color.system_neutral1_300,
-        android.R.color.system_neutral1_400, android.R.color.system_neutral1_500,
-        android.R.color.system_neutral1_600, android.R.color.system_neutral1_700,
-        android.R.color.system_neutral1_800, android.R.color.system_neutral1_900,
-        android.R.color.system_neutral1_1000,
-        android.R.color.system_neutral2_0, android.R.color.system_neutral2_10,
-        android.R.color.system_neutral2_50, android.R.color.system_neutral2_100,
-        android.R.color.system_neutral2_200, android.R.color.system_neutral2_300,
-        android.R.color.system_neutral2_400, android.R.color.system_neutral2_500,
-        android.R.color.system_neutral2_600, android.R.color.system_neutral2_700,
-        android.R.color.system_neutral2_800, android.R.color.system_neutral2_900,
-        android.R.color.system_neutral2_1000,
-    )
-    val rows = listOf(
-        "", "0", "10", "50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"
-    )
-    val cols = listOf("", "accent1", "accent2", "accent3", "neutral1", "neutral2")
-    val recyclerViewAdapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
-        override fun getItemCount() = 84
-        override fun getItemViewType(position: Int) = position
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            object : RecyclerView.ViewHolder(TextView(activity).apply {
-                textAlignment = View.TEXT_ALIGNMENT_CENTER
-                val dp = resources.dp
-                setAutoSizeTextTypeUniformWithConfiguration(8, 16, 1, dp.toInt())
-                layoutParams = ViewGroup.MarginLayoutParams((50 * dp).toInt(), (25 * dp).toInt())
-                    .apply { setMargins((4 * dp).toInt()) }
-                val col = viewType % 6
-                val row = viewType / 6
-                if (row == 0) text = cols[col]
-                else if (col == 0) text = rows[row]
-                else {
-                    val index = (col - 1) * 13 + row - 1
-                    setBackgroundColor(context.getColor(dynamicColors[index]))
+                fun log(any: Any?) {
+                    text?.appendLine()
+                    text?.appendLine(any.toString())
                 }
-            }) {}
-    }
-    MaterialAlertDialogBuilder(activity)
-        .setView(RecyclerView(activity).also {
-            it.adapter = recyclerViewAdapter
-            it.layoutManager = GridLayoutManager(activity, 6)
-        })
+
+                override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
+                    log(event)
+                    return super.onGenericMotionEvent(event)
+                }
+
+                override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+                    log(event)
+                    return super.onKeyDown(keyCode, event)
+                }
+
+                override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+                    log(event)
+                    return super.onKeyUp(keyCode, event)
+                }
+            })
         .show()
 }
 
-fun showTypographyDemoDialog(activity: FragmentActivity) {
-    val text = buildSpannedString {
-        textAppearances.forEach { (appearanceName, appearanceId) ->
-            val textAppearance = TextAppearanceSpan(activity, appearanceId)
-            inSpans(textAppearance) { append(appearanceName) }
-            val originalSize = if (Build.VERSION.SDK_INT >= 34) {
-                TypedValue.deriveDimension(
-                    TypedValue.COMPLEX_UNIT_SP,
-                    textAppearance.textSize.toFloat(),
-                    activity.resources.displayMetrics
-                )
-            } else textAppearance.textSize / activity.resources.sp(1f)
-            append(" ${originalSize.roundToInt()}sp")
-            appendLine()
-        }
-    }
-    MaterialAlertDialogBuilder(activity).setView(TextView(activity).also { it.text = text }).show()
-}
-
-private val textAppearances = listOf(
-    "DisplayLarge" to com.google.android.material.R.style.TextAppearance_Material3_DisplayLarge,
-    "DisplayMedium" to com.google.android.material.R.style.TextAppearance_Material3_DisplayMedium,
-    "DisplaySmall" to com.google.android.material.R.style.TextAppearance_Material3_DisplaySmall,
-    "HeadlineLarge" to com.google.android.material.R.style.TextAppearance_Material3_HeadlineLarge,
-    "HeadlineMedium" to com.google.android.material.R.style.TextAppearance_Material3_HeadlineMedium,
-    "HeadlineSmall" to com.google.android.material.R.style.TextAppearance_Material3_HeadlineSmall,
-    "TitleLarge" to com.google.android.material.R.style.TextAppearance_Material3_TitleLarge,
-    "TitleMedium" to com.google.android.material.R.style.TextAppearance_Material3_TitleMedium,
-    "TitleSmall" to com.google.android.material.R.style.TextAppearance_Material3_TitleSmall,
-    "BodyLarge" to com.google.android.material.R.style.TextAppearance_Material3_BodyLarge,
-    "BodyMedium" to com.google.android.material.R.style.TextAppearance_Material3_BodyMedium,
-    "BodySmall" to com.google.android.material.R.style.TextAppearance_Material3_BodySmall,
-    "LabelLarge" to com.google.android.material.R.style.TextAppearance_Material3_LabelLarge,
-    "LabelMedium" to com.google.android.material.R.style.TextAppearance_Material3_LabelMedium,
-    "LabelSmall" to com.google.android.material.R.style.TextAppearance_Material3_LabelSmall
-)
-
-fun showCarouselDialog(activity: FragmentActivity) {
-    MaterialAlertDialogBuilder(activity).setView(FrameLayout(activity).also { root ->
-        root.addView(RecyclerView(activity).also {
-            it.layoutManager = CarouselLayoutManager()
-            it.adapter = SeasonsAdapter()
-            it.setHasFixedSize(true) // Just as an optimization
-            it.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                (196 * activity.resources.dp).toInt()
-            )
-            // When items have match parent width PagerSnapHelper can be used instead of LinearSnapHelper
-            PagerSnapHelper().attachToRecyclerView(it) // LinearSnapHelper().attachToRecyclerView(it)
-            it.scrollToPosition(0)
-            it.smoothScrollToPosition(12)
-        })
-    }).show()
-}
+//fun showCarouselDialog(activity: ComponentActivity) {
+//    AlertDialog.Builder(activity)
+//        .setView(FrameLayout(activity).also { root ->
+//            root.addView(RecyclerView(activity).also {
+//                it.layoutManager = CarouselLayoutManager()
+//                it.adapter = SeasonsAdapter()
+//                it.setHasFixedSize(true) // Just as an optimization
+//                it.layoutParams = ViewGroup.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                    (196 * activity.resources.dp).toInt()
+//                )
+//                // When items have match parent width PagerSnapHelper can be used instead of LinearSnapHelper
+//                PagerSnapHelper().attachToRecyclerView(it) // LinearSnapHelper().attachToRecyclerView(it)
+//                it.scrollToPosition(0)
+//                it.smoothScrollToPosition(12)
+//            })
+//        }).show()
+//}
 
 // Lindenmayer system: https://en.wikipedia.org/wiki/L-system
 class LSystem(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {

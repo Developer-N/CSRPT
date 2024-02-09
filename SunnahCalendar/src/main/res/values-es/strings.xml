@@ -19,6 +19,7 @@
     <!--Navigation drawers-->
     <string name="calendar">Calendario</string>
     <string name="date_converter">Convertidor de fecha</string>
+    <string name="converter">Convertidor</string>
     <string name="compass">Brújula</string>
     <string name="settings">Ajustes</string>
     <string name="about">Acerca de</string>
@@ -71,7 +72,7 @@
     <string name="length_of_day">Duración del día</string>
     <string name="remaining_daylight">Restante</string>
     <string name="n_hours_minutes">%1$sh %2$sm</string>
-    <string name="owghat">Tiempos de oración</string>
+    <string name="times">Tiempos</string>
     <string name="imsak">Imsak</string>
     <string name="fajr">Fajr</string>
     <string name="sunrise">Amanecer</string>
@@ -121,7 +122,7 @@
     <string name="astronomy">Astronómica</string>
     <string name="astronomical_info_summary">Mostrar información adicional como constelación, nombres antiguos de años y la luna en escorpio</string>
     <string name="week_number">Semana del año</string>
-    <string name="week_number_summary">Mostrar la semana del año en calendario</string>
+    <string name="week_number_summary">Mostrar el número de la semana en el calendario</string>
     <string name="week_start">Inicio de semana</string>
     <string name="week_start_summary">Elegir día del inicio de semana</string>
     <string name="week_ends">Fin de semanas</string>
@@ -405,4 +406,18 @@
     </plurals>
     <string name="time_zones">Husos horarios</string>
     <string name="qr_code">Código QR</string>
+    <plurals name="n_work_days">
+        <item quantity="one">%1$s día laborable</item>
+        <item quantity="many">%1$s días laborables</item>
+        <item quantity="other">%1$s días laborables</item>
+    </plurals>
+    <string name="navigate_up">Navegar hacia arriba</string>
+    <string name="open_drawer">Abra el cajón de navegación</string>
+    <string name="more_options">Más opciones</string>
+    <string name="yes">Sí</string>
+    <string name="sample_inputs">Ejemplos de entradas</string>
+    <string name="year_view">Vista del año</string>
+    <string name="ask_for_calendar_permission">¿Quieres activar tus eventos personales desde el calendario de tu dispositivo?</string>
+    <string name="exempt_app_battery_optimization">¿Te gustaría añadir la aplicación a la excepción de optimización de la batería para el correcto funcionamiento de la notificación?</string>
+    <string name="widget_background_transparency">Transparencia de fondo del widget</string>
 </resources>

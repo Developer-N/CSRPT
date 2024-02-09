@@ -1,183 +1,225 @@
 package com.byagowi.persiancalendar.ui.level
 
-import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
-import android.os.Bundle
 import android.os.PowerManager
-import android.view.MenuItem
 import android.view.Surface
-import android.view.View
-import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeGesturesPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.SyncAlt
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.getSystemService
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.isVisible
-import androidx.core.view.postDelayed
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.navigation.fragment.findNavController
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.LevelScreenBinding
+import com.byagowi.persiancalendar.ui.common.AppIconButton
+import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.ShrinkingFloatingActionButton
+import com.byagowi.persiancalendar.ui.common.StopButton
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.ExtraLargeShapeCornerSize
 import com.byagowi.persiancalendar.ui.utils.SensorEventAnnouncer
-import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
-import com.byagowi.persiancalendar.ui.utils.navigateSafe
-import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.setupUpNavigation
+import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
-import com.byagowi.persiancalendar.utils.THREE_SECONDS_AND_HALF_IN_MILLIS
-import com.google.android.material.shape.ShapeAppearanceModel
+import com.byagowi.persiancalendar.variants.debugLog
+import java.util.UUID
 
-class LevelScreen : Fragment(R.layout.level_screen) {
+@Composable
+fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
+    var isStopped by remember { mutableStateOf(false) }
+    var orientationProvider by remember { mutableStateOf<OrientationProvider?>(null) }
+    val announcer = remember { SensorEventAnnouncer(R.string.level) }
+    var cmInchFlip by remember { mutableStateOf(false) }
+    var fullscreenToken by remember { mutableStateOf<UUID?>(null) }
+    val isFullscreen = fullscreenToken != null
+    val context = LocalContext.current
 
-    private var provider: OrientationProvider? = null
-    private var isStopped = false
-    private var lockCleanup: (() -> Unit)? = null
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupRotationLock()
-        val binding = LevelScreenBinding.bind(view)
-        binding.appBar.toolbar.setTitle(R.string.level)
-        binding.appBar.toolbar.setupUpNavigation()
-        val activity = activity ?: return
-        provider = OrientationProvider(activity, binding.levelView)
-        val announcer = SensorEventAnnouncer(R.string.level)
-        binding.levelView.onIsLevel = { isLevel ->
-            announcer.check(activity, isLevel, lockCleanup != null)
-        }
-        binding.bottomAppbar.menu.add(R.string.level).also {
-            it.icon = binding.bottomAppbar.context.getCompatDrawable(R.drawable.ic_compass_menu)
-            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        }.onClick {
-            // If compass wasn't in backstack (level is brought from shortcut), navigate to it
-            if (!findNavController().popBackStack(R.id.compass, false))
-                findNavController().navigateSafe(LevelScreenDirections.actionLevelToCompass())
-        }
-
-        binding.appBar.toolbar.menu.add("cm / in").also { menuItem ->
-            val toolbarContext = binding.appBar.toolbar.context
-            menuItem.icon = toolbarContext.getCompatDrawable(R.drawable.ic_sync_alt)
-            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-            menuItem.onClick {
-                binding.rulerView.cmInchFlip = !binding.rulerView.cmInchFlip
-            }
-        }
-        binding.appBar.toolbar.menu.add(getString(R.string.full_screen)).also { menuItem ->
-            val defaultMask = binding.maskableFrameLayout.shapeAppearanceModel
-            val rulerNonFullScreenTopSpace = (25 * resources.dp).toInt()
-            binding.paddingFrameLayout.updatePadding(top = rulerNonFullScreenTopSpace)
-            val toolbarContext = binding.appBar.toolbar.context
-            menuItem.icon = toolbarContext.getCompatDrawable(R.drawable.ic_fullscreen)
-            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-            var lock: PowerManager.WakeLock? = null
-            menuItem.onClick {
-                if (lock != null) return@onClick lockCleanup?.invoke().let { }
-
-                lock = activity.getSystemService<PowerManager>()
-                    ?.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "SunnahCalendar:level")
-                lock?.acquire(FIFTEEN_MINUTES_IN_MILLIS)
-
-                binding.bottomAppbar.performHide(true)
-                binding.appBar.toolbar.isVisible = false
-                binding.maskableFrameLayout.shapeAppearanceModel = ShapeAppearanceModel()
-                binding.paddingFrameLayout.updatePadding(top = 0)
-                binding.exitFullScreen.show()
-                binding.exitFullScreen.postDelayed(THREE_SECONDS_AND_HALF_IN_MILLIS) {
-                    binding.exitFullScreen.shrink()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(Unit) {
+        val activity = context.getActivity() ?: return@DisposableEffect onDispose {}
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                debugLog("level: ON_RESUME")
+                // Rotation lock, https://stackoverflow.com/a/75984863
+                val destination =
+                    @Suppress("DEPRECATION") activity.windowManager?.defaultDisplay?.rotation
+                activity.requestedOrientation = when (destination) {
+                    Surface.ROTATION_180 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+                    Surface.ROTATION_270 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                    Surface.ROTATION_0 -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    Surface.ROTATION_90 -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                 }
-
-                val windowInsetsController =
-                    WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-                windowInsetsController.systemBarsBehavior =
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-                // TODO: We should fill the system status bar space also
-
-                lockCleanup = {
-                    binding.appBar.toolbar.isVisible = true
-                    binding.maskableFrameLayout.shapeAppearanceModel = defaultMask
-                    binding.paddingFrameLayout.updatePadding(top = rulerNonFullScreenTopSpace)
-                    windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-                    binding.exitFullScreen.hide()
-                    lock?.release()
-                    lock = null
-                    binding.bottomAppbar.performShow(true)
-                    lockCleanup = null
+                if (orientationProvider?.isListening == false && !isStopped) {
+                    orientationProvider?.startListening()
                 }
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                debugLog("level: ON_PAUSE")
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                if (orientationProvider?.isListening == true) orientationProvider?.stopListening()
             }
         }
-        binding.exitFullScreen.setOnClickListener { lockCleanup?.invoke() }
-        binding.fab.setOnClickListener {
-            val provider = provider ?: return@setOnClickListener
-            val stop = !provider.isListening
-            binding.fab.setImageResource(if (stop) R.drawable.ic_stop else R.drawable.ic_play)
-            binding.fab.contentDescription = getString(if (stop) R.string.stop else R.string.resume)
-            isStopped = !stop
-            if (stop) provider.startListening() else provider.stopListening()
-        }
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-            }
-            binding.bottomAppbar.updatePadding(bottom = insets.bottom)
-            binding.fab.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                bottomMargin = insets.bottom / 2
-            }
-            binding.levelView.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                bottomMargin =
-                    if (insets.bottom != 0) insets.bottom + (75 * resources.dp).toInt() else 0
-            }
-            WindowInsetsCompat.CONSUMED
-        }
-
-        // It could be animated but it doesn't look that smooth so skip for now
-        // val insetsCallback = object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
-        //     override fun onProgress(
-        //         insets: WindowInsetsCompat,
-        //         runningAnimations: MutableList<WindowInsetsAnimationCompat>
-        //     ): WindowInsetsCompat {
-        //         return WindowInsetsCompat.CONSUMED
-        //     }
-        // }
-        // ViewCompat.setWindowInsetsAnimationCallback(binding.root, insetsCallback)
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    @SuppressLint("SourceLockedOrientationActivity")
-    override fun onResume() {
-        super.onResume()
-        if (!isStopped) provider?.startListening()
-    }
+    if (fullscreenToken != null) DisposableEffect(fullscreenToken) {
+        val lock = context.getSystemService<PowerManager>()
+            ?.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "persiancalendar:level")
+        lock?.acquire(FIFTEEN_MINUTES_IN_MILLIS)
 
-    override fun onPause() {
-        if (provider?.isListening == true) provider?.stopListening()
-        lockCleanup?.invoke()
-        super.onPause()
-    }
-}
+        val activity = context.getActivity() ?: return@DisposableEffect onDispose {}
+        val windowInsetsController =
+            WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
-// https://stackoverflow.com/a/75984863
-private fun Fragment.setupRotationLock() {
-    lifecycle.addObserver(LifecycleEventObserver { _, event ->
-        val activity = activity ?: return@LifecycleEventObserver
-        if (event != Lifecycle.Event.ON_PAUSE && event != Lifecycle.Event.ON_RESUME)
-            return@LifecycleEventObserver
-        val destination =
-            if (event == Lifecycle.Event.ON_PAUSE) null
-            else @Suppress("DEPRECATION") activity.windowManager?.defaultDisplay?.rotation
-        activity.requestedOrientation = when (destination) {
-            Surface.ROTATION_180 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
-            Surface.ROTATION_270 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-            Surface.ROTATION_0 -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            Surface.ROTATION_90 -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        onDispose {
+            lock?.release()
+            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
         }
-    })
+    }
+
+    Column {
+        AnimatedVisibility(visible = !isFullscreen) {
+            @OptIn(ExperimentalMaterial3Api::class) TopAppBar(
+                title = { Text(stringResource(R.string.level)) },
+                colors = appTopAppBarColors(),
+                navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
+                actions = {
+                    AppIconButton(
+                        icon = Icons.Default.SyncAlt,
+                        title = "cm / in",
+                    ) { cmInchFlip = !cmInchFlip }
+                    AppIconButton(
+                        icon = Icons.Default.Fullscreen,
+                        title = stringResource(R.string.full_screen),
+                    ) { fullscreenToken = UUID.randomUUID() }
+                },
+            )
+        }
+
+        val topCornersRoundness by animateDpAsState(
+            if (isFullscreen) 0.dp else ExtraLargeShapeCornerSize.dp,
+            animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+            label = "corner",
+        )
+        Surface(
+            shape = MaterialTheme.shapes.large.copy(
+                topStart = CornerSize(topCornersRoundness),
+                topEnd = CornerSize(topCornersRoundness),
+                bottomStart = ZeroCornerSize,
+                bottomEnd = ZeroCornerSize,
+            )
+        ) {
+            Box {
+                Crossfade(targetState = cmInchFlip, label = "ruler") { state ->
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(
+                                if (isFullscreen) Modifier.safeDrawingPadding()
+                                else Modifier.padding(top = topCornersRoundness)
+                            ),
+                        factory = ::RulerView,
+                        update = { it.cmInchFlip = state },
+                    )
+                }
+                Column {
+                    AndroidView(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .then(if (isFullscreen) Modifier.safeDrawingPadding() else Modifier),
+                        factory = {
+                            val levelView = LevelView(it)
+                            context.getActivity()?.let { activity ->
+                                orientationProvider = OrientationProvider(activity, levelView)
+                            }
+                            levelView
+                        },
+                        update = update@{ levelView ->
+                            val provider = orientationProvider ?: return@update
+                            if (isStopped && provider.isListening) {
+                                levelView.onIsLevel = {}
+                                provider.stopListening()
+                            } else if (!provider.isListening) {
+                                levelView.onIsLevel =
+                                    { isLevel -> announcer.check(context, isLevel) }
+                                provider.startListening()
+                            }
+                        },
+                    )
+                    AnimatedVisibility(visible = !isFullscreen) {
+                        BottomAppBar {
+                            Spacer(Modifier.width(8.dp))
+                            AnimatedVisibility(visible = !isFullscreen) {
+                                AppIconButton(
+                                    icon = Icons.Default.Explore,
+                                    title = stringResource(R.string.compass),
+                                    onClick = navigateToCompass,
+                                )
+                            }
+                            Spacer(Modifier.weight(1f, fill = true))
+                            StopButton(isStopped) { isStopped = it }
+                            Spacer(Modifier.width(16.dp))
+                        }
+                    }
+                }
+                if (isFullscreen) Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(horizontal = 20.dp, vertical = 32.dp),
+                ) { StopButton(isStopped) { isStopped = it } }
+
+                ShrinkingFloatingActionButton(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .safeGesturesPadding()
+                        .padding(top = 32.dp),
+                    isVisible = isFullscreen,
+                    action = { fullscreenToken = null },
+                    icon = Icons.Default.FullscreenExit,
+                    title = stringResource(R.string.exit_full_screen),
+                )
+            }
+        }
+    }
 }

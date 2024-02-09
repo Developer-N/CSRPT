@@ -236,7 +236,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(36.7, 67.11, 370.751)
+        coordinates = Coordinates(36.7, 67.11, 0.0)
     ),
     "BAMYAN" to CityItem(
         key = "BAMYAN",
@@ -244,7 +244,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(34.81, 67.81, 2531.299)
+        coordinates = Coordinates(34.81, 67.81, 0.0)
     ),
     "DAYKUNDI" to CityItem(
         key = "DAYKUNDI",
@@ -252,7 +252,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(33.75, 66.25, 2234.5)
+        coordinates = Coordinates(33.75, 66.25, 0.0)
     ),
     "GHAZNI" to CityItem(
         key = "GHAZNI",
@@ -260,7 +260,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(33.55, 68.41, 2190.846)
+        coordinates = Coordinates(33.55, 68.41, 0.0)
     ),
     "HELMAND" to CityItem(
         key = "HELMAND",
@@ -268,7 +268,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(31.58, 64.36, 778.969)
+        coordinates = Coordinates(31.58, 64.36, 0.0)
     ),
     "HERAT" to CityItem(
         key = "HERAT",
@@ -276,7 +276,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(34.34, 62.2, 922.0)
+        coordinates = Coordinates(34.34, 62.2, 0.0)
     ),
     "KABUL" to CityItem(
         key = "KABUL",
@@ -284,7 +284,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(34.53, 69.16, 1797.55)
+        coordinates = Coordinates(34.53, 69.16, 0.0)
     ),
     "KANDAHAR" to CityItem(
         key = "KANDAHAR",
@@ -292,7 +292,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(31.61, 65.71, 1003.473)
+        coordinates = Coordinates(31.61, 65.71, 0.0)
     ),
     "KUNDUZ" to CityItem(
         key = "KUNDUZ",
@@ -300,7 +300,7 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(36.728, 68.868, 391.0)
+        coordinates = Coordinates(36.728, 68.868, 0.0)
     ),
     "NANGARHAR" to CityItem(
         key = "NANGARHAR",
@@ -308,111 +308,111 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         countryCode = "af",
         countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
         "أفغانستان",
-        coordinates = Coordinates(34.43, 70.44, 576.629)
+        coordinates = Coordinates(34.43, 70.44, 0.0)
     ),
     "KARBALA" to CityItem(
         key = "KARBALA",
         en = "Karbala", fa = "کربلا", ckb = "کەربەلا", ar = "كربلاء",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(32.37, 44.02, 34.0)
+        coordinates = Coordinates(32.37, 44.02, 0.0)
     ),
     "NAJAF" to CityItem(
         key = "NAJAF",
         en = "Najaf", fa = "نجف", ckb = "نەجەف", ar = "النجف",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(32.0, 44.2, 46.0)
+        coordinates = Coordinates(32.0, 44.2, 0.0)
     ),
     "BAGHDAD" to CityItem(
         key = "BAGHDAD",
         en = "Baghdad", fa = "بغداد", ckb = "بەغدا", ar = "بغداد",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(33.325, 44.422, 38.0)
+        coordinates = Coordinates(33.325, 44.422, 0.0)
     ),
     "BASRAH" to CityItem(
         key = "BASRAH",
         en = "Basrah", fa = "بصره", ckb = "بەسرە", ar = "البصرة",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(30.5, 47.78, 5.0)
+        coordinates = Coordinates(30.5, 47.78, 0.0)
     ),
     "TIKRIT" to CityItem(
         key = "TIKRIT",
         en = "Tikrit", fa = "تکریت", ckb = "سەڵاحەدین", ar = "تكريت",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(34.3636, 43.4048, 114.0)
+        coordinates = Coordinates(34.3636, 43.4048, 0.0)
     ),
     "KIRKUK" to CityItem(
         key = "KIRKUK",
         en = "Kirkuk", fa = "کرکوک", ckb = "کەرکووک", ar = "كركوك",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(35.46, 44.38, 341.0)
+        coordinates = Coordinates(35.46, 44.38, 0.0)
     ),
     "SULAYMANIYAH" to CityItem(
         key = "SULAYMANIYAH",
         en = "Sulaymaniyah", fa = "سلمانیه", ckb = "سلێمانی", ar = "السليمانية",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(35.55, 45.43, 837.0)
+        coordinates = Coordinates(35.55, 45.43, 0.0)
     ),
     "ERBIL" to CityItem(
         key = "ERBIL",
         en = "Erbil", fa = "اربیل", ckb = "ھەولێر", ar = "أربيل",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(36.2, 44.01, 412.0)
+        coordinates = Coordinates(36.2, 44.01, 0.0)
     ),
     "DUHOK" to CityItem(
         key = "DUHOK",
         en = "Duhok", fa = "دهوک", ckb = "دھۆک", ar = "دهوك",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(36.86, 42.94, 532.0)
+        coordinates = Coordinates(36.86, 42.94, 0.0)
     ),
     "MOSUL" to CityItem(
         key = "MOSUL",
         en = "Mosul", fa = "موصل", ckb = "مووسڵ", ar = "الموصل",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(35.55, 45.43, 837.0)
+        coordinates = Coordinates(35.55, 45.43, 0.0)
     ),
     "ZAKHO" to CityItem(
         key = "ZAKHO",
         en = "Zakho", fa = "زاخو", ckb = "زاخۆ", ar = "زاخو",
         countryCode = "iq",
         countryEn = "Iraq", countryFa = "عراق", countryCkb = "عێراق", countryAr = "العراق",
-        coordinates = Coordinates(37.15, 42.683, 440.0)
+        coordinates = Coordinates(37.15, 42.683, 0.0)
     ),
     "ANKARA" to CityItem(
         key = "ANKARA",
         en = "Ankara", fa = "آنکارا", ckb = "ئەنقەرە", ar = "أنقرة",
         countryCode = "tr",
         countryEn = "Turkey", countryFa = "ترکیه", countryCkb = "تورکیا", countryAr = "تركيا",
-        coordinates = Coordinates(39.93, 32.85, 938.0)
+        coordinates = Coordinates(39.93, 32.85, 0.0)
     ),
     "DIYARBAKIR" to CityItem(
         key = "DIYARBAKIR",
         en = "Diyarbakır", fa = "دیاربکر", ckb = "ئامەد", ar = "ديار بكر",
         countryCode = "tr",
         countryEn = "Turkey", countryFa = "ترکیه", countryCkb = "تورکیا", countryAr = "تركيا",
-        coordinates = Coordinates(37.91, 40.24, 675.0)
+        coordinates = Coordinates(37.91, 40.24, 0.0)
     ),
     "ISTANBUL" to CityItem(
         key = "ISTANBUL",
         en = "Istanbul", fa = "استانبول", ckb = "ئەستەمبوڵ", ar = "إسطنبول",
         countryCode = "tr",
         countryEn = "Turkey", countryFa = "ترکیه", countryCkb = "تورکیا", countryAr = "تركيا",
-        coordinates = Coordinates(41.013611, 28.955, 40.0)
+        coordinates = Coordinates(41.013611, 28.955, 0.0)
     ),
     "IZMIR" to CityItem(
         key = "IZMIR",
         en = "İzmir", fa = "ازمیر", ckb = "ئیزمیر", ar = "إزمير",
         countryCode = "tr",
         countryEn = "Turkey", countryFa = "ترکیه", countryCkb = "تورکیا", countryAr = "تركيا",
-        coordinates = Coordinates(38.42, 27.14, 2.0)
+        coordinates = Coordinates(38.42, 27.14, 0.0)
     ),
 )

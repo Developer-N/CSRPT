@@ -19,13 +19,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
-class AzkarViewModel constructor(
+class AzkarViewModel(
     private val azkarRepository: AzkarRepository,
     private val prefs: SharedPreferences
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
+
+    private val _isSearchBoxIsOpen = MutableStateFlow(false)
+    val isSearchBoxIsOpen = _isSearchBoxIsOpen.asStateFlow()
 
     private val _chapters = MutableStateFlow(emptyList<AzkarChapter>())
     val chapters = query.combine(_chapters) { text, chapters ->
@@ -108,5 +111,13 @@ class AzkarViewModel constructor(
             _azkarLang.value = lang
             _isLoading.value = false
         }
+    }
+
+    fun openSearch() {
+        _isSearchBoxIsOpen.value = true
+    }
+
+    fun closeSearch() {
+        _isSearchBoxIsOpen.value = false
     }
 }//end of class

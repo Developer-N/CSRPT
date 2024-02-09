@@ -5,11 +5,6 @@ import android.os.Build
 
 const val LOG_TAG = "NAMOO"
 
-const val LOCATION_PERMISSION_REQUEST_CODE = 23
-const val CALENDAR_READ_PERMISSION_REQUEST_CODE = 55
-const val POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_CALENDAR_NOTIFICATION = 38
-const val POST_NOTIFICATION_PERMISSION_REQUEST_CODE_ENABLE_ATHAN_NOTIFICATION = 34
-
 const val LAST_CHOSEN_TAB_KEY = "LastChosenTab"
 
 const val PREF_MAIN_CALENDAR_KEY = "mainCalendarType"
@@ -41,6 +36,7 @@ const val PREF_ASTRONOMICAL_FEATURES = "astronomicalFeatures"
 const val PREF_SHOW_WEEK_OF_YEAR_NUMBER = "showWeekOfYearNumber"
 const val PREF_NOTIFY_DATE = "NotifyDate"
 const val PREF_NOTIFY_IGNORED = "NotifyIgnored"
+const val PREF_BATTERY_OPTIMIZATION_IGNORED = "BatteryOptimizationIgnored"
 const val PREF_NOTIFICATION_ATHAN = "NotificationAthan"
 const val PREF_NOTIFY_DATE_LOCK_SCREEN = "NotifyDateLockScreen"
 const val PREF_ATHAN_VOLUME = "athanVolume"
@@ -57,6 +53,7 @@ const val PREF_ATHAN_ALARM = "AthanAlarm"
 const val PREF_ATHAN_GAP = "AthanGap"
 const val PREF_THEME = "Theme"
 const val PREF_THEME_GRADIENT = "ThemeGradient"
+const val PREF_THEME_CYBERPUNK = "ThemeCyberpunk"
 const val PREF_HOLIDAY_TYPES = "holiday_types"
 const val PREF_WEEK_START = "WeekStart"
 const val PREF_WEEK_ENDS = "WeekEnds"
@@ -64,13 +61,12 @@ const val PREF_SHIFT_WORK_STARTING_JDN = "ShiftWorkJdn"
 const val PREF_SHIFT_WORK_SETTING = "ShiftWorkSetting"
 const val PREF_SHIFT_WORK_RECURS = "ShiftWorkRecurs"
 const val PREF_DISABLE_OWGHAT = "DisableOwghat"
-const val PREF_HAS_EVER_VISITED = "PreferenceIsVisitedOnce"
 const val PREF_LAST_APP_VISIT_VERSION = "LastAppVisitVersion"
 const val PREF_SHOW_QIBLA_IN_COMPASS = "showQibla"
 const val PREF_TRUE_NORTH_IN_COMPASS = "trueNorth"
 const val PREF_WALLPAPER_DARK = "WallpaperDark"
-
-const val CHANGE_LANGUAGE_IS_PROMOTED_ONCE = "CHANGE_LANGUAGE_IS_PROMOTED_ONCE"
+const val PREF_DREAM_NOISE = "DreamNoise"
+const val PREF_WIDGET_TRANSPARENCY = "WidgetTransparency"
 
 const val DEFAULT_CITY = "CUSTOM"
 const val DEFAULT_PRAY_TIME_METHOD = "Karachi"
@@ -90,12 +86,13 @@ const val DEFAULT_ATHAN_VOLUME = 3
 const val DEFAULT_ISLAMIC_OFFSET = "0"
 const val DEFAULT_SECONDARY_CALENDAR_IN_TABLE = false
 const val DEFAULT_THEME_GRADIENT = true
+const val DEFAULT_THEME_CYBERPUNK = false
 const val DEFAULT_WALLPAPER_DARK = true
+const val DEFAULT_DREAM_NOISE = false
 const val DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS = false
 const val DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS = false
+const val DEFAULT_WIDGET_TRANSPARENCY = 0f
 
-const val LOAD_APP_ID = 1000
-const val THREE_HOURS_APP_ID = 1010
 const val ALARMS_BASE_ID = 2000
 
 const val BROADCAST_ALARM = "BROADCAST_ALARM"

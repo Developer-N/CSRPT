@@ -2,6 +2,7 @@ package ir.namoo.quran.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,9 +16,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,12 +26,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.colorAppBar
-import ir.namoo.commons.utils.colorOnAppBar
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -43,9 +42,7 @@ fun SettingsScreen(drawerState: DrawerState, viewModel: SettingViewModel = koinV
 
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(
-                text = stringResource(id = R.string.settings), fontFamily = FontFamily(appFont)
-            )
+            Text(text = stringResource(id = R.string.settings))
         }, navigationIcon = {
             IconButton(onClick = {
                 scope.launch {
@@ -58,31 +55,34 @@ fun SettingsScreen(drawerState: DrawerState, viewModel: SettingViewModel = koinV
                     imageVector = Icons.Filled.Menu, contentDescription = "Menu"
                 )
             }
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorAppBar,
-            titleContentColor = colorOnAppBar,
-            navigationIconContentColor = colorOnAppBar,
-            actionIconContentColor = colorOnAppBar
+        }, colors = appTopAppBarColors()
         )
-        )
-    }) { contentPadding ->
-        Column(
+    }) { paddingValues ->
+        Surface(
             modifier = Modifier
-                .padding(contentPadding)
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding()),
+            shape = materialCornerExtraLargeTop()
         ) {
-            AnimatedVisibility(visible = isLoading) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp, 4.dp)
-                        .height(2.dp),
-                    strokeCap = StrokeCap.Round
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                AnimatedVisibility(visible = isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp, 4.dp)
+                            .height(2.dp),
+                        strokeCap = StrokeCap.Round
+                    )
+                }
+                TranslateItems(viewModel)
+                QaraatItems(viewModel)
+                FontSettingItems(viewModel)
             }
-            TranslateItems(viewModel)
-            QaraatItems(viewModel)
-            FontSettingItems(viewModel)
         }
     }
 }

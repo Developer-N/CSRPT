@@ -6,10 +6,13 @@ import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.ProvinceModel
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesDB
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
+import ir.namoo.religiousprayers.praytimeprovider.EditedPrayTimesEntity
+import ir.namoo.religiousprayers.praytimeprovider.PrayTimesDB
 
 class LocalPrayTimeRepository(
     private val locationsDB: LocationsDB,
-    private val downloadPrayTimeDB: DownloadedPrayTimesDB
+    private val downloadPrayTimeDB: DownloadedPrayTimesDB,
+    private val editedPrayTimesDB: PrayTimesDB
 ) {
     suspend fun insertCountries(countryList: List<CountryModel>) {
         runCatching {
@@ -51,4 +54,44 @@ class LocalPrayTimeRepository(
             downloadPrayTimeDB.downloadedPrayTimes().insertToDownload(prayTimesList)
         }.onFailure { }
     }
+
+    suspend fun getDownloadedTimeForCity(cityId: Int, dayNumber: Int): DownloadedPrayTimesEntity? {
+        runCatching {
+            return downloadPrayTimeDB.downloadedPrayTimes().getDownloadFor(cityId, dayNumber)
+        }.onFailure { return null }.getOrElse { return null }
+    }
+
+    suspend fun getEdited(dayNumber: Int): EditedPrayTimesEntity? {
+        runCatching {
+            return editedPrayTimesDB.prayTimes().getEdited(dayNumber)
+        }.onFailure { return null }.getOrElse { return null }
+    }
+
+    suspend fun getDownloadedTimesFor(cityId: Int): List<DownloadedPrayTimesEntity> {
+        runCatching {
+            return downloadPrayTimeDB.downloadedPrayTimes().getDownloadFor(cityId)
+        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
+    }
+
+    suspend fun getAllEditedTimes(): List<EditedPrayTimesEntity> {
+        runCatching {
+            return editedPrayTimesDB.prayTimes().getAllEdited()
+        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
+    }
+
+    suspend fun insertEdit(newEditTimes: List<EditedPrayTimesEntity>) {
+        runCatching {
+            clearEditTimes()
+            editedPrayTimesDB.prayTimes().insertEdited(newEditTimes)
+        }.onFailure { }
+    }
+
+    suspend fun clearEditTimes() {
+        runCatching {
+            editedPrayTimesDB.prayTimes().clearEditedPrayTimes()
+        }
+    }
+
+    suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
+        editedPrayTimesDB.prayTimes().updateEdited(times)
 }

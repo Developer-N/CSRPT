@@ -18,6 +18,7 @@
     <string name="about">لەبارە</string>
     <string name="gpl_logo">لۆگۆی GPL</string>
     <string name="date_converter">بگۆڕی ڕێککەوت</string>
+    <string name="converter">بگۆڕی</string>
     <string name="widget_text_color">ڕەنگی دەقی ویجیت</string>
     <string name="select_widgets_text_color">ھەڵبژاردنی ڕەنگی دڵخواز بۆ دەقی ویجیت</string>
     <string name="notify_date">ئاگاداریی ڕێککەوت</string>
@@ -58,7 +59,7 @@
     <string name="sunrise">ڕۆژھەڵات</string>
     <string name="sunset">ڕۆژاوا</string>
     <string name="midnight">نیوه‌شەوی شەرعی</string>
-    <string name="owghat">کاتە شەرعییەکان</string>
+    <string name="times">کاتە</string>
     <string name="events">بۆنەکان</string>
     <string name="events_summary">چ جۆر بۆنەگەلێک لە ڕۆژژمێردا نیشان بدرێ</string>
     <string name="today">ئەمڕۆ</string>
@@ -239,6 +240,14 @@
         <item quantity="one">%1$s ڕۆژ</item>
         <item quantity="other">%1$s ڕۆژ</item>
     </plurals>
+    <plurals name="n_work_days">
+        <item quantity="one">تەنها یەک ڕۆژی کاری</item>
+        <item quantity="other">%1$s ڕۆژی کاری</item>
+    </plurals>
+    <plurals name="n_weeks">
+        <item quantity="one">تەنها یەک حەفتە</item>
+        <item quantity="other">%1$s حەفتە</item>
+    </plurals>
     <plurals name="n_months">
         <item quantity="one">%1$s مانگ</item>
         <item quantity="other">%1$s مانگ</item>
@@ -375,10 +384,24 @@
     <string name="chinese_calendar">ڕۆژژمێری چینی</string>
     <string name="chinese">چینی</string>
     <string name="screensaver_settings">ڕێکخستنەکانی شاشەپارێز</string>
-    <string name="live_wallpaper_settings">ڕێکخستنەکانی دیوارکاغەزی زیندوو</string>
+    <string name="live_wallpaper_settings">ڕێکخستنەکانی نەخشەوێنە زیندوو</string>
     <string name="tropical">خولگەیی</string>
     <string name="enable_notification">دەتەوێت ئاگاداریی ڕێککەوت چالاک بکەیت؟</string>
     <string name="add_quick_settings_tile">زیادکردنی کاشیی ڕێکخستنی خێرا</string>
     <string name="true_north">باکووری ڕاستی</string>
-    <string name="lock">قفڵ</string>
+    <string name="lock">قوفڵ</string>
+    <string name="yes">بەڵێ</string>
+    <plurals name="n_seconds">
+        <item quantity="one">تەنها یەک چرکە</item>
+        <item quantity="other">%1$s چرکە</item>
+    </plurals>
+    <string name="sample_inputs">داتایی نموونەیی</string>
+    <string name="navigate_up">ڕۆیشتن بۆ سەرەوە</string>
+    <string name="qr_code">کۆدی وەڵامدانەوەی خێرا</string>
+    <string name="color_gradient">لاری ڕەنگی</string>
+    <string name="time_zones">ناوچەی کاتییەکان</string>
+    <string name="exit_full_screen">دەرچوون لە شاشەی پڕ</string>
+    <string name="full_screen">پڕ بە شاشە</string>
+    <string name="open_drawer">کردنەوەی لیستی ڕێنیشاندەر</string>
+    <string name="more_options">هەڵبژاردەی زیاتر</string>
 </resources>

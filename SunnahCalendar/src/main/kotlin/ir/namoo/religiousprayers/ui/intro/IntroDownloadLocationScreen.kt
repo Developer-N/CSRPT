@@ -25,9 +25,8 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -44,16 +43,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.iconColor
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import org.koin.androidx.compose.koinViewModel
 
@@ -79,7 +75,6 @@ fun IntroDownloadLocationScreen(
         ), onClick = { viewModel.loadData() }) {
             Text(
                 text = stringResource(id = R.string.str_retry),
-                fontFamily = FontFamily(appFont),
                 fontSize = 20.sp
             )
             Icon(
@@ -87,23 +82,21 @@ fun IntroDownloadLocationScreen(
                 contentDescription = stringResource(id = R.string.str_retry)
             )
         }
-        Card(
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 100.dp)
-                .alpha(0.95f)
-                .animateContentSize(animationSpec = spring()),
-            colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-            elevation = CardDefaults.elevatedCardElevation()
+                .alpha(0.99f)
+                .animateContentSize(animationSpec = spring())
         ) {
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp),
                 text = stringResource(id = R.string.welcome_please_select_your_city),
-                fontFamily = FontFamily(appFont),
                 color = MaterialTheme.colorScheme.primary,
-                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
             TextField(
@@ -113,21 +106,16 @@ fun IntroDownloadLocationScreen(
                 value = query,
                 onValueChange = { viewModel.updateQuery(it) },
                 enabled = downloadingCityID == -1 && !isLoading,
-                label = {
-                    Text(
-                        text = stringResource(id = R.string.search),
-                        fontFamily = FontFamily(appFont),
-                    )
-                },
+                label = { Text(text = stringResource(id = R.string.search)) },
                 trailingIcon = {
                     IconButton(onClick = {
                         viewModel.updateQuery("")
                         focus.clearFocus()
-                    }) {
+                    }, enabled = query.isNotEmpty()) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = stringResource(id = R.string.cancel),
-                            tint = if (query.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.scrim
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 },
@@ -155,7 +143,7 @@ fun IntroDownloadLocationScreen(
                         .padding(8.dp)
                 ) {
                     items(items = addedCities, key = { it.id }) { city ->
-                        Card(
+                        ElevatedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .animateItemPlacement()
@@ -164,12 +152,12 @@ fun IntroDownloadLocationScreen(
                                     if (downloadingCityID == -1) viewModel.downloadAndStart(
                                         context, city, startMainActivity
                                     )
-                                },
-                            colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-                            elevation = CardDefaults.elevatedCardElevation()
+                                }
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -177,7 +165,7 @@ fun IntroDownloadLocationScreen(
                                         .padding(horizontal = 8.dp)
                                         .weight(3f),
                                     text = city.name,
-                                    fontFamily = FontFamily(appFont)
+                                    fontWeight = FontWeight.SemiBold
                                 )
                                 AnimatedVisibility(visible = downloadingCityID == city.id) {
                                     CircularProgressIndicator(
@@ -197,7 +185,7 @@ fun IntroDownloadLocationScreen(
                                         Icon(
                                             imageVector = Icons.Filled.CloudDownload,
                                             contentDescription = stringResource(id = R.string.download),
-                                            tint = iconColor
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
@@ -217,10 +205,7 @@ fun IntroDownloadLocationScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(onClick = { goToCustomLocation() }) {
-                        Text(
-                            text = stringResource(id = R.string.custom_location),
-                            fontFamily = FontFamily(appFont)
-                        )
+                        Text(text = stringResource(id = R.string.custom_location))
                         Icon(imageVector = Icons.Filled.LocationOn, contentDescription = "location")
                     }
                 }

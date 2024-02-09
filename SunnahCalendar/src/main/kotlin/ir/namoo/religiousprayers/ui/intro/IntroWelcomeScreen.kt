@@ -15,11 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
 
 @Composable
 fun IntroWelcomeScreen(goToDownloadLocation: () -> Unit) {
@@ -38,7 +36,6 @@ fun IntroWelcomeScreen(goToDownloadLocation: () -> Unit) {
                 .background(MaterialTheme.colorScheme.primary)
                 .padding(8.dp),
             text = stringResource(id = R.string.app_name),
-            fontFamily = FontFamily(appFont),
             textAlign = TextAlign.Center,
             fontSize = MaterialTheme.typography.headlineSmall.fontSize,
             color = MaterialTheme.colorScheme.onPrimary
@@ -48,14 +45,12 @@ fun IntroWelcomeScreen(goToDownloadLocation: () -> Unit) {
                 .fillMaxWidth()
                 .padding(8.dp),
             text = stringResource(id = R.string.str_welcome),
-            fontFamily = FontFamily(appFont),
             fontSize = MaterialTheme.typography.bodyMedium.fontSize
         )
         Button(modifier = Modifier.padding(8.dp), onClick = { goToDownloadLocation() }) {
             Text(
                 text = stringResource(id = R.string.select_city),
-                fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                fontFamily = FontFamily(appFont)
+                fontSize = MaterialTheme.typography.headlineSmall.fontSize
             )
 
             Icon(

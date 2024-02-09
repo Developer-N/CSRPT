@@ -8,7 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import ir.namoo.commons.DEFAULT_AZKAR_LANG
 import ir.namoo.commons.PREF_AZKAR_LANG
-import ir.namoo.commons.appLink
+import ir.namoo.commons.APP_LINK
 import ir.namoo.commons.downloader.DownloadResult
 import ir.namoo.commons.downloader.downloadFile
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarChapter
@@ -20,13 +20,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
-class AzkarActivityViewModel constructor(
-    private val azkarRepository: AzkarRepository,
-    private val prefs: SharedPreferences
-) :
-    ViewModel() {
+class AzkarActivityViewModel(
+    private val azkarRepository: AzkarRepository, private val prefs: SharedPreferences
+) : ViewModel() {
 
     var description = "\uD83E\uDD32\uD83C\uDFFB"
+
+    private var azkarDirectory: String? = null
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -52,9 +52,10 @@ class AzkarActivityViewModel constructor(
     private val _lastPlay = MutableStateFlow(-1)
     val lastPlay = _lastPlay.asStateFlow()
 
-    fun loadItems(chapterID: Int) {
+    fun loadItems(chapterID: Int, directory: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            azkarDirectory = directory
             _azkarLang.value =
                 prefs.getString(PREF_AZKAR_LANG, DEFAULT_AZKAR_LANG) ?: DEFAULT_AZKAR_LANG
             _azkarItems.value = azkarRepository.getAzkarItem(chapterID)
@@ -62,8 +63,9 @@ class AzkarActivityViewModel constructor(
             _chapter.value = azkarRepository.getAzkarChapter(chapterID)
             setDescription()
             _itemsState.value = mutableListOf<AzkarItemState>().apply {
-                for (z in azkarItems.value)
-                    add(AzkarItemState())
+                for (z in azkarItems.value) add(AzkarItemState().apply {
+                    isFileExists = File(directory + z.sound + ".mp3").exists()
+                })
             }
             _isLoading.value = false
         }
@@ -92,7 +94,7 @@ class AzkarActivityViewModel constructor(
                 else -> azkarReferences.value[azkarItems.value.indexOf(zkr)].arabic
             }
         }" + "\n------------------\n"
-        description += appLink
+        description += APP_LINK
     }
 
     fun play(id: Int) {
@@ -118,27 +120,45 @@ class AzkarActivityViewModel constructor(
         }
     }
 
-    fun downloadSound(soundName: String, file: File, id: Int) {
+    fun delete(id: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val index = azkarItems.value.indexOfFirst { it.id == id }
+            val item = azkarItems.value[index]
+            val file = File(azkarDirectory + item.sound + ".mp3")
+            file.delete()
+            _itemsState.value[index].isFileExists = false
+            _isLoading.value = false
+        }
+    }
+
+    fun downloadSound(id: Int) {
         viewModelScope.launch {
             val index = azkarItems.value.indexOfFirst { it.id == id }
-            val url = "https://archive.org/download/azkar_n/$soundName.MP3"
+            val item = azkarItems.value[index]
+            val url = "https://archive.org/download/azkar_n/${item.sound}.MP3"
             val ktor = HttpClient(Android)
             itemsState.value[index].isDownloading = true
 
-            ktor.downloadFile(file, url).collect { downloadResult ->
-                when (downloadResult) {
-                    is DownloadResult.Error -> {
-                        _itemsState.value[index].isDownloading = false
-                        _itemsState.value[index].downloadError = downloadResult.message
+            ktor.downloadFile(File(azkarDirectory + item.sound + ".mp3"), url)
+                .collect { downloadResult ->
+                    when (downloadResult) {
+                        is DownloadResult.Error -> {
+                            _itemsState.value[index].isDownloading = false
+                            _itemsState.value[index].downloadError = downloadResult.message
+                        }
+
+                        is DownloadResult.Progress -> _itemsState.value[index].progress =
+                            downloadResult.progress.toFloat()
+
+                        DownloadResult.Success -> {
+                            _itemsState.value[index].isDownloading = false
+                            _itemsState.value[index].isFileExists = true
+                        }
+
+                        is DownloadResult.TotalSize -> {}
                     }
-
-                    is DownloadResult.Progress -> _itemsState.value[index].progress =
-                        downloadResult.progress.toFloat()
-
-                    DownloadResult.Success -> _itemsState.value[index].isDownloading = false
-                    is DownloadResult.TotalSize -> {}
                 }
-            }
         }
     }
 }

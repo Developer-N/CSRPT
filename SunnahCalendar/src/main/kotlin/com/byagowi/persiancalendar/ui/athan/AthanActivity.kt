@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.athan
 
 import android.app.KeyguardManager
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -11,24 +12,28 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
 import com.byagowi.persiancalendar.FAJR_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
-import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
+import com.byagowi.persiancalendar.global.ascendingAthan
+import com.byagowi.persiancalendar.ui.theme.SystemTheme
+import com.byagowi.persiancalendar.ui.utils.isSystemInDarkTheme
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.athanVolume
 import com.byagowi.persiancalendar.utils.getAthanUri
-import com.byagowi.persiancalendar.utils.isAscendingAthanVolumeEnabled
 import com.byagowi.persiancalendar.utils.logException
 import java.util.concurrent.TimeUnit
 
-class AthanActivity : AppCompatActivity() {
+class AthanActivity : ComponentActivity() {
     private val ascendingVolumeStep = 6
     private var currentVolumeSteps = 1
     private val handler = Handler(Looper.getMainLooper())
@@ -70,9 +75,18 @@ class AthanActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            SystemBarStyle.dark(Color.TRANSPARENT),
+            if (isSystemInDarkTheme(resources.configuration))
+                SystemBarStyle.dark(Color.TRANSPARENT)
+            else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        )
+        applyAppLanguage(this)
         super.onCreate(savedInstanceState)
-
-        transparentSystemBars()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        }
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
 
@@ -100,21 +114,14 @@ class AthanActivity : AppCompatActivity() {
                 if (it < THIRTY_SECONDS_IN_MILLIS) stopAtHalfMinute = true
             }
             ringtone = RingtoneManager.getRingtone(this, getAthanUri(this)).also {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    it.audioAttributes = AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .build()
-                } else {
-                    @Suppress("DEPRECATION")
-                    it.streamType = AudioManager.STREAM_ALARM
-                }
+                it.audioAttributes = AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build()
                 volumeControlStream = AudioManager.STREAM_ALARM
                 it.play()
             }
         }.onFailure(logException)
-
-        applyAppLanguage(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
@@ -133,11 +140,11 @@ class AthanActivity : AppCompatActivity() {
             )
         }
 
-        setAthanActivityContent(this, prayerKey, onClick = ::stop)
+        setContent { SystemTheme { AthanActivityContent(prayerKey, ::stop) } }
 
         handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
 
-        if (isAscendingAthanVolumeEnabled) handler.post(ascendVolume)
+        if (ascendingAthan.value) handler.post(ascendVolume)
 
         preventPhoneCallIntervention.startListener(this)
     }
@@ -155,7 +162,7 @@ class AthanActivity : AppCompatActivity() {
         ringtone?.stop()
 
         handler.removeCallbacks(stopTask)
-        if (isAscendingAthanVolumeEnabled) handler.removeCallbacks(ascendVolume)
+        if (ascendingAthan.value) handler.removeCallbacks(ascendVolume)
         finish()
     }
 }

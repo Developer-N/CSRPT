@@ -19,9 +19,10 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,16 +40,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.glide.GlideImage
 import com.skydoves.landscapist.placeholder.shimmer.ShimmerPlugin
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.iconColor
 import ir.namoo.quran.qari.QariEntity
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -59,31 +56,34 @@ fun QaraatItems(viewModel: SettingViewModel = koinViewModel()) {
     val playType by viewModel.playType.collectAsState()
     val rootPaths by viewModel.rootPaths.collectAsState()
     val selectedPath by viewModel.selectedPath.collectAsState()
+    val playNextSura by viewModel.playNextSura.collectAsState()
 
     val playTypeList = listOf(
         stringResource(id = R.string.arabic_translate),
         stringResource(id = R.string.just_arabic),
         stringResource(id = R.string.just_translate)
     )
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(2.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
+            .padding(2.dp)
     ) {
         Text(
             modifier = Modifier.padding(4.dp, 2.dp),
-            text = stringResource(id = R.string.select_qari_translate_for_play),
-            fontFamily = FontFamily(appFont)
+            text = stringResource(id = R.string.select_qari_translate_for_play)
         )
         SelectQariAndTranslateToPlay(modifier = Modifier, viewModel)
-        Divider(modifier = Modifier.padding(16.dp, 0.dp))
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         MyBtnGroup(title = stringResource(id = R.string.play_type),
             items = playTypeList,
             checkedItem = playTypeList[playType - 1],
             onCheckChanged = { viewModel.updatePlayType(playTypeList.indexOf(it) + 1) })
-        Divider(modifier = Modifier.padding(16.dp, 0.dp))
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
+        MySwitchBox(modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp),
+            checked = playNextSura,
+            label = stringResource(id = R.string.play_next_sura),
+            onCheckChanged = { play -> viewModel.updatePlayNextSura(play) })
+        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         MyBtnGroup(
             title = stringResource(id = R.string.select_storage),
             items = rootPaths,
@@ -147,21 +147,17 @@ fun QariSelector(
     val rotate = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
 
-    Card(
-        modifier = modifier.clickable {
-            expanded.value = !expanded.value
-            coroutineScope.launch {
-                rotate.animateTo(
-                    if (expanded.value) 180f else 0f, animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
+    ElevatedCard(modifier = modifier.clickable {
+        expanded.value = !expanded.value
+        coroutineScope.launch {
+            rotate.animateTo(
+                if (expanded.value) 180f else 0f, animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
                 )
-            }
-        },
-        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
-    ) {
+            )
+        }
+    }) {
         Row(
             modifier = Modifier
                 .padding(2.dp)
@@ -173,8 +169,8 @@ fun QariSelector(
             Icon(
                 modifier = Modifier.rotate(rotate.value),
                 imageVector = Icons.Filled.ExpandCircleDown,
-                tint = iconColor,
-                contentDescription = "DropDown"
+                contentDescription = "DropDown",
+                tint = MaterialTheme.colorScheme.primary
             )
             DropdownMenu(expanded = expanded.value, onDismissRequest = {
                 expanded.value = false
@@ -189,9 +185,7 @@ fun QariSelector(
             }) {
                 list.forEach { qari ->
                     DropdownMenuItem(text = {
-                        Text(
-                            text = qari.name, fontFamily = FontFamily(appFont)
-                        )
+                        Text(text = qari.name)
                     }, onClick = {
                         onSelectChange(qari.folderName)
                         expanded.value = false
@@ -205,7 +199,9 @@ fun QariSelector(
                         }
                     }, leadingIcon = {
                         if (qari.photoLink.isNullOrBlank()) Icon(
-                            imageVector = Icons.Filled.Image, contentDescription = qari.name
+                            imageVector = Icons.Filled.Image,
+                            contentDescription = qari.name,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         else GlideImage(modifier = Modifier
                             .size(32.dp)
@@ -227,15 +223,15 @@ fun QariSelector(
                             })
                     }, trailingIcon = {
                         if (qari.folderName == selected) Icon(
-                            imageVector = Icons.Filled.Check, contentDescription = "Check"
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Check",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     })
                 }
             }
 
-            Text(
-                text = title, fontFamily = FontFamily(appFont)
-            )
+            Text(text = title)
 
             AnimatedVisibility(
                 visible = !enable, enter = expandHorizontally(), exit = shrinkHorizontally()
@@ -249,7 +245,9 @@ fun QariSelector(
             ) {
                 val qari = list.find { it.folderName == selected }
                 if (qari == null || qari.photoLink.isNullOrBlank()) Icon(
-                    imageVector = Icons.Filled.Image, contentDescription = ""
+                    imageVector = Icons.Filled.Image,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 else GlideImage(modifier = Modifier
                     .size(34.dp)
@@ -266,7 +264,9 @@ fun QariSelector(
                     },
                     failure = {
                         Icon(
-                            imageVector = Icons.Filled.Image, contentDescription = qari.name
+                            imageVector = Icons.Filled.Image,
+                            contentDescription = qari.name,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     })
             }

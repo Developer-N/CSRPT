@@ -16,9 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.DownloadDone
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,26 +27,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import ir.namoo.commons.model.CityModel
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import ir.namoo.commons.utils.iconColor
 
 @Composable
 fun CityItemUIElement(
     city: CityModel, searchText: String, cityItemState: CityItemState, download: () -> Unit
 ) {
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .padding(8.dp, 2.dp)
             .fillMaxWidth()
-            .clickable { download() },
-        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
+            .clickable { download() }
     ) {
         Row(modifier = Modifier.padding(8.dp)) {
             AnimatedVisibility(
@@ -59,7 +52,7 @@ fun CityItemUIElement(
                     Icons.Filled.Check,
                     modifier = Modifier.weight(1f),
                     contentDescription = "Selected",
-                    tint = iconColor
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
@@ -77,14 +70,11 @@ fun CityItemUIElement(
                     for (i in (index + searchText.length)..<city.name.length) append("${city.name[i]}")
                 } else append(city.name)
             }
-            Text(
-                text = cityName, modifier = Modifier.weight(4f), fontFamily = FontFamily(appFont)
-            )
+            Text(text = cityName, modifier = Modifier.weight(4f))
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = city.lastUpdate,
-                modifier = Modifier.weight(4f),
-                fontFamily = FontFamily(appFont)
+                modifier = Modifier.weight(4f)
             )
             Spacer(modifier = Modifier.width(4.dp))
             AnimatedVisibility(visible = cityItemState.isDownloading) {
@@ -96,41 +86,16 @@ fun CityItemUIElement(
                 )
             }
             AnimatedVisibility(visible = !cityItemState.isDownloading) {
-
                 IconButton(modifier = Modifier
                     .weight(1f)
                     .height(32.dp), onClick = { download() }) {
                     Icon(
                         imageVector = if (cityItemState.isDownloaded) Icons.Filled.DownloadDone else Icons.Filled.CloudDownload,
                         contentDescription = "Selected",
-                        tint = iconColor
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         }
     }
 }
-
-//@Preview(locale = "fa", showBackground = true)
-//@Preview(locale = "fa", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-//@Composable
-//fun PC() {
-//    Mdc3Theme {
-//        CityItemUIElement(
-//            CityModel(
-//                1,
-//                "سردشت",
-//                36.155278,
-//                45.478889,
-//                0,
-//                2,
-//                "2022-02-06T05:12:11.000000Z",
-//                "2022-02-06T05:12:11.000000Z"
-//            ),
-//            Typeface.createFromAsset(LocalContext.current.assets, "fonts/Vazirmatn.ttf"),
-//            Color.DarkGray,
-//            Color.White,
-//            Color.DarkGray
-//        )
-//    }
-//}

@@ -36,8 +36,8 @@ abstract class DownloadedPrayTimesDB : RoomDatabase() {
         }
 
         private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE DownloadedPrayTimes ADD COLUMN asr_hanafi TEXT NOT NULL DEFAULT \"00:00\"")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE DownloadedPrayTimes ADD COLUMN asr_hanafi TEXT NOT NULL DEFAULT \"00:00\"")
             }
 
         }
@@ -76,14 +76,14 @@ interface DownloadedPrayTimesDAO {
     suspend fun getDownloadFor(cityID: Int, day: Int): DownloadedPrayTimesEntity?
 
     @Query("select * from DownloadedPrayTimes where city_id=:cityID")
-    suspend fun getDownloadFor(cityID: Int): List<DownloadedPrayTimesEntity>?
+    suspend fun getDownloadFor(cityID: Int): List<DownloadedPrayTimesEntity>
 
     @Query("select distinct city_id from DownloadedPrayTimes")
     suspend fun getCities(): List<Int>
 
     @Query("delete from DownloadedPrayTimes where city_id=:cityID")
     suspend fun clearDownloadFor(cityID: Int)
-    
+
     @Insert(onConflict = REPLACE)
     suspend fun insertToDownload(prayTimes: List<DownloadedPrayTimesEntity>)
 

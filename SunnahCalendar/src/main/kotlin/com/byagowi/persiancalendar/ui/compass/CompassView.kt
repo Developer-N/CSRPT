@@ -11,6 +11,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
+import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.withRotation
@@ -24,8 +25,6 @@ import com.byagowi.persiancalendar.ui.common.AngleDisplay
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.ui.utils.sp
 import com.byagowi.persiancalendar.utils.toObserver
 import java.util.GregorianCalendar
@@ -35,7 +34,6 @@ import kotlin.math.round
 import kotlin.math.roundToInt
 
 class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(context, attrs) {
-
     var angle = 0f
         set(value) {
             if (value != field) {
@@ -85,7 +83,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         it.style = Paint.Style.FILL_AND_STROKE
         it.pathEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
     }
-    private val kaaba = context.getCompatDrawable(R.drawable.kaaba)
+    private val kaaba = resources.getDrawable(R.drawable.kaaba, null)
         .toBitmap((32 * dp).toInt(), (32 * dp).toInt())
 
     private var cx = 0f
@@ -130,13 +128,16 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         it.textAlign = Paint.Align.CENTER
     }
     private val textStrokePaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = context.resolveColor(com.google.android.material.R.attr.colorSurface)
         it.strokeWidth = 5 * dp
         it.style = Paint.Style.STROKE
         it.textAlign = Paint.Align.CENTER
     }
 
-    private val angleDisplay = AngleDisplay(context, "0", "888")
+    fun setSurfaceColor(@ColorInt color: Int) {
+        textStrokePaint.color = color
+    }
+
+    private val angleDisplay = AngleDisplay(resources, "0", "888")
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -219,7 +220,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         }
     }
 
-    private val solarDraw = SolarDraw(context)
+    private val solarDraw = SolarDraw(resources)
 
     private val shadeFactor = 1.5f
 

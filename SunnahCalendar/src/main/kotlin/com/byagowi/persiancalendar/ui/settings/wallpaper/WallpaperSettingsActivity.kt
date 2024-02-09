@@ -2,46 +2,86 @@ package com.byagowi.persiancalendar.ui.settings.wallpaper
 
 import android.content.res.Configuration
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.os.bundleOf
-import androidx.fragment.app.commit
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.byagowi.persiancalendar.PREF_WALLPAPER_DARK
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.WallpaperSettingsBinding
-import com.byagowi.persiancalendar.entities.Theme
+import com.byagowi.persiancalendar.global.wallpaperDark
+import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
+import com.byagowi.persiancalendar.ui.theme.SystemTheme
+import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.makeWallpaperTransparency
-import com.byagowi.persiancalendar.ui.utils.transparentSystemBars
 import com.byagowi.persiancalendar.utils.applyAppLanguage
+import com.byagowi.persiancalendar.utils.applyLanguageToConfiguration
 
-class WallpaperSettingsActivity : AppCompatActivity() {
-
+class WallpaperSettingsActivity : ComponentActivity() {
     private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = finish()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Theme.apply(this)
         applyAppLanguage(this)
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         window?.makeWallpaperTransparency()
-        transparentSystemBars()
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
 
-        val binding = WallpaperSettingsBinding.inflate(layoutInflater).also {
-            setContentView(it.root)
+        setContent {
+            SystemTheme {
+                Column(modifier = Modifier.safeDrawingPadding()) {
+                    Column(
+                        Modifier
+                            .alpha(AppBlendAlpha)
+                            .verticalScroll(rememberScrollState())
+                            .padding(all = 16.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.shapes.extraLarge
+                            )
+                            .padding(vertical = 16.dp),
+                    ) {
+                        Button(
+                            onClick = ::finish,
+                            modifier = Modifier.align(alignment = Alignment.CenterHorizontally)
+                        ) {
+                            Text(
+                                stringResource(R.string.accept),
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                            )
+                        }
+                        val wallpaperDark by wallpaperDark.collectAsState()
+                        SettingsSwitch(
+                            PREF_WALLPAPER_DARK,
+                            wallpaperDark,
+                            stringResource(R.string.theme_dark)
+                        )
+                    }
+                }
+            }
         }
-
-        supportFragmentManager.commit {
-            replace(
-                R.id.preference_fragment_holder, WallpaperSettingsFragment::class.java, bundleOf()
-            )
-        }
-        binding.addWidgetButton.setOnClickListener { finish() }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
+        super.onConfigurationChanged(applyLanguageToConfiguration(newConfig))
         applyAppLanguage(this)
     }
 }

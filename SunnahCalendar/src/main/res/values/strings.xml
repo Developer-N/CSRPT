@@ -19,6 +19,7 @@
     <!--Navigation drawers-->
     <string name="calendar">Calendar</string>
     <string name="date_converter">Date Converter</string>
+    <string name="converter">Converter</string>
     <string name="compass">Compass</string>
     <string name="settings">Settings</string>
     <string name="about">About</string>
@@ -65,13 +66,14 @@
     <string name="events">Events</string>
     <string name="no_event">No event or appointment for this day</string>
     <string name="warn_if_events_not_set">To select and show preferred holidays and events, visit the Settings</string>
+    <string name="ask_for_calendar_permission">"Would you like to enable your personal events from your device's calendar?"</string>
     <string name="sunriseSunView">Sunrise</string>
     <string name="middaySunView">Midday</string>
     <string name="sunsetSunView">Sunset</string>
     <string name="length_of_day">Daytime</string>
     <string name="remaining_daylight">Remaining</string>
     <string name="n_hours_minutes">%1$sh %2$sm</string>
-    <string name="owghat">Pray times</string>
+    <string name="times">Times</string>
     <string name="imsak">Imsak</string>
     <string name="fajr">Fajr</string>
     <string name="sunrise">Sunrise</string>
@@ -390,6 +392,14 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="color_gradient">Color gradient</string>
     <string name="time_zones">Time zones</string>
     <string name="qr_code">QR Code</string>
+    <string name="navigate_up">Navigate up</string>
+    <string name="open_drawer">Open navigation drawer</string>
+    <string name="more_options">More options</string>
+    <string name="yes">Yes</string>
+    <string name="sample_inputs">Sample inputs</string>
+    <string name="year_view">Year view</string>
+    <string name="exempt_app_battery_optimization">Would you like to add the app to battery optimization exception for correct functionality of the notification?</string>
+    <string name="widget_background_transparency">Widget background transparency</string>
 
     <plurals name="shift_work_record_title">
         <item quantity="one">%1$s %2$s day</item>

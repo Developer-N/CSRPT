@@ -2,9 +2,9 @@ package com.byagowi.persiancalendar.entities
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Resources
 import android.os.Build
 import android.view.inputmethod.InputMethodManager
-import androidx.annotation.VisibleForTesting
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.AFGHANISTAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
@@ -17,6 +17,7 @@ import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugLog
 import io.github.cosinekitty.astronomy.EclipseKind
 import io.github.persiancalendar.praytimes.CalculationMethod
+import org.jetbrains.annotations.VisibleForTesting
 import java.util.Locale
 import java.util.TimeZone
 
@@ -248,48 +249,52 @@ enum class Language(val code: String, val nativeName: String) {
             else -> emptyList()
         }
 
-    fun getPersianMonths(context: Context): List<String> = when (this) {
+    fun getPersianMonths(resources: Resources): List<String> = when (this) {
         FA -> persianCalendarMonthsInPersian
         FA_AF -> persianCalendarMonthsInDari
-        else -> persianCalendarMonths.map(context::getString)
+        AR -> if (userTimeZoneId == IRAN_TIMEZONE_ID) persianCalendarMonthsInArabicIran
+        else persianCalendarMonths.map(resources::getString)
+
+        else -> persianCalendarMonths.map(resources::getString)
     }
 
-    fun getIslamicMonths(context: Context): List<String> = when (this) {
+    fun getIslamicMonths(resources: Resources): List<String> = when (this) {
         FA, FA_AF -> islamicCalendarMonthsInPersian
-        else -> islamicCalendarMonths.map(context::getString)
+        else -> islamicCalendarMonths.map(resources::getString)
     }
 
-    fun getGregorianMonths(context: Context, alternativeGregorianMonths: Boolean) = when (this) {
-        FA -> {
-            if (alternativeGregorianMonths) gregorianCalendarMonthsInDari
-            else gregorianCalendarMonthsInPersian
+    fun getGregorianMonths(resources: Resources, alternativeGregorianMonths: Boolean) =
+        when (this) {
+            FA -> {
+                if (alternativeGregorianMonths) gregorianCalendarMonthsInPersianEnglishPronunciation
+                else gregorianCalendarMonthsInPersian
+            }
+
+            FA_AF -> gregorianCalendarMonthsInDari
+
+            AR -> {
+                if (alternativeGregorianMonths) easternGregorianCalendarMonths
+                else gregorianCalendarMonths.map(resources::getString)
+            }
+
+            else -> gregorianCalendarMonths.map(resources::getString)
         }
-
-        FA_AF -> gregorianCalendarMonthsInDari
-
-        AR -> {
-            if (alternativeGregorianMonths) easternGregorianCalendarMonths
-            else gregorianCalendarMonths.map(context::getString)
-        }
-
-        else -> gregorianCalendarMonths.map(context::getString)
-    }
 
     fun getNepaliMonths(): List<String> = when (this) {
         NE -> nepaliMonths
         else -> nepaliMonthsInEnglish
     }
 
-    fun getWeekDays(context: Context): List<String> = when (this) {
+    fun getWeekDays(resources: Resources): List<String> = when (this) {
         FA, FA_AF -> weekDaysInPersian
         EN_IR -> weekDaysInEnglishIran
-        else -> weekDays.map(context::getString)
+        else -> weekDays.map(resources::getString)
     }
 
-    fun getWeekDaysInitials(context: Context): List<String> = when (this) {
+    fun getWeekDaysInitials(resources: Resources): List<String> = when (this) {
         FA, FA_AF -> weekDaysInitialsInPersian
         EN_IR -> weekDaysInitialsInEnglishIran
-        else -> weekDaysInitials.map(context::getString)
+        else -> weekDaysInitials.map(resources::getString)
     }
 
     fun getCountryName(cityItem: CityItem): String = when {
@@ -461,6 +466,10 @@ enum class Language(val code: String, val nativeName: String) {
             "شهریور", "مهر", "آبان", "آذر", "دی",
             "بهمن", "اسفند"
         )
+        private val persianCalendarMonthsInArabicIran = listOf12Items(
+            "فروردین", "أرديبهشت", "خرداد", "تير", "مرداد",
+            "شهريور", "مهر", "آبان", "آذر", "دي", "بهمن", "إسفند",
+        )
         private val islamicCalendarMonthsInPersian = listOf12Items(
             "مُحَرَّم", "صَفَر", "ربیع‌الاول", "ربیع‌الثانی", "جمادى‌الاولى", "جمادی‌الثانیه",
             "رجب", "شعبان", "رمضان", "شوال", "ذی‌القعده", "ذی‌الحجه"
@@ -475,7 +484,11 @@ enum class Language(val code: String, val nativeName: String) {
         )
         private val gregorianCalendarMonthsInDari = listOf12Items(
             "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
-            "جولای", "آگست", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
+            "جولای", "آگست", "سپتامبر", "اکتوبر", "نوامبر", "دسامبر"
+        )
+        private val gregorianCalendarMonthsInPersianEnglishPronunciation = listOf12Items(
+            "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
+            "جولای", "آگوست", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
         )
         private val easternGregorianCalendarMonths = listOf12Items(
             "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول",

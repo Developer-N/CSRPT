@@ -6,15 +6,25 @@ import android.content.ContextWrapper
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun KeepScreenOn() {
+fun KeepScreenOn(timeoutMillis: Long = 10 * 60 * 1000) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     DisposableEffect(Unit) {
         val window = context.findActivity()?.window
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        //remove keep screen flag after timeout
+        coroutineScope.launch {
+            delay(timeoutMillis)
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         onDispose {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }

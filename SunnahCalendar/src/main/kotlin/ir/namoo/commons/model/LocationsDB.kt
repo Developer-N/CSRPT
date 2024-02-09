@@ -52,6 +52,9 @@ interface CityDAO {
     @Query("select * from city where id=:id")
     suspend fun getCity(id: Int): CityModel
 
+    @Query("select * from city where province_id=:id")
+    suspend fun getCityForProvince(id: Int): List<CityModel>
+
     @Query("select * from city where name=:name")
     suspend fun getCity(name: String): CityModel?
 

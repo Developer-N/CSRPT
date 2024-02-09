@@ -1,7 +1,8 @@
 package ir.namoo.quran.utils
 
 //const val DB_LINK = "https://namoodev.ir/storage/quran_v3.zip"
-const val DB_LINK = "https://raw.githubusercontent.com/Developer-N/QuranProject/main/AndroidDB/quran_v3.zip"
+const val DB_LINK =
+    "https://raw.githubusercontent.com/Developer-N/QuranProject/main/AndroidDB/quran_v3.zip"
 
 const val PREF_QURAN_FONT = "key_quran_font"
 const val DEFAULT_QURAN_FONT = "fonts/Quran_Bahij_Regular.ttf"
@@ -101,3 +102,11 @@ val englishFontNames = listOf(
 
 const val PREF_SEARCH_IN_TRANSLATES = "search_in_translates"
 const val DEFAULT_SEARCH_IN_TRANSLATES = false
+
+const val EXTRA_SURA = "extra_sura"
+const val EXTRA_AYA = "extra_aya"
+
+const val PREF_PLAY_NEXT_SURA = "play_next_sura"
+const val DEFAULT_PLAY_NEXT_SURA = false
+
+const val PREF_IS_SURA_VIEW_IS_OPEN = "is_sura_view_is_open"

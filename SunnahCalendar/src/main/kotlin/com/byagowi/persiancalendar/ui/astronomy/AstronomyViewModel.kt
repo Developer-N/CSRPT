@@ -6,24 +6,26 @@ import androidx.lifecycle.ViewModel
 import com.byagowi.persiancalendar.utils.ONE_MINUTE_IN_MILLIS
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import java.util.GregorianCalendar
 import kotlin.math.roundToInt
 
 class AstronomyViewModel : ViewModel() {
-    private val _isTropical = MutableStateFlow(false)
-    val isTropical: StateFlow<Boolean> = _isTropical
-
     private val _mode = MutableStateFlow(AstronomyMode.entries[0])
-    val mode: StateFlow<AstronomyMode> = _mode
+    val mode: StateFlow<AstronomyMode> get() = _mode
 
     private val _minutesOffset = MutableStateFlow(DEFAULT_TIME)
-    val minutesOffset: StateFlow<Int> = _minutesOffset
+    val minutesOffset: StateFlow<Int> get() = _minutesOffset
 
     private val dateSink = GregorianCalendar() // Just to avoid recreating it everytime
-    private var _astronomyState = MutableStateFlow(AstronomyState(dateSink))
-    var astronomyState: StateFlow<AstronomyState> = _astronomyState
+
+    private val _astronomyState = MutableStateFlow(AstronomyState(dateSink))
+    val astronomyState: StateFlow<AstronomyState> get() = _astronomyState
+
+    private val _isTropical = MutableStateFlow(false)
+    val isTropical: StateFlow<Boolean> get() = _isTropical
+
+    private val _isDayPickerDialogShown = MutableStateFlow(false)
+    val isDayPickerDialogShown: StateFlow<Boolean> get() = _isDayPickerDialogShown
 
     // Both minutesOffset and astronomyState keep some sort of time state, astronomyState however
     // is meant to be used in animation thus is the visible one and the other is to keep final
@@ -33,32 +35,43 @@ class AstronomyViewModel : ViewModel() {
     // of the screen entrance and makes one day button to exactly jump 24h regardless of current
     // animation of the screen.
 
-    // Events
-    val resetButtonVisibilityEvent = minutesOffset
-        .map { it != 0 }
-        .distinctUntilChanged()
-
     // Commands
+
     private fun setAstronomyState(value: Int) {
         dateSink.timeInMillis = System.currentTimeMillis() + value * ONE_MINUTE_IN_MILLIS
         _astronomyState.value = AstronomyState(dateSink)
     }
 
-    private var animator: ValueAnimator? = null
-    private val interpolator = AccelerateDecelerateInterpolator()
+    private val animator = ValueAnimator().also {
+        it.duration = 400 // android.R.integer.config_mediumAnimTime
+        it.interpolator = AccelerateDecelerateInterpolator()
+        it.addUpdateListener { _ -> setAstronomyState(it.animatedValue as? Int ?: 0) }
+    }
+
+    fun showDayPickerDialog() {
+        _isDayPickerDialogShown.value = true
+    }
+
+    fun dismissDayPickerDialog() {
+        _isDayPickerDialogShown.value = false
+    }
+
+    fun setMode(mode: AstronomyMode) {
+        _mode.value = mode
+    }
+
+    fun toggleIsTropical() {
+        _isTropical.value = !_isTropical.value
+    }
+
     fun animateToAbsoluteMinutesOffset(value: Int) {
-        animator?.removeAllUpdateListeners()
-        ValueAnimator.ofInt(
+        animator.setIntValues(
             // If the animation is still going on use its current value to not have jumps
-            if (animator?.isRunning == true) animator?.animatedValue as? Int ?: 0
+            if (animator.isRunning) animator.animatedValue as? Int ?: 0
             else _minutesOffset.value,
             value
-        ).also {
-            animator = it
-            it.duration = 400 // android.R.integer.config_mediumAnimTime
-            it.interpolator = interpolator
-            it.addUpdateListener { _ -> setAstronomyState(it.animatedValue as? Int ?: 0) }
-        }.start()
+        )
+        animator.start()
         _minutesOffset.value = value
     }
 
@@ -83,14 +96,6 @@ class AstronomyViewModel : ViewModel() {
         _minutesOffset.value =
             ((time - System.currentTimeMillis()) / ONE_MINUTE_IN_MILLIS).toFloat().roundToInt()
         setAstronomyState(_minutesOffset.value)
-    }
-
-    fun changeTropicalStatus(value: Boolean) {
-        _isTropical.value = value
-    }
-
-    fun changeScreenMode(value: AstronomyMode) {
-        _mode.value = value
     }
 
     companion object {

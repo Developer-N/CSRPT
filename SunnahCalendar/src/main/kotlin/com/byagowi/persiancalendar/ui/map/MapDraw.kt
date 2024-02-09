@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.map
 
-import android.content.Context
+import android.animation.ArgbEvaluator
+import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
@@ -10,6 +11,9 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.hardware.GeomagneticField
 import androidx.annotation.RawRes
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.toPath
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
 import androidx.core.graphics.withMatrix
@@ -23,13 +27,11 @@ import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
 import com.byagowi.persiancalendar.ui.utils.scaleBy
 import com.byagowi.persiancalendar.ui.utils.translateBy
 import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.toCivilDate
-import com.google.android.material.animation.ArgbEvaluatorCompat
 import io.github.cosinekitty.astronomy.Aberration
 import io.github.cosinekitty.astronomy.Body
 import io.github.cosinekitty.astronomy.Direction
@@ -60,32 +62,34 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundColor: Int? = null) {
-    private val solarDraw = SolarDraw(context)
-    private val pinDrawable = context.getCompatDrawable(R.drawable.ic_pin)
+class MapDraw(
+    resources: Resources, mapBackgroundColor: Int? = null, mapForegroundColor: Int? = null
+) {
+    private val solarDraw = SolarDraw(resources)
+    private val pinDrawable = resources.getDrawable(R.drawable.ic_pin, null)
 
     val mapScaleFactor = 16 // As the path bounds is 360x180 *16
     val mapWidth = 360 * mapScaleFactor
     val mapHeight = 180 * mapScaleFactor
     private val mapRect = Rect(0, 0, mapWidth, mapHeight)
 
-    private fun createPathFromResourceText(context: Context, @RawRes id: Int): Path {
-        val path = context.resources.openRawResource(id).readBytes().decodeToString()
-        return createPathFromPathData(path)
+    private fun createPathFromResourceText(resources: Resources, @RawRes id: Int): Path {
+        val path = resources.openRawResource(id).readBytes().decodeToString()
+        // In case Compose addPathNodes became private bring back
+        // https://github.com/persian-calendar/persian-calendar/blob/5a7ff8a/PersianCalendar/src/main/kotlin/com/byagowi/persiancalendar/ui/map/PathParser.kt
+        return addPathNodes(path).toPath().asAndroidPath()
     }
 
-    private val mapPath: Path = createPathFromResourceText(context, R.raw.worldmap)
+    private val mapPath: Path = createPathFromResourceText(resources, R.raw.worldmap)
     private val timezones: Path by lazy(LazyThreadSafetyMode.NONE) {
-        createPathFromResourceText(context, R.raw.timezones)
+        createPathFromResourceText(resources, R.raw.timezones)
             // `topojson['transform']` result, turn it to degrees scale
-            .scaleBy(0.17586713f, 0.08793366f)
-            .translateBy(-180f, -90f)
+            .scaleBy(0.17586713f, 0.08793366f).translateBy(-180f, -90f)
             // Make it the same scale as mapPath
-            .translateBy(180f, -90f)
-            .scaleBy(mapScaleFactor.toFloat(), -mapScaleFactor.toFloat())
+            .translateBy(180f, -90f).scaleBy(mapScaleFactor.toFloat(), -mapScaleFactor.toFloat())
     }
     private val tectonicPlates: Path by lazy(LazyThreadSafetyMode.NONE) {
-        createPathFromResourceText(context, R.raw.tectonicplates)
+        createPathFromResourceText(resources, R.raw.tectonicplates)
             // `topojson['transform']` result, turn it to degrees scale
             .scaleBy(0.17586713f, 0.074727945f)
             .translateBy(-180f, -66.1632f)
@@ -107,7 +111,7 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
     var drawKaaba: Boolean = false
 
     private val kaabaIcon by lazy(LazyThreadSafetyMode.NONE) {
-        context.getCompatDrawable(R.drawable.kaaba)
+        resources.getDrawable(R.drawable.kaaba, null)
     }
 
     var markersScale = 1f
@@ -347,6 +351,11 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
         it.textSize = gridLinesWidth * 10
         it.textAlign = Paint.Align.CENTER
     }
+    private val moaiPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
+        it.color = Color.BLACK
+        it.textSize = 1.5f
+        it.textAlign = Paint.Align.CENTER
+    }
 
     private val parallelsLatitudes = listOf(
         // Circles of latitude are often called parallels
@@ -367,13 +376,14 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
     private val foregroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = mapForegroundColor ?: 0xFFFBF8E5.toInt()
     }
-    private val dp = context.resources.dp
+    private val dp = resources.dp
     private val miscPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 5 * dp
         color = mapForegroundColor ?: 0x80393CC4.toInt()
     }
     private val matrixProperties = FloatArray(9)
+    private val argbEvaluator = ArgbEvaluator()
 
     fun draw(
         canvas: Canvas, matrix: Matrix,
@@ -395,6 +405,11 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                     (userX + 8).roundToInt(), (userY + 8).roundToInt(),
                 )
                 kaabaIcon.draw(this)
+            }
+            if (scaleBack < .1) {
+                val userX = (-109.366f + 180) * mapScaleFactor
+                val userY = (90 - -27.116f) * mapScaleFactor
+                drawText("🗿", userX - 1f, userY + 2.5f, moaiPaint)
             }
             val coordinates = coordinates.value
             if (coordinates != null && displayLocation) {
@@ -423,9 +438,9 @@ class MapDraw(context: Context, mapBackgroundColor: Int? = null, mapForegroundCo
                     if (i >= points.size - 1) return@forEachIndexed
                     val (x2, y2) = points[i + 1]
                     if (hypot(x2 - x1, y2 - y1) > 90 * mapScaleFactor) return@forEachIndexed
-                    pathPaint.color = ArgbEvaluatorCompat.getInstance().evaluate(
+                    pathPaint.color = (argbEvaluator.evaluate(
                         i.toFloat() / points.size, Color.BLACK, Color.RED
-                    )
+                    ) as? Int) ?: 0
                     drawLine(x1, y1, x2, y2, pathPaint)
                 }
                 val center = points[points.size / 2]

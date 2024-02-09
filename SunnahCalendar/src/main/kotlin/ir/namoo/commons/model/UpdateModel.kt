@@ -28,7 +28,7 @@ class UpdateModel(
 ) : Parcelable {
     val updatedAt: Date
         get() {
-            var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.asSystemLocale())
+            var date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.value.asSystemLocale())
                 .parse(serverFormatUpdatedAt)
             if (date == null)
                 date = Date()

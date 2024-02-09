@@ -45,8 +45,8 @@ abstract class AzkarDB : RoomDatabase() {
         }
 
         private val MIGRATION_1_2 = object:Migration(1,2){
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("update azkar_items set ar = \"رَضِيتُ بِاللَّهِ رَبَّاً، وَبِالْإِسْلاَمِ دِيناً، وَبِمُحَمَّدٍ صلى الله عليه وسلم نَبِيّاً (ثلاث مرات)\" where id = 110")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("update azkar_items set ar = \"رَضِيتُ بِاللَّهِ رَبَّاً، وَبِالْإِسْلاَمِ دِيناً، وَبِمُحَمَّدٍ صلى الله عليه وسلم نَبِيّاً (ثلاث مرات)\" where id = 110")
             }
 
         }

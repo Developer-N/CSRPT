@@ -4,268 +4,397 @@ import android.app.StatusBarManager
 import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.Build
-import android.os.Bundle
 import android.provider.Settings
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.annotation.Px
-import androidx.annotation.StyleRes
-import androidx.appcompat.widget.Toolbar
+import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
-import androidx.core.os.bundleOf
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.byagowi.persiancalendar.BuildConfig
-import com.byagowi.persiancalendar.LOG_TAG
-import com.byagowi.persiancalendar.PREF_HAS_EVER_VISITED
+import com.byagowi.persiancalendar.DEFAULT_THEME_CYBERPUNK
+import com.byagowi.persiancalendar.PREF_THEME_CYBERPUNK
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.NumericBinding
-import com.byagowi.persiancalendar.databinding.SettingsScreenBinding
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.PersianCalendarTileService
-import com.byagowi.persiancalendar.ui.about.showCarouselDialog
-import com.byagowi.persiancalendar.ui.about.showDynamicColorsDialog
-import com.byagowi.persiancalendar.ui.about.showIconsDemoDialog
-import com.byagowi.persiancalendar.ui.about.showTypographyDemoDialog
-import com.byagowi.persiancalendar.ui.settings.interfacecalendar.InterfaceCalendarFragment
-import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetNotificationFragment
-import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
-import com.byagowi.persiancalendar.ui.utils.hideToolbarBottomShadow
-import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
-import com.byagowi.persiancalendar.ui.utils.shareTextFile
+import com.byagowi.persiancalendar.ui.about.ColorSchemeDemoDialog
+import com.byagowi.persiancalendar.ui.about.DynamicColorsDialog
+import com.byagowi.persiancalendar.ui.about.IconsDemoDialog
+import com.byagowi.persiancalendar.ui.about.ScheduleAlarm
+import com.byagowi.persiancalendar.ui.about.ShapesDemoDialog
+import com.byagowi.persiancalendar.ui.about.TypographyDemoDialog
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
+import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
+import com.byagowi.persiancalendar.ui.settings.interfacecalendar.InterfaceCalendarSettings
+import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetNotificationSettings
+import com.byagowi.persiancalendar.ui.theme.appColorAnimationSpec
+import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
+import com.byagowi.persiancalendar.ui.utils.getActivity
+import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
-import com.byagowi.persiancalendar.variants.debugLog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.shape.ShapeAppearanceModel
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
-import ir.namoo.religiousprayers.ui.preferences.NPreferenceFragment
-import java.util.concurrent.TimeUnit
+import ir.namoo.religiousprayers.ui.settings.NSettingsScreen
+import kotlinx.coroutines.launch
 
-/**
- * @author MEHDI DIMYADI
- * MEHDIMYADI
- */
+@Composable
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+fun SettingsScreen(
+    openDrawer: () -> Unit,
+    navigateToMap: () -> Unit,
+    navigateToAthanSettings: (Int) -> Unit,
+    initialPage: Int,
+    destination: String,
+) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                title = {
+                    val language by language.collectAsState()
+                    language.run {}
+                    AnimatedContent(
+                        targetState = stringResource(R.string.settings),
+                        label = "title",
+                        transitionSpec = appCrossfadeSpec,
+                    ) { state -> Text(state) }
+                },
+                colors = appTopAppBarColors(),
+                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                actions = { ThreeDotsDropdownMenu { closeMenu -> MenuItems(closeMenu) } },
+            )
+        }
+    ) { paddingValues ->
+        Column(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+            val tabs = listOf(
+//                TabItem(
+//                    Icons.Outlined.LocationOn, Icons.Default.LocationOn,
+//                    R.string.location, R.string.athan,
+//                ) { NSettingsScreen(navigateToAthanSettings) },
+                TabItem(
+                    Icons.Outlined.Palette, Icons.Default.Palette,
+                    R.string.pref_interface, R.string.calendar,
+                ) { InterfaceCalendarSettings(destination) },
+                TabItem(
+                    Icons.Outlined.Widgets, Icons.Default.Widgets,
+                    R.string.pref_notification, R.string.pref_widget,
+                ) { WidgetNotificationSettings() },
+                TabItem(
+                    Icons.Outlined.LocationOn, Icons.Default.LocationOn,
+                    R.string.location, R.string.athan,
+                ) { NSettingsScreen(navigateToAthanSettings = navigateToAthanSettings) },
+            )
 
-class SettingsScreen : Fragment(R.layout.settings_screen) {
+            val pagerState = rememberPagerState(initialPage = initialPage, pageCount = tabs::size)
+            val coroutineScope = rememberCoroutineScope()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val binding = SettingsScreenBinding.bind(view)
-        binding.appBar.root.hideToolbarBottomShadow()
-        binding.appBar.toolbar.setTitle(R.string.settings)
-        binding.appBar.toolbar.setupMenuNavigation()
-        setupMenu(binding.appBar.toolbar, binding, layoutInflater)
-
-        val args by navArgs<SettingsScreenArgs>()
-        val viewModel by viewModels<SettingsViewModel>()
-        if (viewModel.selectedTab.value == SettingsViewModel.DEFAULT_SELECTED_TAB)
-            viewModel.changeSelectedTab(args.tab)
-        val initiallySelectedTab = viewModel.selectedTab.value
-
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabUnselected(tab: TabLayout.Tab?) = Unit
-            override fun onTabReselected(tab: TabLayout.Tab?) = Unit
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                viewModel.changeSelectedTab(tab.position)
+            val selectedTabIndex = pagerState.currentPage
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                contentColor = LocalContentColor.current,
+                containerColor = Color.Transparent,
+                divider = {},
+                indicator = @Composable { tabPositions ->
+                    if (selectedTabIndex < tabPositions.size) {
+                        val isLandscape =
+                            LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                        TabRowDefaults.PrimaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                            width = if (isLandscape) 92.dp else 64.dp,
+                            color = LocalContentColor.current.copy(alpha = AppBlendAlpha)
+                        )
+                    }
+                },
+            ) {
+                tabs.forEachIndexed { index, tab ->
+                    val isLandscape =
+                        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                    if (isLandscape) Tab(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                tab.Icon(selectedTabIndex == index)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                tab.Title()
+                            }
+                        },
+                        selected = pagerState.currentPage == index,
+                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                    ) else Tab(
+                        icon = { tab.Icon(selectedTabIndex == index) },
+                        text = { tab.Title() },
+                        selected = pagerState.currentPage == index,
+                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                    )
+                }
             }
-        })
-        binding.viewPager.adapter = object : FragmentStateAdapter(this) {
-            override fun getItemCount() = tabs.size
-            override fun createFragment(position: Int) = tabs[position].first().also {
-                if (position == args.tab && args.preferenceKey.isNotEmpty()) {
-                    it.arguments = bundleOf(PREF_DESTINATION to args.preferenceKey)
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.clip(materialCornerExtraLargeTop()),
+            ) { index ->
+                val surfaceColor by animateColorAsState(
+                    MaterialTheme.colorScheme.surface,
+                    animationSpec = appColorAnimationSpec,
+                    label = "surface color"
+                )
+                val onSurfaceColor by animateColorAsState(
+                    MaterialTheme.colorScheme.onSurface,
+                    animationSpec = appColorAnimationSpec,
+                    label = "onSurface color"
+                )
+                Surface(
+                    color = surfaceColor,
+                    contentColor = onSurfaceColor,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
+                        tabs[index].content()
+                        Spacer(Modifier.height(paddingValues.calculateBottomPadding()))
+                    }
                 }
             }
         }
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, i ->
-            tab.text = tabs[i].second.joinToString(getString(R.string.spaced_and)) { getString(it) }
-        }.attach()
-        view.post {
-            binding.viewPager.setCurrentItem(initiallySelectedTab, true)
-            view.context.appPrefs.edit { putBoolean(PREF_HAS_EVER_VISITED, true) }
-        }
+    }
+}
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.appBar.root) { appBar, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            appBar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-            }
-            windowInsets
-        }
-
-        @StyleRes var shape = R.style.shapeAppearanceTopCornerLarge
-        @Px var pad = 0
-        if (language.isArabicScript) {
-            shape = R.style.shapeAppearanceTopCornerExtraLarge
-            pad = (8 * resources.dp).toInt()
-        }
-        binding.viewPager.updatePadding(left = pad, right = pad)
-        binding.roundnessFrame.shapeAppearanceModel =
-            ShapeAppearanceModel.builder(binding.root.context, shape, 0).build()
+@Immutable
+private data class TabItem(
+    private val outlinedIcon: ImageVector,
+    private val filledIcon: ImageVector,
+    @StringRes private val firstTitle: Int,
+    @StringRes private val secondTitle: Int,
+    val content: @Composable () -> Unit,
+) {
+    @Composable
+    fun Title() {
+        val language by language.collectAsState()
+        language.run {}
+        Text(
+            stringResource(firstTitle) + stringResource(R.string.spaced_and) + stringResource(
+                secondTitle
+            )
+        )
     }
 
-    companion object {
-        fun insetsFix(recyclerView: RecyclerView): RecyclerView {
-            ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { _, windowInsets ->
-                val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                recyclerView.updatePadding(bottom = insets.bottom)
-                windowInsets
-            }
-            return recyclerView
+    @Composable
+    fun Icon(isSelected: Boolean) {
+        Crossfade(isSelected, label = "icon") {
+            Icon(if (it) filledIcon else outlinedIcon, contentDescription = null)
         }
-
-        const val PREF_DESTINATION = "DESTINATION"
-        const val INTERFACE_CALENDAR_TAB = 1
-        const val WIDGET_NOTIFICATION_TAB = 2
-        const val LOCATION_ATHAN_TAB = 0
     }
+}
 
-    private val tabs = listOf<Pair<() -> (Fragment), List<Int>>>(
-        ::NPreferenceFragment to listOf(R.string.location, R.string.athan),
-        ::InterfaceCalendarFragment to listOf(R.string.pref_interface, R.string.calendar),
-        ::WidgetNotificationFragment to listOf(R.string.pref_notification, R.string.pref_widget)
-//        ::LocationAthanFragment to listOf(R.string.location, R.string.athan)
+const val INTERFACE_CALENDAR_TAB = 0
+const val WIDGET_NOTIFICATION_TAB = 1
+const val LOCATION_ATHAN_TAB = 2
+
+@Composable
+private fun MenuItems(closeMenu: () -> Unit) {
+    val context = LocalContext.current
+    AppDropdownMenuItem(
+        text = { Text(stringResource(R.string.live_wallpaper_settings)) },
+        onClick = {
+            closeMenu()
+            runCatching {
+                context.startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
+            }.onFailure(logException).getOrNull().debugAssertNotNull
+        },
     )
-
-    // Development only functionalities
-    private fun setupMenu(
-        toolbar: Toolbar, binding: SettingsScreenBinding, inflater: LayoutInflater
-    ) {
-        toolbar.menu.add(R.string.live_wallpaper_settings).onClick {
-            runCatching { startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)) }
-                .onFailure(logException).getOrNull().debugAssertNotNull
-        }
-        toolbar.menu.add(R.string.screensaver_settings).onClick {
-            runCatching { startActivity(Intent(Settings.ACTION_DREAM_SETTINGS)) }
-                .onFailure(logException).getOrNull().debugAssertNotNull
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            toolbar.menu.add(R.string.add_quick_settings_tile).onClick {
-                val context = toolbar.context
+    AppDropdownMenuItem(
+        text = { Text(stringResource(R.string.screensaver_settings)) },
+        onClick = {
+            closeMenu()
+            runCatching { context.startActivity(Intent(Settings.ACTION_DREAM_SETTINGS)) }.onFailure(
+                logException
+            ).getOrNull().debugAssertNotNull
+        },
+    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        AppDropdownMenuItem(
+            text = { Text(stringResource(R.string.add_quick_settings_tile)) },
+            onClick = {
+                closeMenu()
                 context.getSystemService<StatusBarManager>()?.requestAddTileService(
                     ComponentName(
-                        context.packageName,
-                        PersianCalendarTileService::class.qualifiedName ?: ""
+                        context.packageName, PersianCalendarTileService::class.qualifiedName ?: "",
                     ),
-                    getString(R.string.app_name),
+                    context.getString(R.string.app_name),
                     Icon.createWithResource(context, R.drawable.day19),
                     {},
-                    {}
+                    {},
                 )
-            }
-        }
+            },
+        )
+    }
 
-        // Rest are development features
-        if (!BuildConfig.DEVELOPMENT) return
-        val activity = activity ?: return
-        toolbar.menu.add("Static vs generated icons").onClick { showIconsDemoDialog(activity) }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            toolbar.menu.add("Dynamic Colors").onClick { showDynamicColorsDialog(activity) }
-        }
-        toolbar.menu.add("Typography").onClick { showTypographyDemoDialog(activity) }
-        toolbar.menu.add("Clear preferences store and exit").onClick {
-            activity.appPrefs.edit { clear() }
-            activity.finish()
-        }
-        toolbar.menu.add("Schedule an alarm").onClick {
-            val numericBinding = NumericBinding.inflate(inflater)
-            numericBinding.edit.setText("5")
-            MaterialAlertDialogBuilder(activity)
-                .setTitle("Enter seconds to schedule alarm")
-                .setView(numericBinding.root)
-                .setPositiveButton(R.string.accept) { _, _ ->
-                    val seconds = numericBinding.edit.text.toString().toLongOrNull() ?: 0L
-                    val alarmWorker = OneTimeWorkRequest.Builder(AlarmWorker::class.java)
-                        .setInitialDelay(
-                            TimeUnit.SECONDS.toMillis(seconds), TimeUnit.MILLISECONDS
-                        )
-                        .build()
-                    WorkManager.getInstance(binding.root.context)
-                        .beginUniqueWork(
-                            "TestAlarm", ExistingWorkPolicy.REPLACE, alarmWorker
-                        )
-                        .enqueue()
-                    Toast.makeText(context, "Alarm in ${seconds}s", Toast.LENGTH_SHORT)
-                        .show()
-                }
-                .show()
-        }
-        fun viewCommandResult(command: String) {
-            val dialogBuilder = MaterialAlertDialogBuilder(activity)
-            val result = Runtime.getRuntime().exec(command).inputStream.bufferedReader().readText()
-            val button = ImageButton(activity).also { button ->
-                button.setImageDrawable(activity.getCompatDrawable(R.drawable.ic_baseline_share))
-                button.setOnClickListener {
-                    activity.shareTextFile(result, "log.txt", "text/plain")
-                }
-            }
-            dialogBuilder.setCustomTitle(
-                LinearLayout(activity).also {
-                    it.layoutDirection = View.LAYOUT_DIRECTION_LTR
-                    it.addView(button)
-                }
-            )
-            dialogBuilder.setView(
-                ScrollView(context).also { scrollView ->
-                    scrollView.addView(TextView(context).also {
-                        it.text = result
-                        it.textDirection = View.TEXT_DIRECTION_LTR
-                    })
-                    // Scroll to bottom, https://stackoverflow.com/a/3080483
-                    scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
-                }
-            )
-            dialogBuilder.show()
-        }
-        toolbar.menu.addSubMenu("Log Viewer").also {
-            it.add("Filtered").onClick {
-                viewCommandResult("logcat -v raw -t 500 *:S $LOG_TAG:V AndroidRuntime:E")
-            }
-            it.add("Unfiltered").onClick { viewCommandResult("logcat -v raw -t 500") }
-        }
-        toolbar.menu.addSubMenu("Log").also {
-            it.add("Log 'Hello'").onClick { debugLog("Hello!") }
-            it.add("Handled Crash").onClick { logException(Exception("Logged Crash!")) }
-            it.add("Crash!").onClick { error("Unhandled Crash!") }
-        }
-        toolbar.menu.add("Start Dream").onClick {
+    if (!BuildConfig.DEVELOPMENT) return // Rest are development only functionalities
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Static vs generated icons") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) IconsDemoDialog { showDialog = false }
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Dynamic Colors") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) DynamicColorsDialog { showDialog = false }
+    }
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Color Scheme") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) ColorSchemeDemoDialog { showDialog = false }
+    }
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Typography") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) TypographyDemoDialog { showDialog = false }
+    }
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Shapes") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) ShapesDemoDialog { showDialog = false }
+    }
+    AppDropdownMenuItem(
+        text = { Text("Clear preferences store and exit") },
+        onClick = {
+            context.appPrefs.edit { clear() }
+            context.getActivity()?.finish()
+        },
+    )
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem(
+            text = { Text("Schedule an alarm") },
+            onClick = { showDialog = true },
+        )
+        if (showDialog) ScheduleAlarm { showDialog = false }
+    }
+//    fun viewCommandResult(command: String) {
+//        val dialogBuilder = AlertDialog.Builder(activity)
+//        val result = Runtime.getRuntime().exec(command).inputStream.bufferedReader().readText()
+//        val button = ImageButton(activity).also { button ->
+//            button.setImageDrawable(activity.getCompatDrawable(R.drawable.ic_baseline_share))
+//            button.setOnClickListener {
+//                activity.shareTextFile(result, "log.txt", "text/plain")
+//            }
+//        }
+//        dialogBuilder.setCustomTitle(LinearLayout(activity).also {
+//            it.layoutDirection = View.LAYOUT_DIRECTION_LTR
+//            it.addView(button)
+//        })
+//        dialogBuilder.setView(ScrollView(activity).also { scrollView ->
+//            scrollView.addView(TextView(activity).also {
+//                it.text = result
+//                it.textDirection = View.TEXT_DIRECTION_LTR
+//            })
+//            // Scroll to bottom, https://stackoverflow.com/a/3080483
+//            scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
+//        })
+//        dialogBuilder.show()
+//    }
+//    toolbar.menu.addSubMenu("Log Viewer").also {
+//        it.add("Filtered").onClick {
+//            viewCommandResult("logcat -v raw -t 500 *:S $LOG_TAG:V AndroidRuntime:E")
+//        }
+//        it.add("Unfiltered").onClick { viewCommandResult("logcat -v raw -t 500") }
+//    }
+//    toolbar.menu.addSubMenu("Log").also {
+//        it.add("Log 'Hello'").onClick { debugLog("Hello!") }
+//        it.add("Handled Crash").onClick { logException(Exception("Logged Crash!")) }
+//        it.add("Crash!").onClick { error("Unhandled Crash!") }
+//    }
+    AppDropdownMenuItem(
+        text = { Text("Start Dream") },
+        onClick = {
             // https://stackoverflow.com/a/23112947
             runCatching {
-                startActivity(
+                context.startActivity(
                     Intent(Intent.ACTION_MAIN).setClassName(
-                        "com.android.systemui",
-                        "com.android.systemui.Somnambulator"
+                        "com.android.systemui", "com.android.systemui.Somnambulator"
                     )
                 )
             }.onFailure(logException).getOrNull().debugAssertNotNull
-        }
-        toolbar.menu.add("Start Carousel").onClick {
-            showCarouselDialog(activity)
-        }
-    }
+        },
+    )
+    AppDropdownMenuItem(
+        text = { Text("Cyberpunk") },
+        onClick = {
+            val appPrefs = context.appPrefs
+            appPrefs.edit {
+                putBoolean(
+                    PREF_THEME_CYBERPUNK,
+                    !appPrefs.getBoolean(PREF_THEME_CYBERPUNK, DEFAULT_THEME_CYBERPUNK)
+                )
+            }
+            closeMenu()
+        },
+    )
 }

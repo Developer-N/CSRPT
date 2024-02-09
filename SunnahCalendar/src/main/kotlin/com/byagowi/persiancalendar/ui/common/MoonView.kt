@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.compose.ui.util.lerp
 import androidx.core.view.isVisible
 import com.byagowi.persiancalendar.entities.Jdn
 import io.github.cosinekitty.astronomy.Ecliptic
@@ -17,29 +18,27 @@ import java.util.GregorianCalendar
 import kotlin.math.roundToInt
 
 class MoonView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-
-    private val solarDraw = SolarDraw(context)
-    private var animator: ValueAnimator? = null
+    private val solarDraw = SolarDraw(resources)
+    private val animator = ValueAnimator.ofFloat(0f, 1f).also {
+        it.duration = resources.getInteger(android.R.integer.config_longAnimTime).toLong()
+        it.interpolator = AccelerateDecelerateInterpolator()
+    }
     private var sun: Ecliptic? = null
     private var moon: Spherical? = null
     var jdn = Jdn.today().value.toFloat()
         set(value) {
-            animator?.removeAllUpdateListeners()
             if (!isVisible) {
                 field = value
                 update()
                 return
             }
             val from = if (field == value) value - 29f else field.coerceIn(value - 30f, value + 30f)
-            ValueAnimator.ofFloat(from, value).also {
-                animator = it
-                it.duration = resources.getInteger(android.R.integer.config_longAnimTime).toLong()
-                it.interpolator = AccelerateDecelerateInterpolator()
-                it.addUpdateListener { _ ->
-                    field = it.animatedValue as? Float ?: return@addUpdateListener
-                    update()
-                }
-            }.start()
+            animator.removeAllUpdateListeners()
+            animator.addUpdateListener { _ ->
+                field = lerp(from, value, animator.animatedFraction)
+                update()
+            }
+            animator.start()
             invalidate()
         }
 

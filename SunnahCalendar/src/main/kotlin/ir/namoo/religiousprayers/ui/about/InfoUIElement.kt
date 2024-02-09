@@ -1,10 +1,12 @@
 package ir.namoo.religiousprayers.ui.about
 
+import android.os.Build
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,20 +18,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import ir.namoo.commons.utils.appFont
+import com.byagowi.persiancalendar.ui.about.createIconRandomEffects
 
 @Composable
 fun InfoUIElement(versionDescription: String) {
@@ -57,37 +67,53 @@ fun InfoTitle() {
             .fillMaxWidth(),
         text = stringResource(id = R.string.namoo_developer_group),
         textAlign = TextAlign.Center,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
-        fontFamily = FontFamily(appFont)
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold
     )
 }
 
-@OptIn(ExperimentalAnimationGraphicsApi::class)
+@OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun InfoVersion(versionDescription: String) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    var logoAnimationAtEnd by remember { mutableStateOf(false) }
+    var logoEffect by remember { mutableStateOf<RenderEffect?>(null) }
+    val effectsGenerator = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) createIconRandomEffects()
+        else null
+    }
+    LaunchedEffect(Unit) { logoAnimationAtEnd = !logoAnimationAtEnd }
+
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .semantics { this.invisibleToUser() }
+        .clickable {
+            logoAnimationAtEnd = false
+            logoAnimationAtEnd = true
+            logoEffect = effectsGenerator
+                ?.invoke()
+                ?.asComposeRenderEffect()
+        },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(
             modifier = Modifier
                 .padding(6.dp)
                 .weight(2f),
             text = versionDescription,
-            fontSize = 12.sp,
-            fontFamily = FontFamily(appFont)
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
         )
         val image = AnimatedImageVector.animatedVectorResource(R.drawable.app_icon_animated)
-        val state = remember { mutableStateOf(false) }
-        LaunchedEffect(key1 = "app_icon_animated") {
-            state.value = true
-        }
+
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             Image(
                 modifier = Modifier
-                    .weight(1f),
-                painter = rememberAnimatedVectorPainter(image, state.value),
+                    .weight(1f)
+                    .graphicsLayer { renderEffect = logoEffect },
+                painter = rememberAnimatedVectorPainter(image, logoAnimationAtEnd),
                 contentDescription = stringResource(
                     id = R.string.app_name
-                )
+                ), contentScale = ContentScale.Fit
             )
         }
     }
@@ -99,6 +125,6 @@ fun InfoDescription() {
         modifier = Modifier.padding(6.dp),
         text = stringResource(id = R.string.str_info_msg),
         fontSize = 12.sp,
-        fontFamily = FontFamily(appFont)
+        fontWeight = FontWeight.SemiBold
     )
 }

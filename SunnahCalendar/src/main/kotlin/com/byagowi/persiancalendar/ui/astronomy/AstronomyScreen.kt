@@ -1,342 +1,575 @@
 package com.byagowi.persiancalendar.ui.astronomy
 
-import android.graphics.Canvas
-import android.graphics.ColorFilter
-import android.graphics.PixelFormat
-import android.graphics.drawable.Drawable
+import android.content.res.Configuration
 import android.os.Build
-import android.os.Bundle
-import android.view.HapticFeedbackConstants
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.widget.CompoundButton
+import androidx.annotation.ColorInt
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.coerceAtMost
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.util.lruCache
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isInvisible
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
-import androidx.navigation.navGraphViewModels
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.databinding.AstronomyScreenBinding
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.global.isTalkBackEnabled
-import com.byagowi.persiancalendar.ui.calendar.dialogs.showDayPickerDialog
-import com.byagowi.persiancalendar.ui.common.ArrowView
+import com.byagowi.persiancalendar.global.theme
+import com.byagowi.persiancalendar.ui.calendar.dialogs.DayPickerDialog
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
+import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.common.SolarDraw
-import com.byagowi.persiancalendar.ui.utils.getCompatDrawable
-import com.byagowi.persiancalendar.ui.utils.isRtl
-import com.byagowi.persiancalendar.ui.utils.navigateSafe
-import com.byagowi.persiancalendar.ui.utils.onClick
-import com.byagowi.persiancalendar.ui.utils.setupLayoutTransition
-import com.byagowi.persiancalendar.ui.utils.setupMenuNavigation
+import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
+import com.byagowi.persiancalendar.ui.common.TodayActionButton
+import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.isDynamicGrayscale
+import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
+import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
+import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.isSouthernHemisphere
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
-import com.google.android.material.materialswitch.MaterialSwitch
 import io.github.cosinekitty.astronomy.seasons
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.util.Date
 import kotlin.math.abs
-import kotlin.math.min
 
-class AstronomyScreen : Fragment(R.layout.astronomy_screen) {
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val binding = AstronomyScreenBinding.bind(view)
-
-        binding.appBar.toolbar.setTitle(R.string.astronomy)
-        binding.appBar.toolbar.setupMenuNavigation()
-
-        val resetButton = binding.appBar.toolbar.menu.add(R.string.return_to_today).also {
-            it.icon =
-                binding.appBar.toolbar.context.getCompatDrawable(R.drawable.ic_restore_modified)
-            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            it.isVisible = false
-        }
-
-        // Just that our UI tests don't have access to the nav controllers, let's don't access nav there
-        val ifNavAvailable = runCatching { findNavController() }.getOrNull() != null
-        val viewModel =
-            if (ifNavAvailable) navGraphViewModels<AstronomyViewModel>(R.id.astronomy).value else AstronomyViewModel()
-        if (ifNavAvailable && viewModel.minutesOffset.value == AstronomyViewModel.DEFAULT_TIME)
-            viewModel.animateToAbsoluteDayOffset(navArgs<AstronomyScreenArgs>().value.dayOffset)
-
-        var clickCount = 0
-        binding.solarView.setOnClickListener {
-            val activity = activity
-            if (++clickCount % 2 == 0 && activity != null) showHoroscopesDialog(
-                activity, viewModel.astronomyState.value.date.time
-            )
-        }
-
-        val moonIconDrawable = object : Drawable() {
-            override fun setAlpha(alpha: Int) = Unit
-            override fun setColorFilter(colorFilter: ColorFilter?) = Unit
-
-            @Deprecated("", ReplaceWith("PixelFormat.OPAQUE", "android.graphics.PixelFormat"))
-            override fun getOpacity(): Int = PixelFormat.OPAQUE
-
-            private val solarDraw = SolarDraw(view.context)
-            override fun draw(canvas: Canvas) {
-                val radius = min(bounds.width(), bounds.height()) / 2f
-                val sun = viewModel.astronomyState.value.sun
-                val moon = viewModel.astronomyState.value.moon
-                solarDraw.moon(canvas, sun, moon, radius, radius, radius)
-            }
-        }
-        binding.railView.itemIconTintList = null // makes it to not apply tint on modes icons
-        binding.railView.menu.also { menu ->
-            val buttons =
-                AstronomyMode.entries.associateWith { menu.add(it.title).setIcon(it.icon) }
-            binding.railView.post { // Needs to be done in .post so selected button is applied correctly
-                buttons.forEach { (mode, item) ->
-                    if (viewModel.mode.value == mode) item.isChecked = true
-                    item.onClick { viewModel.changeScreenMode(mode) }
-                }
-            }
-
-            // Special case for moon icon
-            buttons[AstronomyMode.Moon]?.icon = moonIconDrawable
-            // Reset sun tint color as it can be set by other screens
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                buttons[AstronomyMode.Sun]?.icon?.setTintList(null)
-            }
-        }
-
-        val seasonsCache = lruCache(1024, create = ::seasons)
-        val headerCache = lruCache(1024, create = { jdn: Jdn ->
-            val context = context ?: return@lruCache listOf("", "", "")
-            viewModel.astronomyState.value.generateHeader(context, jdn)
-        })
-
-        val headerTextViews = listOf(binding.solarEclipse, binding.lunarEclipse, binding.yearNames)
-
-        fun update(state: AstronomyState) {
-            binding.solarView.setTime(state)
-            moonIconDrawable.invalidateSelf() // Update moon icon of rail view
-
-            val tropical = viewModel.isTropical.value
-            val sunZodiac = if (tropical) Zodiac.fromTropical(state.sun.elon)
-            else Zodiac.fromIau(state.sun.elon)
-            val moonZodiac = if (tropical) Zodiac.fromTropical(state.moon.lon)
-            else Zodiac.fromIau(state.moon.lon)
-
-            binding.sun.setValue(
-                sunZodiac.format(view.context, true) // ☉☀️
-            )
-            binding.moon.setValue(
-                moonZodiac.format(binding.root.context, true) // ☽it.moonPhaseEmoji
-            )
-            binding.time.text = state.date.formatDateAndTime()
-
-            val civilDate = state.date.toCivilDate()
-            val jdn = Jdn(civilDate)
-            headerTextViews.zip(headerCache[jdn]) { textView, line -> textView.text = line }
-
-            (1..4).forEach { i ->
-                when (i) {
-                    1 -> binding.firstSeason
-                    2 -> binding.secondSeason
-                    3 -> binding.thirdSeason
-                    else -> binding.fourthSeason
-                }.setValue(
-                    Date(
-                        seasonsCache[CivilDate(
-                            PersianDate(jdn.toPersianDate().year, i * 3, 29)
-                        ).year].let {
-                            when (i) {
-                                1 -> it.juneSolstice
-                                2 -> it.septemberEquinox
-                                3 -> it.decemberSolstice
-                                else -> it.marchEquinox
-                            }
-                        }.toMillisecondsSince1970()
-                    ).toGregorianCalendar().formatDateAndTime()
-                )
-            }
-        }
-
-        val tropicalMenuItem = binding.appBar.toolbar.menu.add(R.string.tropical).also { menuItem ->
-            menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menuItem.actionView = MaterialSwitch(binding.appBar.toolbar.context).also { switch ->
-                switch.setText(R.string.tropical)
-                switch.isChecked = viewModel.isTropical.value
-                switch.setOnCheckedListenerWithDeferredAnimation(viewModel::changeTropicalStatus)
-                // Animate visibility of the switch, a bit hacky way to retrieve the view parent
-                switch.post { (switch.parent as? ViewGroup)?.setupLayoutTransition() }
-            }
-        }
-
-        viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
-            if (event != Lifecycle.Event.ON_RESUME) return@LifecycleEventObserver
-            listOf(
-                binding.firstSeason, binding.secondSeason, binding.thirdSeason, binding.fourthSeason
-            ).zip(
-                if (coordinates.value?.isSouthernHemisphere == true)
-                    listOf(Season.WINTER, Season.SPRING, Season.SUMMER, Season.AUTUMN)
-                else
-                    listOf(Season.SUMMER, Season.AUTUMN, Season.WINTER, Season.SPRING)
-            ).forEach { (holder, season) ->
-                holder.setTitle(getString(season.nameStringId))
-                holder.setColor(season.color)
-            }
-            binding.sun.setTitle(getString(R.string.sun))
-            binding.sun.setColor(0xcceaaa00.toInt())
-            binding.moon.setTitle(getString(R.string.moon))
-            binding.moon.setColor(0xcc606060.toInt())
-        })
-
-
-        fun bringDate() {
-            val currentJdn = Jdn(viewModel.astronomyState.value.date.toCivilDate())
-            showDayPickerDialog(activity ?: return, currentJdn, R.string.accept) { jdn ->
-                viewModel.animateToAbsoluteDayOffset(jdn - Jdn.today())
-            }
-        }
-        binding.time.setOnClickListener { bringDate() }
-        binding.time.setOnLongClickListener { viewModel.animateToAbsoluteMinutesOffset(0); true }
-        binding.appBar.toolbar.menu.add(R.string.goto_date).also {
-            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            it.onClick(::bringDate)
-        }
-        binding.appBar.toolbar.menu.add(R.string.map).also {
-            it.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            it.onClick {
-                findNavController().navigateSafe(AstronomyScreenDirections.actionAstronomyToMap())
-            }
-        }
-        binding.mapIcon.setOnClickListener {
-            findNavController().navigateSafe(AstronomyScreenDirections.actionAstronomyToMap())
-        }
-
-        resetButton.onClick {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AstronomyScreen(
+    openDrawer: () -> Unit,
+    navigateToMap: () -> Unit,
+    viewModel: AstronomyViewModel,
+) {
+    LaunchedEffect(Unit) {
+        // Default animation screen enter, only if minutes offset is at it's default
+        if (viewModel.minutesOffset.value == AstronomyViewModel.DEFAULT_TIME)
             viewModel.animateToAbsoluteMinutesOffset(0)
-            resetButton.isVisible = false
+
+        while (true) {
+            delay(TEN_SECONDS_IN_MILLIS)
+            // Ugly, just to make the offset
+            viewModel.addMinutesOffset(1)
+            viewModel.addMinutesOffset(-1)
         }
+    }
 
-        val viewDirection = if (resources.isRtl) -1 else 1
+    // Bad practice, for now
+    var slider by remember { mutableStateOf<SliderView?>(null) }
 
-        var lastButtonClickTimestamp = System.currentTimeMillis()
-        binding.slider.smoothScrollBy(250f * viewDirection, 0f)
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-        var latestVibration = 0L
-        binding.slider.onScrollListener = { dx, _ ->
-            if (dx != 0f) {
-                val current = System.currentTimeMillis()
-                if (current - lastButtonClickTimestamp > 2000) {
-                    if (current >= latestVibration + 25_000_000 / abs(dx)) {
-                        binding.slider.performHapticFeedback(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) HapticFeedbackConstants.CLOCK_TICK
-                            else HapticFeedbackConstants.LONG_PRESS
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(R.string.astronomy),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                colors = appTopAppBarColors(),
+                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                actions = {
+                    val minutesOffset by viewModel.minutesOffset.collectAsState()
+                    val isTropical by viewModel.isTropical.collectAsState()
+                    val mode by viewModel.mode.collectAsState()
+                    TodayActionButton(visible = minutesOffset != 0) {
+                        viewModel.animateToAbsoluteMinutesOffset(0)
+                    }
+                    AnimatedVisibility(visible = mode == AstronomyMode.Earth) {
+                        Row(
+                            Modifier.clickable(
+                                indication = rememberRipple(bounded = false),
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) { viewModel.toggleIsTropical() },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(R.string.tropical))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(isTropical, onCheckedChange = { viewModel.toggleIsTropical() })
+                        }
+                    }
+                    ThreeDotsDropdownMenu { closeMenu ->
+                        AppDropdownMenuItem(
+                            text = { Text(stringResource(R.string.goto_date)) },
+                            onClick = {
+                                closeMenu()
+                                viewModel.showDayPickerDialog()
+                            },
                         )
-                        latestVibration = current
+                        AppDropdownMenuItem(
+                            text = { Text(stringResource(R.string.map)) },
+                            onClick = {
+                                closeMenu()
+                                navigateToMap()
+                            },
+                        )
                     }
-                    viewModel.addMinutesOffset((dx * viewDirection).toInt())
-                }
-            }
+                },
+            )
+        },
+        bottomBar = {
+            val modifier = Modifier
+                .padding(bottom = 16.dp)
+                .safeDrawingPadding()
+            if (!isLandscape) SliderBar(modifier, slider, viewModel) { slider = it }
         }
+    ) { paddingValues ->
+        Surface(
+            shape = materialCornerExtraLargeTop(),
+            modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
+        ) {
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                val bottomPadding = paddingValues.calculateBottomPadding()
+                val maxHeight = maxHeight
+                val maxWidth = maxWidth
+                if (isLandscape) Row(Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier
+                            .width((maxWidth / 2).coerceAtMost(480.dp))
+                            .fillMaxHeight()
+                            .padding(top = 24.dp, start = 24.dp, bottom = bottomPadding + 16.dp),
+                    ) {
+                        Header(Modifier, viewModel)
+                        Spacer(Modifier.weight(1f))
+                        SliderBar(Modifier, slider, viewModel) { slider = it }
+                    }
+                    SolarDisplay(
+                        Modifier
+                            .weight(1f)
+                            .padding(top = 16.dp, bottom = bottomPadding + 16.dp)
+                            .height(maxHeight - bottomPadding),
+                        viewModel, slider, navigateToMap,
+                    )
+                } else Layout(
+                    // Puts content in middle of available space after the measured header
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    content = {
+                        Header(
+                            Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp),
+                            viewModel,
+                        )
+                        SolarDisplay(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(maxWidth - (56 * 2 + 8).dp),
+                            viewModel, slider, navigateToMap,
+                        )
+                    },
+                ) { measurables, constraints ->
+                    val header = measurables[0].measure(constraints)
+                    val content = measurables[1].measure(constraints)
+                    layout(
+                        width = constraints.maxWidth,
+                        height = header.height + content.height +
+                                // To make solar display can be scrolled above bottom padding in smaller screen
+                                bottomPadding.roundToPx(),
+                    ) {
+                        // Put the header at top
+                        header.placeRelative(0, 0)
 
-        binding.solarView.rotationalMinutesChange = { offset ->
-            viewModel.addMinutesOffset(offset)
-            binding.slider.manualScrollBy(offset / 200f, 0f)
-        }
-
-        fun buttonScrollSlider(days: Int): Boolean {
-            lastButtonClickTimestamp = System.currentTimeMillis()
-            binding.slider.smoothScrollBy(250f * days * viewDirection, 0f)
-            viewModel.animateToRelativeDayOffset(days)
-            return true
-        }
-        binding.startArrow.rotateTo(ArrowView.Direction.START)
-        binding.startArrow.setOnClickListener {
-            binding.startArrow.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            buttonScrollSlider(-1)
-        }
-        binding.startArrow.setOnLongClickListener { buttonScrollSlider(-365) }
-        binding.startArrow.contentDescription =
-            getString(R.string.previous_x, getString(R.string.day))
-        binding.endArrow.rotateTo(ArrowView.Direction.END)
-        binding.endArrow.setOnClickListener {
-            binding.endArrow.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            buttonScrollSlider(1)
-        }
-        binding.endArrow.setOnLongClickListener { buttonScrollSlider(365) }
-        binding.endArrow.contentDescription = getString(R.string.next_x, getString(R.string.day))
-
-        binding.firstColumn.setupLayoutTransition()
-        binding.secondColumn.setupLayoutTransition()
-
-        binding.contentRoot.setupLayoutTransition()
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.contentRoot) { _, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            binding.contentRoot.updatePadding(bottom = insets.bottom)
-            binding.sliderWrapper.updatePadding(bottom = insets.bottom)
-            binding.appBar.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                topMargin = insets.top
-            }
-            WindowInsetsCompat.CONSUMED
-        }
-
-        // Setup view model change listeners
-        // https://developer.android.com/topic/libraries/architecture/coroutines#lifecycle-aware
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.isTropical.collectLatest {
-                        update(viewModel.astronomyState.value)
-                        binding.solarView.isTropicalDegree = it
+                        val availableHeight =
+                            (maxHeight - bottomPadding).roundToPx() - header.height
+                        val space = availableHeight / 2 - content.height / 2
+                        content.placeRelative(0, header.height + space.coerceAtLeast(0))
                     }
                 }
-                launch {
-                    viewModel.resetButtonVisibilityEvent.collectLatest {
-                        resetButton.isVisible = it
-                    }
-                }
-                launch {
-                    viewModel.mode.collectLatest {
-                        binding.solarView.mode = it
-                        val showTropicalRelatedElements = it == AstronomyMode.Earth
-                        tropicalMenuItem.isVisible = showTropicalRelatedElements
-                        binding.sun.isInvisible = !showTropicalRelatedElements
-                        binding.moon.isInvisible = !showTropicalRelatedElements
-                    }
-                }
-                launch { viewModel.astronomyState.collectLatest(::update) }
             }
         }
     }
 
-    // This is a hack to re-enable switch animation on the screen. Switch animation doesn't work
-    // when other parts of the screen are also updated at the same time so this reverts the change
-    // and re-applies the actual value in the next iteration of the event loop, i.e. `post`.
-    private fun CompoundButton.setOnCheckedListenerWithDeferredAnimation(listener: (Boolean) -> Unit) {
-        if (isTalkBackEnabled) return setOnCheckedChangeListener { _, value -> listener(value) }
-        var disableListener = false
-        setOnCheckedChangeListener { _, value ->
-            if (disableListener) return@setOnCheckedChangeListener
-            disableListener = true
-            isChecked = !value
-            listener(value)
-            post {
-                isChecked = value
-                disableListener = false
+    val isDayPickerDialogShown by viewModel.isDayPickerDialogShown.collectAsState()
+    if (isDayPickerDialogShown) {
+        val astronomyState by viewModel.astronomyState.collectAsState()
+        DayPickerDialog(
+            initialJdn = Jdn(astronomyState.date.toCivilDate()),
+            positiveButtonTitle = R.string.accept,
+            onSuccess = { jdn -> viewModel.animateToAbsoluteDayOffset(jdn - Jdn.today()) },
+            onDismissRequest = viewModel::dismissDayPickerDialog,
+        )
+    }
+}
+
+@Composable
+private fun SliderBar(
+    modifier: Modifier,
+    slider: SliderView?,
+    viewModel: AstronomyViewModel,
+    setSlider: (SliderView) -> Unit,
+) {
+    val state by viewModel.astronomyState.collectAsState()
+    var lastButtonClickTimestamp by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    fun buttonScrollSlider(days: Int) {
+        lastButtonClickTimestamp = System.currentTimeMillis()
+        slider?.smoothScrollBy(250f * days * if (isRtl) 1 else -1, 0f)
+        viewModel.animateToRelativeDayOffset(days)
+    }
+
+    @OptIn(ExperimentalFoundationApi::class) Column(modifier.fillMaxWidth()) {
+        Text(
+            state.date.formatDateAndTime(),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { viewModel.showDayPickerDialog() },
+                    onClickLabel = stringResource(R.string.goto_date),
+                    onLongClick = { viewModel.animateToAbsoluteMinutesOffset(0) },
+                    onLongClickLabel = stringResource(R.string.today),
+                ),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        ) {
+            TimeArrow(::buttonScrollSlider, isPrevious = true)
+            val primary = MaterialTheme.colorScheme.primary
+            AndroidView(
+                factory = { context ->
+                    val root = SliderView(context)
+                    root.setBarsColor(primary.toArgb())
+                    setSlider(root)
+                    var latestVibration = 0L
+                    root.smoothScrollBy(250f * if (isRtl) 1 else -1, 0f)
+                    root.onScrollListener = { dx, _ ->
+                        if (dx != 0f) {
+                            val current = System.currentTimeMillis()
+                            if (current - lastButtonClickTimestamp > 2000) {
+                                if (current >= latestVibration + 25_000_000 / abs(dx)) {
+                                    root.performHapticFeedbackVirtualKey()
+                                    latestVibration = current
+                                }
+                                viewModel.addMinutesOffset(
+                                    (dx * if (isRtl) 1 else -1).toInt()
+                                )
+                            }
+                        }
+                    }
+                    root
+                },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .height(46.dp)
+                    .weight(1f, fill = false),
+            )
+            TimeArrow(::buttonScrollSlider, isPrevious = false)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun TimeArrow(buttonScrollSlider: (Int) -> Unit, isPrevious: Boolean) {
+    val hapticFeedback = LocalHapticFeedback.current
+    Icon(
+        if (isPrevious) Icons.AutoMirrored.Default.KeyboardArrowLeft
+        else Icons.AutoMirrored.Default.KeyboardArrowRight,
+        contentDescription = stringResource(
+            if (isPrevious) R.string.previous_x else R.string.next_x,
+            stringResource(R.string.day),
+        ),
+        Modifier.combinedClickable(
+            indication = rememberRipple(bounded = false),
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                buttonScrollSlider(if (isPrevious) -1 else 1)
+            },
+            onClickLabel = stringResource(R.string.select_day),
+            onLongClick = { buttonScrollSlider(if (isPrevious) -365 else 365) },
+            onLongClickLabel = stringResource(
+                if (isPrevious) R.string.previous_x else R.string.next_x,
+                stringResource(R.string.year)
+            ),
+        ),
+        tint = MaterialTheme.colorScheme.primary,
+    )
+}
+
+@Composable
+private fun SolarDisplay(
+    modifier: Modifier,
+    viewModel: AstronomyViewModel,
+    slider: SliderView?,
+    navigateToMap: () -> Unit,
+) {
+    val state by viewModel.astronomyState.collectAsState()
+    val isTropical by viewModel.isTropical.collectAsState()
+    val mode by viewModel.mode.collectAsState()
+    var showHoroscopeDialog by rememberSaveable { mutableStateOf(false) }
+    if (showHoroscopeDialog) HoroscopesDialog(state.date.time) { showHoroscopeDialog = false }
+    Box(modifier) {
+        Column(Modifier.align(Alignment.CenterStart)) {
+            AstronomyMode.entries.forEach {
+                NavigationRailItem(
+                    modifier = Modifier.size(56.dp),
+                    selected = mode == it,
+                    onClick = { viewModel.setMode(it) },
+                    icon = {
+                        if (it == AstronomyMode.Moon) MoonIcon(state) else Icon(
+                            ImageVector.vectorResource(it.icon),
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                        )
+                    },
+                )
             }
+        }
+        val surfaceColor = MaterialTheme.colorScheme.surface
+        val contentColor = LocalContentColor.current
+        AndroidView(
+            factory = {
+                val solarView = SolarView(it)
+                var clickCount = 0
+                solarView.setOnClickListener {
+                    if (++clickCount % 2 == 0) showHoroscopeDialog = true
+                }
+                solarView.rotationalMinutesChange = { offset ->
+                    viewModel.addMinutesOffset(offset)
+                    slider?.manualScrollBy(offset / 200f, 0f)
+                }
+                solarView
+            },
+            modifier = Modifier
+                .padding(horizontal = 56.dp)
+                .aspectRatio(1f)
+                .align(Alignment.Center),
+            update = {
+                it.setSurfaceColor(surfaceColor.toArgb())
+                it.setContentColor(contentColor.toArgb())
+                it.isTropicalDegree = isTropical
+                it.setTime(state)
+                it.mode = mode
+            },
+        )
+        val map = stringResource(R.string.map)
+        NavigationRailItem(
+            modifier = Modifier
+                .size(56.dp)
+                .align(Alignment.CenterEnd),
+            selected = false,
+            onClick = navigateToMap,
+            icon = {
+                Text(
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) "m" else "🗺",
+                    modifier = Modifier.semantics { this.contentDescription = map }
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
+    val isTropical by viewModel.isTropical.collectAsState()
+    val mode by viewModel.mode.collectAsState()
+    val state by viewModel.astronomyState.collectAsState()
+    val sunZodiac = if (isTropical) Zodiac.fromTropical(state.sun.elon)
+    else Zodiac.fromIau(state.sun.elon)
+    val moonZodiac = if (isTropical) Zodiac.fromTropical(state.moon.lon)
+    else Zodiac.fromIau(state.moon.lon)
+
+    val context = LocalContext.current
+    val headerCache = remember {
+        lruCache(1024, create = { jdn: Jdn ->
+            state.generateHeader(context.resources, jdn).joinToString("\n")
+        })
+    }
+
+    Column(modifier) {
+        val jdn by remember { derivedStateOf { Jdn(state.date.toCivilDate()) } }
+        SelectionContainer {
+            Text(
+                headerCache[jdn],
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 3
+            )
+        }
+        Seasons(jdn)
+        AnimatedVisibility(visible = mode == AstronomyMode.Earth) {
+            Row(Modifier.padding(top = 8.dp)) {
+                Box(Modifier.weight(1f)) {
+                    Cell(
+                        Modifier.align(Alignment.Center),
+                        0xcceaaa00.toInt(),
+                        stringResource(R.string.sun),
+                        sunZodiac.format(context.resources, true) // ☉☀️
+                    )
+                }
+                Box(Modifier.weight(1f)) {
+                    Cell(
+                        Modifier.align(Alignment.Center),
+                        0xcc606060.toInt(),
+                        stringResource(R.string.moon),
+                        moonZodiac.format(context.resources, true) // ☽it.moonPhaseEmoji
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Seasons(jdn: Jdn) {
+    val seasonsCache = remember { lruCache(1024, create = ::seasons) }
+    val seasonsOrder = remember {
+        if (coordinates.value?.isSouthernHemisphere == true) {
+            listOf(Season.WINTER, Season.SPRING, Season.SUMMER, Season.AUTUMN)
+        } else listOf(Season.SUMMER, Season.AUTUMN, Season.WINTER, Season.SPRING)
+    }
+    val equinoxes = (1..4).map { i ->
+        Date(
+            seasonsCache[CivilDate(
+                PersianDate(jdn.toPersianDate().year, i * 3, 29)
+            ).year].let {
+                when (i) {
+                    1 -> it.juneSolstice
+                    2 -> it.septemberEquinox
+                    3 -> it.decemberSolstice
+                    else -> it.marchEquinox
+                }
+            }.toMillisecondsSince1970()
+        ).toGregorianCalendar().formatDateAndTime()
+    }
+    repeat(2) { row ->
+        Row(Modifier.padding(top = 8.dp)) {
+            repeat(2) { cell ->
+                Box(Modifier.weight(1f)) {
+                    Cell(
+                        Modifier,
+                        seasonsOrder[cell + row * 2].color,
+                        stringResource(seasonsOrder[cell + row * 2].nameStringId),
+                        equinoxes[cell + row * 2],
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Stable
+@Composable
+private fun MoonIcon(astronomyState: AstronomyState) {
+    val context = LocalContext.current
+    val solarDraw = remember { SolarDraw(context.resources) }
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .drawBehind {
+                drawIntoCanvas {
+                    val radius = size.minDimension / 2f
+                    val sun = astronomyState.sun
+                    val moon = astronomyState.moon
+                    solarDraw.moon(it.nativeCanvas, sun, moon, radius, radius, radius)
+                }
+            },
+    )
+}
+
+@Stable
+@Composable
+private fun Cell(modifier: Modifier, @ColorInt color: Int, label: String, value: String) {
+    Row(
+        modifier.animateContentSize(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val context = LocalContext.current
+        val isDynamicGrayscale = remember(LocalConfiguration.current) {
+            theme.value.isDynamicColors() && context.resources.isDynamicGrayscale
+        }
+        Text(
+            label,
+            modifier = Modifier
+                .background(
+                    Color(if (isDynamicGrayscale) 0xcc808080.toInt() else color),
+                    MaterialTheme.shapes.small,
+                )
+                .align(alignment = Alignment.CenterVertically)
+                .padding(vertical = 4.dp, horizontal = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White,
+        )
+        Spacer(Modifier.width(8.dp))
+        SelectionContainer {
+            Text(value, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

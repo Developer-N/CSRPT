@@ -33,6 +33,9 @@ class DownloadPrayTimesViewModel constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _isSearchBoxIsOpen = MutableStateFlow(false)
+    val isSearchBoxIsOpen = _isSearchBoxIsOpen.asStateFlow()
+
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
 
@@ -100,5 +103,13 @@ class DownloadPrayTimesViewModel constructor(
             _query.value = query
             _isLoading.value = false
         }
+    }
+
+    fun openSearch() {
+        _isSearchBoxIsOpen.value = true
+    }
+
+    fun closeSearch() {
+        _isSearchBoxIsOpen.value = false
     }
 }//end of class

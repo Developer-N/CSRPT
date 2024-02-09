@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
@@ -20,17 +18,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ExpandCircleDown
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,20 +31,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,9 +48,7 @@ import com.byagowi.persiancalendar.utils.formatNumber
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import ir.namoo.commons.utils.appFont
-import ir.namoo.commons.utils.cardColor
-import kotlinx.coroutines.launch
+import ir.namoo.religiousprayers.ui.settings.MyLocationSelector
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -88,14 +73,12 @@ fun IntroCustomLocationScreen(
             viewModel.getCurrentLocation(context)
         }
     }
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
             .alpha(0.95f)
-            .animateContentSize(animationSpec = spring()),
-        colors = CardDefaults.elevatedCardColors(containerColor = cardColor),
-        elevation = CardDefaults.elevatedCardElevation()
+            .animateContentSize(animationSpec = spring())
     ) {
         AnimatedContent(
             targetState = locationPermissions.allPermissionsGranted, label = "location"
@@ -130,8 +113,8 @@ fun IntroCustomLocationScreen(
                         text = message,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         textAlign = TextAlign.Center,
-                        fontFamily = FontFamily(appFont),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -173,14 +156,12 @@ fun GetPermissionSection(locationPermissions: MultiplePermissionsState) {
         Text(
             modifier = Modifier.padding(8.dp),
             text = stringResource(id = R.string.first_setup_location_message),
-            fontFamily = FontFamily(appFont),
             fontSize = MaterialTheme.typography.bodyMedium.fontSize
         )
         Button(modifier = Modifier.padding(8.dp),
             onClick = { locationPermissions.launchMultiplePermissionRequest() }) {
             Text(
                 text = stringResource(id = R.string.ok),
-                fontFamily = FontFamily(appFont),
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
             )
         }
@@ -216,12 +197,9 @@ fun ShowLocationSection(
             onValueChange = { viewModel.updateCity(it) },
             label = {
                 Text(
-                    stringResource(id = R.string.city), fontFamily = FontFamily(appFont)
+                    stringResource(id = R.string.city)
                 )
             },
-            textStyle = TextStyle(
-                fontFamily = FontFamily(appFont)
-            ),
             isError = city.isEmpty(),
             maxLines = 1,
             keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
@@ -234,7 +212,6 @@ fun ShowLocationSection(
                 ) {
                     Text(
                         text = stringResource(id = R.string.enter_city_name),
-                        fontFamily = FontFamily(appFont),
                         fontSize = MaterialTheme.typography.bodySmall.fontSize
                     )
                 }
@@ -250,8 +227,8 @@ fun ShowLocationSection(
             Text(
                 modifier = Modifier.padding(4.dp),
                 text = formatNumber("${stringResource(id = R.string.latitude)} = $latitude"),
-                fontFamily = FontFamily(appFont),
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                fontWeight = FontWeight.SemiBold,
                 color = if (latitude.isEmpty()) MaterialTheme.colorScheme.error
                 else MaterialTheme.colorScheme.primary
             )
@@ -259,8 +236,8 @@ fun ShowLocationSection(
             Text(
                 modifier = Modifier.padding(4.dp),
                 text = formatNumber(" ${stringResource(id = R.string.longitude)} = $longitude "),
-                fontFamily = FontFamily(appFont),
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                fontWeight = FontWeight.SemiBold,
                 color = if (latitude.isEmpty()) MaterialTheme.colorScheme.error
                 else MaterialTheme.colorScheme.primary
             )
@@ -268,15 +245,15 @@ fun ShowLocationSection(
         }
         AnimatedVisibility(visible = !isLoading && (message.isNotEmpty() || city.isEmpty())) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Divider(modifier = Modifier.padding(8.dp))
+                HorizontalDivider(modifier = Modifier.padding(8.dp))
 
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     text = stringResource(id = R.string.select_location_if_not_detect),
-                    fontFamily = FontFamily(appFont),
-                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Row(
@@ -307,7 +284,7 @@ fun ShowLocationSection(
                         }
                     )
                 }
-                Divider(modifier = Modifier.padding(8.dp))
+                HorizontalDivider(modifier = Modifier.padding(8.dp))
             }
         }
 
@@ -318,10 +295,7 @@ fun ShowLocationSection(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Button(enabled = !isLoading, onClick = { viewModel.getCurrentLocation(context) }) {
-                Text(
-                    text = stringResource(id = R.string.renew_location),
-                    fontFamily = FontFamily(appFont)
-                )
+                Text(text = stringResource(id = R.string.renew_location))
                 Icon(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     imageVector = Icons.Filled.Autorenew,
@@ -334,10 +308,7 @@ fun ShowLocationSection(
                         context, startMainActivity
                     )
                 }) {
-                Text(
-                    text = stringResource(id = R.string.save_location),
-                    fontFamily = FontFamily(appFont)
-                )
+                Text(text = stringResource(id = R.string.save_location))
                 Icon(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     imageVector = Icons.Filled.Save,
@@ -348,68 +319,4 @@ fun ShowLocationSection(
     }
 }
 
-@Composable
-fun MyLocationSelector(
-    modifier: Modifier = Modifier,
-    locationList: List<String>,
-    selectedLocation: String,
-    onSelectedLocationChange: (String) -> Unit
-) {
-    val expanded = remember { mutableStateOf(false) }
-    val rotate = remember { Animatable(0f) }
-    val coroutineScope = rememberCoroutineScope()
 
-    ElevatedAssistChip(modifier = modifier.padding(4.dp), onClick = {
-        expanded.value = !expanded.value
-        coroutineScope.launch {
-            rotate.animateTo(
-                if (expanded.value) 180f else 0f, animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
-        }
-    }, label = {
-        Text(text = selectedLocation, fontFamily = FontFamily(appFont))
-    }, leadingIcon = {
-        Icon(
-            modifier = Modifier.rotate(rotate.value),
-            imageVector = Icons.Filled.ExpandCircleDown,
-            contentDescription = "DropDown"
-        )
-        DropdownMenu(expanded = expanded.value, onDismissRequest = {
-            expanded.value = false
-            coroutineScope.launch {
-                rotate.animateTo(
-                    if (expanded.value) 180f else 0f, animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                )
-            }
-        }) {
-            locationList.forEach { location ->
-                DropdownMenuItem(text = {
-                    Text(
-                        text = location, fontFamily = FontFamily(appFont)
-                    )
-                }, onClick = {
-                    onSelectedLocationChange(location)
-                    expanded.value = false
-                    coroutineScope.launch {
-                        rotate.animateTo(
-                            if (expanded.value) 180f else 0f, animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMedium
-                            )
-                        )
-                    }
-                }, trailingIcon = {
-                    if (selectedLocation == location) Icon(
-                        imageVector = Icons.Filled.Check, contentDescription = "Check"
-                    )
-                })
-            }
-        }
-    })
-}

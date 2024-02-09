@@ -144,7 +144,7 @@
     <string name="sunrise">Lever du soleil</string>
     <string name="fajr">Fajr</string>
     <string name="imsak">Imsak</string>
-    <string name="owghat">Heures de prière</string>
+    <string name="times">Heures</string>
     <string name="remaining_daylight">Restant</string>
     <string name="length_of_day">En journée</string>
     <string name="n_hours_minutes">%1$s h %2$s min</string>
@@ -197,6 +197,7 @@
     <string name="settings">Paramètres</string>
     <string name="compass">Boussole</string>
     <string name="date_converter">Convertisseur de date</string>
+    <string name="converter">Convertisseur</string>
     <string name="calendar">Calendrier</string>
     <string name="update">Mettre à jour</string>
     <string name="outdated_app">En raison de leur ancienneté, les informations peuvent être inexactes</string>

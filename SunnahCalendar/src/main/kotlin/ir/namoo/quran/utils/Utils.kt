@@ -2,16 +2,10 @@ package ir.namoo.quran.utils
 
 import android.content.Context
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Environment
-import android.text.Html
-import android.text.SpannableString
-import android.text.Spanned
 import androidx.core.content.edit
-import androidx.core.text.HtmlCompat
 import ir.namoo.commons.utils.appPrefsLite
 import java.io.File
-import java.util.*
 
 var quranFont: Typeface = Typeface.SANS_SERIF
     private set
@@ -75,11 +69,6 @@ fun initQuranUtils(context: Context) {
     farsiFontSize = prefs.getFloat(PREF_FARSI_FONT_SIZE, DEFAULT_FARSI_FONT_SIZE)
 }
 
-fun isDigit(string: String): Boolean {
-    for (c in string) if (!c.isDigit()) return false
-    return true
-}
-
 fun getSelectedQuranDirectoryPath(context: Context): String {
     val inPref = context.appPrefsLite.getString(PREF_STORAGE_PATH, "-") ?: "-"
     return if (inPref.contains("emulated") || inPref == "-") context.getExternalFilesDir("quran")?.absolutePath
@@ -125,14 +114,6 @@ fun getAyaFileName(sura: Int, aya: Int) = when {
     }
 }
 
-fun kyFarsiToArabicCharacters(text: String?): String {
-    return text?.replace("ک", "ك")?.replace("ی", "ي") ?: ""
-}
-
-fun kKurdishToArabicCharacters(text: String?): String {
-    return text?.replace("ک", "ك") ?: ""
-}
-
 fun getRootDirs(context: Context): ArrayList<File?> {
     var result: ArrayList<File?>? = null
     val dirs: Array<File?> = context.applicationContext.getExternalFilesDirs(null)
@@ -156,17 +137,6 @@ fun getRootDirs(context: Context): ArrayList<File?> {
         result.add(Environment.getExternalStorageDirectory())
     }
     return result
-}
-
-fun formatHtmlToSpanned(htmlContent: String): Spanned {
-    return when {
-        htmlContent.isEmpty() -> SpannableString("")
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> Html.fromHtml(
-            htmlContent, HtmlCompat.FROM_HTML_MODE_LEGACY
-        )
-
-        else -> @Suppress("DEPRECATION") Html.fromHtml(htmlContent)
-    }
 }
 
 fun String.getWordsForSearch(): List<String> {

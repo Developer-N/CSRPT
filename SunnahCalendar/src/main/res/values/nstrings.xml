@@ -17,7 +17,7 @@
     <string name="favorite">Favorite</string>
 
     <string name="apply">Apply</string>
-    <string name="group_change">Group change</string>
+    <string name="group_edit">Group change</string>
     <string name="clear_change">Clear change</string>
 
     <string name="network_error_title">Network error!</string>
@@ -27,7 +27,6 @@
     <string name="welcome">Welcome</string>
 
     <string name="available_exact_times">For your city exact pray times are available.</string>
-    <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="send_times">Send pray times</string>
     <string name="copy">Copy</string>
@@ -177,6 +176,7 @@
     <string name="just_arabic">Just arabic</string>
     <string name="just_translate">Just translate</string>
     <string name="play_type">Play type</string>
+    <string name="play_next_sura">Play next sura at end</string>
     <string name="str_bismillah" translatable="false">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
     <string name="quran_font_setting">Quran font setting</string>
     <string name="english_font_setting">English font setting</string>
@@ -209,6 +209,7 @@
     <string name="files_are_ready">Files are ready.</string>
     <string name="sort_order">Chapter sort order</string>
     <string name="go_to_page">Go to page</string>
+    <string name="page">Page</string>
     <string name="go_to_juz">Go to juz</string>
     <string name="go_to_hizb">Go to hizb</string>
     <string name="chapter_sort_dialog_title">Chapter sort order</string>
@@ -274,4 +275,9 @@
 
     <string name="str_welcome">Welcome to Your APP :)</string>
     <string name="bank_number">Bank number</string>
+
+    <string name="selected_location">Selected Location</string>
+
+    <string name="owghat">Pray Times</string>
+    <string name="save">Save</string>
 </resources>

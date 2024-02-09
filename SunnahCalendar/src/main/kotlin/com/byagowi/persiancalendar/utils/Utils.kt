@@ -1,13 +1,10 @@
 package com.byagowi.persiancalendar.utils
 
-import android.os.Bundle
 import android.util.Log
 import androidx.annotation.StringRes
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.LOG_TAG
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.global.coordinates
 import io.github.cosinekitty.astronomy.Observer
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
@@ -24,8 +21,8 @@ fun String.splitFilterNotEmpty(delim: String) = this.split(delim).filter { it.is
 
 fun Coordinates.calculatePrayTimes(
     calendar: GregorianCalendar = GregorianCalendar(),
-    calculationMethod: CalculationMethod = com.byagowi.persiancalendar.global.calculationMethod,
-    asrMethod: AsrMethod = com.byagowi.persiancalendar.global.asrMethod,
+    calculationMethod: CalculationMethod = com.byagowi.persiancalendar.global.calculationMethod.value,
+    asrMethod: AsrMethod = com.byagowi.persiancalendar.global.asrMethod.value,
     highLatitudesMethod: HighLatitudesMethod = com.byagowi.persiancalendar.global.highLatitudesMethod,
     midnightMethod: MidnightMethod = com.byagowi.persiancalendar.global.midnightMethod,
 ): PrayTimes {
@@ -61,8 +58,7 @@ val CalculationMethod.titleStringId
 
 // Midnight sun occurs at latitudes from 65°44' to 90° north or south as
 // https://en.wikipedia.org/wiki/Midnight_sun
-val enableHighLatitudesConfiguration: Boolean
-    get() = coordinates.value?.let { abs(it.latitude) > 50 } ?: false
+val Coordinates.enableHighLatitudesConfiguration: Boolean get() = abs(latitude) > 50
 
 val HighLatitudesMethod.titleStringId
     get(): @StringRes Int = when (this) {
@@ -71,5 +67,3 @@ val HighLatitudesMethod.titleStringId
         HighLatitudesMethod.OneSeventh -> R.string.high_latitudes_one_seventh
         HighLatitudesMethod.None -> R.string.none
     }
-
-fun Bundle.putJdn(key: String, jdn: Jdn) = putLong(key, jdn.value)

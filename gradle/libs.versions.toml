@@ -1,94 +1,82 @@
 [versions]
-agp = "8.1.1"
+agp = "8.2.2"
 android-test = "1.5.0"
 android-test-runner = "1.5.2"
-androidx-activity = "1.7.2"
+androidx-activity = "1.8.2"
 androidx-core = "1.12.0"
-androidx-fragment = "1.6.1"
-androidx-navigation = "2.7.2"
+androidx-navigation = "2.7.6"
 androidx-test-ext-junit = "1.1.5"
-appcompat = "1.6.1"
-astronomy = "bd2db6a3805ac8a7c559b6b2276e16c1e1793d1f"
-browser = "1.6.0"
-cardview = "1.0.0"
-compose = "1.5.1"
-compose-accompanist = "0.32.0"
-compose-compiler = "1.5.3" # https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-compose-material3 = "1.1.1"
+astronomy = "61dc07020aaa6885d2c7f688a4d82beaf6edb9ef" # is equal to v2.1.19
+browser = "1.7.0"
+compose = "1.6.0"
+compose-accompanist = "0.34.0"
+compose-compiler = "1.5.8" # https://developer.android.com/jetpack/androidx/releases/compose-kotlin
+compose-material3 = "1.2.0-rc01"
 coroutines = "1.7.3"
 dynamicanimation = "1.0.0"
-espresso = "3.5.1"
-jetbrains-kotlinx-serialization-json = "1.6.0"
 junit = "4.13.2"
-junit-runner = "1.10.0"
-junit5 = "5.10.0"
-kotlin = "1.9.10"
-kotlinpoet = "1.14.2"
-kotlinx-html-jvm = "0.9.1"
-kotlinx-serialization-json = "1.6.0"
-ksp = "1.9.10-1.0.13"
-leakcanary = "2.12"
-lifecycle-runtime = "2.6.2"
-material = "1.9.0"
-mockito-core = "5.5.0"
-mockito-kotlin = "5.1.0"
-multidex = "2.0.1"
+junit-runner = "1.10.1"
+junit5 = "5.10.1"
+kotlin = "1.9.22"
+kotlinpoet = "1.16.0"
+kotlinx-html-jvm = "0.11.0"
+kotlinx-serialization-json = "1.6.2"
+lifecycle = "2.7.0"
+mockito-core = "5.10.0"
+mockito-kotlin = "5.2.1"
 openlocationcode = "1.0.4"
 persiancalendar-calculator = "371a91149d1fea9c318ef0def94ca0f93a1be0c2"
-persiancalendar-calendar = "aa50eff1684cfaceac752c5d812b96e1c0ff95fa"
+persiancalendar-calendar = "a029c1f7fdf7204b8315847b89612eb15a5d519e"
 persiancalendar-praytimes = "36eab5bf0b6f5057357d6fbf0007bea3fab73895"
 persiancalendar-qr = "60ad1863978b35205549eae6af177c45a1e67307"
-preference = "1.2.1"
-recyclerview = "1.3.1"
-room = "2.5.2"
-sqlite = "2.3.1"
-truth = "1.1.5"
-viewpager2 = "1.0.0"
-work-manager = "2.8.1"
+truth = "1.3.0"
+work-manager = "2.9.0"
 
-gms = "4.3.15"
+gms = "4.4.0"
 firebase-pref = "1.4.2"
-crashlytics = "2.9.8"
+crashlytics = "2.9.9"
 
-koin = "3.5.0"
+ksp = "1.9.22-1.0.16"
+room = "2.6.1"
+multidex = "2.0.1"
+
+koin = "3.5.3"
 koin-ktor = "3.5.1"
 ktor = "2.2.2"
-logback = "1.4.7"
+logback = "1.4.11"
 lifecycle-extensions = "2.2.0"
-lifecycle-livedata = "2.6.2"
+lifecycle-livedata = "2.7.0"
 timber = "5.0.1"
 okhttp3 = "5.0.0-alpha.11"
-animation-graphics = "1.5.1"
-extended-icons = "1.5.1"
-landscapist-bom = "2.2.3"
-media = "1.1.1"
-gms-location = "21.0.1"
+animation-graphics = "1.6.0"
+extended-icons = "1.6.0"
+landscapist-bom = "2.2.13"
+media = "1.2.1"
+gms-location = "21.1.0"
 appcompanist-permissions = "0.31.1-alpha"
+poolakey = "2.2.0"
+myket-billing-client = "1.6"
 
 [libraries]
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 astronomy = { group = "com.github.cosinekitty", name = "astronomy", version.ref = "astronomy" }
 browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
-compose-accompanist-drawablepainter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "compose-accompanist" }
 compose-accompanist-flowlayout = { group = "com.google.accompanist", name = "accompanist-flowlayout", version.ref = "compose-accompanist" }
-compose-accompanist-themeadapter-material3 = { group = "com.google.accompanist", name = "accompanist-themeadapter-material3", version.ref = "compose-accompanist" }
 compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity" }
+compose-animation = { group = "androidx.compose.animation", name = "animation-graphics-android", version.ref = "compose" }
 compose-compiler = { group = "androidx.compose.compiler", name = "compiler", version.ref = "compose-compiler" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "compose" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "compose-material3" }
+compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation" }
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "compose" }
 compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "compose" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "compose" }
 dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
-espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espresso" }
-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "androidx-fragment" }
-fragment-testing = { group = "androidx.fragment", name = "fragment-testing", version.ref = "androidx-fragment" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit5" }
@@ -98,36 +86,27 @@ kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotli
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-html-jvm = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinx-html-jvm" }
-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "jetbrains-kotlinx-serialization-json" }
-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycle" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
-multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "androidx-navigation" }
-navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "androidx-navigation" }
-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "androidx-navigation" }
 openlocationcode = { group = "com.google.openlocationcode", name = "openlocationcode", version.ref = "openlocationcode" }
 persiancalendar-calculator = { group = "com.github.persian-calendar", name = "calculator", version.ref = "persiancalendar-calculator" }
 persiancalendar-calendar = { group = "com.github.persian-calendar", name = "calendar", version.ref = "persiancalendar-calendar" }
 persiancalendar-praytimes = { group = "com.github.persian-calendar", name = "praytimes", version.ref = "persiancalendar-praytimes" }
 persiancalendar-qr = { group = "com.github.persian-calendar", name = "qr", version.ref = "persiancalendar-qr" }
-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preference" }
-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
-room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
-sqlite = { group = "androidx.sqlite", name = "sqlite", version.ref = "sqlite" }
-sqlite-framework = { group = "androidx.sqlite", name = "sqlite-framework", version.ref = "sqlite" }
-sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sqlite" }
 test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "android-test" }
 test-rules = { group = "androidx.test", name = "rules", version.ref = "android-test" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "android-test-runner" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
-viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 work-manager-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
+
+multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
@@ -159,6 +138,8 @@ compose-animation-graphics = { group = "androidx.compose.animation", name = "ani
 compose-extended-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "extended-icons" }
 
 skydoves-bom = { group = "com.github.skydoves", name = "landscapist-bom", version.ref = "landscapist-bom" }
+skydoves-glide = { group = "com.github.skydoves", name = "landscapist-glide" }
+skydoves-placeholder = { group = "com.github.skydoves", name = "landscapist-placeholder" }
 
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media" }
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media" }
@@ -167,12 +148,15 @@ media3-session = { group = "androidx.media3", name = "media3-session", version.r
 gms-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "gms-location" }
 appcomanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "appcompanist-permissions" }
 
+cafebazar-poolakey = { group = "com.github.cafebazaar.Poolakey", name = "poolakey", version.ref = "poolakey" }
+myket-billing-client = { module = "com.github.myketstore:myket-billing-client", version.ref = "myket-billing-client" }
+
 [plugins]
-androidx-navigation-safeargs-kotlin = { id = "androidx.navigation.safeargs.kotlin", version.ref = "androidx-navigation" }
 com-android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
 google-gms = { id = "com.google.gms.google-services", version.ref = "gms" }
@@ -181,10 +165,9 @@ firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
 [bundles]
-compose-accompanist = ["compose-accompanist-drawablepainter", "compose-accompanist-flowlayout", "compose-accompanist-themeadapter-material3"]
-espresso = ["espresso-core", "espresso-contrib"]
 mockito = ["mockito-core", "mockito-kotlin"]
-room = ["room-ktx", "room-paging", "room-runtime", "sqlite", "sqlite-framework", "sqlite-ktx"]
+lifecycle = ["lifecycle-runtime-ktx", "lifecycle-service"]
 
+room = ["room-ktx", "room-paging", "room-runtime"]
 ktor = ["ktor-core", "ktor-content-negotiation", "ktor-serialization-kotlinx-json", "ktor-client-logging", "ktor-client-okhttp", "ktor-clinet-android"]
 media3 = ["media3-ui", "media3-exoplayer", "media3-session"]

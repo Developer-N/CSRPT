@@ -33,7 +33,6 @@ import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.enableWorkManager
 import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugLog
@@ -45,13 +44,13 @@ import ir.namoo.commons.PREF_AZKAR_REINDER
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import kotlinx.coroutines.coroutineScope
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
-fun scheduleAzkars(context: Context) {
+fun scheduleAzkars(context: Context, prayTimeProvider: PrayTimeProvider) {
     var prayTimes: PrayTimes = coordinates.value?.calculatePrayTimes() ?: return
-    PrayTimeProvider(context).nReplace(prayTimes, Jdn.today())?.let {
+    prayTimeProvider.replace(prayTimes, Jdn.today())?.let {
         prayTimes = it
     }
     val morningAzkarTime = Calendar.getInstance().also {
@@ -81,7 +80,7 @@ private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Lon
     debugLog("Azkar: $azkarName in ${remainedMillis / 60000} minutes")
     if (remainedMillis < 0) return // Don't set alarm in past
 
-    if (enableWorkManager) { // Schedule in both, startAthan has the logic to skip duplicated calls
+    run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
         val workerInputData = Data.Builder().putLong(KEY_AZKAR_EXTRA_TIME, timeInMillis)
             .putString(KEY_AZKAR_EXTRA_NAME, azkarName).build()
         val alarmWorker = OneTimeWorkRequest.Builder(AzkarWorker::class.java)
@@ -121,6 +120,7 @@ class AzkarWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
 
 fun startAzkar(context: Context, name: String, intendedTime: Long?) {
     debugLog("Azkar: startAzkar for $name")
+    applyAppLanguage(context)
     if (intendedTime == null) return startAzkarBody(context, name)
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return

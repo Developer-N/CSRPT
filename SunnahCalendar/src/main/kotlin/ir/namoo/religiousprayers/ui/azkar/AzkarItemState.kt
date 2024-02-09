@@ -10,4 +10,5 @@ class AzkarItemState {
     var progress by mutableFloatStateOf(0f)
     var isDownloading by mutableStateOf(false)
     var isPlaying by mutableStateOf(false)
+    var isFileExists by mutableStateOf(false)
 }

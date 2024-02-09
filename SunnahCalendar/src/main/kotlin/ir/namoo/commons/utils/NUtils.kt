@@ -1,13 +1,11 @@
 package ir.namoo.commons.utils
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -15,12 +13,8 @@ import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.ui.graphics.Color
-import androidx.core.app.ActivityCompat
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.DHUHR_KEY
@@ -33,15 +27,11 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
-import com.byagowi.persiancalendar.ui.utils.resolveColor
 import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.commons.PREF_PHONE_STATE_PERMISSION
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.PrayTimesModel
@@ -50,25 +40,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-var appFont: Typeface = Typeface.SANS_SERIF
-    private set
-var iconColor: Color = Color(27, 94, 32)
-    private set
-var cardColor: Color = Color(232, 245, 233)
-    private set
-var colorAppBar: Color = Color(56, 142, 60)
-    private set
-var colorOnAppBar: Color = Color(232, 245, 233)
-    private set
-
-fun initUtils(context: Context) {
-    appFont = getAppFont(context)
-    iconColor = Color(context.resolveColor(android.R.attr.colorAccent))
-    cardColor =
-        Color(context.resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface))
-    colorAppBar = Color(context.resolveColor(R.attr.screenBackgroundColor))
-    colorOnAppBar = Color(context.resolveColor(R.attr.colorOnAppBar))
-}
 
 fun String.digitsOf(): String {
     val res = StringBuilder()
@@ -95,8 +66,8 @@ fun fixTime(time: String, min: Int): String {
     var sh: Int
     var sm: Int // source hour and min
     val t = time.split(":".toRegex()).toTypedArray()
-    sh = t[0].toInt()
-    sm = t[1].toInt()
+    sh = t[0].digitsOf().toInt()
+    sm = t[1].digitsOf().toInt()
     sm += min
     if (sm >= 60) {
         sm -= 60
@@ -129,26 +100,6 @@ fun hideKeyBoard(view: View) {
 @SuppressLint("SdCardPath")
 fun getDatabasesDirectory(applicationContext: Context): String =
     "/data/data/${applicationContext.packageName}/databases/"
-
-fun snackMessage(
-    view: View?,
-    message: String,
-    snackAction: String? = null,
-    clickAction: View.OnClickListener = View.OnClickListener { },
-    snackTime: Int = Snackbar.LENGTH_SHORT
-) {
-    runCatching {
-        view ?: return
-        val snack = Snackbar.make(view, message, snackTime)
-        (snack.view.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView).typeface =
-            getAppFont(view.context)
-        snack.view.setBackgroundColor(view.context.resolveColor(com.google.accompanist.themeadapter.material3.R.attr.colorSurface))
-        snackAction?.let {
-            snack.setAction(it, clickAction)
-        }
-        snack.show()
-    }.onFailure(logException)
-}
 
 fun Context.toastMessage(msg: String) {
     Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
@@ -342,7 +293,7 @@ fun modelToDBTimes(models: List<PrayTimesModel>): List<DownloadedPrayTimesEntity
 
 fun formatServerDate(serverDate: String): String {
     var date = SimpleDateFormat(
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.asSystemLocale()
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", language.value.asSystemLocale()
     ).parse(serverDate)
     if (date == null) date = Date()
     return formatDate(
@@ -568,34 +519,7 @@ fun Activity.turnScreenOnAndKeyguardOff() {
     }
 }
 
-fun Activity.checkAndAskPhoneStatePermission(athanSettings: AthanSettingsDB) {
-    val settings = athanSettings.athanSettingsDAO().getAllAthanSettings()
-    var isAthanNotificationEnable = false
-    settings.forEach {
-        if (it.state) isAthanNotificationEnable = true
-    }
-    if (isAthanNotificationEnable && !appPrefsLite.getBoolean(
-            PREF_PHONE_STATE_PERMISSION, false
-        ) && ActivityCompat.checkSelfPermission(
-            this, Manifest.permission.READ_PHONE_STATE
-        ) != PackageManager.PERMISSION_GRANTED
-    ) {
-        MaterialAlertDialogBuilder(this).setTitle(getString(R.string.requset_permision))
-            .setMessage(getString(R.string.phone_state_permission_message))
-            .setPositiveButton(R.string.ok) { _, _ ->
-                ActivityCompat.requestPermissions(
-                    this, arrayOf(Manifest.permission.READ_PHONE_STATE), 1
-                )
-            }.setNegativeButton(R.string.cancel) { dialog, _ ->
-                dialog.dismiss()
-            }.show()
-        appPrefsLite.edit {
-            putBoolean(PREF_PHONE_STATE_PERMISSION, true)
-        }
-    }
-}
-
-fun File.logTo(log: String) {
+fun File.writeLog(log: String) {
     if (!exists()) createNewFile()
     val currentText = readText()
     writeText("$currentText\r\n$log")
