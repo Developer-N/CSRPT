@@ -505,7 +505,14 @@ private fun createMapRemoteViews(
     matrix.setScale(size * 2f / mapDraw.mapWidth, size.toFloat() / mapDraw.mapHeight)
     val bitmap = createBitmap(size * 2, size).applyCanvas {
         withClip(createRoundPath(size * 2, size, roundPixelSize)) {
-            mapDraw.draw(this, matrix, true, null, false)
+            mapDraw.draw(
+                canvas = this,
+                matrix = matrix,
+                coordinates = coordinates.value,
+                displayLocation = true,
+                directPathDestination = null,
+                displayGrid = false
+            )
         }
     }
     remoteViews.setImageViewBitmap(R.id.image, bitmap)
@@ -670,12 +677,7 @@ private fun create2x2RemoteViews(
 }
 
 private fun create4x2RemoteViews(
-    context: Context,
-    width: Int,
-    height: Int,
-    jdn: Jdn,
-    date: AbstractDate,
-    nowClock: Clock,
+    context: Context, width: Int, height: Int, jdn: Jdn, date: AbstractDate, nowClock: Clock,
     prayTimes: PrayTimes?
 ): RemoteViews {
     val weekDayName = jdn.dayOfWeekName
@@ -689,21 +691,13 @@ private fun create4x2RemoteViews(
     remoteViews.setDirection(R.id.widget_layout4x2, context.resources)
 
     remoteViews.setupForegroundTextColors(
-        R.id.textPlaceholder0_4x2,
-        R.id.textPlaceholder1_4x2,
-        R.id.textPlaceholder2_4x2,
-        R.id.textPlaceholder4owghat_3_4x2,
-        R.id.textPlaceholder4owghat_1_4x2,
-        R.id.textPlaceholder4owghat_15_4x2,
-        R.id.textPlaceholder4owghat_4_4x2,
-        R.id.textPlaceholder4owghat_2_4x2,
-        R.id.textPlaceholder4owghat_5_4x2,
-        R.id.event_4x2
+        R.id.textPlaceholder0_4x2, R.id.textPlaceholder1_4x2, R.id.textPlaceholder2_4x2,
+        R.id.textPlaceholder4owghat_3_4x2, R.id.textPlaceholder4owghat_1_4x2,
+        R.id.textPlaceholder4owghat_15_4x2, R.id.textPlaceholder4owghat_4_4x2,
+        R.id.textPlaceholder4owghat_2_4x2, R.id.textPlaceholder4owghat_5_4x2, R.id.event_4x2
     )
-    if (prefersWidgetsDynamicColors) remoteViews.setDynamicTextColor(
-        R.id.textPlaceholder0_4x2,
-        android.R.attr.colorAccent
-    )
+    if (prefersWidgetsDynamicColors)
+        remoteViews.setDynamicTextColor(R.id.textPlaceholder0_4x2, android.R.attr.colorAccent)
 
     if (!isWidgetClock) remoteViews.setTextViewText(R.id.textPlaceholder0_4x2, weekDayName)
     remoteViews.setTextViewText(R.id.textPlaceholder1_4x2, buildString {
@@ -716,75 +710,65 @@ private fun create4x2RemoteViews(
         // Set text of owghats
         val nowMinutes = nowClock.toMinutes()
         val owghats = listOf(
-            R.id.textPlaceholder4owghat_1_4x2,
-            R.id.textPlaceholder4owghat_15_4x2,
-            R.id.textPlaceholder4owghat_2_4x2,
-            R.id.textPlaceholder4owghat_3_4x2,
-            R.id.textPlaceholder4owghat_4_4x2,
-            R.id.textPlaceholder4owghat_5_4x2
+            R.id.textPlaceholder4owghat_1_4x2, R.id.textPlaceholder4owghat_15_4x2,
+            R.id.textPlaceholder4owghat_2_4x2, R.id.textPlaceholder4owghat_3_4x2,
+            R.id.textPlaceholder4owghat_4_4x2, R.id.textPlaceholder4owghat_5_4x2
         ).zip(
             if (calculationMethod.value.isJafari) {
-                if (nowMinutes < prayTimes.getFromStringId(R.string.dhuhr)
-                        .toMinutes() || nowMinutes > prayTimes.getFromStringId(R.string.isha)
-                        .toMinutes()
+                if (
+                    nowMinutes < prayTimes.getFromStringId(R.string.dhuhr).toMinutes() ||
+                    nowMinutes > prayTimes.getFromStringId(R.string.isha).toMinutes()
                 ) listOf(
-                    R.string.fajr,
-                    R.string.sunrise,
-                    R.string.dhuhr,
-                    R.string.maghrib,
+                    R.string.fajr, R.string.sunrise,
+                    R.string.dhuhr, R.string.maghrib,
                     R.string.midnight
                 ) else listOf(
-                    R.string.fajr,
-                    R.string.dhuhr,
-                    R.string.sunset,
-                    R.string.maghrib,
+                    R.string.fajr, R.string.dhuhr,
+                    R.string.sunset, R.string.maghrib,
                     R.string.midnight
                 )
             } else listOf(
-                R.string.fajr,
-                R.string.sunrise,
-                R.string.dhuhr,
-                R.string.asr,
-                R.string.maghrib,
-                R.string.isha
+                R.string.fajr, R.string.sunrise, R.string.dhuhr,
+                R.string.asr, R.string.maghrib, R.string.isha
             )
         ) { textHolderViewId, owghatStringId ->
             val timeClock = prayTimes.getFromStringId(owghatStringId)
             remoteViews.setTextViewText(
-
-                textHolderViewId,
-                context.getString(owghatStringId) + "\n" + timeClock.toFormattedString(printAmPm = false)
+                textHolderViewId, context.getString(owghatStringId) + "\n" +
+                        timeClock.toFormattedString(printAmPm = false)
             )
             remoteViews.setupForegroundTextColors(textHolderViewId)
-            remoteViews.setFloat(textHolderViewId, "setAlpha", .7f)
             Triple(textHolderViewId, owghatStringId, timeClock)
         }
         val (nextViewId, nextOwghatId, timeClock) = owghats.firstOrNull { (_, _, timeClock) ->
             timeClock.toMinutes() > nowMinutes
         } ?: owghats[0]
 
-        owghats.forEach { (viewId) ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) remoteViews.setFloat(
-                viewId,
-                "setAlpha",
-                1f
-            )
-            if (viewId != nextViewId) {
-                if (prefersWidgetsDynamicColors) {
-                    remoteViews.setFloat(viewId, "setAlpha", .6f)
-                    remoteViews.setDynamicTextColor(viewId)
-                    remoteViews.setDynamicTextColor(nextViewId, android.R.attr.colorAccent)
-                } else {
-                    val color =
-                        context.appPrefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
-                            ?.let(Color::parseColor)
-                            ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
-                    remoteViews.setTextColor(nextViewId, color)
-                    remoteViews.setTextColor(
-                        viewId, ColorUtils.setAlphaComponent(selectedWidgetTextColor, 180)
-                    )
-                }
-            } else remoteViews.setupForegroundTextColors(viewId)
+//        owghats.forEach { (viewId) ->
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+//            if (viewId != nextViewId) {
+//                if (prefersWidgetsDynamicColors) {
+//                    remoteViews.setDynamicTextColor(viewId)
+//                    remoteViews.setDynamicTextColor(nextViewId, android.R.attr.colorAccent)
+//                } else {
+//                    val color =
+//                        context.appPrefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
+//                            ?.let(Color::parseColor)
+//                            ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+//                    remoteViews.setTextColor(nextViewId, color)
+//                    remoteViews.setTextColor(
+//                        viewId, ColorUtils.setAlphaComponent(selectedWidgetTextColor, 180)
+//                    )
+//                }
+//            } else remoteViews.setupForegroundTextColors(viewId)
+//        }
+
+        if (prefersWidgetsDynamicColors) {
+            remoteViews.setDynamicTextColor(nextViewId, android.R.attr.colorAccent)
+        } else {
+            val color = context.appPrefs.getString(PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, null)
+                ?.let(Color::parseColor) ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+            remoteViews.setTextColor(nextViewId, color)
         }
 
         val difference = timeClock.toMinutes() - nowClock.toMinutes()
@@ -792,17 +776,15 @@ private fun create4x2RemoteViews(
             R.id.textPlaceholder2_4x2, context.getString(
                 R.string.n_till,
                 Clock.fromMinutesCount(if (difference > 0) difference else difference + 60 * 24)
-                    .asRemainingTime(context.resources),
-                context.getString(nextOwghatId)
+                    .asRemainingTime(context.resources), context.getString(nextOwghatId)
             )
         )
 
         remoteViews.setImageViewResource(R.id.refresh_icon, R.drawable.ic_widget_refresh)
         val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            0,
-            Intent(context, Widget4x2::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+            context, 0, Intent(context, Widget4x2::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
         remoteViews.setOnClickPendingIntent(R.id.refresh_wrapper, pendingIntent)
 
@@ -854,12 +836,9 @@ private fun createNRemoteViews(
         if (calculationMethod.value.isJafari) listOf(
             R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.maghrib, R.string.midnight
         ) else listOf(
-            R.string.fajr,
-            R.string.sunrise,
-            R.string.dhuhr,
-            R.string.asr,
-            R.string.maghrib,
-            R.string.isha
+            R.string.fajr, R.string.sunrise,
+            R.string.dhuhr, R.string.asr,
+            R.string.maghrib, R.string.isha
         )
     ) { textHolderViewId, owghatStringId ->
         val timeClock = prayTimes.getFromStringId(owghatStringId)
@@ -868,11 +847,6 @@ private fun createNRemoteViews(
             context.getString(owghatStringId) + "\n" + timeClock.toFormattedString(printAmPm = false)
         )
         remoteViews.setupForegroundTextColors(textHolderViewId)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) remoteViews.setFloat(
-            textHolderViewId,
-            "setAlpha",
-            .6f
-        )
         Triple(textHolderViewId, owghatStringId, timeClock)
     }
     val (nextViewId, _, _) = owghats.firstOrNull { (_, _, timeClock) ->
@@ -885,11 +859,6 @@ private fun createNRemoteViews(
             ?.let(Color::parseColor) ?: DEFAULT_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
         remoteViews.setTextColor(nextViewId, color)
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) remoteViews.setFloat(
-        nextViewId,
-        "setAlpha",
-        1f
-    )
 
     remoteViews.setOnClickPendingIntent(R.id.n_widget_layout, context.launchAppPendingIntent())
     return remoteViews

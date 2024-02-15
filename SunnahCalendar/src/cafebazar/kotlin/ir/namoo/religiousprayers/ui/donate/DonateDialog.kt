@@ -96,7 +96,9 @@ fun DonateDialog(onDismiss: () -> Unit) {
                 )
 
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {

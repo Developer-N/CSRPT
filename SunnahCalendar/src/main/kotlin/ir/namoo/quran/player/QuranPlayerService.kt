@@ -46,8 +46,8 @@ class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.
     private val quranRepository: QuranRepository by inject()
 
     override fun onCreate() {
-        super.onCreate()
         applyAppLanguage(this)
+        super.onCreate()
         val player = ExoPlayer.Builder(this).setAudioAttributes(AudioAttributes.DEFAULT, true)
             .setHandleAudioBecomingNoisy(true).setWakeMode(C.WAKE_MODE_LOCAL).build()
 

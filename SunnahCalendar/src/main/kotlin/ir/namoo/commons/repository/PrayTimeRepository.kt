@@ -102,6 +102,6 @@ class PrayTimeRepository(
 
     suspend fun clearEditTimes() = localRepository.clearEditTimes()
 
-    suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
-        localRepository.updateEditedTimes(times)
+   suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
+       localRepository.updateEditedTimes(times)
 }

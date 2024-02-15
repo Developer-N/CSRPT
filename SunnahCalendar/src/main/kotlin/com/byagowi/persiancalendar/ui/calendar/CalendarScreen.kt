@@ -165,6 +165,7 @@ import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 import com.byagowi.persiancalendar.utils.update
+import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import io.github.persiancalendar.calendar.AbstractDate
 import ir.namoo.commons.APP_LINK
 import ir.namoo.commons.utils.openUrlInCustomTab
@@ -205,7 +206,6 @@ fun CalendarScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val isYearView by viewModel.isYearView.collectAsState()
-    BackHandler(enabled = isYearView) { viewModel.closeYearView() }
 
     val context = LocalContext.current
 
@@ -216,7 +216,7 @@ fun CalendarScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             val searchBoxIsOpen by viewModel.isSearchOpen.collectAsState()
-            BackHandler(enabled = searchBoxIsOpen) { viewModel.closeSearch() }
+            BackHandler(enabled = searchBoxIsOpen, onBack = viewModel::closeSearch)
 
             Crossfade(searchBoxIsOpen, label = "toolbar") {
                 if (it) Search(viewModel) else Toolbar(addEvent, openDrawer, viewModel)
@@ -415,7 +415,9 @@ private fun detailsPagerState(
         initialPage = selectedTabIndex.coerceAtMost(tabs.size - 1),
         pageCount = tabs::size,
     )
-    viewModel.changeSelectedTabIndex(pagerState.currentPage)
+    LaunchedEffect(key1 = pagerState.currentPage) {
+        viewModel.changeSelectedTabIndex(pagerState.currentPage)
+    }
     return pagerState
 }
 
@@ -476,6 +478,7 @@ private fun CalendarsTab(viewModel: CalendarViewModel) {
         val jdn by viewModel.selectedDay.collectAsState()
         val today by viewModel.today.collectAsState()
         var isExpanded by rememberSaveable { mutableStateOf(false) }
+        Spacer(Modifier.height(24.dp))
         CalendarsOverview(jdn, today, mainCalendar, enabledCalendars, isExpanded) {
             isExpanded = !isExpanded
         }
@@ -508,7 +511,13 @@ private fun CalendarsTab(viewModel: CalendarViewModel) {
                     discardAction = {
                         context.appPrefs.edit { putBoolean(PREF_NOTIFY_IGNORED, true) }
                     },
-                ) { context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+                ) {
+                    runCatching {
+                        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    }.onFailure(logException).onFailure {
+                        context.appPrefs.edit { putBoolean(PREF_NOTIFY_IGNORED, true) }
+                    }.getOrNull().debugAssertNotNull
+                }
             }
         }
     }
@@ -601,10 +610,13 @@ private fun Toolbar(addEvent: () -> Unit, openDrawer: () -> Unit, viewModel: Cal
     val todayDate = remember(today, mainCalendar) { today.toCalendar(mainCalendar) }
     val selectedMonth = mainCalendar.getMonthStartFromMonthsDistance(today, selectedMonthOffset)
     val isYearView by viewModel.isYearView.collectAsState()
+    val yearViewOffset by viewModel.yearViewOffset.collectAsState()
+    val yearViewIsInYearSelection by viewModel.yearViewIsInYearSelection.collectAsState()
+
+    BackHandler(enabled = isYearView, onBack = viewModel::onYearViewBackPressed)
 
     @OptIn(ExperimentalMaterial3Api::class) TopAppBar(
         title = {
-            val yearViewOffset by viewModel.yearViewOffset.collectAsState()
             val refreshToken by viewModel.refreshToken.collectAsState()
             // just a noop to update title and subtitle when secondary calendar is toggled
             refreshToken.run {}
@@ -613,9 +625,12 @@ private fun Toolbar(addEvent: () -> Unit, openDrawer: () -> Unit, viewModel: Cal
             val title: String
             val subtitle: String
             if (isYearView) {
-                title = stringResource(R.string.year_view)
-                subtitle =
-                    if (yearViewOffset == 0) "" else formatNumber(todayDate.year + yearViewOffset)
+                title = stringResource(
+                    if (yearViewIsInYearSelection) R.string.select_year else R.string.year_view
+                )
+                subtitle = if (yearViewOffset == 0 || yearViewIsInYearSelection) "" else {
+                    formatNumber(todayDate.year + yearViewOffset)
+                }
             } else if (secondaryCalendar == null) {
                 title = selectedMonth.monthName
                 subtitle = formatNumber(selectedMonth.year)
@@ -631,9 +646,13 @@ private fun Toolbar(addEvent: () -> Unit, openDrawer: () -> Unit, viewModel: Cal
                     indication = rememberRipple(bounded = false),
                     interactionSource = remember { MutableInteractionSource() },
                     onClickLabel = stringResource(
-                        if (isYearView) R.string.close else R.string.year_view
+                        if (isYearView && !yearViewIsInYearSelection) R.string.select_year
+                        else R.string.year_view
                     ),
-                ) { if (isYearView) viewModel.closeYearView() else viewModel.openYearView() }
+                ) {
+                    if (isYearView) viewModel.commandYearView(YearViewCommand.ToggleYearSelection)
+                    else viewModel.openYearView()
+                },
             ) {
                 AnimatedContent(
                     title,
@@ -684,23 +703,23 @@ private fun Toolbar(addEvent: () -> Unit, openDrawer: () -> Unit, viewModel: Cal
                 if (state) AppIconButton(
                     icon = Icons.AutoMirrored.Default.ArrowBack,
                     title = stringResource(R.string.close),
-                ) { viewModel.closeYearView() } else NavigationOpenDrawerIcon(openDrawer)
+                    onClick = viewModel::onYearViewBackPressed,
+                ) else NavigationOpenDrawerIcon(openDrawer)
             }
         },
         actions = {
             AnimatedVisibility(isYearView) {
-                val yearViewOffset by viewModel.yearViewOffset.collectAsState()
-                TodayActionButton(yearViewOffset != 0) {
+                TodayActionButton(yearViewOffset != 0 && !yearViewIsInYearSelection) {
                     viewModel.commandYearView(YearViewCommand.TodayMonth)
                 }
             }
-            AnimatedVisibility(isYearView) {
+            AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
                 AppIconButton(
                     icon = Icons.Default.KeyboardArrowDown,
                     title = stringResource(R.string.next_x, stringResource(R.string.year)),
                 ) { viewModel.commandYearView(YearViewCommand.NextMonth) }
             }
-            AnimatedVisibility(isYearView) {
+            AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
                 AppIconButton(
                     icon = Icons.Default.KeyboardArrowUp,
                     title = stringResource(R.string.previous_x, stringResource(R.string.year)),

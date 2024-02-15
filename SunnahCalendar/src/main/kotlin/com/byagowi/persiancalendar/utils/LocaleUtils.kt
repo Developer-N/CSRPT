@@ -15,25 +15,29 @@ import java.util.Locale
 
 fun applyAppLanguage(context: Context) {
     runCatching {
-        val locale = language.value.asSystemLocale()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.getSystemService<LocaleManager>()?.applicationLocales = LocaleList(locale)
-        } else {
-            Locale.setDefault(locale)
-            val resources = context.resources
-            val config = applyLanguageToConfiguration(resources.configuration, locale)
-            resources.updateConfiguration(config, resources.displayMetrics)
-        }
+        val locale = Language.FA.asSystemLocale()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+//        {
+            runCatching {
+                context.getSystemService<LocaleManager>()?.applicationLocales = LocaleList(locale)
+            }.onFailure(logException)
+//        } else {
+        Locale.setDefault(locale)
+        val resources = context.resources
+        val config = applyLanguageToConfiguration(resources.configuration, locale)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(config, resources.displayMetrics)
+//        }
     }.onFailure(logException).getOrNull().debugAssertNotNull
 }
 
 fun applyLanguageToConfiguration(
     config: Configuration,
-    locale: Locale = language.value.asSystemLocale()
+    locale: Locale = Language.FA.asSystemLocale()
 ): Configuration {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return config
+//    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return config
     config.setLocale(locale)
-    config.setLayoutDirection(if (language.value.isLessKnownRtl) Language.FA.asSystemLocale() else locale)
+    config.setLayoutDirection(if (Language.FA.isLessKnownRtl) Language.FA.asSystemLocale() else locale)
     return config
 }
 

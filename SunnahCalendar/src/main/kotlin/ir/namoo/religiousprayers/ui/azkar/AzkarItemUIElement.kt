@@ -42,6 +42,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
@@ -85,6 +87,15 @@ fun AzkarItemUIElement(
                     )
                 )
         ) {
+//            Text(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp),
+//                text = item.sound ?: "-",
+//                fontSize = 24.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                textAlign = TextAlign.Center
+//            )
             SelectionContainer {
                 Text(
                     modifier = Modifier

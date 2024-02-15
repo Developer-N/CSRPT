@@ -34,8 +34,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
         targetSdk = 34
-        versionCode = 11010
-        versionName = "11.0.1"
+        versionCode = 11022
+        versionName = "11.0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
@@ -158,8 +158,11 @@ dependencies {
     implementation(libs.kotlinx.html.jvm)
     implementation(libs.openlocationcode)
     implementation(libs.activity.ktx)
+
+    val composeBom = platform(libs.compose.bom)
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
     implementation(libs.compose.activity)
-    implementation(libs.compose.accompanist.flowlayout)
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation(libs.compose.navigation)

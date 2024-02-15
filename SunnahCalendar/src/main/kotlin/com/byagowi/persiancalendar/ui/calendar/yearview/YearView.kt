@@ -3,6 +3,7 @@ package com.byagowi.persiancalendar.ui.calendar.yearview
 import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -23,6 +24,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,7 +32,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -41,8 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.invisibleToUser
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -65,6 +65,7 @@ import com.byagowi.persiancalendar.ui.utils.LargeShapeCornerSize
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.readYearDeviceEvents
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.floor
 
 @Composable
@@ -86,6 +87,7 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
     val transformableState = rememberTransformableState { zoomChange, _, _ ->
         scale = (scale * zoomChange).coerceAtMost(horizontalDivisions.toFloat())
     }
+    viewModel.yearViewIsInYearSelection(scale < yearSelectionModeMaxScale)
 
     val width = floor(maxWidth.value / horizontalDivisions * scale).coerceAtLeast(1f).dp
     val height = ((maxHeight - bottomPadding) / if (isLandscape) 3 else 4) * scale
@@ -118,114 +120,134 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
         })
     }
 
-    val halfPages = 100
     val lazyListState = rememberLazyListState(halfPages + yearOffsetInMonths)
     val yearViewCommand by viewModel.yearViewCommand.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
-    yearViewCommand?.let { command ->
-        coroutineScope.launch {
-            viewModel.clearYearViewCommand()
-            when (command) {
-                YearViewCommand.PreviousMonth -> {
-                    lazyListState.animateScrollToItem(lazyListState.firstVisibleItemIndex - 1)
-                }
+    LaunchedEffect(key1 = yearViewCommand) {
+        when (yearViewCommand ?: return@LaunchedEffect) {
+            YearViewCommand.ToggleYearSelection -> scale = if (scale > .5f) 0.01f else 1f
 
-                YearViewCommand.NextMonth -> {
-                    lazyListState.animateScrollToItem(lazyListState.firstVisibleItemIndex + 1)
-                }
+            YearViewCommand.PreviousMonth -> {
+                lazyListState.animateScrollToItem(lazyListState.firstVisibleItemIndex - 1)
+            }
 
-                YearViewCommand.TodayMonth -> lazyListState.animateScrollToItem(halfPages)
+            YearViewCommand.NextMonth -> {
+                lazyListState.animateScrollToItem(lazyListState.firstVisibleItemIndex + 1)
+            }
+
+            YearViewCommand.TodayMonth -> {
+                scale = 1f
+                if (abs(lazyListState.firstVisibleItemIndex - halfPages) > 2) {
+                    lazyListState.scrollToItem(halfPages)
+                } else lazyListState.animateScrollToItem(halfPages)
             }
         }
+        viewModel.clearYearViewCommand()
     }
 
-    viewModel.notifyYearViewOffset(
-        remember { derivedStateOf { lazyListState.firstVisibleItemIndex - halfPages } }.value
-    )
+    val current by remember { derivedStateOf { lazyListState.firstVisibleItemIndex - halfPages } }
+    LaunchedEffect(key1 = current) { viewModel.notifyYearViewOffset(current) }
+
+    val coroutineScope = rememberCoroutineScope()
 
     LazyColumn(state = lazyListState, modifier = Modifier.transformable(transformableState)) {
         items(halfPages * 2) {
             val yearOffset = it - halfPages
 
-            val yearDeviceEvents: EventsStore<CalendarEvent.DeviceCalendarEvent> =
-                remember(yearOffset, today) {
-                    val yearStartJdn = Jdn(
-                        mainCalendar.createDate(
-                            today.toCalendar(mainCalendar).year + yearOffset, 1, 1
-                        )
-                    )
-                    if (isShowDeviceCalendarEvents.value) context.readYearDeviceEvents(yearStartJdn)
-                    else EventsStore.empty()
-                }
-
-            Column {
-                @OptIn(ExperimentalLayoutApi::class) FlowRow(
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    repeat(if (isLandscape) 3 else 4) { row ->
-                        repeat(if (isLandscape) 4 else 3) { column ->
-                            val month = 1 + column + row * if (isLandscape) 4 else 3
-                            val offset = yearOffset * 12 + month - todayDate.month
-                            val title = language.value.my.format(
-                                monthNames[month - 1],
-                                formatNumber(yearOffset + todayDate.year),
-                            )
-                            Column(
-                                Modifier
-                                    .size(width, height)
-                                    .padding(padding)
-                                    .clip(shape)
-                                    .clickable(onClickLabel = stringResource(R.string.select_month)) {
-                                        viewModel.closeYearView()
-                                        viewModel.changeSelectedMonthOffsetCommand(offset)
-                                    }
-                                    .background(
-                                        LocalContentColor.current.copy(
-                                            alpha = if (offset == selectedMonthOffset) .025f else .1f,
-                                        )
-                                    ),
-                            ) {
-                                Text(
-                                    title,
-                                    Modifier.fillMaxWidth(),
-                                    fontSize = titleHeight,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = titleLineHeight,
+            Column(Modifier.fillMaxWidth()) {
+                if (scale > yearSelectionModeMaxScale) {
+                    val yearDeviceEvents: EventsStore<CalendarEvent.DeviceCalendarEvent> =
+                        remember(yearOffset, today) {
+                            val yearStartJdn = Jdn(
+                                mainCalendar.createDate(
+                                    today.toCalendar(mainCalendar).year + yearOffset, 1, 1
                                 )
-                                Canvas(Modifier.fillMaxSize()) {
-                                    drawIntoCanvas { canvas ->
-                                        renderMonthWidget(
-                                            dayPainter = dayPainter[this.size.height],
-                                            width = size.width,
-                                            canvas = canvas.nativeCanvas,
-                                            today = today,
-                                            baseDate = mainCalendar.getMonthStartFromMonthsDistance(
-                                                today, offset
-                                            ),
-                                            deviceEvents = yearDeviceEvents,
-                                            isRtl = isRtl,
-                                            isShowWeekOfYearEnabled = isShowWeekOfYearEnabled,
-                                            selectedDay = viewModel.selectedDay.value,
-                                        )
+                            )
+                            if (isShowDeviceCalendarEvents.value) {
+                                context.readYearDeviceEvents(yearStartJdn)
+                            } else EventsStore.empty()
+                        }
+                    @OptIn(ExperimentalLayoutApi::class) FlowRow(
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        repeat(if (isLandscape) 3 else 4) { row ->
+                            repeat(if (isLandscape) 4 else 3) { column ->
+                                val month = 1 + column + row * if (isLandscape) 4 else 3
+                                val offset = yearOffset * 12 + month - todayDate.month
+                                val title = language.value.my.format(
+                                    monthNames[month - 1],
+                                    formatNumber(yearOffset + todayDate.year),
+                                )
+                                Column(
+                                    Modifier
+                                        .size(width, height)
+                                        .padding(padding)
+                                        .clip(shape)
+                                        .clickable(onClickLabel = stringResource(R.string.select_month)) {
+                                            viewModel.closeYearView()
+                                            viewModel.changeSelectedMonthOffsetCommand(offset)
+                                        }
+                                        .background(LocalContentColor.current.copy(alpha = .1f))
+                                        .then(
+                                            if (offset != selectedMonthOffset) Modifier else Modifier.border(
+                                                width = 2.dp,
+                                                color = LocalContentColor.current.copy(alpha = .15f),
+                                                shape = shape
+                                            )
+                                        ),
+                                ) {
+                                    Text(
+                                        title,
+                                        Modifier.fillMaxWidth(),
+                                        fontSize = titleHeight,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = titleLineHeight,
+                                    )
+                                    Canvas(Modifier.fillMaxSize()) {
+                                        drawIntoCanvas { canvas ->
+                                            renderMonthWidget(
+                                                dayPainter = dayPainter[this.size.height],
+                                                width = size.width,
+                                                canvas = canvas.nativeCanvas,
+                                                today = today,
+                                                baseDate = mainCalendar.getMonthStartFromMonthsDistance(
+                                                    today, offset
+                                                ),
+                                                deviceEvents = yearDeviceEvents,
+                                                isRtl = isRtl,
+                                                isShowWeekOfYearEnabled = isShowWeekOfYearEnabled,
+                                                selectedDay = viewModel.selectedDay.value,
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-                Spacer(Modifier.height(bottomPadding.coerceAtLeast(24.dp)))
+                val space = bottomPadding.coerceAtLeast(24.dp) * scale.coerceIn(.4f, 1f)
+                val alpha = (.15f * (1 - scale)).coerceIn(0f, .15f)
+                Spacer(Modifier.height(space))
                 if (yearOffset != halfPages - 1) Text(
                     formatNumber(yearOffset + todayDate.year + 1),
                     style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics {
-                            @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser()
+                        .align(Alignment.CenterHorizontally)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LocalContentColor.current.copy(alpha = alpha))
+                        .padding((32 * alpha).dp)
+                        .clickable(onClickLabel = stringResource(R.string.select_year)) {
+                            coroutineScope.launch {
+                                if (scale < yearSelectionModeMaxScale) scale = 1f
+                                lazyListState.animateScrollToItem(halfPages + yearOffset + 1)
+                            }
                         },
                 )
             }
         }
     }
 }
+
+private const val yearSelectionModeMaxScale = .2f
+private const val halfPages = 200

@@ -84,6 +84,7 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.global.theme
 import com.byagowi.persiancalendar.ui.about.AboutScreen
 import com.byagowi.persiancalendar.ui.about.DeviceInformationScreen
@@ -326,7 +327,8 @@ fun App(intentStartDestination: String?, finish: () -> Unit) {
             composable(mapRoute) {
                 val viewModel = viewModel<MapViewModel>()
                 val previousEntry = navController.previousBackStackEntry
-                if (previousEntry?.destination?.route == astronomyRoute) {
+                val previousRoute = previousEntry?.destination?.route
+                if (previousRoute == astronomyRoute) {
                     val astronomyViewModel = viewModel<AstronomyViewModel>(previousEntry)
                     LaunchedEffect(Unit) {
                         viewModel.changeToTime(astronomyViewModel.astronomyState.value.date.time)
@@ -335,6 +337,7 @@ fun App(intentStartDestination: String?, finish: () -> Unit) {
                 }
                 MapScreen(
                     navigateUp = { navigateUp(mapRoute) },
+                    fromSettings = previousRoute == settingsRoute,
                     viewModel = viewModel,
                 )
             }
@@ -470,15 +473,16 @@ private fun DrawerSeasonsPager(drawerState: DrawerState) {
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
             .height(196.dp)
             .clip(MaterialTheme.shapes.extraLarge)
-            .semantics {
-                @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser()
-            },
+            .semantics { @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser() },
         pageSpacing = 8.dp,
     ) {
+        val season = Season.entries[it % 4]
         Image(
-            ImageBitmap.imageResource(Season.entries[it % 4].imageId),
+            ImageBitmap.imageResource(season.imageId),
             contentScale = ContentScale.FillWidth,
-            contentDescription = null,
+            contentDescription = """${stringResource(R.string.season)}$spacedColon${
+                stringResource(season.nameStringId)
+            }""",
             colorFilter = imageFilter,
             modifier = Modifier
                 .fillMaxSize()

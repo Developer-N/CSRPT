@@ -39,7 +39,6 @@ class WidgetMap : WidgetProvider()
 class WidgetMoon : WidgetProvider()
 class WidgetSunView : WidgetProvider()
 class WidgetMonthView : WidgetProvider()
-//class Widget4x1dateOnly : WidgetProvider()
 class NWidget : WidgetProvider()
 
 class AgeWidget : WidgetProvider() {

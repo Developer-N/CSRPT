@@ -61,10 +61,7 @@ import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.readDayDeviceEvents
 
 @Composable
-fun EventsTab(
-    navigateToHolidaysSettings: () -> Unit,
-    viewModel: CalendarViewModel,
-) {
+fun EventsTab(navigateToHolidaysSettings: () -> Unit, viewModel: CalendarViewModel) {
     Column(Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(8.dp))
         val context = LocalContext.current
@@ -90,9 +87,7 @@ fun EventsTab(
                 }
             }
         }
-        val shiftWorkInDaysDistance = remember(jdn) {
-            getShiftWorksInDaysDistance(jdn, context.resources)
-        }
+        val shiftWorkInDaysDistance = getShiftWorksInDaysDistance(jdn)
         AnimatedVisibility(visible = shiftWorkInDaysDistance != null) {
             AnimatedContent(
                 targetState = shiftWorkInDaysDistance ?: "",
@@ -147,7 +142,7 @@ fun EventsTab(
                     event.isHoliday -> MaterialTheme.colorScheme.primary
                     else -> MaterialTheme.colorScheme.surfaceVariant
                 },
-                label = "backgroundColor",
+                label = "background color",
             )
 
             val eventTime =
@@ -195,7 +190,7 @@ fun EventsTab(
                 ) {
                     val contentColor by animateColorAsState(
                         if (backgroundColor.isLight) Color.Black else Color.White,
-                        label = "contentColor"
+                        label = "content color"
                     )
 
                     SelectionContainer {

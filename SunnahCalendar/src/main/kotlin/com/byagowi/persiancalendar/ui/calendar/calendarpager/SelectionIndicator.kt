@@ -14,34 +14,28 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun SelectionIndicator(color: Color, radius: Float, center: Offset, visible: Boolean) {
+fun SelectionIndicator(color: Color, radius: Float, center: Offset?) {
     val animatedCenter = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val animatedRadiusFraction = remember { Animatable(0f) }
+    val animatedRadius = remember { Animatable(0f) }
 
-    LaunchedEffect(visible) {
-        if (visible) animatedCenter.snapTo(center)
-        val target = if (visible) 1f else 0f
-        if (animatedRadiusFraction.value != target) animatedRadiusFraction.animateTo(
+    LaunchedEffect(key1 = center != null) {
+        if (center != null) animatedCenter.snapTo(center)
+        val target = if (center != null) 1f else 0f
+        if (animatedRadius.value != target || animatedRadius.isRunning) animatedRadius.animateTo(
             targetValue = target,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessLow,
-            ),
+            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow),
         )
     }
 
-    LaunchedEffect(center) {
-        if (visible && animatedCenter.value != center) animatedCenter.animateTo(
+    LaunchedEffect(key1 = center) {
+        if (center != null) animatedCenter.animateTo(
             targetValue = center,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioLowBouncy,
-                stiffness = Spring.StiffnessLow,
-            ),
+            animationSpec = spring(Spring.DampingRatioLowBouncy, Spring.StiffnessLow),
         )
     }
 
     Canvas(Modifier.fillMaxSize()) {
-        val radiusFraction = animatedRadiusFraction.value
+        val radiusFraction = animatedRadius.value
         if (radiusFraction > 0f) drawCircle(
             color = color,
             center = animatedCenter.value,

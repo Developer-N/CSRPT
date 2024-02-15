@@ -143,10 +143,11 @@ fun isQuranDownloaded(context: Context, sura: Int): Boolean {
         ) + File.separator + getSuraFileName(
             sura
         )
-    File(internalZip).let {
-        if (it.exists()) {
-            ZipFile(it).extractAll(it.parent)
-            it.delete()
+    File(internalZip).let { file ->
+        if (file.exists()) {
+            runCatching { ZipFile(file).extractAll(file.parent) }
+                .onFailure { _ -> file.delete() }
+                .onSuccess { _ -> file.delete() }
         }
     }
 

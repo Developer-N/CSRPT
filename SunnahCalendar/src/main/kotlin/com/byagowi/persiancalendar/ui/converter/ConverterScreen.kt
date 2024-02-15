@@ -118,12 +118,12 @@ fun ConverterScreen(
                                 )
                             },
                     ) {
-                        var spinnerWidth by remember { mutableIntStateOf(0) }
+                        var dropDownWidth by remember { mutableIntStateOf(0) }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .padding(vertical = 4.dp)
-                                .onSizeChanged { spinnerWidth = it.width },
+                                .onSizeChanged { dropDownWidth = it.width },
                         ) {
                             Spacer(Modifier.width(16.dp))
                             AnimatedContent(
@@ -137,7 +137,7 @@ fun ConverterScreen(
                         AppDropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
-                            minWidth = with(LocalDensity.current) { spinnerWidth.toDp() },
+                            minWidth = with(LocalDensity.current) { dropDownWidth.toDp() },
                         ) {
                             ConverterScreenMode.entries.forEach {
                                 AppDropdownMenuItem(
@@ -430,31 +430,39 @@ private fun ConverterAndDistance(viewModel: ConverterViewModel) {
             )
         }
         Spacer(Modifier.width(8.dp))
-        AnimatedContent(
-            screenMode == ConverterScreenMode.Converter,
-            Modifier.weight(1f),
-            label = "converter/distance second pane",
-        ) { state ->
-            if (state) CalendarsOverview(
-                jdn = jdn,
-                today = today,
-                selectedCalendar = calendar,
-                shownCalendars = enabledCalendars - calendar,
-                isExpanded = isExpanded
-            ) { isExpanded = !isExpanded } else DaysDistanceSecondPart(viewModel, jdn, calendar)
+        Column(Modifier.weight(1f)) {
+            AnimatedVisibility(visible = screenMode == ConverterScreenMode.Converter) {
+                Column {
+                    Spacer(Modifier.height(12.dp))
+                    CalendarsOverview(
+                        jdn = jdn,
+                        today = today,
+                        selectedCalendar = calendar,
+                        shownCalendars = enabledCalendars - calendar,
+                        isExpanded = isExpanded
+                    ) { isExpanded = !isExpanded }
+                }
+            }
+            AnimatedVisibility(visible = screenMode == ConverterScreenMode.Distance) {
+                DaysDistanceSecondPart(viewModel, jdn, calendar)
+            }
         }
     } else {
         CalendarsTypesPicker(calendar, viewModel::changeCalendar)
         DayPicker(
             calendarType = calendar, jdn = jdn, setJdn = viewModel::changeSelectedDate
         )
-        AnimatedVisibility(screenMode == ConverterScreenMode.Converter) {
+        AnimatedVisibility(
+            visible = screenMode == ConverterScreenMode.Converter,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Card(
                 shape = MaterialTheme.shapes.extraLarge,
                 elevation = CardDefaults.cardElevation(8.dp),
                 onClick = { isExpanded = !isExpanded },
                 modifier = Modifier.padding(top = 16.dp),
             ) {
+                Spacer(Modifier.height(20.dp))
                 CalendarsOverview(
                     jdn = jdn,
                     today = today,
@@ -464,9 +472,10 @@ private fun ConverterAndDistance(viewModel: ConverterViewModel) {
                 ) { isExpanded = !isExpanded }
             }
         }
-        AnimatedVisibility(screenMode == ConverterScreenMode.Distance) {
-            DaysDistanceSecondPart(viewModel, jdn, calendar)
-        }
+        AnimatedVisibility(
+            visible = screenMode == ConverterScreenMode.Distance,
+            modifier = Modifier.fillMaxWidth(),
+        ) { DaysDistanceSecondPart(viewModel, jdn, calendar) }
     }
 }
 

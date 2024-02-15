@@ -13,7 +13,7 @@ import ir.namoo.commons.model.ServerAthanModel
 import ir.namoo.commons.model.ServerResponseModel
 import ir.namoo.commons.model.UpdateModel
 
-class RemotePrayTimeRepository constructor(private val httpClient: HttpClient) {
+class RemotePrayTimeRepository(private val httpClient: HttpClient) {
 
     suspend fun getAllCities(): List<CityModel> {
         runCatching {

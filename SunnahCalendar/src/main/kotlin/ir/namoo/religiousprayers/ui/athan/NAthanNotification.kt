@@ -108,6 +108,7 @@ class NAthanNotification : Service() {
     @Suppress("Deprecation")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent ?: return START_NOT_STICKY
+        applyAppLanguage(this)
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

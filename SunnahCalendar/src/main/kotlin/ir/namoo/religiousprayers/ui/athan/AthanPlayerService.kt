@@ -12,8 +12,8 @@ class AthanPlayerService : MediaSessionService(), MediaSession.Callback, Player.
 
     private var session: MediaSession? = null
     override fun onCreate() {
-        super.onCreate()
         applyAppLanguage(this)
+        super.onCreate()
         val player = ExoPlayer.Builder(this).setAudioAttributes(
             AudioAttributes.Builder().setUsage(C.USAGE_ALARM)
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), false
