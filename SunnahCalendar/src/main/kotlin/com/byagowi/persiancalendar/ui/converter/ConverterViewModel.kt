@@ -2,7 +2,7 @@ package com.byagowi.persiancalendar.ui.converter
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.byagowi.persiancalendar.entities.CalendarType
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
@@ -17,7 +17,7 @@ import java.util.TimeZone
 
 class ConverterViewModel : ViewModel() {
     private val _calendar = MutableStateFlow(mainCalendar)
-    val calendar: StateFlow<CalendarType> get() = _calendar
+    val calendar: StateFlow<Calendar> get() = _calendar
 
     private val _today = MutableStateFlow(Jdn.today())
     val today: StateFlow<Jdn> get() = _today
@@ -56,15 +56,15 @@ class ConverterViewModel : ViewModel() {
                 clock, firstTimeZone, secondTimeZone,
             ).collectLatest {
                 _todayButtonVisibility.value = when (screenMode.value) {
-                    ConverterScreenMode.Calculator, ConverterScreenMode.QrCode -> false
+                    ConverterScreenMode.CALCULATOR, ConverterScreenMode.QR_CODE -> false
 
-                    ConverterScreenMode.Converter -> selectedDate.value != today.value
+                    ConverterScreenMode.CONVERTER -> selectedDate.value != today.value
 
-                    ConverterScreenMode.Distance -> {
+                    ConverterScreenMode.DISTANCE -> {
                         selectedDate.value != today.value || secondSelectedDate.value != today.value
                     }
 
-                    ConverterScreenMode.TimeZones -> {
+                    ConverterScreenMode.TIME_ZONES -> {
                         !haveSameClock(
                             clock.value,
                             GregorianCalendar(clock.value.timeZone),
@@ -83,8 +83,8 @@ class ConverterViewModel : ViewModel() {
     }
 
     // Commands
-    fun changeCalendar(calendarType: CalendarType) {
-        _calendar.value = calendarType
+    fun changeCalendar(calendar: Calendar) {
+        _calendar.value = calendar
     }
 
     fun changeSelectedDate(jdn: Jdn) {

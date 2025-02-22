@@ -6,11 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 
-@Database(
-    entities = [TranslateSetting::class],
-    exportSchema = false,
-    version = 3
-)
+@Database(entities = [TranslateSetting::class], exportSchema = false, version = 3)
 abstract class QuranSettingDB : RoomDatabase() {
 
     abstract fun quranSettingDAO(): QuranSettingsDAO
@@ -21,7 +17,7 @@ abstract class QuranSettingDB : RoomDatabase() {
             return instance ?: synchronized(QuranSettingDB::class) {
                 val db = Room.databaseBuilder(
                     context.applicationContext, QuranSettingDB::class.java, "quran_setting.db"
-                ).fallbackToDestructiveMigration().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true).build()
                 instance = db
                 db
             }

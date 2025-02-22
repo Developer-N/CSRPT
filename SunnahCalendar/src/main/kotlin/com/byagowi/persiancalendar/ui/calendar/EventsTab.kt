@@ -5,12 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +22,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Yard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,36 +40,63 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_EVENTS
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.CalendarEvent
+import com.byagowi.persiancalendar.entities.DeviceCalendarEventsStore
 import com.byagowi.persiancalendar.entities.EventsRepository
+import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.eventsRepository
 import com.byagowi.persiancalendar.global.holidayString
+import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
+import com.byagowi.persiancalendar.global.isGradient
+import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.ui.common.AskForCalendarPermissionDialog
+import com.byagowi.persiancalendar.ui.common.equinoxTitle
+import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
+import com.byagowi.persiancalendar.ui.theme.noTransitionSpec
 import com.byagowi.persiancalendar.ui.utils.isLight
-import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.DAY_IN_MILLIS
+import com.byagowi.persiancalendar.utils.ONE_HOUR_IN_MILLIS
+import com.byagowi.persiancalendar.utils.ONE_MINUTE_IN_MILLIS
+import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
 import com.byagowi.persiancalendar.utils.getShiftWorksInDaysDistance
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.readDayDeviceEvents
+import io.github.persiancalendar.calendar.PersianDate
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun EventsTab(navigateToHolidaysSettings: () -> Unit, viewModel: CalendarViewModel) {
+fun SharedTransitionScope.EventsTab(
+    navigateToHolidaysSettings: () -> Unit,
+    viewModel: CalendarViewModel,
+    animatedContentScope: AnimatedContentScope,
+    bottomPadding: Dp,
+) {
     Column(Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(8.dp))
-        val context = LocalContext.current
 
         val jdn by viewModel.selectedDay.collectAsState()
         val refreshToken by viewModel.refreshToken.collectAsState()
@@ -105,126 +137,40 @@ fun EventsTab(navigateToHolidaysSettings: () -> Unit, viewModel: CalendarViewMod
             }
         }
 
-        val events = remember(jdn, refreshToken) {
-            (eventsRepository?.getEvents(jdn, context.readDayDeviceEvents(jdn))
-                ?: emptyList()).sortedBy {
-                when {
-                    it.isHoliday -> 0L
-                    it !is CalendarEvent.DeviceCalendarEvent -> 1L
-                    else -> it.start.time
-                }
+        Column(Modifier.padding(horizontal = 24.dp)) {
+            val context = LocalContext.current
+            val deviceEvents = remember(jdn, refreshToken) { context.readDayDeviceEvents(jdn) }
+            val events = readEvents(jdn, viewModel, deviceEvents)
+            Spacer(Modifier.height(16.dp))
+            AnimatedVisibility(events.isEmpty()) {
+                Text(
+                    stringResource(R.string.no_event),
+                    Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
             }
-        }
-        Spacer(Modifier.height(16.dp))
-        AnimatedVisibility(events.isEmpty()) {
-            Text(
-                stringResource(R.string.no_event),
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                textAlign = TextAlign.Center,
-            )
-        }
-
-        val launcher =
-            rememberLauncherForActivityResult(ViewEventContract()) { viewModel.refreshCalendar() }
-
-        events.forEach { event ->
-            val backgroundColor by animateColorAsState(
-                when {
-                    event is CalendarEvent.DeviceCalendarEvent -> {
-                        runCatching {
-                            // should be turned to long then int otherwise gets stupid alpha
-                            if (event.color.isEmpty()) null else Color(event.color.toLong().toInt())
-                        }.onFailure(logException).getOrNull() ?: MaterialTheme.colorScheme.primary
-                    }
-
-                    event.isHoliday -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.surfaceVariant
-                },
-                label = "background color",
-            )
-
-            val eventTime =
-                (event as? CalendarEvent.DeviceCalendarEvent)?.time?.let { "\n" + it } ?: ""
-            AnimatedContent(
-                (if (event.isHoliday) language.value.inParentheses.format(
-                    event.title, holidayString
-                ) else event.title) + eventTime,
-                label = "event title",
-                transitionSpec = appCrossfadeSpec,
-            ) { title ->
-                Row(
-                    @OptIn(ExperimentalFoundationApi::class) Modifier
-                        .fillMaxWidth()
-                        // TODO: Match it with a better number with page's fab
-                        .padding(horizontal = 24.dp, vertical = 4.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(backgroundColor)
-                        .combinedClickable(
-                            enabled = event is CalendarEvent.DeviceCalendarEvent,
-                            onClick = {
-                                if (event is CalendarEvent.DeviceCalendarEvent) {
-                                    runCatching { launcher.launch(event.id) }
-                                        .onFailure {
-                                            Toast
-                                                .makeText(
-                                                    context,
-                                                    R.string.device_does_not_support,
-                                                    Toast.LENGTH_SHORT
-                                                )
-                                                .show()
-                                        }
-                                        .onFailure(logException)
-                                }
-                            },
-                        )
-                        .padding(8.dp)
-                        .semantics {
-                            this.contentDescription = if (event.isHoliday) context.getString(
-                                R.string.holiday_reason, event.oneLinerTitleWithTime
-                            ) else event.oneLinerTitleWithTime
-                        },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    val contentColor by animateColorAsState(
-                        if (backgroundColor.isLight) Color.Black else Color.White,
-                        label = "content color"
-                    )
-
-                    SelectionContainer {
-                        Text(
-                            title,
-                            color = contentColor,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                    AnimatedVisibility(event is CalendarEvent.DeviceCalendarEvent) {
-                        Icon(
-                            Icons.AutoMirrored.Default.OpenInNew,
-                            contentDescription = null,
-                            tint = contentColor,
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
-            }
+            Column(
+                Modifier.sharedBounds(
+                    rememberSharedContentState(SHARED_CONTENT_KEY_EVENTS),
+                    animatedVisibilityScope = animatedContentScope,
+                )
+            ) { DayEvents(events) { viewModel.refreshCalendar() } }
         }
 
         val language by language.collectAsState()
-        if (PREF_HOLIDAY_TYPES !in context.appPrefs && language.isIranExclusive) {
+        val context = LocalContext.current
+        if (PREF_HOLIDAY_TYPES !in context.preferences && language.isIranExclusive) {
             Spacer(modifier = Modifier.height(16.dp))
             EncourageActionLayout(
                 header = stringResource(R.string.warn_if_events_not_set),
                 discardAction = {
-                    context.appPrefs.edit {
+                    context.preferences.edit {
                         putStringSet(PREF_HOLIDAY_TYPES, EventsRepository.iranDefault)
                     }
                 },
                 acceptAction = navigateToHolidaysSettings,
             )
-        } else if (PREF_SHOW_DEVICE_CALENDAR_EVENTS !in context.appPrefs) {
+        } else if (PREF_SHOW_DEVICE_CALENDAR_EVENTS !in context.preferences) {
             var showDialog by remember { mutableStateOf(false) }
             if (showDialog) AskForCalendarPermissionDialog { showDialog = false }
 
@@ -232,7 +178,7 @@ fun EventsTab(navigateToHolidaysSettings: () -> Unit, viewModel: CalendarViewMod
             EncourageActionLayout(
                 header = stringResource(R.string.ask_for_calendar_permission),
                 discardAction = {
-                    context.appPrefs.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false) }
+                    context.preferences.edit { putBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false) }
                 },
                 acceptButton = stringResource(R.string.yes),
                 acceptAction = { showDialog = true },
@@ -240,11 +186,208 @@ fun EventsTab(navigateToHolidaysSettings: () -> Unit, viewModel: CalendarViewMod
         }
 
         // Events addition fab placeholder, so events can be scrolled after it
-        Spacer(modifier = Modifier.height(76.dp))
+        Spacer(Modifier.height(76.dp))
+        Spacer(Modifier.height(bottomPadding))
     }
 }
 
-private class ViewEventContract : ActivityResultContract<Long, Void?>() {
+@Composable
+fun eventColor(event: CalendarEvent<*>): Color {
+    return when {
+        event is CalendarEvent.DeviceCalendarEvent -> runCatching {
+            // should be turned to long then int otherwise gets stupid alpha
+            if (event.color.isEmpty()) null else Color(event.color.toLong())
+        }.onFailure(logException).getOrNull() ?: MaterialTheme.colorScheme.primary
+
+        event.isHoliday || event is CalendarEvent.EquinoxCalendarEvent -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+}
+
+fun ManagedActivityResultLauncher<Long, Void?>.viewEvent(
+    event: CalendarEvent.DeviceCalendarEvent,
+    context: Context
+) {
+    runCatching { this@viewEvent.launch(event.id) }
+        .onFailure {
+            Toast
+                .makeText(
+                    context,
+                    R.string.device_does_not_support,
+                    Toast.LENGTH_SHORT
+                )
+                .show()
+        }
+        .onFailure(logException)
+}
+
+fun eventTextColor(color: Int): Int = eventTextColor(Color(color)).toArgb()
+fun eventTextColor(color: Color): Color = if (color.isLight) Color.Black else Color.White
+
+@Composable
+fun DayEvents(events: List<CalendarEvent<*>>, refreshCalendar: () -> Unit) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ViewEventContract()) { refreshCalendar() }
+    events.forEach { event ->
+        val backgroundColor by animateColor(eventColor(event))
+        val eventTime = (event as? CalendarEvent.DeviceCalendarEvent)?.time?.let { "\n" + it } ?: ""
+        AnimatedContent(
+            (if (event.isHoliday) language.value.inParentheses.format(
+                event.title, holidayString
+            ) else event.title) + eventTime,
+            label = "event title",
+            transitionSpec = {
+                (if (event is CalendarEvent.EquinoxCalendarEvent) noTransitionSpec
+                else appCrossfadeSpec)()
+            },
+        ) { title ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(backgroundColor)
+                    .combinedClickable(
+                        enabled = event is CalendarEvent.DeviceCalendarEvent,
+                        onClick = {
+                            if (event is CalendarEvent.DeviceCalendarEvent) {
+                                launcher.viewEvent(event, context)
+                            }
+                        },
+                    )
+                    .padding(8.dp)
+                    .semantics {
+                        this.contentDescription = if (event.isHoliday) context.getString(
+                            R.string.holiday_reason, event.oneLinerTitleWithTime
+                        ) else event.oneLinerTitleWithTime
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                val contentColor by animateColor(eventTextColor(backgroundColor))
+                Column(modifier = Modifier.weight(1f, fill = false)) {
+                    SelectionContainer {
+                        Text(
+                            title,
+                            color = contentColor,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    if (event is CalendarEvent.EquinoxCalendarEvent) Row equinox@{
+                        val isGradient by isGradient.collectAsState()
+                        val foldedCardBrush = if (isGradient) Brush.verticalGradient(
+                            .25f to contentColor,
+                            .499f to contentColor.copy(
+                                alpha = if (contentColor.isLight) .75f else .5f
+                            ),
+                            .5f to contentColor,
+                        ) else Brush.verticalGradient(
+                            .49f to contentColor,
+                            .491f to Color.Transparent,
+                            .509f to Color.Transparent,
+                            .51f to contentColor,
+                        )
+
+                        var remainedTime = event.remainingMillis
+                        if (remainedTime < 0 || remainedTime > DAY_IN_MILLIS * 356) return@equinox
+                        countDownTimeParts.map { (pluralId, interval) ->
+                            val x = (remainedTime / interval).toInt()
+                            remainedTime -= x * interval
+                            pluralStringResource(pluralId, x, formatNumber(x))
+                        }.forEachIndexed { i, x ->
+                            if (i != 0) Spacer(Modifier.width(8.dp))
+                            val parts = x.split(" ")
+                            if (parts.size == 2 && parts[0].length <= 2 && !isTalkBackEnabled) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    CompositionLocalProvider(
+                                        LocalLayoutDirection provides LayoutDirection.Ltr
+                                    ) {
+                                        Row {
+                                            parts[0].padStart(2, formatNumber(0)[0])
+                                                .forEachIndexed { i, c ->
+                                                    Text(
+                                                        "$c",
+                                                        style = MaterialTheme.typography.headlineSmall,
+                                                        textAlign = TextAlign.Center,
+                                                        color = backgroundColor,
+                                                        modifier = Modifier
+                                                            .background(
+                                                                foldedCardBrush,
+                                                                MaterialTheme.shapes.extraSmall,
+                                                            )
+                                                            .width(28.dp),
+                                                    )
+                                                    if (i == 0) Spacer(Modifier.width(2.dp))
+                                                }
+                                        }
+                                    }
+                                    Text(
+                                        parts[1], color = contentColor,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            } else Text(
+                                x,
+                                color = contentColor,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
+                AnimatedVisibility(event is CalendarEvent.DeviceCalendarEvent || event is CalendarEvent.EquinoxCalendarEvent) {
+                    Icon(
+                        if (event is CalendarEvent.EquinoxCalendarEvent) Icons.Default.Yard
+                        else Icons.AutoMirrored.Default.OpenInNew,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val countDownTimeParts = listOf(
+    R.plurals.days to DAY_IN_MILLIS,
+    R.plurals.hours to ONE_HOUR_IN_MILLIS,
+    R.plurals.minutes to ONE_MINUTE_IN_MILLIS,
+)
+
+@Composable
+fun readEvents(
+    jdn: Jdn,
+    viewModel: CalendarViewModel,
+    deviceEvents: DeviceCalendarEventsStore,
+): List<CalendarEvent<*>> {
+    val context = LocalContext.current
+    val events = sortEvents(eventsRepository?.getEvents(jdn, deviceEvents) ?: emptyList())
+
+    if (mainCalendar == Calendar.SHAMSI || isAstronomicalExtraFeaturesEnabled) {
+        val date = jdn.toPersianDate()
+        if (jdn + 1 == Jdn(PersianDate(date.year + 1, 1, 1))) {
+            val now by viewModel.now.collectAsState()
+            val (rawTitle, equinoxTime) = equinoxTitle(date, jdn, context)
+            val title = rawTitle.replace(": ", "\n")
+            val remainedTime = equinoxTime - now
+            val event = CalendarEvent.EquinoxCalendarEvent(title, false, date, remainedTime)
+            return listOf(event) + events
+        }
+    }
+    return events
+}
+
+fun sortEvents(events: List<CalendarEvent<*>>): List<CalendarEvent<*>> {
+    return events.sortedBy {
+        when {
+            it.isHoliday -> 0L
+            it !is CalendarEvent.DeviceCalendarEvent -> 1L
+            else -> it.start.timeInMillis
+        }
+    }
+}
+
+class ViewEventContract : ActivityResultContract<Long, Void?>() {
     override fun parseResult(resultCode: Int, intent: Intent?) = null
     override fun createIntent(context: Context, input: Long): Intent {
         return Intent(Intent.ACTION_VIEW).setData(

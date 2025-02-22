@@ -117,8 +117,8 @@ class MapDraw(
 
     private fun drawMask(canvas: Canvas, matrixScale: Float) {
         when (currentMapType) {
-            MapType.None -> Unit
-            MapType.DayNight, MapType.MoonVisibility -> {
+            MapType.NONE -> Unit
+            MapType.DAY_NIGHT, MapType.MOON_VISIBILITY -> {
                 canvas.drawBitmap(maskMap, null, mapRect, null)
                 val scale = mapWidth / maskMap.width
                 solarDraw.simpleMoon(
@@ -135,22 +135,22 @@ class MapDraw(
                 )
             }
 
-            MapType.MagneticInclination, MapType.MagneticDeclination, MapType.MagneticFieldStrength ->
+            MapType.MAGNETIC_INCLINATION, MapType.MAGNETIC_DECLINATION, MapType.MAGNETIC_FIELD_STRENGTH ->
                 canvas.drawBitmap(maskMap, null, mapRect, null)
 
-            MapType.TimeZones -> canvas.drawPath(timezones, miscPaint)
-            MapType.TectonicPlates -> canvas.drawPath(tectonicPlates, miscPaint)
-            MapType.Yallop, MapType.Odeh ->
+            MapType.TIME_ZONES -> canvas.drawPath(timezones, miscPaint)
+            MapType.TECTONIC_PLATES -> canvas.drawPath(tectonicPlates, miscPaint)
+            MapType.YALLOP, MapType.ODEH ->
                 canvas.drawBitmap(maskMapCrescentVisibility, null, mapRect, null)
         }
     }
 
     private val maskDateSink = GregorianCalendar().also { --it.timeInMillis }
-    var currentMapType = MapType.None
+    var currentMapType = MapType.NONE
         private set
 
     fun updateMap(timeInMillis: Long, mapType: MapType) {
-        if (mapType == MapType.None) {
+        if (mapType == MapType.NONE) {
             currentMapType = mapType
             maskFormattedTime = ""
             return
@@ -159,23 +159,21 @@ class MapDraw(
         maskDateSink.timeInMillis = timeInMillis
         currentMapType = mapType
         when (mapType) {
-            MapType.DayNight, MapType.MoonVisibility -> {
+            MapType.DAY_NIGHT, MapType.MOON_VISIBILITY -> {
                 maskFormattedTime = maskDateSink.formatDateAndTime()
                 maskMap.eraseColor(Color.TRANSPARENT)
                 writeDayNightMask(timeInMillis)
             }
 
-            MapType.MagneticFieldStrength,
-            MapType.MagneticDeclination,
-            MapType.MagneticInclination -> {
+            MapType.MAGNETIC_FIELD_STRENGTH, MapType.MAGNETIC_DECLINATION, MapType.MAGNETIC_INCLINATION -> {
                 maskFormattedTime = maskDateSink.formatDateAndTime()
                 maskMap.eraseColor(Color.TRANSPARENT)
                 writeMagneticMap(timeInMillis, mapType)
             }
 
-            MapType.Yallop, MapType.Odeh -> {
+            MapType.YALLOP, MapType.ODEH -> {
                 maskFormattedTime = formatDate(
-                    Jdn(maskDateSink.toCivilDate()).toCalendar(mainCalendar),
+                    Jdn(maskDateSink.toCivilDate()) on mainCalendar,
                     forceNonNumerical = true
                 )
                 maskMapCrescentVisibility.eraseColor(Color.TRANSPARENT)
@@ -192,10 +190,10 @@ class MapDraw(
                 val latitude = 180 / 2f - y
                 val longitude = x - 360 / 2f
                 val field = GeomagneticField(latitude, longitude, 0f, timeInMillis)
-                maskMap[x, y] = if (mapType != MapType.MagneticFieldStrength) {
+                maskMap[x, y] = if (mapType != MapType.MAGNETIC_FIELD_STRENGTH) {
                     val value = when (mapType) {
-                        MapType.MagneticDeclination -> field.declination
-                        MapType.MagneticInclination -> field.inclination
+                        MapType.MAGNETIC_DECLINATION -> field.declination
+                        MapType.MAGNETIC_INCLINATION -> field.inclination
                         else -> 0f
                     }
                     when {
@@ -219,7 +217,7 @@ class MapDraw(
         val geoSunEqd = rot.rotate(geoSunEqj)
         val geoMoonEqd = rot.rotate(geoMoonEqj)
 
-        val isMoonVisibility = currentMapType == MapType.MoonVisibility
+        val isMoonVisibility = currentMapType == MapType.MOON_VISIBILITY
 
         // https://github.com/cosinekitty/astronomy/blob/edcf9248/demo/c/worldmap.cpp
         (0..<360).forEach { x ->
@@ -261,7 +259,7 @@ class MapDraw(
         rot.rotate(bVec - oVec).let { it.z / it.length() }
 
     private fun writeCrescentVisibilityMap(date: GregorianCalendar, mapType: MapType) {
-        val isYallop = mapType == MapType.Yallop
+        val isYallop = mapType == MapType.YALLOP
         val baseTime = Time(
             date[GregorianCalendar.YEAR], date[GregorianCalendar.MONTH] + 1,
             date[GregorianCalendar.DAY_OF_MONTH] + 1, 0, 0, .0
@@ -311,7 +309,7 @@ class MapDraw(
                     val q = (ARCV - (11.8371 - 6.3226 * W_topo + .7319 * W_topo.pow(2)
                             - .1018 * W_topo.pow(3))) / 10
                     maskMapCrescentVisibility[x, y] = when {
-                        q > +.216 -> 0x7F3EFF00 // Crescent easily visible
+                        q > .216 -> 0x7F3EFF00 // Crescent easily visible
                         q > -.014 -> 0x7F3EFF6D // Crescent visible under perfect conditions
                         q > -.160 -> 0x7F00FF9E // May need optical aid to find crescent
                         q > -.232 -> 0x7F00FFFA // Will need optical aid to find crescent
@@ -350,9 +348,19 @@ class MapDraw(
         it.textSize = gridLinesWidth * 10
         it.textAlign = Paint.Align.CENTER
     }
-    private val moaiPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
+    private val emojiPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
         it.color = Color.BLACK
         it.textSize = 1.5f
+        it.textAlign = Paint.Align.CENTER
+    }
+    private val emojiRedPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
+        it.color = Color.RED
+        it.textSize = 1.5f
+        it.textAlign = Paint.Align.CENTER
+    }
+    private val biggerEmojiPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
+        it.color = Color.BLACK
+        it.textSize = 10f
         it.textAlign = Paint.Align.CENTER
     }
 
@@ -363,10 +371,12 @@ class MapDraw(
         66.566667, // https://en.wikipedia.org/wiki/Arctic_Circle
         -66.566667, // https://en.wikipedia.org/wiki/Antarctic_Circle
     ).map { (90 - it.toFloat()) * mapScaleFactor }
+    private val dp = resources.dp
     private val parallelsPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.strokeWidth = gridLinesWidth
         it.color = 0x80800000.toInt()
-        it.pathEffect = DashPathEffect(floatArrayOf(5f, 5f), 0f)
+        val dashSize = 4 * dp
+        it.pathEffect = DashPathEffect(floatArrayOf(dashSize, dashSize / 2), 0f)
     }
 
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -375,7 +385,6 @@ class MapDraw(
     private val foregroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = mapForegroundColor ?: 0xFFFBF8E5.toInt()
     }
-    private val dp = resources.dp
     private val miscPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = 5 * dp
@@ -412,7 +421,37 @@ class MapDraw(
             if (scaleBack < .1) {
                 val userX = (-109.366f + 180) * mapScaleFactor
                 val userY = (90 - -27.116f) * mapScaleFactor
-                drawText("🗿", userX - 1f, userY + 2.5f, moaiPaint)
+                drawText("🗿", userX - 1f, userY + 2.5f, emojiPaint) // Moai
+            }
+            if (scaleBack < .1) {
+                val userX = (129.3970f + 180) * mapScaleFactor
+                val userY = (90 - 34.5897f) * mapScaleFactor
+                drawText("⛩", userX, userY + 2.5f, emojiRedPaint) // Tsushima
+            }
+            if (scaleBack < .1) {
+                val userX = (86.92527f + 180) * mapScaleFactor
+                val userY = (90 - 27.98833f) * mapScaleFactor
+                drawText("🗻", userX, userY + 2.5f, biggerEmojiPaint) // Everest
+            }
+            if (scaleBack < .1) {
+                val userX = (-72.62f + 180) * mapScaleFactor
+                val userY = (90 - 80.37f) * mapScaleFactor
+                drawText("🐻‍❄️", userX, userY + 2.5f, biggerEmojiPaint) // North geomagnetic pole
+            }
+            if (scaleBack < .1) {
+                val userX = (108.22f + 180) * mapScaleFactor
+                val userY = (90 - -79.74f) * mapScaleFactor
+                drawText("🐧", userX, userY + 2.5f, biggerEmojiPaint) // South geomagnetic pole
+            }
+            if (scaleBack < .1) {
+                val userX = (132.16666f + 180) * mapScaleFactor
+                val userY = (90 - -23.03333f) * mapScaleFactor
+                drawText(
+                    "🦘",
+                    userX,
+                    userY + 2.5f,
+                    biggerEmojiPaint
+                ) // Australia pole of inaccessibility
             }
             if (coordinates != null && displayLocation) {
                 val userX = (coordinates.longitude.toFloat() + 180) * mapScaleFactor

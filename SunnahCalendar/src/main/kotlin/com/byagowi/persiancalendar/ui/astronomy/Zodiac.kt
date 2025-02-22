@@ -37,6 +37,7 @@ import kotlin.math.floor
  * * https://github.com/chan/vios/blob/3430b89/autoload/time/moon.vim
  * * https://github.com/BGCX262/zweer-gdr-svn-to-git/blob/6d85903/trunk/library/Zwe/Weather/Moon.php
  *
+ * See also: https://en.wikipedia.org/wiki/Lunar_station#Arabic_manzil
  */
 enum class Zodiac(
     private val iauRangeEnd: Double, val emoji: String, @StringRes private val title: Int
@@ -74,6 +75,6 @@ enum class Zodiac(
             entries.firstOrNull { longitude < it.iauRangeEnd } ?: ARIES
 
         fun fromTropical(longitude: Double): Zodiac =
-            entries.getOrNull(floor((longitude - 15) / 30).toInt()) ?: PISCES
+            entries.getOrNull(floor(longitude / 30).toInt()) ?: PISCES
     }
 }

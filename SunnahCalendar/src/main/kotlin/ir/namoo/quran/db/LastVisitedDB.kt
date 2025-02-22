@@ -46,7 +46,7 @@ abstract class LastVisitedDB : RoomDatabase() {
             return instance ?: synchronized(LastVisitedDB::class.java) {
                 val ins = Room.databaseBuilder(
                     context.applicationContext, LastVisitedDB::class.java, "LastQuranVisited.db"
-                ).fallbackToDestructiveMigration().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true).build()
                 instance = ins
                 ins
             }

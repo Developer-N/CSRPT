@@ -2,9 +2,14 @@ package com.byagowi.persiancalendar.utils
 
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.LOG_TAG
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.asrMethod
+import com.byagowi.persiancalendar.global.calculationMethod
+import com.byagowi.persiancalendar.global.highLatitudesMethod
+import com.byagowi.persiancalendar.global.midnightMethod
 import io.github.cosinekitty.astronomy.Observer
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
@@ -19,12 +24,22 @@ import kotlin.math.abs
 // for our use so this filter any non empty string after split, its name rhymes with .filterNotNull
 fun String.splitFilterNotEmpty(delim: String) = this.split(delim).filter { it.isNotEmpty() }
 
+fun Coordinates.calculatePrayTimes(calendar: GregorianCalendar = GregorianCalendar()): PrayTimes =
+    calculatePrayTimes(
+        calendar = calendar,
+        calculationMethod = calculationMethod.value,
+        asrMethod = asrMethod.value,
+        highLatitudesMethod = highLatitudesMethod,
+        midnightMethod = midnightMethod,
+    )
+
+@VisibleForTesting
 fun Coordinates.calculatePrayTimes(
-    calendar: GregorianCalendar = GregorianCalendar(),
-    calculationMethod: CalculationMethod = com.byagowi.persiancalendar.global.calculationMethod.value,
-    asrMethod: AsrMethod = com.byagowi.persiancalendar.global.asrMethod.value,
-    highLatitudesMethod: HighLatitudesMethod = com.byagowi.persiancalendar.global.highLatitudesMethod,
-    midnightMethod: MidnightMethod = com.byagowi.persiancalendar.global.midnightMethod,
+    calendar: GregorianCalendar,
+    calculationMethod: CalculationMethod,
+    asrMethod: AsrMethod,
+    highLatitudesMethod: HighLatitudesMethod,
+    midnightMethod: MidnightMethod,
 ): PrayTimes {
     val year = calendar[GregorianCalendar.YEAR]
     val month = calendar[GregorianCalendar.MONTH] + 1
@@ -46,7 +61,8 @@ val logException = fun(e: Throwable) { Log.e(LOG_TAG, "Handled Exception", e) }
 
 // Thee same order as http://praytimes.org/code/v2/js/examples/monthly.htm
 val CalculationMethod.titleStringId
-    get(): @StringRes Int = when (this) {
+    @StringRes
+    get(): Int = when (this) {
         CalculationMethod.MWL -> R.string.method_mwl
         CalculationMethod.ISNA -> R.string.method_isna
         CalculationMethod.Egypt -> R.string.method_egypt
@@ -61,7 +77,8 @@ val CalculationMethod.titleStringId
 val Coordinates.enableHighLatitudesConfiguration: Boolean get() = abs(latitude) > 50
 
 val HighLatitudesMethod.titleStringId
-    get(): @StringRes Int = when (this) {
+    @StringRes
+    get(): Int = when (this) {
         HighLatitudesMethod.NightMiddle -> R.string.high_latitudes_night_middle
         HighLatitudesMethod.AngleBased -> R.string.high_latitudes_angle_based
         HighLatitudesMethod.OneSeventh -> R.string.high_latitudes_one_seventh

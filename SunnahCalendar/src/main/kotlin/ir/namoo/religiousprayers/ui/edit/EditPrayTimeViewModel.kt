@@ -4,12 +4,11 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.getFromStringId
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.toCivilDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
@@ -57,7 +56,7 @@ class EditPrayTimeViewModel(private val prayTimeRepository: PrayTimeRepository) 
     fun loadData(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
-            _isEnabled.value = context.appPrefs.getBoolean(PREF_ENABLE_EDIT, false)
+            _isEnabled.value = context.preferences.getBoolean(PREF_ENABLE_EDIT, false)
             _originalTimes.value = prayTimeRepository.getAllEditedTimes()
             val temp = mutableListOf<EditTimesState>()
             originalTimes.value.forEach { edited ->
@@ -130,7 +129,7 @@ class EditPrayTimeViewModel(private val prayTimeRepository: PrayTimeRepository) 
     fun updateIsEnabled(context: Context) {
         viewModelScope.launch {
             _isEnabled.value = !isEnabled.value
-            context.appPrefs.edit { putBoolean(PREF_ENABLE_EDIT, isEnabled.value) }
+            context.preferences.edit { putBoolean(PREF_ENABLE_EDIT, isEnabled.value) }
             if (isEnabled.value && originalTimes.value.isEmpty()) {
                 val newTimes = calculateAllTimes(context)
                 if (newTimes.isEmpty()) return@launch
@@ -141,12 +140,12 @@ class EditPrayTimeViewModel(private val prayTimeRepository: PrayTimeRepository) 
                         val temp = EditedPrayTimesEntity(
                             id,
                             id,
-                            t.getFromStringId(R.string.fajr).toFormattedString(),
-                            t.getFromStringId(R.string.sunrise).toFormattedString(),
-                            t.getFromStringId(R.string.dhuhr).toFormattedString(),
-                            t.getFromStringId(R.string.asr).toFormattedString(),
-                            t.getFromStringId(R.string.maghrib).toFormattedString(),
-                            t.getFromStringId(R.string.isha).toFormattedString()
+                            Clock(t.fajr).toFormattedString(),
+                            Clock(t.sunrise).toFormattedString(),
+                            Clock(t.dhuhr).toFormattedString(),
+                            Clock(t.asr).toFormattedString(),
+                            Clock(t.maghrib).toFormattedString(),
+                            Clock(t.isha).toFormattedString()
                         )
                         id++
                         newEditTimes.add(temp)
@@ -173,7 +172,7 @@ class EditPrayTimeViewModel(private val prayTimeRepository: PrayTimeRepository) 
             val persianDate = PersianDate(PersianDate(civilDate.toCivilDate()).year, month, day)
             val date = CivilDate(persianDate.toJdn())
             var time = coordinates.value?.calculatePrayTimes(Jdn(date).toGregorianCalendar())
-            if (!context.appPrefs.getBoolean(
+            if (!context.preferences.getBoolean(
                     PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME
                 ) && i in 2..185
             ) time = fixSummerTimes(time, true)
@@ -201,7 +200,7 @@ class EditPrayTimeViewModel(private val prayTimeRepository: PrayTimeRepository) 
         viewModelScope.launch {
             _isLoading.value = true
             prayTimeRepository.clearEditTimes()
-            context.appPrefs.edit {
+            context.preferences.edit {
                 putBoolean(PREF_ENABLE_EDIT, false)
             }
             _isEnabled.value = false

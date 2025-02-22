@@ -2,6 +2,7 @@ package com.byagowi.persiancalendar.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.graphics.Color
@@ -16,54 +17,54 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.core.os.postDelayed
-import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.BuildConfig
-import com.byagowi.persiancalendar.DHUHR_KEY
-import com.byagowi.persiancalendar.FAJR_KEY
-import com.byagowi.persiancalendar.ISHA_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
-import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.PrayTime
+import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
+import com.byagowi.persiancalendar.global.athanVibration
 import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.ui.athan.AthanActivity
+import com.byagowi.persiancalendar.ui.athan.AthanActivity.Companion.CANCEL_ATHAN_NOTIFICATION
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.utils.SIX_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.getAthanUri
-import com.byagowi.persiancalendar.utils.getFromStringId
-import com.byagowi.persiancalendar.utils.getPrayTimeName
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.setDirection
 import com.byagowi.persiancalendar.utils.startAthanActivity
-import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
-import org.koin.android.ext.android.get
+import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import kotlin.random.Random
 
 class AthanNotification : Service() {
 
-    private val prayTimeProvider: PrayTimeProvider = get()
     override fun onBind(intent: Intent): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent ?: return START_STICKY
         applyAppLanguage(this)
 
-        val notificationId =
-            if (BuildConfig.DEVELOPMENT) Random.nextInt(2000, 4000)
-            else (if (notificationAthan.value) 3000 else 3001)
+        val athanVibration = athanVibration.value
+        val notificationAthan = notificationAthan.value
+        val notificationId = if (BuildConfig.DEVELOPMENT) Random.nextInt(2000, 4000) else {
+            if (notificationAthan) (if (athanVibration) 3000 else 3002)
+            else (if (athanVibration) 3001 else 3003)
+        }
         val notificationChannelId = notificationId.toString()
 
         val notificationManager = getSystemService<NotificationManager>()
 
-        val athanKey = intent.getStringExtra(KEY_EXTRA_PRAYER)
-        if (!notificationAthan.value) startAthanActivity(this, athanKey)
+        val prayTime = PrayTime.fromName(
+            intent.getStringExtra(KEY_EXTRA_PRAYER)
+        ).debugAssertNotNull ?: PrayTime.FAJR
+        if (!notificationAthan) startAthanActivity(this, prayTime.name)
 
-        val soundUri = if (notificationAthan.value) getAthanUri(this) else null
+        val soundUri = if (notificationAthan) getAthanUri(this) else null
         if (soundUri != null) runCatching {
             // ensure custom reminder sounds play well
             grantUriPermission(
@@ -74,15 +75,15 @@ class AthanNotification : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
                 notificationChannelId, getString(R.string.athan),
-                if (notificationAthan.value) NotificationManager.IMPORTANCE_HIGH
+                if (notificationAthan) NotificationManager.IMPORTANCE_HIGH
                 else NotificationManager.IMPORTANCE_DEFAULT
             ).also {
                 it.description = getString(R.string.athan)
                 it.enableLights(true)
                 it.lightColor = Color.GREEN
-                it.vibrationPattern = LongArray(2) { 500 }
-                it.enableVibration(true)
-                it.setBypassDnd(athanKey == FAJR_KEY)
+                if (athanVibration) it.vibrationPattern = LongArray(2) { 500 }
+                it.enableVibration(athanVibration)
+                it.setBypassDnd(prayTime.isBypassDnd)
                 if (soundUri == null) it.setSound(null, null) else it.setSound(
                     soundUri, AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -96,39 +97,37 @@ class AthanNotification : Service() {
         }
 
         val cityName = cityName.value
-        val prayTimeName = getString(getPrayTimeName(athanKey))
+        val prayTimeName = getString(prayTime.stringRes)
         val title =
             if (cityName == null) prayTimeName
             else "$prayTimeName$spacedComma${getString(R.string.in_city_time, cityName)}"
 
-        var prayTimes = coordinates.value?.calculatePrayTimes()
-        prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())
-        val subtitle = when (athanKey) {
-            FAJR_KEY -> listOf(R.string.sunrise)
-            DHUHR_KEY ->
-                if (calculationMethod.value.isJafari) listOf(R.string.sunset)
-                else listOf(R.string.asr, R.string.maghrib)
-
-            ASR_KEY -> listOf(R.string.maghrib)
-            MAGHRIB_KEY ->
-                if (calculationMethod.value.isJafari) listOf(R.string.midnight)
-                else listOf(R.string.isha, R.string.midnight)
-
-            ISHA_KEY -> listOf(R.string.midnight)
-            else -> listOf(R.string.midnight)
-        }.joinToString(" - ") {
-            "${getString(it)}: ${prayTimes?.getFromStringId(it)?.toFormattedString() ?: ""}"
+        val prayTimes = coordinates.value?.calculatePrayTimes()
+        val isJafari = calculationMethod.value.isJafari
+        val subtitle = prayTime.upcomingTimes(isJafari).joinToString(" - ") {
+            "${getString(it.stringRes)}: ${prayTimes?.get(it)?.toFormattedString() ?: ""}"
         }
 
         val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
         notificationBuilder.setAutoCancel(true)
             .setWhen(System.currentTimeMillis())
-            .setSmallIcon(R.drawable.sun)
+            .setSmallIcon(prayTime.drawable)
             .setContentTitle(title)
             .setContentText(subtitle)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 0,
+                    Intent(this, AthanActivity::class.java)
+                        .setAction(CANCEL_ATHAN_NOTIFICATION)
+                        .putExtra(KEY_EXTRA_PRAYER, prayTime)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    PendingIntent.FLAG_UPDATE_CURRENT or
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+                )
+            )
 
-        if (notificationAthan.value) {
+        if (notificationAthan) {
             notificationBuilder.priority = NotificationCompat.PRIORITY_MAX
             notificationBuilder.setSound(soundUri, AudioManager.STREAM_NOTIFICATION)
             notificationBuilder.setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -151,20 +150,25 @@ class AthanNotification : Service() {
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
         }
 
-        startForeground(notificationId, notificationBuilder.build())
+        notificationManager?.notify(notificationId, notificationBuilder.build())
 
-        var stop = {}
         val preventPhoneCallIntervention =
-            if (notificationAthan.value) PreventPhoneCallIntervention(stop) else null
-        stop = {
-            preventPhoneCallIntervention?.let { it.stopListener() }
+            if (notificationAthan) PreventPhoneCallIntervention(cleanUp) else null
+        cleanUp = {
+            preventPhoneCallIntervention?.stopListener?.invoke()
             notificationManager?.cancel(notificationId)
-            stopSelf()
         }
 
         preventPhoneCallIntervention?.startListener(this)
-        Handler(Looper.getMainLooper()).postDelayed(SIX_MINUTES_IN_MILLIS) { stop() }
+        Handler(Looper.getMainLooper()).postDelayed(SIX_MINUTES_IN_MILLIS) { cleanUp() }
 
         return super.onStartCommand(intent, flags, startId)
     }
+
+    override fun onDestroy() {
+        cleanUp()
+        super.onDestroy()
+    }
+
+    private var cleanUp = {}
 }

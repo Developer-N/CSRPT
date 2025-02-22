@@ -3,9 +3,10 @@ package com.byagowi.persiancalendar.ui.settings.wallpaper
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -22,30 +23,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.byagowi.persiancalendar.PREF_WALLPAPER_AUTOMATIC
 import com.byagowi.persiancalendar.PREF_WALLPAPER_DARK
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.wallpaperAutomatic
 import com.byagowi.persiancalendar.global.wallpaperDark
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
 import com.byagowi.persiancalendar.ui.theme.SystemTheme
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
-import com.byagowi.persiancalendar.ui.utils.makeWallpaperTransparency
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.applyLanguageToConfiguration
 
 class WallpaperSettingsActivity : ComponentActivity() {
-    private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() = finish()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         applyAppLanguage(this)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        window?.makeWallpaperTransparency()
-
-        onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
-
         setContent {
+            BackHandler { finish() }
             SystemTheme {
                 Column(modifier = Modifier.safeDrawingPadding()) {
                     Column(
@@ -54,8 +49,7 @@ class WallpaperSettingsActivity : ComponentActivity() {
                             .verticalScroll(rememberScrollState())
                             .padding(all = 16.dp)
                             .background(
-                                MaterialTheme.colorScheme.surface,
-                                MaterialTheme.shapes.extraLarge
+                                MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge
                             )
                             .padding(vertical = 16.dp),
                     ) {
@@ -68,12 +62,20 @@ class WallpaperSettingsActivity : ComponentActivity() {
                                 modifier = Modifier.padding(horizontal = 8.dp),
                             )
                         }
-                        val wallpaperDark by wallpaperDark.collectAsState()
+                        val wallpaperAutomatic by wallpaperAutomatic.collectAsState()
                         SettingsSwitch(
-                            PREF_WALLPAPER_DARK,
-                            wallpaperDark,
-                            stringResource(R.string.theme_dark)
+                            PREF_WALLPAPER_AUTOMATIC,
+                            wallpaperAutomatic,
+                            stringResource(R.string.theme_default)
                         )
+                        AnimatedVisibility(!wallpaperAutomatic) {
+                            val wallpaperDark by wallpaperDark.collectAsState()
+                            SettingsSwitch(
+                                PREF_WALLPAPER_DARK,
+                                wallpaperDark,
+                                stringResource(R.string.theme_dark)
+                            )
+                        }
                     }
                 }
             }

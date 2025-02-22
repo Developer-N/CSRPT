@@ -9,11 +9,11 @@
     <string name="n_hours_minutes">%1$ss %2$sd</string>
     <string name="remaining_daylight">Mayî</string>
     <string name="length_of_day">Rojgar</string>
-    <string name="sunsetSunView">Rojavabûn</string>
-    <string name="middaySunView">Nîvro</string>
-    <string name="sunriseSunView">Rojderketin</string>
+    <string name="sunset_sun_view">Rojavabûn</string>
+    <string name="midday_sun_view">Nîvro</string>
+    <string name="sunrise_sun_view">Rojderketin</string>
     <string name="events">Bûyer</string>
-    <string name="moonInScorpio">Heyv di dûpişk</string>
+    <string name="moon_in_scorpio">Heyv di dûpişk</string>
     <string name="sagittarius">Kevan</string>
     <string name="scorpio">Dûpişk</string>
     <string name="libra">Terazû</string>
@@ -25,7 +25,7 @@
     <string name="aquarius">Dewlik</string>
     <string name="capricorn">Gîsk</string>
     <string name="zodiac">Zodiyak (Çerxa burcan)</string>
-    <string name="animal_year_name_goat">Pez</string>
+    <string name="animal_year_name_goat">Bizin</string>
     <string name="animal_year_name_horse">Hesp</string>
     <string name="animal_year_name_snake">Mar</string>
     <string name="animal_year_name_dragon">Ejdeha</string>
@@ -41,8 +41,6 @@
     <string name="date_copied_clipboard">%1$s Hate kopîkirin.</string>
     <string name="start_of_year_diff">%1$s roj (~%2$s heftî yan ~%3$s heyv) ji destpêka salê</string>
     <string name="search_in_events">Lêgerîn di nav bûyeran de</string>
-    <string name="go">Here</string>
-    <string name="goto_date">Here Dîrokê</string>
     <string name="today">Îro</string>
     <string name="device_does_not_support">Rojhejmêra amûrê vî karî piştevanî nake</string>
     <string name="add_event">Zêdekirina bûyerê</string>
@@ -56,15 +54,15 @@
     <string name="date_converter">Guhervana Dîrokê</string>
     <string name="converter">Guhervana</string>
     <string name="compass">Rûgehnas</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s sal</item>
         <item quantity="other">%1$s sal</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s meh</item>
         <item quantity="other">%1$s meh</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s roj</item>
         <item quantity="other">%1$s roj</item>
     </plurals>

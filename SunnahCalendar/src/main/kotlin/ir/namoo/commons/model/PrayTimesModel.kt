@@ -26,3 +26,11 @@ data class PrayTimesModel(
     @SerialName("updated_at")
     val updatedAt: String
 ) : Parcelable
+
+
+@Serializable
+data class PrayTimesResponse(
+    val status: Int,
+    val data: List<PrayTimesModel>,
+    val msg: String
+)

@@ -29,7 +29,8 @@ abstract class DownloadedPrayTimesDB : RoomDatabase() {
             return instance ?: synchronized(DownloadedPrayTimesDB::class) {
                 val db = Room.databaseBuilder(
                     context.applicationContext, DownloadedPrayTimesDB::class.java, "dpt_db"
-                ).addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration().build()
+                ).addMigrations(MIGRATION_2_3).fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
                 instance = db
                 db
             }
@@ -70,7 +71,7 @@ data class DownloadedPrayTimesEntity(
 interface DownloadedPrayTimesDAO {
 
     @Query("select * from DownloadedPrayTimes")
-    suspend fun getAllDownloaded(): List<DownloadedPrayTimesEntity>?
+    suspend fun getAllDownloaded(): List<DownloadedPrayTimesEntity>
 
     @Query("select * from DownloadedPrayTimes where city_id=:cityID and day=:day")
     suspend fun getDownloadFor(cityID: Int, day: Int): DownloadedPrayTimesEntity?
@@ -79,7 +80,7 @@ interface DownloadedPrayTimesDAO {
     suspend fun getDownloadFor(cityID: Int): List<DownloadedPrayTimesEntity>
 
     @Query("select distinct city_id from DownloadedPrayTimes")
-    suspend fun getCities(): List<Int>
+    suspend fun getDownloadedCitiesID(): List<Int>
 
     @Query("delete from DownloadedPrayTimes where city_id=:cityID")
     suspend fun clearDownloadFor(cityID: Int)

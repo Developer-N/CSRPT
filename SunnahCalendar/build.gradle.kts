@@ -1,12 +1,7 @@
-import org.codehaus.groovy.runtime.ProcessGroovyMethods
-
-operator fun File.div(child: String): File = File(this, child)
-fun String.execute(): Process = ProcessGroovyMethods.execute(this)
-val Process.text: String? get() = ProcessGroovyMethods.getText(this)
-
 plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.kotlin.parcelize)
@@ -14,14 +9,15 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
-val generatedAppSrcDir =
-    layout.buildDirectory.get().asFile / "generated" / "source" / "appsrc" / "main"
 android {
     sourceSets {
+        operator fun File.div(child: String): File = File(this, child)
+        val generatedAppSrcDir =
+            layout.buildDirectory.get().asFile / "generated" / "source" / "appsrc" / "main"
         getByName("main").kotlin.srcDir(generatedAppSrcDir)
     }
 
-    compileSdk = 34
+    compileSdk = 35
 
     buildFeatures {
         buildConfig = true
@@ -33,16 +29,16 @@ android {
     defaultConfig {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
-        targetSdk = 34
-        versionCode = 11022
-        versionName = "11.0.2"
+        targetSdk = 35
+        versionCode = 12000
+        versionName = "12.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
-        resourceConfigurations += listOf(
+        androidResources.localeFilters += listOf(
             "en", "fa", "ckb", "ar", "ur", "ps", "glk", "azb", "ja", "fr", "es", "tr", "kmr", "tg",
-            "ne", "zh-rCN", "ru"
+            "ne", "zh-rCN", "ru", "pt", "it", "ta",
         )
         setProperty("archivesBaseName", "SunnahCalendar-$versionName")
     }
@@ -101,24 +97,14 @@ android {
         language.enableSplit = false
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
-
-    val javaVersion = JavaVersion.VERSION_17
+    val javaVersion = JavaVersion.VERSION_21
 
     compileOptions {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
-        // isCoreLibraryDesugaringEnabled = true
-        //   Actually could be useful as makes use of java.time.Duration possible instead
-        //   java.util.concurrent.TimeUnit but needs multidex as it says:
-        //     In order to use core library desugaring, please enable multidex.
     }
 
-    kotlinOptions {
-        jvmTarget = javaVersion.majorVersion
-    }
+    kotlinOptions { jvmTarget = javaVersion.majorVersion }
 
     lint { disable += listOf("MissingTranslation") }
 
@@ -161,6 +147,8 @@ dependencies {
 
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
+    // Temporarily till bom reaches to it
+    implementation("androidx.compose.foundation:foundation-layout:1.8.0-beta02")
     androidTestImplementation(composeBom)
     implementation(libs.compose.activity)
     implementation(libs.compose.ui)
@@ -196,6 +184,7 @@ dependencies {
     annotationProcessor(libs.room.compiler)
 
     // Koin main features for Android
+    implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
     // Koin Jetpack WorkManager
     implementation(libs.koin.workmanager)
@@ -218,23 +207,13 @@ dependencies {
     //room
     ksp(libs.room.compiler)
 
-    implementation(libs.lifecycle.extensions)
-    implementation(libs.lifecycle.livedata)
-
     implementation(libs.multidex)
 
     //FireBase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation("com.google.firebase:firebase-inappmessaging-display-ktx")
-
-    //Timber
-    implementation(libs.timber)
-
-    //OkHttp
-    implementation(libs.okhttp3.okhttp)
-    implementation(libs.okhttp3.logging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.inappmessaging)
 
     //Reflection
     implementation(libs.kotlin.reflect)
@@ -243,12 +222,12 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar", "*.jar"))))
 
     //Compose
-    implementation(libs.navigation.compose)
     implementation(libs.compose.animation.graphics)
     implementation(libs.compose.extended.icons)
     implementation(libs.skydoves.bom)
     implementation(libs.skydoves.glide)
     implementation(libs.skydoves.placeholder)
+    implementation(libs.compose.coil)
 
     //ExoPlayer
     implementation(libs.bundles.media3)
@@ -258,46 +237,4 @@ dependencies {
 
     cafebazarImplementation(libs.cafebazar.poolakey)
     myketImplementation(libs.myket.billing.client)
-}
-
-
-//// Just a personal debugging tool, isn't that useful as it doesn't resolve all the dependencies
-//// later to be completed by ideas of
-//// https://github.com/ProtonMail/proton-mail-android/blob/release/scripts/extract_dependencies/ExtractDeps.kts
-//val dependenciesURLs: Sequence<Pair<String, URL?>>
-//    get() = project.configurations.getByName(
-//        "implementation"
-//    ).dependencies.asSequence().mapNotNull {
-//        it.run { "$group:$name:$version" } to project.repositories.mapNotNull { repo ->
-//            (repo as? UrlArtifactRepository)?.url
-//        }.flatMap { repoUrl ->
-//            "%s/%s/%s/%s/%s-%s".format(
-//                repoUrl.toString().trimEnd('/'),
-//                it.group?.replace('.', '/') ?: "", it.name, it.version,
-//                it.name, it.version
-//            ).let { x -> listOf("$x.jar", "$x.aar") }
-//        }.toList().firstNotNullOfOrNull { url ->
-//            runCatching {
-//                val connection = URL(url).openConnection()
-//                connection.getInputStream() ?: throw Exception()
-//                connection.url
-//            }.getOrNull()
-//        }
-//    }
-//tasks.register("printDependenciesURLs") {
-//    doLast {
-//        dependenciesURLs.forEach { (dependency: String, url: URL?) -> println("$dependency => $url") }
-//    }
-//}
-
-// Can be called like: ./gradlew mergeWeblate
-tasks.register("mergeWeblate") {
-    doLast {
-        val weblateRepository = "https://hosted.weblate.org/git/persian-calendar/persian-calendar/"
-        listOf(
-            "git remote add weblate $weblateRepository",
-            "git remote update weblate",
-            "git merge weblate/main",
-        ).forEach { println(it.execute().text) }
-    }
 }

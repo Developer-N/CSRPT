@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_month"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_modern_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".WidgetMonth"
+    tools:ignore="TooManyViews,NestedWeights">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_name_wrapper"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_view_name">
+
+            <TextView
+                android:id="@+id/month_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:lineSpacingMultiplier="1.1"
+                android:paddingStart="16dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="0dp"
+                android:paddingBottom="8dp"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="18sp" />
+
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/previous_month"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:alpha=".65"
+            android:background="@drawable/widget_month_button"
+            android:contentDescription="@string/previous_x"
+            android:src="@drawable/ic_navigate_before"
+            android:tint="@color/widget_modern_text" />
+
+        <ImageButton
+            android:id="@+id/next_month"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="16dp"
+            android:alpha=".65"
+            android:background="@drawable/widget_month_button"
+            android:contentDescription="@string/next_x"
+            android:src="@drawable/ic_navigate_next"
+            android:tint="@color/widget_modern_text" />
+
+        <ImageButton
+            android:id="@+id/add_event"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/widget_add_event"
+            android:contentDescription="@string/add_event"
+            android:src="@drawable/widget_add_event_icon"
+            android:tint="@color/widget_add_event_icon" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week0"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/month_grid_cell0x1"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/widget_month_vertical_border" />
+
+            <TextView
+                android:id="@+id/month_grid_cell0x2"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/month_grid_cell0x3"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/widget_month_vertical_border" />
+
+            <TextView
+                android:id="@+id/month_grid_cell0x4"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/month_grid_cell0x5"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/widget_month_vertical_border" />
+
+            <TextView
+                android:id="@+id/month_grid_cell0x6"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/month_grid_cell0x7"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week1_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell1x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week2_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell2x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week3_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell3x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week4_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell4x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_month_bottom_border"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week5_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell5x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/week6"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/month_grid_week6_parent"
+            android:layout_width="@dimen/widget_month_week_number_width"
+            android:layout_height="wrap_content"
+            android:paddingStart="6dp"
+            android:paddingEnd="2dp">
+
+            <TextView
+                android:id="@+id/month_grid_week6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_month_week_number"
+                android:textAlignment="center"
+                android:textColor="@color/widget_modern_text"
+                android:textSize="12sp" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x5"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x6"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_month_vertical_border"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+        <LinearLayout
+            android:id="@+id/month_grid_cell6x7"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:foreground="@drawable/widget_month_day_ripple"
+            android:orientation="vertical"
+            tools:ignore="UnusedAttribute" />
+
+    </LinearLayout>
+
+</LinearLayout>

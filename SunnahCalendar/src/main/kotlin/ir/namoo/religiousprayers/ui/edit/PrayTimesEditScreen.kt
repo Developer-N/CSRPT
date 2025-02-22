@@ -4,7 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,10 +62,12 @@ import ir.namoo.religiousprayers.ui.settings.athan.SettingSwitch
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun PrayTimesEditScreen(
-    openDrawer: () -> Unit, viewModel: EditPrayTimeViewModel = koinViewModel()
+fun SharedTransitionScope.PrayTimesEditScreen(
+    openDrawer: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+    viewModel: EditPrayTimeViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     viewModel.loadData(context)
@@ -84,7 +89,7 @@ fun PrayTimesEditScreen(
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = stringResource(id = R.string.edit_times)) },
             colors = appTopAppBarColors(),
-            navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+            navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
             actions = {
                 AnimatedVisibility(visible = isEnabled) {
                     Row {
@@ -93,7 +98,7 @@ fun PrayTimesEditScreen(
                             onClick = { showSaveDialog = true },
                             icon = Icons.Default.Save
                         )
-                        ThreeDotsDropdownMenu { closeMenu ->
+                        ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
                             AppDropdownMenuItem(text = {
                                 Text(text = stringResource(id = R.string.send_times))
                             }, onClick = {

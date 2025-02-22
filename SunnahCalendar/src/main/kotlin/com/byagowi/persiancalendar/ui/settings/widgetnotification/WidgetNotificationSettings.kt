@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,32 +36,31 @@ import com.byagowi.persiancalendar.PREF_WIDGET_CLOCK
 import com.byagowi.persiancalendar.PREF_WIDGET_IN_24
 import com.byagowi.persiancalendar.PREF_WIDGET_TRANSPARENCY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.CalendarType
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.global.isForcedIranTimeEnabled
 import com.byagowi.persiancalendar.global.isNotifyDate
 import com.byagowi.persiancalendar.global.isNotifyDateOnLockScreen
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.global.prefersWidgetsDynamicColorsFlow
-import com.byagowi.persiancalendar.global.theme
+import com.byagowi.persiancalendar.global.userSetTheme
 import com.byagowi.persiancalendar.global.widgetTransparency
-import com.byagowi.persiancalendar.ui.settings.SettingsClickable
+import com.byagowi.persiancalendar.ui.settings.SettingsColor
 import com.byagowi.persiancalendar.ui.settings.SettingsHorizontalDivider
 import com.byagowi.persiancalendar.ui.settings.SettingsMultiSelect
 import com.byagowi.persiancalendar.ui.settings.SettingsSection
 import com.byagowi.persiancalendar.ui.settings.SettingsSlider
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitchWithInnerState
-import com.byagowi.persiancalendar.ui.settings.common.ColorPickerDialog
 import com.byagowi.persiancalendar.utils.QUARTER_SECOND_IN_MILLIS
-import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.preferences
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import java.util.TimeZone
 
 @Composable
-fun WidgetNotificationSettings() {
+fun ColumnScope.WidgetNotificationSettings() {
     SettingsSection(stringResource(R.string.pref_notification))
     NotificationSettings()
     SettingsHorizontalDivider()
@@ -69,13 +69,13 @@ fun WidgetNotificationSettings() {
 }
 
 @Composable
-fun NotificationSettings() {
+fun ColumnScope.NotificationSettings() {
     val context = LocalContext.current
     val isNotifyDate by isNotifyDate.collectAsState()
     run {
         val launcher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
-        ) { isGranted -> context.appPrefs.edit { putBoolean(PREF_NOTIFY_DATE, isGranted) } }
+        ) { isGranted -> context.preferences.edit { putBoolean(PREF_NOTIFY_DATE, isGranted) } }
         SettingsSwitch(
             key = PREF_NOTIFY_DATE,
             value = isNotifyDate,
@@ -105,32 +105,32 @@ fun NotificationSettings() {
 
 // Consider that it is used both in MainActivity and WidgetConfigurationActivity
 @Composable
-fun WidgetConfiguration() {
+fun ColumnScope.WidgetConfiguration() {
     val prefersWidgetsDynamicColors by prefersWidgetsDynamicColorsFlow.collectAsState()
     WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors)
     AnimatedVisibility(!prefersWidgetsDynamicColors) {
-        SettingsClickable(
-            stringResource(R.string.widget_text_color),
-            stringResource(R.string.select_widgets_text_color)
-        ) { onDismissRequest ->
-            ColorPickerDialog(1, PREF_SELECTED_WIDGET_TEXT_COLOR, onDismissRequest)
-        }
+        SettingsColor(
+            title = stringResource(R.string.widget_text_color),
+            summary = stringResource(R.string.select_widgets_text_color),
+            isBackgroundPick = false,
+            key = PREF_SELECTED_WIDGET_TEXT_COLOR
+        )
     }
     AnimatedVisibility(!prefersWidgetsDynamicColors) {
-        SettingsClickable(
-            stringResource(R.string.widget_next_athan_text_color),
-            stringResource(R.string.select_widgets_next_athan_text_color)
-        ) { onDismissRequest ->
-            ColorPickerDialog(2, PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR, onDismissRequest)
-        }
+        SettingsColor(
+            title = stringResource(R.string.widget_next_athan_text_color),
+            summary = stringResource(R.string.select_widgets_next_athan_text_color),
+            isBackgroundPick = false,
+            key = PREF_SELECTED_WIDGET_NEXT_ATHAN_TEXT_COLOR
+        )
     }
     AnimatedVisibility(!prefersWidgetsDynamicColors) {
-        SettingsClickable(
-            stringResource(R.string.widget_background_color),
-            stringResource(R.string.select_widgets_background_color)
-        ) { onDismissRequest ->
-            ColorPickerDialog(3, PREF_SELECTED_WIDGET_BACKGROUND_COLOR, onDismissRequest)
-        }
+        SettingsColor(
+            title = stringResource(R.string.widget_background_color),
+            summary = stringResource(R.string.select_widgets_background_color),
+            isBackgroundPick = true,
+            key = PREF_SELECTED_WIDGET_BACKGROUND_COLOR,
+        )
     }
     SettingsSwitchWithInnerState(
         key = PREF_NUMERICAL_DATE_PREFERRED,
@@ -157,7 +157,7 @@ fun WidgetConfiguration() {
         summary = stringResource(R.string.center_align_widgets_summary)
     )
     val isInIranTimeVisible = remember {
-        (language.value.showIranTimeOption || mainCalendar == CalendarType.SHAMSI) && TimeZone.getDefault().id != IRAN_TIMEZONE_ID
+        (language.value.showIranTimeOption || mainCalendar == Calendar.SHAMSI) && TimeZone.getDefault().id != IRAN_TIMEZONE_ID
     }
     if (isInIranTimeVisible) {
         val isForcedIranTimeEnabled by isForcedIranTimeEnabled.collectAsState()
@@ -187,9 +187,9 @@ fun WidgetConfiguration() {
 }
 
 @Composable
-fun WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors: Boolean) {
-    val theme by theme.collectAsState()
-    if (theme.isDynamicColors()) {
+fun ColumnScope.WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors: Boolean) {
+    val userSetTheme by userSetTheme.collectAsState()
+    if (userSetTheme.isDynamicColors) {
         SettingsSwitch(
             key = PREF_WIDGETS_PREFER_SYSTEM_COLORS,
             value = prefersWidgetsDynamicColors,
@@ -202,10 +202,10 @@ fun WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors: Boolean) {
         @OptIn(FlowPreview::class)
         LaunchedEffect(Unit) {
             widgetTransparencyFlow
-                // Debounce to not spam prefs much but specially is needed for
+                // Debounce to not spam preferences much but specially is needed for
                 // map widget as its expensive calculations
                 .debounce(QUARTER_SECOND_IN_MILLIS)
-                .collect { context.appPrefs.edit { putFloat(PREF_WIDGET_TRANSPARENCY, it) } }
+                .collect { context.preferences.edit { putFloat(PREF_WIDGET_TRANSPARENCY, it) } }
         }
         val widgetTransparency by widgetTransparencyFlow.collectAsState()
         SettingsSlider(

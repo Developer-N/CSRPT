@@ -43,6 +43,12 @@ class LocalPrayTimeRepository(
         }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }
 
+    suspend fun getAllCountries(): List<CountryModel> {
+        runCatching {
+            return locationsDB.countryDAO().getAllCountries()
+        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
+    }
+
     suspend fun clearDownloadFor(id: Int) {
         runCatching {
             downloadPrayTimeDB.downloadedPrayTimes().clearDownloadFor(id)

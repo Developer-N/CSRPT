@@ -2,8 +2,12 @@ package com.byagowi.persiancalendar.ui.converter
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -21,8 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,7 +32,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -48,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -59,10 +59,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.CalendarType
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.enabledCalendars
@@ -70,31 +71,35 @@ import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
-import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.CalendarsOverview
 import com.byagowi.persiancalendar.ui.common.CalendarsTypesPicker
-import com.byagowi.persiancalendar.ui.common.DayPicker
+import com.byagowi.persiancalendar.ui.common.DatePicker
 import com.byagowi.persiancalendar.ui.common.ExpandArrow
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.common.NumberPicker
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
+import com.byagowi.persiancalendar.ui.common.ShareActionButton
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
-import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
+import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.ui.utils.shareText
-import com.byagowi.persiancalendar.utils.ONE_MINUTE_IN_MILLIS
+import com.byagowi.persiancalendar.utils.ONE_HOUR_IN_MILLIS
 import com.byagowi.persiancalendar.utils.calculateDaysDifference
 import com.byagowi.persiancalendar.utils.dateStringOfOtherCalendars
 import com.byagowi.persiancalendar.utils.dayTitleSummary
 import com.byagowi.persiancalendar.utils.formatDate
 import io.github.persiancalendar.calculator.eval
 import java.util.GregorianCalendar
+import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.abs
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ConverterScreen(
+fun SharedTransitionScope.ConverterScreen(
+    animatedContentScope: AnimatedContentScope,
     openDrawer: () -> Unit,
     viewModel: ConverterViewModel,
 ) {
@@ -113,9 +118,7 @@ fun ConverterScreen(
                             .background(LocalContentColor.current.copy(alpha = .175f))
                             .clickable {
                                 showMenu = !showMenu
-                                if (showMenu) hapticFeedback.performHapticFeedback(
-                                    HapticFeedbackType.LongPress
-                                )
+                                if (showMenu) hapticFeedback.performLongPress()
                             },
                     ) {
                         var dropDownWidth by remember { mutableIntStateOf(0) }
@@ -126,11 +129,7 @@ fun ConverterScreen(
                                 .onSizeChanged { dropDownWidth = it.width },
                         ) {
                             Spacer(Modifier.width(16.dp))
-                            AnimatedContent(
-                                targetState = stringResource(screenMode.title),
-                                label = "title",
-                                transitionSpec = appCrossfadeSpec,
-                            ) { Text(it) }
+                            Text(stringResource(screenMode.title), Modifier.animateContentSize())
                             ExpandArrow(isExpanded = showMenu)
                             Spacer(Modifier.width(8.dp))
                         }
@@ -140,20 +139,17 @@ fun ConverterScreen(
                             minWidth = with(LocalDensity.current) { dropDownWidth.toDp() },
                         ) {
                             ConverterScreenMode.entries.forEach {
-                                AppDropdownMenuItem(
-                                    text = { Text(stringResource(it.title)) },
-                                    onClick = {
-                                        showMenu = false
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.changeScreenMode(it)
-                                    },
-                                )
+                                AppDropdownMenuItem({ Text(stringResource(it.title)) }) {
+                                    showMenu = false
+                                    hapticFeedback.performLongPress()
+                                    viewModel.changeScreenMode(it)
+                                }
                             }
                         }
                     }
                 },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
                 actions = {
                     val todayButtonVisibility by viewModel.todayButtonVisibility.collectAsState()
                     TodayActionButton(visible = todayButtonVisibility) {
@@ -162,82 +158,93 @@ fun ConverterScreen(
                         viewModel.changeSecondSelectedDate(todayJdn)
                         viewModel.resetTimeZoneClock()
                     }
-                    ShareActionButton(viewModel, qrShareAction)
+                    ConverterScreenShareActionButton(animatedContentScope, viewModel, qrShareAction)
                 },
             )
         },
     ) { paddingValues ->
-        Surface(
-            shape = materialCornerExtraLargeTop(),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding()),
-        ) {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                Spacer(modifier = Modifier.height(24.dp))
+        Box(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+            ScreenSurface(animatedContentScope) {
+                Box(Modifier.fillMaxSize()) {
+                    val scrollState = rememberScrollState()
+                    Column(Modifier.verticalScroll(scrollState)) {
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                val isLandscape =
-                    LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                        val isLandscape =
+                            LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-                // Timezones
-                AnimatedVisibility(screenMode == ConverterScreenMode.TimeZones) {
-                    val zones = remember {
-                        TimeZone.getAvailableIDs().map(TimeZone::getTimeZone)
-                            .sortedBy { it.rawOffset }
-                    }
-                    if (isLandscape) Row(Modifier.padding(horizontal = 24.dp)) {
-                        Box(Modifier.weight(1f)) {
-                            TimezoneClock(viewModel, zones, isFirst = true)
+                        // Timezones
+                        AnimatedVisibility(screenMode == ConverterScreenMode.TIME_ZONES) {
+                            val zones = remember {
+                                TimeZone.getAvailableIDs().map(TimeZone::getTimeZone)
+                                    .sortedBy { it.rawOffset }
+                            }
+                            if (isLandscape) Row(Modifier.padding(horizontal = 24.dp)) {
+                                Box(Modifier.weight(1f)) {
+                                    TimezoneClock(viewModel, zones, isFirst = true)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(Modifier.weight(1f)) {
+                                    TimezoneClock(viewModel, zones, isFirst = false)
+                                }
+                            } else Column(Modifier.padding(horizontal = 24.dp)) {
+                                TimezoneClock(viewModel, zones, isFirst = true)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TimezoneClock(viewModel, zones, isFirst = false)
+                            }
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(Modifier.weight(1f)) {
-                            TimezoneClock(viewModel, zones, isFirst = false)
+
+                        AnimatedVisibility(
+                            screenMode == ConverterScreenMode.CONVERTER || screenMode == ConverterScreenMode.DISTANCE
+                        ) {
+                            Column(Modifier.padding(horizontal = 24.dp)) {
+                                ConverterAndDistance(viewModel)
+                            }
                         }
-                    } else Column(Modifier.padding(horizontal = 24.dp)) {
-                        TimezoneClock(viewModel, zones, isFirst = true)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TimezoneClock(viewModel, zones, isFirst = false)
-                    }
-                }
 
-                AnimatedVisibility(
-                    screenMode == ConverterScreenMode.Converter || screenMode == ConverterScreenMode.Distance
-                ) {
-                    Column(Modifier.padding(horizontal = 24.dp)) {
-                        ConverterAndDistance(viewModel)
-                    }
-                }
+                        AnimatedVisibility(screenMode == ConverterScreenMode.CALCULATOR) {
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                Calculator(viewModel)
+                            }
+                        }
 
-                AnimatedVisibility(screenMode == ConverterScreenMode.Calculator) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        Calculator(viewModel)
-                    }
-                }
+                        AnimatedVisibility(screenMode == ConverterScreenMode.QR_CODE) {
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                                QrCode(viewModel) { qrShareAction = it }
+                            }
+                        }
 
-                AnimatedVisibility(screenMode == ConverterScreenMode.QrCode) {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                        QrCode(viewModel) { qrShareAction = it }
+                        Spacer(
+                            Modifier.height(
+                                paddingValues.calculateBottomPadding().coerceAtLeast(24.dp)
+                            )
+                        )
                     }
+                    ScrollShadow(scrollState, top = true)
+                    ScrollShadow(scrollState, top = false)
                 }
-
-                Spacer(Modifier.height(paddingValues.calculateBottomPadding()))
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun ShareActionButton(viewModel: ConverterViewModel, qrShareAction: () -> Unit) {
+private fun SharedTransitionScope.ConverterScreenShareActionButton(
+    animatedContentScope: AnimatedContentScope,
+    viewModel: ConverterViewModel,
+    qrShareAction: () -> Unit,
+) {
     val screenMode by viewModel.screenMode.collectAsState()
     val context = LocalContext.current
-    AppIconButton(icon = Icons.Default.Share, title = stringResource(R.string.share)) {
+    ShareActionButton(animatedContentScope) {
         val chooserTitle = context.getString(screenMode.title)
         when (screenMode) {
-            ConverterScreenMode.Converter -> {
+            ConverterScreenMode.CONVERTER -> {
                 val jdn = viewModel.selectedDate.value
                 context.shareText(
                     listOf(
-                        dayTitleSummary(jdn, jdn.toCalendar(mainCalendar)),
+                        dayTitleSummary(jdn, jdn on mainCalendar),
                         context.getString(R.string.equivalent_to),
                         dateStringOfOtherCalendars(jdn, spacedComma)
                     ).joinToString(" "),
@@ -245,7 +252,7 @@ private fun ShareActionButton(viewModel: ConverterViewModel, qrShareAction: () -
                 )
             }
 
-            ConverterScreenMode.Distance -> {
+            ConverterScreenMode.DISTANCE -> {
                 val jdn = viewModel.selectedDate.value
                 val secondJdn = viewModel.secondSelectedDate.value
                 context.shareText(
@@ -254,16 +261,16 @@ private fun ShareActionButton(viewModel: ConverterViewModel, qrShareAction: () -
                             context.resources,
                             jdn,
                             secondJdn,
-                            calendarType = viewModel.calendar.value,
+                            calendar = viewModel.calendar.value,
                         ),
-                        formatDate(jdn.toCalendar(viewModel.calendar.value)),
-                        formatDate(secondJdn.toCalendar(viewModel.calendar.value)),
+                        formatDate(jdn on viewModel.calendar.value),
+                        formatDate(secondJdn on viewModel.calendar.value),
                     ).joinToString("\n"),
                     chooserTitle,
                 )
             }
 
-            ConverterScreenMode.Calculator -> {
+            ConverterScreenMode.CALCULATOR -> {
                 context.shareText(
                     runCatching {
                         // running this inside a runCatching block is absolutely important
@@ -273,7 +280,7 @@ private fun ShareActionButton(viewModel: ConverterViewModel, qrShareAction: () -
                 )
             }
 
-            ConverterScreenMode.TimeZones -> {
+            ConverterScreenMode.TIME_ZONES -> {
                 context.shareText(
                     listOf(
                         viewModel.firstTimeZone.value,
@@ -287,7 +294,7 @@ private fun ShareActionButton(viewModel: ConverterViewModel, qrShareAction: () -
                 )
             }
 
-            ConverterScreenMode.QrCode -> qrShareAction()
+            ConverterScreenMode.QR_CODE -> qrShareAction()
         }
     }
 }
@@ -414,7 +421,7 @@ private fun QrCode(viewModel: ConverterViewModel, setShareAction: (() -> Unit) -
 }
 
 @Composable
-private fun ConverterAndDistance(viewModel: ConverterViewModel) {
+private fun ColumnScope.ConverterAndDistance(viewModel: ConverterViewModel) {
     val screenMode by viewModel.screenMode.collectAsState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val calendar by viewModel.calendar.collectAsState()
@@ -425,37 +432,37 @@ private fun ConverterAndDistance(viewModel: ConverterViewModel) {
     if (isLandscape) Row {
         Column(Modifier.weight(1f)) {
             CalendarsTypesPicker(calendar, viewModel::changeCalendar)
-            DayPicker(
-                calendarType = calendar, jdn = jdn, setJdn = viewModel::changeSelectedDate
+            DatePicker(
+                calendar = calendar, jdn = jdn, setJdn = viewModel::changeSelectedDate
             )
         }
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
-            AnimatedVisibility(visible = screenMode == ConverterScreenMode.Converter) {
-                Column {
-                    Spacer(Modifier.height(12.dp))
-                    CalendarsOverview(
-                        jdn = jdn,
-                        today = today,
-                        selectedCalendar = calendar,
-                        shownCalendars = enabledCalendars - calendar,
-                        isExpanded = isExpanded
-                    ) { isExpanded = !isExpanded }
-                }
+            AnimatedVisibility(
+                visible = screenMode == ConverterScreenMode.CONVERTER,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.extraLarge)
+                    .clickable { isExpanded = !isExpanded }
+                    .padding(top = 12.dp, bottom = 12.dp)
+            ) {
+                CalendarsOverview(
+                    jdn = jdn,
+                    today = today,
+                    selectedCalendar = calendar,
+                    shownCalendars = enabledCalendars - calendar,
+                    isExpanded = isExpanded
+                )
             }
-            AnimatedVisibility(visible = screenMode == ConverterScreenMode.Distance) {
+            AnimatedVisibility(visible = screenMode == ConverterScreenMode.DISTANCE) {
                 DaysDistanceSecondPart(viewModel, jdn, calendar)
             }
         }
     } else {
         CalendarsTypesPicker(calendar, viewModel::changeCalendar)
-        DayPicker(
-            calendarType = calendar, jdn = jdn, setJdn = viewModel::changeSelectedDate
+        DatePicker(
+            calendar = calendar, jdn = jdn, setJdn = viewModel::changeSelectedDate
         )
-        AnimatedVisibility(
-            visible = screenMode == ConverterScreenMode.Converter,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
+        AnimatedVisibility(visible = screenMode == ConverterScreenMode.CONVERTER) {
             Card(
                 shape = MaterialTheme.shapes.extraLarge,
                 elevation = CardDefaults.cardElevation(8.dp),
@@ -463,33 +470,31 @@ private fun ConverterAndDistance(viewModel: ConverterViewModel) {
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 Spacer(Modifier.height(20.dp))
-                CalendarsOverview(
-                    jdn = jdn,
-                    today = today,
-                    selectedCalendar = calendar,
-                    shownCalendars = enabledCalendars - calendar,
-                    isExpanded = isExpanded
-                ) { isExpanded = !isExpanded }
+                Box(Modifier.fillMaxWidth()) {
+                    CalendarsOverview(
+                        jdn = jdn,
+                        today = today,
+                        selectedCalendar = calendar,
+                        shownCalendars = enabledCalendars - calendar,
+                        isExpanded = isExpanded,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
             }
         }
-        AnimatedVisibility(
-            visible = screenMode == ConverterScreenMode.Distance,
-            modifier = Modifier.fillMaxWidth(),
-        ) { DaysDistanceSecondPart(viewModel, jdn, calendar) }
+        AnimatedVisibility(visible = screenMode == ConverterScreenMode.DISTANCE) {
+            DaysDistanceSecondPart(viewModel, jdn, calendar)
+        }
     }
 }
 
 @Composable
-private fun DaysDistanceSecondPart(
-    viewModel: ConverterViewModel,
-    jdn: Jdn,
-    calendar: CalendarType,
-) {
+private fun DaysDistanceSecondPart(viewModel: ConverterViewModel, jdn: Jdn, calendar: Calendar) {
     Column {
         val secondJdn by viewModel.secondSelectedDate.collectAsState()
         DaysDistance(jdn, secondJdn, calendar)
-        DayPicker(
-            calendarType = calendar,
+        DatePicker(
+            calendar = calendar,
             jdn = secondJdn,
             setJdn = viewModel::changeSecondSelectedDate,
         )
@@ -497,7 +502,7 @@ private fun DaysDistanceSecondPart(
 }
 
 @Composable
-private fun DaysDistance(jdn: Jdn, baseJdn: Jdn, calendar: CalendarType) {
+private fun DaysDistance(jdn: Jdn, baseJdn: Jdn, calendar: Calendar) {
     val context = LocalContext.current
     AnimatedContent(
         calculateDaysDifference(context.resources, jdn, baseJdn, calendar),
@@ -539,9 +544,10 @@ private fun TimezoneClock(viewModel: ConverterViewModel, zones: List<TimeZone>, 
                     else viewModel.changeSecondTimeZone(zones[it])
                 },
                 label = {
-                    val offset = Clock.fromMinutesCount(
-                        minutes = zones[it].rawOffset / ONE_MINUTE_IN_MILLIS.toInt()
-                    ).toTimeZoneOffsetFormat()
+                    val hoursFraction = zones[it].rawOffset / ONE_HOUR_IN_MILLIS.toDouble()
+                    val (h, m) = Clock(abs(hoursFraction)).toHoursAndMinutesPair()
+                    val sign = if (hoursFraction < 0) "-" else "+"
+                    val offset = sign + "%s%02d:%02d".format(Locale.ENGLISH, sign, h, m)
                     val id = zones[it].id.replace("_", " ").replace(Regex(".*/"), "")
                     "$id ($offset)"
                 },

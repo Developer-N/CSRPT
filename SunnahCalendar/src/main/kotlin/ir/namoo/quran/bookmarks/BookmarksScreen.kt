@@ -1,23 +1,26 @@
 package ir.namoo.quran.bookmarks
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowCircleRight
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -30,9 +33,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
@@ -40,58 +43,44 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.utils.quranFont
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun BookmarksScreen(
-    drawerState: DrawerState,
-    navController: NavHostController,
+fun SharedTransitionScope.BookmarksScreen(
+    animatedContentScope: AnimatedContentScope,
+    openDrawer: () -> Unit,
+    navigateToVerse: (Int, Int) -> Unit,
     viewModel: BookmarkViewModel = koinViewModel()
 ) {
-    viewModel.loadData()
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(key1 = Unit) {
+        viewModel.loadData()
+    }
     val isLoading by viewModel.isLoading.collectAsState()
-    val bookmarks by viewModel.bookmarks.collectAsState()
-    val chapters by viewModel.chapters.collectAsState()
+    val bookmarks = viewModel.bookmarks
+    val chapters = viewModel.chapters
 
     Scaffold(topBar = {
         TopAppBar(title = {
-            Column {
-                Text(
-                    text = stringResource(id = R.string.bookmarks),
-                    fontSize = 16.sp
-                )
-                AnimatedVisibility(visible = !isLoading) {
-                    Text(
-                        text = formatNumber(bookmarks.size),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            Text(text = stringResource(id = R.string.bookmarks))
         }, navigationIcon = {
-            IconButton(onClick = {
-                scope.launch {
-                    drawerState.apply {
-                        if (isOpen) close() else open()
-                    }
+            NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+        }, colors = appTopAppBarColors(), actions = {
+            if (bookmarks.isNotEmpty()) AnimatedContent(
+                targetState = bookmarks.size, label = "Size"
+            ) {
+                IconButton(onClick = {}) {
+                    Text(text = formatNumber(it), fontWeight = FontWeight.SemiBold)
                 }
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Menu, contentDescription = "Menu"
-                )
             }
-        }, colors = appTopAppBarColors())
+        })
     }) { paddingValues ->
         Surface(
             modifier = Modifier
@@ -108,33 +97,35 @@ fun BookmarksScreen(
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp, 4.dp)
-                            .height(2.dp),
+                            .padding(8.dp),
                         strokeCap = StrokeCap.Round
                     )
                 }
-                if (bookmarks.isNotEmpty() && chapters.isNotEmpty()) LazyColumn(state = rememberLazyListState()) {
+                if (bookmarks.isNotEmpty() && chapters.isNotEmpty()) LazyColumn {
                     items(items = bookmarks, key = { it.id }) { quran ->
                         ElevatedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(4.dp)
-                                .animateItemPlacement()
+                                .animateItem(
+                                    fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                ), shape = MaterialTheme.shapes.large
                         ) {
                             var title =
                                 chapters.find { it.sura == quran.surahID }?.nameArabic ?: " - "
                             title += " " + stringResource(id = R.string.aya) + " "
                             title += formatNumber(quran.verseID)
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp, horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceAround
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    modifier = Modifier,
-                                    text = title,
-                                    fontSize = 16.sp
-                                )
+                                Text(text = title, fontWeight = FontWeight.SemiBold)
                                 IconButton(onClick = { viewModel.removeBookmark(quran) }) {
                                     Icon(
                                         imageVector = Icons.Filled.Bookmark,
@@ -142,21 +133,21 @@ fun BookmarksScreen(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
-                                ElevatedAssistChip(modifier = Modifier,
-                                    onClick = { navController.navigate("sura/${quran.surahID}/${quran.verseID}") },
-                                    label = {
-                                        Text(
-                                            text = stringResource(
-                                                id = R.string.go_to_aya
-                                            )
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Filled.ArrowCircleRight,
-                                            contentDescription = stringResource(id = R.string.go_to_aya)
-                                        )
-                                    })
+                                ElevatedButton(onClick = {
+                                    navigateToVerse(
+                                        quran.surahID, quran.verseID
+                                    )
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Default.Reply,
+                                        contentDescription = stringResource(id = R.string.go_to_aya)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.go_to_aya),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                             HorizontalDivider()
                             Text(
@@ -170,7 +161,6 @@ fun BookmarksScreen(
                     }
                 }
                 else if (!isLoading) NothingFoundUIElement()
-
             }
         }
     }

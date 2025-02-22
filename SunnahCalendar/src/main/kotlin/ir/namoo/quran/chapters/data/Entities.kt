@@ -6,39 +6,39 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "chapters")
 data class ChapterEntity(
-    @PrimaryKey @ColumnInfo(name = "sura") var sura: Int,
-    @ColumnInfo(name = "ayas_count") var ayaCount: Int,
-    @ColumnInfo(name = "first_aya_id") var firstAyaId: Int,
-    @ColumnInfo(name = "name_arabic") var nameArabic: String,
-    @ColumnInfo(name = "name_transliteration") var nameTransliteration: String,
-    @ColumnInfo(name = "type") var type: String,
-    @ColumnInfo(name = "revelation_order") var revelationOrder: Int,
-    @ColumnInfo(name = "rukus") var rukus: Int,
-    @ColumnInfo(name = "bismillah") var bismillah: Int,
-    @ColumnInfo(name = "fav") var fav: Int,
-    @ColumnInfo(name = "description") var description: String?
+    @PrimaryKey @ColumnInfo(name = "sura") val sura: Int,
+    @ColumnInfo(name = "ayas_count") val ayaCount: Int,
+    @ColumnInfo(name = "first_aya_id") val firstAyaId: Int,
+    @ColumnInfo(name = "name_arabic") val nameArabic: String,
+    @ColumnInfo(name = "name_transliteration") val nameTransliteration: String,
+    @ColumnInfo(name = "type") val type: String,
+    @ColumnInfo(name = "revelation_order") val revelationOrder: Int,
+    @ColumnInfo(name = "rukus") val rukus: Int,
+    @ColumnInfo(name = "bismillah") val bismillah: Int,
+    @ColumnInfo(name = "fav") val fav: Int,
+    @ColumnInfo(name = "description") val description: String?
 )//end of class ChaptersEntity
 
 @Entity(tableName = "hezb")
 data class HizbEntity(
-    @ColumnInfo(name = "aya") var aya: Int,
-    @ColumnInfo(name = "sura") var sura: Int,
-    @ColumnInfo(name = "Page") var page: Int,
-    @PrimaryKey @ColumnInfo(name = "hizb") var hizb: Int,
-    @ColumnInfo(name = "JozA") var jozA: Int
+    @ColumnInfo(name = "aya") val aya: Int,
+    @ColumnInfo(name = "sura") val sura: Int,
+    @ColumnInfo(name = "Page") val page: Int,
+    @PrimaryKey @ColumnInfo(name = "hizb") val hizb: Int,
+    @ColumnInfo(name = "JozA") val jozA: Int
 )//end of class HezbEntity
 
 @Entity(tableName = "juz")
 data class JuzEntity(
-    @PrimaryKey @ColumnInfo(name = "id") var id: Int,
-    @ColumnInfo(name = "sura") var sura: Int,
-    @ColumnInfo(name = "aya") var aya: Int
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "sura") val sura: Int,
+    @ColumnInfo(name = "aya") val aya: Int
 )//end of class JuzEntity
 
 @Entity(tableName = "page")
 data class PageEntity(
-    @PrimaryKey @ColumnInfo(name = "MetaDataID") var metaDataID: Int,
-    @ColumnInfo(name = "sura") var sura: Int,
-    @ColumnInfo(name = "page") var page: Int,
-    @ColumnInfo(name = "aya") var aya: Int
+    @PrimaryKey @ColumnInfo(name = "MetaDataID") val metaDataID: Int,
+    @ColumnInfo(name = "sura") val sura: Int,
+    @ColumnInfo(name = "page") val page: Int,
+    @ColumnInfo(name = "aya") val aya: Int
 )

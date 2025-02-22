@@ -6,8 +6,8 @@ import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.asrMethod
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.DEFAULT_SUMMER_TIME
@@ -22,8 +22,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
 
 // 0=calculated 1=exact 2=edited 3=just asr calculated
-private val _prayTimesFrom = MutableStateFlow(0)
-val prayTimesFrom = _prayTimesFrom.asStateFlow()
+private val prayTimesFrom_ = MutableStateFlow(0)
+val prayTimesFrom = prayTimesFrom_.asStateFlow()
 
 
 class PrayTimeProvider(
@@ -32,35 +32,34 @@ class PrayTimeProvider(
     private val locationsDB: LocationsDB
 ) {
 
-    fun replace(prayTimes: PrayTimes?, jdn: Jdn): PrayTimes? {
-        prayTimes ?: return null
+    fun replace(prayTimes: PrayTimes, jdn: Jdn): PrayTimes {
         return runCatching {
             val persianCalendar = jdn.toPersianDate()
             val dayNumber = getDayNum(persianCalendar.month, persianCalendar.dayOfMonth)
             val cityName =
-                context.appPrefs.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
+                context.preferences.getString(PREF_GEOCODED_CITYNAME, DEFAULT_CITY) ?: DEFAULT_CITY
             val result = when {
                 context.isExistAndEnabledEdit() -> {
-                    _prayTimesFrom.value = 2
+                    prayTimesFrom_.value = 2
                     replaceWithEdited(prayTimes, dayNumber)
                 }
 
                 isExistExactTimes(cityName) -> {
-                    _prayTimesFrom.value = 1
+                    prayTimesFrom_.value = 1
                     replaceWithExact(prayTimes, cityName, dayNumber)
                 }
 
                 else -> {
-                    _prayTimesFrom.value = 0
+                    prayTimesFrom_.value = 0
                     prayTimes
                 }
             }
-            if (prayTimesFrom.value == 0 && context.appPrefs.getBoolean(
+            if (prayTimesFrom.value == 0 && context.preferences.getBoolean(
                     PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME
                 ) && dayNumber in 2..185
             ) result.addSummerTime()
             else if (prayTimesFrom.value == 0 ||
-                context.appPrefs.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME)
+                context.preferences.getBoolean(PREF_SUMMER_TIME, DEFAULT_SUMMER_TIME)
                 || dayNumber !in 2..185
             ) result
             else result.deleteSummerTime()
@@ -77,32 +76,14 @@ class PrayTimeProvider(
         val maghrib = this.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
         val isha = this.javaClass.getDeclaredField("isha").apply { isAccessible = true }
 
-        imsak.set(
-            this, (Clock.fromHoursFraction(this.imsak).apply {
-                hours -= 1
-            }).toHoursFraction()
-        )
-        fajr.set(this, (Clock.fromHoursFraction(this.fajr).apply {
-            hours -= 1
-        }).toHoursFraction())
-        sunrise.set(this, (Clock.fromHoursFraction(this.sunrise).apply {
-            hours -= 1
-        }).toHoursFraction())
-        dhuhr.set(this, (Clock.fromHoursFraction(this.dhuhr).apply {
-            hours -= 1
-        }).toHoursFraction())
-        asr.set(this, (Clock.fromHoursFraction(this.asr).apply {
-            hours -= 1
-        }).toHoursFraction())
-        sunset.set(this, (Clock.fromHoursFraction(this.sunset).apply {
-            hours -= 1
-        }).toHoursFraction())
-        maghrib.set(this, (Clock.fromHoursFraction(this.maghrib).apply {
-            hours -= 1
-        }).toHoursFraction())
-        isha.set(this, (Clock.fromHoursFraction(this.isha).apply {
-            hours -= 1
-        }).toHoursFraction())
+        imsak.set(this, Clock(this.imsak).minus(Clock(1.0)).value)
+        fajr.set(this, Clock(this.fajr).minus(Clock(1.0)).value)
+        sunrise.set(this, Clock(this.sunrise).minus(Clock(1.0)).value)
+        dhuhr.set(this, Clock(this.dhuhr).minus(Clock(1.0)).value)
+        asr.set(this, Clock(this.asr).minus(Clock(1.0)).value)
+        sunset.set(this, Clock(this.sunset).minus(Clock(1.0)).value)
+        maghrib.set(this, Clock(this.maghrib).minus(Clock(1.0)).value)
+        isha.set(this, (Clock(this.isha).minus(Clock(1.0)).value))
         return this
     }
 
@@ -116,32 +97,14 @@ class PrayTimeProvider(
         val maghrib = this.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
         val isha = this.javaClass.getDeclaredField("isha").apply { isAccessible = true }
 
-        imsak.set(
-            this, (Clock.fromHoursFraction(this.imsak).apply {
-                hours += 1
-            }).toHoursFraction()
-        )
-        fajr.set(this, (Clock.fromHoursFraction(this.fajr).apply {
-            hours += 1
-        }).toHoursFraction())
-        sunrise.set(this, (Clock.fromHoursFraction(this.sunrise).apply {
-            hours += 1
-        }).toHoursFraction())
-        dhuhr.set(this, (Clock.fromHoursFraction(this.dhuhr).apply {
-            hours += 1
-        }).toHoursFraction())
-        asr.set(this, (Clock.fromHoursFraction(this.asr).apply {
-            hours += 1
-        }).toHoursFraction())
-        sunset.set(this, (Clock.fromHoursFraction(this.sunset).apply {
-            hours += 1
-        }).toHoursFraction())
-        maghrib.set(this, (Clock.fromHoursFraction(this.maghrib).apply {
-            hours += 1
-        }).toHoursFraction())
-        isha.set(this, (Clock.fromHoursFraction(this.isha).apply {
-            hours += 1
-        }).toHoursFraction())
+        imsak.set(this, Clock(this.imsak).plus(Clock(1.0)).value)
+        fajr.set(this, Clock(this.fajr).plus(Clock(1.0)).value)
+        sunrise.set(this, Clock(this.sunrise).plus(Clock(1.0)).value)
+        dhuhr.set(this, Clock(this.dhuhr).plus(Clock(1.0)).value)
+        asr.set(this, Clock(this.asr).plus(Clock(1.0)).value)
+        sunset.set(this, Clock(this.sunset).plus(Clock(1.0)).value)
+        maghrib.set(this, Clock(this.maghrib).plus(Clock(1.0)).value)
+        isha.set(this, Clock(this.isha).plus(Clock(1.0)).value)
         return this
     }
 
@@ -174,7 +137,7 @@ class PrayTimeProvider(
         else if (asrMethod.value == AsrMethod.Hanafi && exactTimes.asrHanafi != "00:00:00") asr.set(
             prayTimes, exactTimes.toDouble(exactTimes.asrHanafi)
         )
-        else _prayTimesFrom.value = 3
+        else prayTimesFrom_.value = 3
         sunset.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         maghrib.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         isha.set(prayTimes, exactTimes.toDouble(exactTimes.isha))
@@ -220,7 +183,7 @@ class PrayTimeProvider(
     }
 
     private fun Context.isExistAndEnabledEdit(): Boolean =
-        runBlocking { prayTimesRepository.getAllEditedTimes() }.size == 366 && appPrefs.getBoolean(
+        runBlocking { prayTimesRepository.getAllEditedTimes() }.size == 366 && preferences.getBoolean(
             PREF_ENABLE_EDIT, false
         )
 

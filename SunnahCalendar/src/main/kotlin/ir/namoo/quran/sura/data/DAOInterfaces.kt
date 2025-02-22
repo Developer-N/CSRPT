@@ -19,6 +19,12 @@ interface QuranDAO {
     @Query("select * from tafsirs where sura_id=:sura")
     suspend fun getTafsir(sura: Int): List<TafsirEntity>
 
+    @Query("select * from tafsirs")
+    suspend fun getTafsir(): List<TafsirEntity>
+
+    @Update
+    suspend fun updateTafsir(tafsirEntity: TafsirEntity)
+
     @Query("select * from quran where fav=1")
     suspend fun getBookmarks(): List<QuranEntity>
 

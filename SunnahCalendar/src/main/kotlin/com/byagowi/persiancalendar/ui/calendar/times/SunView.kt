@@ -57,9 +57,9 @@ class SunView(context: Context) : View(context) {
     private var current = 0f
     private var dayLengthString = ""
     private var remainingString = ""
-    private val sunriseString = context.getString(R.string.sunriseSunView)
-    private val middayString = context.getString(R.string.middaySunView)
-    private val sunsetString = context.getString(R.string.sunsetSunView)
+    private val sunriseString = context.getString(R.string.sunrise_sun_view)
+    private val middayString = context.getString(R.string.midday_sun_view)
+    private val sunsetString = context.getString(R.string.sunset_sun_view)
     private var segmentByPixel = .0
     var prayTimes: PrayTimes? = null
         set(value) {
@@ -212,31 +212,30 @@ class SunView(context: Context) : View(context) {
     fun initiate() {
         val prayTimes = prayTimes ?: return
 
-        val sunset = Clock.fromHoursFraction(prayTimes.sunset).toMinutes().toFloat()
-        val maghrib = Clock.fromHoursFraction(prayTimes.maghrib).toMinutes().toFloat()
-        val sunrise = Clock.fromHoursFraction(prayTimes.sunrise).toMinutes().toFloat()
-        val fajr = Clock.fromHoursFraction(prayTimes.fajr).toMinutes().toFloat()
-        val now = Clock(GregorianCalendar()).toMinutes().toFloat()
+        val sunset = prayTimes.sunset
+        val sunrise = prayTimes.sunrise
+        val fajr = prayTimes.fajr
+        val maghrib = prayTimes.maghrib
+        val now = Clock(GregorianCalendar()).value
 
-        fun Float.safeDiv(other: Float) = if (other == 0f) 0f else this / other
+        fun Double.safeDiv(other: Double): Float = if (other == .0) 0f else (this / other).toFloat()
         current = when {
             now <= sunrise -> now.safeDiv(sunrise) * .17f
             now <= sunset -> (now - sunrise).safeDiv(sunset - sunrise) * .66f + .17f
-            else -> (now - sunset).safeDiv(fullDay - sunset) * .17f + .17f + .66f
+            else -> (now - sunset).safeDiv(24 - sunset) * .17f + .17f + .66f
         }
 
-        val dayLength = Clock.fromMinutesCount((maghrib - fajr).toInt())
-        val remaining = Clock.fromMinutesCount(
-            if (now > maghrib || now < fajr) 0 else (maghrib - now).toInt()
-        )
+        val dayLength = Clock(maghrib - fajr)
         dayLengthString = context.getString(R.string.length_of_day) + spacedColon +
                 dayLength.asRemainingTime(resources, short = true)
-        remainingString = if (remaining.toMinutes() == 0) "" else
+
+        val remaining = if (now > sunset || now < sunrise) null else Clock(sunset - now)
+        remainingString = if (remaining == null) "" else
             context.getString(R.string.remaining_daylight) + spacedColon +
                     remaining.asRemainingTime(resources, short = true)
         // a11y
         contentDescription = context.getString(R.string.length_of_day) + spacedColon +
-                dayLength.asRemainingTime(resources) + if (remaining.toMinutes() == 0) "" else
+                dayLength.asRemainingTime(resources) + if (remaining == null) "" else
             ("\n\n" + context.getString(R.string.remaining_daylight) + spacedColon +
                     remaining.asRemainingTime(resources))
 
@@ -252,9 +251,5 @@ class SunView(context: Context) : View(context) {
     fun startAnimate() {
         initiate()
         animator.start()
-    }
-
-    companion object {
-        private val fullDay = Clock(24, 0).toMinutes().toFloat()
     }
 }

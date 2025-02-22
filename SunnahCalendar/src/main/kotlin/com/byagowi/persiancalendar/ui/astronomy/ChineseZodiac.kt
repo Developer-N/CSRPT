@@ -6,10 +6,12 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import io.github.persiancalendar.calendar.PersianDate
 
 /**
- * The follow table is copied from https://en.wikipedia.org/wiki/Chinese_zodiac
+ * The following table is copied from https://en.wikipedia.org/wiki/Chinese_zodiac
  *
  * | Number |  Animal | Yin/Yang | Trine | Fixed Element |
  * |:------:|:-------:|:--------:|:-----:|:-------------:|
@@ -26,28 +28,36 @@ import io.github.persiancalendar.calendar.PersianDate
  * | 11     | Dog     | Yang     | 3rd   | Earth         |
  * | 12     | Pig     | Yin      | 4th   | Water         |
  *
- * The follow poem is copied from https://fa.wikipedia.org/wiki/گاه‌شماری_حیوانی
+ * The following poem is copied from https://fa.wikipedia.org/wiki/گاه‌شماری_حیوانی
  *
  * موش و بقر و پلنگ و خرگوش شمار - زان چار چو بگذری نهنگ آید و مار
  *آنگاه به اسب و گوسفند است حساب - حمدونه و مرغ و سگ و خوک آخر کار
  */
-enum class ChineseZodiac(@StringRes private val title: Int, private val emoji: String) {
+enum class ChineseZodiac(
+    @StringRes private val title: Int, private val emoji: String,
+    private val persianAlternative: String? = null,
+) {
     RAT(R.string.animal_year_name_rat, "🐀"),
     OX(R.string.animal_year_name_ox, "🐂"),
-    TIGER(R.string.animal_year_name_tiger, "🐅"),
+    TIGER(R.string.animal_year_name_tiger, "🐅", persianAlternative = "🐆 پلنگ"),
     RABBIT(R.string.animal_year_name_rabbit, "🐇"),
-    DRAGON(R.string.animal_year_name_dragon, "🐲"),
+    DRAGON(R.string.animal_year_name_dragon, "🐲", persianAlternative = "🐳 نهنگ"),
     SNAKE(R.string.animal_year_name_snake, "🐍"),
     HORSE(R.string.animal_year_name_horse, "🐎"),
-    GOAT(R.string.animal_year_name_goat, "🐐"),
+    GOAT(R.string.animal_year_name_goat, "🐐", persianAlternative = "🐑 گوسفند"),
     MONKEY(R.string.animal_year_name_monkey, "🐒"),
-    ROOSTER(R.string.animal_year_name_rooster, "🐔"),
+    ROOSTER(R.string.animal_year_name_rooster, "🐓", persianAlternative = "🐔 مرغ"),
     DOG(R.string.animal_year_name_dog, "🐕"),
     PIG(R.string.animal_year_name_pig, "🐖");
 
-    fun format(resources: Resources, withEmoji: Boolean) = buildString {
-        if (withEmoji) append("$emoji ")
-        append(resources.getString(title))
+    fun format(resources: Resources, withEmoji: Boolean, isForPersian: Boolean): String {
+        return if (isForPersian && language.value.isPersian && persianAlternative != null) {
+            if (withEmoji) persianAlternative
+            else persianAlternative.split(" ").getOrNull(1).debugAssertNotNull ?: ""
+        } else buildString {
+            if (withEmoji) append("$emoji ")
+            append(resources.getString(title))
+        }
     }
 
     val bestMatches get() = bestMatchesRaw[ordinal]

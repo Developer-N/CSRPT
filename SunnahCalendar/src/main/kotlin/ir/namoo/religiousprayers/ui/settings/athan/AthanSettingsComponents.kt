@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandCircleDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.getSystemService
+import androidx.core.text.isDigitsOnly
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.NumberPicker
 import com.byagowi.persiancalendar.ui.theme.AppTheme
@@ -215,10 +216,8 @@ fun AthanSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val rotate = animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f, label = "",
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMedium
+        targetValue = if (expanded) 180f else 0f, label = "", animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium
         )
     )
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -229,35 +228,38 @@ fun AthanSelector(
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.primary
         )
-        ElevatedAssistChip(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            onClick = { expanded = true },
-            label = { Text(text = selectedItem) },
-            trailingIcon = {
+        ElevatedButton(modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+            onClick = { expanded = true }) {
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = selectedItem, fontWeight = FontWeight.SemiBold)
                 Icon(
                     modifier = Modifier.rotate(rotate.value),
                     imageVector = Icons.Default.ExpandCircleDown,
                     contentDescription = ""
                 )
-            })
-        DropdownMenu(
-            modifier = Modifier.clip(MaterialTheme.shapes.large),
-            expanded = expanded,
-            onDismissRequest = { expanded = false }) {
-            items.forEach { item ->
-                DropdownMenuItem(text = { Text(text = item) }, onClick = {
-                    onSelectChanged(item)
-                    expanded = false
-                }, trailingIcon = {
-                    if (item == selectedItem)
-                        Icon(
+            }
+            DropdownMenu(shape = MaterialTheme.shapes.extraLarge,
+                expanded = expanded,
+                onDismissRequest = { expanded = false }) {
+                items.forEach { item ->
+                    val name = if (item.split(".").first()
+                            .isDigitsOnly()
+                    ) stringResource(R.string.added_file, item) else item
+                    DropdownMenuItem(text = { Text(text = name) }, onClick = {
+                        onSelectChanged(item)
+                        expanded = false
+                    }, trailingIcon = {
+                        if (item == selectedItem) Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = "",
                             tint = MaterialTheme.colorScheme.primary
                         )
-                })
+                    })
+                }
             }
         }
     }

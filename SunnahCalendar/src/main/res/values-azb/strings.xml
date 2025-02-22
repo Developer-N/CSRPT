@@ -16,7 +16,7 @@
     <string name="showing_clock_in_24">ساعاتی ۲۴‌لۆک گؤستر</string>
     <string name="clock_in_24">۲۴ ساعات</string>
     <string name="about">حاقیندا</string>
-    <string name="gpl_logo">جی‌‌پی‌ال لوگوسو</string>
+    <string name="gpl_logo">جی‌پی‌ال لوگوسو</string>
     <string name="date_converter">تاریخ چئویرمک</string>
     <string name="converter">چئویرمک</string>
     <string name="widget_text_color">ویجت‌ین یازی رنگ‌لری</string>
@@ -75,9 +75,7 @@
     <string name="in_city_time">افق %1$s</string>
     <string name="date_copied_clipboard">«%1$s» حافیظه‌یه یازیلدی</string>
     <string name="stop">ساخلاندی</string>
-    <string name="goto_date">بو تاریخه گئت</string>
-    <string name="go">گئت</string>
-    <string name="pleasewaitgps">بیرآز دایانین... بیر دقیقه سونرا نتیجه اولمازسا، جی‌پی‌اس‌ین آچیق اولماسین‌دان مطمئن اولون. اونو آچماق دا یارارسیز اولسا، گمان‌کی باشقا سئچنئک‌لری تست ائتملی‌سینیز.</string>
+    <string name="wait_for_gps">بیرآز دایانین… بیر دقیقه سونرا نتیجه اولمازسا، جی‌پی‌اس‌ین آچیق اولماسین‌دان مطمئن اولون. اونو آچماق دا یارارسیز اولسا، گمان‌کی باشقا سئچنئک‌لری تست ائتملی‌سینیز.</string>
     <string name="notify_date_lock_screen">اعلان‌لاری کلیدلی صفحه‌ده گؤستر</string>
     <string name="notify_date_lock_screen_summary">سیستم‌ده تنظیم اولسا ایشلیئر</string>
     <string name="warn_if_events_not_set">موناسیبت‌لری فعال ائتمک اۆچون تنظیماتا گئدین</string>
@@ -115,19 +113,19 @@
     <string name="help">یاردیم</string>
     <string name="about_report_bug">خطالاری بیلدیرین</string>
     <string name="about_report_bug_sum">خطالاری بیلدیرمک اوچون بوردا یازین</string>
-    <string name="about_sendMail">ایمیل</string>
-    <string name="about_noClient">!ایمیله گوره برنامه یوخدور</string>
-    <string name="about_developers">گلیشتیر‌ن‌لر حاقیندا</string>
+    <string name="about_send_mail">ایمیل</string>
+    <string name="about_no_client">!ایمیله گوره برنامه یوخدور</string>
+    <string name="about_developers">گلیشتیر‌ن‌لر (رندم ترتیبلنیب)</string>
     <string name="about_support_developers">گلیشتیر‌ن‌لری دستک‌لئین</string>
-    <string name="about_email_sum">شخصی ایمیل برنامه صاحیب‌ینه گؤندرمک</string>
+    <string name="about_email_sum">برنامه صاحیب‌لرینه شخصی ایمیل گؤندرمک</string>
     <string name="gps_internet_desc">اینترنت و جی‌پی‌اس‌ی آچیق بیراخین، برنامه هر مکاندا بیر کئز بو اریشیم‌لره احتیاجی اولاجاق‌دیر، مکانیز دئیش‌یلن دورومدا یئنی‌دن تنظیم گرکلی‌دیر</string>
     <string name="start_of_year_diff">%1$s گۆن (~%2$s هفته یا %3$s آی) ایل‌ین باشیندان</string>
     <string name="end_of_year_diff">%1$s گۆن (~%2$s هفته یا %3$s آی) ایل‌ین سونونا</string>
     <!-- Sun Info -->
-    <string name="sunriseSunView">گۆن چیخان</string>
-    <string name="middaySunView">گۆن اورتا</string>
-    <string name="sunsetSunView">گۆن باتان</string>
-    <string name="no_event">موناسیبت یوخدور</string>
+    <string name="sunrise_sun_view">گۆن چیخان</string>
+    <string name="midday_sun_view">گۆن اورتا</string>
+    <string name="sunset_sun_view">گۆن باتان</string>
+    <string name="no_event">بوگونه موناسیبت یوخدور</string>
     <string name="length_of_day">گۆن سۆره‌سی</string>
     <string name="remaining_daylight">قالان</string>
     <string name="n_hours_minutes">%1$sس %2$sد</string>
@@ -157,11 +155,11 @@
     <string name="animal_year_name_dragon">اژد‌ها</string>
     <string name="animal_year_name_snake">ایلان</string>
     <string name="animal_year_name_horse">آت</string>
-    <string name="animal_year_name_goat">قویون</string>
+    <string name="animal_year_name_goat">کئچی</string>
     <string name="level">تاراز</string>
     <string name="calibrate_compass_summary">وسیله‌نین دوز عملکردینه‌گوره مغناطیس سنسورلاردان اوزاق توتون و بیر کئز دولانین</string>
     <string name="set_location">آی و گۆنو گؤسترمک اۆچون موقعیت تنظیم ائلین.</string>
-    <string name="moonInScorpio">عقربه‌دکی آی گون‌لری</string>
+    <string name="moon_in_scorpio">عقربه‌دکی آی گون‌لری</string>
     <string name="astronomy">آسترونومیا</string>
     <string name="astronomical_info_summary">آسترونومیا ایطلاعات‌ین گؤسترمک</string>
     <string name="islamic_offset">ایسلامی تقویم‌ین تنظیم ائتمک</string>
@@ -196,11 +194,11 @@
     <string name="shift_work_starting_date">ایش شیفتی‌نین باشلانق‌یجی تقویم‌ده، %1$s سئچ‌یلن گۆندن اولاجاق‌دیر.</string>
     <string name="shift_work_starting_date_edit">ایش شیفتی، %1$s سئچ‌یلن گۆندن قاباق اولاجاقدیر.</string>
     <string name="shift_work_reset_button">ائتکی‌سیزلشتیرمک یادا یئنی‌دن تنظیم ائتمک</string>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="one">%1$s دقیقه</item>
         <item quantity="other">%1$s دقیقه</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s ساعات</item>
         <item quantity="other">%1$s ساعات</item>
     </plurals>
@@ -234,15 +232,15 @@
     <string name="widget_age_name">فارسجا تقویم (یاش)</string>
     <string name="age_widget_title">عنوان ویجت</string>
     <string name="select_date">انتخاب تاریخ</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s گۆن</item>
         <item quantity="other">%1$s گۆن</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s آی</item>
         <item quantity="other">%1$s آی</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s ایل</item>
         <item quantity="other">%1$s ایل</item>
     </plurals>
@@ -289,7 +287,7 @@
     <!--Widget customizations-->
     <string name="widget_customization_other_calendars">دیگر تقویم‌لر ویجت‌ده ۴×۱ و ۲×۲</string>
     <string name="widget_customization_non_holiday_events">تعطیل‌سیز گون‌لری ویجت ۲×۲ و اعلان</string>
-    <string name="widget_customization_owghat">شرعی واخت‌لار ویجت‌ده ۲×۲ و اعلان (اگر تنظیم اولسا)</string>
+    <string name="widget_customization_owghat">شرعی واخت‌لار ویجت‌ده و اعلان (اگر تنظیم اولسا)</string>
     <string name="widget_customization_owghat_location">مکان، شرعی واخت‌لار یانین‌دا ویجت‌ده ۲×۲ و اعلان (اگر تنظیم اولسا)</string>
     <string name="farvardin">فروردین</string>
     <string name="ordibehesht">اوردیبهشت</string>
@@ -348,4 +346,9 @@
     <string name="calculator">ماشین حساب</string>
     <string name="enable_new_interface">یئنی ظاهیری گوجلندیر</string>
     <string name="are_you_sure">آرخایینسیز؟</string>
+    <string name="none">هئچ</string>
+    <string name="month_pray_times">آیین نماز واختلاری</string>
+    <string name="high_latitudes_one_seventh">یئدی‌ده بیر</string>
+    <string name="ask_for_calendar_permission">موبایلین تقویمیندن شخصی موناسیبتلری فعال المک ایستیسیز؟</string>
+    <string name="high_latitudes_night_middle">گئجه یاریسی</string>
 </resources>

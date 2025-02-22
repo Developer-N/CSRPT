@@ -18,14 +18,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
@@ -42,7 +42,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -122,7 +122,7 @@ fun NumberPicker(
                                 range,
                                 value,
                                 endValue,
-                                halfNumbersColumnHeightPx
+                                halfNumbersColumnHeightPx,
                             )
                         )
                         animatedOffset.snapTo(0f)
@@ -135,15 +135,13 @@ fun NumberPicker(
             Box(
                 modifier = Modifier
                     .padding(vertical = verticalMargin)
-                    .offset { IntOffset(x = 0, y = coercedAnimatedOffset.roundToInt()) }
+                    .offset { IntOffset(x = 0, y = coercedAnimatedOffset.roundToInt()) },
             ) {
                 if (indexOfElement > 0) Label(
                     text = label(range.first + indexOfElement - 1),
                     modifier = Modifier
                         .height(numbersColumnHeight / 3)
-                        .semantics {
-                            @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser()
-                        }
+                        .semantics { this.hideFromAccessibility() }
                         .offset(y = -halfNumbersColumnHeight)
                         .alpha(
                             maxOf(minimumAlpha, coercedAnimatedOffset / halfNumbersColumnHeightPx)
@@ -202,17 +200,17 @@ fun NumberPicker(
                         modifier = Modifier
                             .height(numbersColumnHeight / 3)
                             .alpha(
-                                (maxOf(
+                                maxOf(
                                     minimumAlpha,
                                     1 - abs(coercedAnimatedOffset) / halfNumbersColumnHeightPx
-                                ))
+                                )
                             )
                             .then(
                                 if (disableEdit) Modifier else Modifier.clickable(
                                     indication = null,
-                                    interactionSource = remember { MutableInteractionSource() },
+                                    interactionSource = null,
                                     onClickLabel = onClickLabel,
-                                ) { showTextEdit = true }
+                                ) { showTextEdit = true },
                             ),
                     )
                 }
@@ -220,9 +218,7 @@ fun NumberPicker(
                     text = label(range.first + indexOfElement + 1),
                     modifier = Modifier
                         .height(numbersColumnHeight / 3)
-                        .semantics {
-                            @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser()
-                        }
+                        .semantics { this.hideFromAccessibility() }
                         .offset(y = halfNumbersColumnHeight)
                         .alpha(
                             maxOf(minimumAlpha, -coercedAnimatedOffset / halfNumbersColumnHeightPx)
@@ -230,7 +226,7 @@ fun NumberPicker(
                 )
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        }
+        },
     ) { measurables, constraints ->
         val placeables = measurables.map { measurable -> measurable.measure(constraints) }
         layout(constraints.maxWidth, placeables.sumOf { it.height }) {
@@ -246,7 +242,7 @@ private fun getItemIndexForOffset(
     range: IntRange,
     value: Int,
     offset: Float,
-    halfNumbersColumnHeightPx: Float
+    halfNumbersColumnHeightPx: Float,
 ): Int {
     val indexOf = value - range.first - (offset / halfNumbersColumnHeightPx).toInt()
     return indexOf.coerceIn(0, range.last - range.first)
@@ -255,7 +251,18 @@ private fun getItemIndexForOffset(
 @Composable
 private fun Label(text: String, modifier: Modifier) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
-        Text(maxLines = 1, text = text)
+        val contentColor = LocalContentColor.current
+        BasicText(
+            text = text,
+            color = { contentColor },
+            style = LocalTextStyle.current,
+            maxLines = 1,
+            softWrap = false,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = MaterialTheme.typography.labelSmall.fontSize,
+                maxFontSize = LocalTextStyle.current.fontSize,
+            )
+        )
     }
 }
 
@@ -271,7 +278,7 @@ private suspend fun Animatable<Float, AnimationVector1D>.fling(
         animateTo(
             targetValue = adjustedTarget,
             initialVelocity = initialVelocity,
-            block = block
+            block = block,
         )
     } else {
         animateDecay(

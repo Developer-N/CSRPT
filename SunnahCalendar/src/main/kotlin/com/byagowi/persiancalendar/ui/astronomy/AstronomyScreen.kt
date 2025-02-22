@@ -2,13 +2,15 @@ package com.byagowi.persiancalendar.ui.astronomy
 
 import android.content.res.Configuration
 import android.os.Build
-import androidx.annotation.ColorInt
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -20,25 +22,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -58,7 +61,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -73,24 +75,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.util.lruCache
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MAP
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MOON
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_TIME_BAR
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.global.theme
-import com.byagowi.persiancalendar.ui.calendar.dialogs.DayPickerDialog
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
+import com.byagowi.persiancalendar.ui.common.DatePickerDialog
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.SwitchWithLabel
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
+import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.isDynamicGrayscale
-import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
+import com.byagowi.persiancalendar.ui.theme.isDynamicGrayscale
 import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
+import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.isSouthernHemisphere
@@ -102,10 +110,12 @@ import io.github.persiancalendar.calendar.PersianDate
 import kotlinx.coroutines.delay
 import java.util.Date
 import kotlin.math.abs
+import kotlin.math.max
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun AstronomyScreen(
+fun SharedTransitionScope.AstronomyScreen(
+    animatedContentScope: AnimatedContentScope,
     openDrawer: () -> Unit,
     navigateToMap: () -> Unit,
     viewModel: AstronomyViewModel,
@@ -141,7 +151,7 @@ fun AstronomyScreen(
                     )
                 },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
                 actions = {
                     val minutesOffset by viewModel.minutesOffset.collectAsState()
                     val isTropical by viewModel.isTropical.collectAsState()
@@ -149,7 +159,7 @@ fun AstronomyScreen(
                     TodayActionButton(visible = minutesOffset != 0) {
                         viewModel.animateToAbsoluteMinutesOffset(0)
                     }
-                    AnimatedVisibility(visible = mode == AstronomyMode.Earth) {
+                    AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
                         SwitchWithLabel(
                             label = stringResource(R.string.tropical),
                             checked = isTropical,
@@ -157,110 +167,114 @@ fun AstronomyScreen(
                             toggle = viewModel::toggleIsTropical,
                         )
                     }
-                    ThreeDotsDropdownMenu { closeMenu ->
-                        AppDropdownMenuItem(
-                            text = { Text(stringResource(R.string.goto_date)) },
-                            onClick = {
-                                closeMenu()
-                                viewModel.showDayPickerDialog()
-                            },
-                        )
-                        AppDropdownMenuItem(
-                            text = { Text(stringResource(R.string.map)) },
-                            onClick = {
-                                closeMenu()
-                                navigateToMap()
-                            },
-                        )
+                    ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
+                        AppDropdownMenuItem({ Text(stringResource(R.string.select_date)) }) {
+                            closeMenu()
+                            viewModel.showDatePickerDialog()
+                        }
+                        AppDropdownMenuItem({ Text(stringResource(R.string.map)) }) {
+                            closeMenu()
+                            navigateToMap()
+                        }
                     }
                 },
             )
         },
-        bottomBar = {
-            val modifier = Modifier
-                .padding(bottom = 16.dp)
-                .safeDrawingPadding()
-            if (!isLandscape) SliderBar(modifier, slider, viewModel) { slider = it }
-        },
     ) { paddingValues ->
-        Surface(
-            shape = materialCornerExtraLargeTop(),
-            modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
-        ) {
-            BoxWithConstraints(Modifier.fillMaxSize()) {
+        Box(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+            ScreenSurface(animatedContentScope) {
                 val bottomPadding = paddingValues.calculateBottomPadding()
-                val maxHeight = maxHeight
-                val maxWidth = maxWidth
-                if (isLandscape) Row(Modifier.fillMaxWidth()) {
-                    Column(
-                        Modifier
-                            .width((maxWidth / 2).coerceAtMost(480.dp))
-                            .fillMaxHeight()
-                            .padding(top = 24.dp, start = 24.dp, bottom = bottomPadding + 16.dp),
-                    ) {
-                        Header(Modifier, viewModel)
-                        Spacer(Modifier.weight(1f))
-                        SliderBar(Modifier, slider, viewModel) { slider = it }
-                    }
-                    SolarDisplay(
-                        Modifier
-                            .weight(1f)
-                            .padding(top = 16.dp, bottom = bottomPadding + 16.dp)
-                            .height(maxHeight - bottomPadding),
-                        viewModel, slider, navigateToMap,
-                    )
-                } else Layout(
-                    // Puts content in middle of available space after the measured header
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    content = {
-                        Header(
-                            Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp),
-                            viewModel,
-                        )
+                if (isLandscape) BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val maxHeight = maxHeight
+                    val maxWidth = maxWidth
+                    Row(Modifier.fillMaxWidth()) {
+                        Column(
+                            Modifier
+                                .width((maxWidth / 2).coerceAtMost(480.dp))
+                                .fillMaxHeight()
+                                .padding(
+                                    top = 24.dp,
+                                    start = 24.dp,
+                                    bottom = bottomPadding + 16.dp,
+                                ),
+                        ) {
+                            Header(Modifier, viewModel)
+                            Spacer(Modifier.weight(1f))
+                            SliderBar(animatedContentScope, slider, viewModel) { slider = it }
+                        }
                         SolarDisplay(
                             Modifier
-                                .fillMaxWidth()
-                                .height(maxWidth - (56 * 2 + 8).dp),
-                            viewModel, slider, navigateToMap,
+                                .weight(1f)
+                                .padding(top = 16.dp, bottom = bottomPadding + 16.dp)
+                                .height(maxHeight - bottomPadding),
+                            animatedContentScope, viewModel, slider, navigateToMap,
                         )
-                    },
-                ) { measurables, constraints ->
-                    val header = measurables[0].measure(constraints)
-                    val content = measurables[1].measure(constraints)
-                    layout(
-                        width = constraints.maxWidth,
-                        height = header.height + content.height +
-                                // To make solar display can be scrolled above bottom padding in smaller screen
-                                bottomPadding.roundToPx(),
-                    ) {
-                        // Put the header at top
-                        header.placeRelative(0, 0)
-
-                        val availableHeight =
-                            (maxHeight - bottomPadding).roundToPx() - header.height
-                        val space = availableHeight / 2 - content.height / 2
-                        content.placeRelative(0, header.height + space.coerceAtLeast(0))
                     }
+                } else Column {
+                    BoxWithConstraints(Modifier.weight(1f, fill = false)) {
+                        val maxHeight = maxHeight
+                        val maxWidth = maxWidth
+                        var needsScroll by remember { mutableStateOf(false) }
+                        // Puts content in middle of available space after the measured header
+                        Layout(
+                            modifier = if (needsScroll) Modifier.verticalScroll(rememberScrollState()) else Modifier,
+                            content = {
+                                // Header
+                                Header(
+                                    Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp),
+                                    viewModel,
+                                )
+                                // Content
+                                SolarDisplay(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(maxWidth - (56 * 2 + 8).dp),
+                                    animatedContentScope, viewModel, slider, navigateToMap,
+                                )
+                            },
+                        ) { (header, content), constraints ->
+                            val placeableHeader = header.measure(constraints)
+                            val placeableContent = content.measure(constraints)
+                            layout(
+                                width = constraints.maxWidth,
+                                height = max(
+                                    placeableHeader.height + placeableContent.height,
+                                    maxHeight.roundToPx(),
+                                ),
+                            ) {
+                                // Put the header at top
+                                placeableHeader.placeRelative(0, 0)
+
+                                val availableHeight = maxHeight.roundToPx() - placeableHeader.height
+                                val space = availableHeight / 2 - placeableContent.height / 2
+                                needsScroll = space <= 0
+                                placeableContent.placeRelative(
+                                    0, placeableHeader.height + space.coerceAtLeast(0)
+                                )
+                            }
+                        }
+                    }
+                    SliderBar(animatedContentScope, slider, viewModel) { slider = it }
+                    Spacer(Modifier.height(16.dp + bottomPadding))
                 }
             }
         }
     }
 
-    val isDayPickerDialogShown by viewModel.isDayPickerDialogShown.collectAsState()
-    if (isDayPickerDialogShown) {
+    val isDatePickerDialogShown by viewModel.isDatePickerDialogShown.collectAsState()
+    if (isDatePickerDialogShown) {
         val astronomyState by viewModel.astronomyState.collectAsState()
-        DayPickerDialog(
+        DatePickerDialog(
             initialJdn = Jdn(astronomyState.date.toCivilDate()),
-            positiveButtonTitle = R.string.accept,
-            onSuccess = { jdn -> viewModel.animateToAbsoluteDayOffset(jdn - Jdn.today()) },
-            onDismissRequest = viewModel::dismissDayPickerDialog,
-        )
+            onDismissRequest = viewModel::dismissDatePickerDialog,
+        ) { jdn -> viewModel.animateToAbsoluteDayOffset(jdn - Jdn.today()) }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SliderBar(
-    modifier: Modifier,
+private fun SharedTransitionScope.SliderBar(
+    animatedContentScope: AnimatedContentScope,
     slider: SliderView?,
     viewModel: AstronomyViewModel,
     setSlider: (SliderView) -> Unit,
@@ -274,17 +288,21 @@ private fun SliderBar(
         viewModel.animateToRelativeDayOffset(days)
     }
 
-    @OptIn(ExperimentalFoundationApi::class) Column(modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth()) {
         Text(
             state.date.formatDateAndTime(),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .combinedClickable(
-                    onClick = { viewModel.showDayPickerDialog() },
-                    onClickLabel = stringResource(R.string.goto_date),
+                    onClick = { viewModel.showDatePickerDialog() },
+                    onClickLabel = stringResource(R.string.select_date),
                     onLongClick = { viewModel.animateToAbsoluteMinutesOffset(0) },
                     onLongClickLabel = stringResource(R.string.today),
+                )
+                .sharedElement(
+                    rememberSharedContentState(key = SHARED_CONTENT_KEY_TIME_BAR),
+                    animatedVisibilityScope = animatedContentScope,
                 ),
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -340,10 +358,10 @@ private fun TimeArrow(buttonScrollSlider: (Int) -> Unit, isPrevious: Boolean) {
             stringResource(R.string.day),
         ),
         Modifier.combinedClickable(
-            indication = rememberRipple(bounded = false),
-            interactionSource = remember { MutableInteractionSource() },
+            indication = ripple(bounded = false),
+            interactionSource = null,
             onClick = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                hapticFeedback.performLongPress()
                 buttonScrollSlider(if (isPrevious) -1 else 1)
             },
             onClickLabel = stringResource(R.string.select_day),
@@ -357,9 +375,11 @@ private fun TimeArrow(buttonScrollSlider: (Int) -> Unit, isPrevious: Boolean) {
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun SolarDisplay(
+private fun SharedTransitionScope.SolarDisplay(
     modifier: Modifier,
+    animatedContentScope: AnimatedContentScope,
     viewModel: AstronomyViewModel,
     slider: SliderView?,
     navigateToMap: () -> Unit,
@@ -377,7 +397,8 @@ private fun SolarDisplay(
                     selected = mode == it,
                     onClick = { viewModel.setMode(it) },
                     icon = {
-                        if (it == AstronomyMode.Moon) MoonIcon(state) else Icon(
+                        if (it == AstronomyMode.MOON) MoonIcon(state, animatedContentScope)
+                        else Icon(
                             ImageVector.vectorResource(it.icon),
                             modifier = Modifier.size(24.dp),
                             contentDescription = null,
@@ -418,7 +439,11 @@ private fun SolarDisplay(
         NavigationRailItem(
             modifier = Modifier
                 .size(56.dp)
-                .align(Alignment.CenterEnd),
+                .align(Alignment.CenterEnd)
+                .sharedBounds(
+                    rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
+                    animatedVisibilityScope = animatedContentScope,
+                ),
             selected = false,
             onClick = navigateToMap,
             icon = {
@@ -443,27 +468,36 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
 
     val context = LocalContext.current
     val headerCache = remember {
-        lruCache(1024, create = { jdn: Jdn ->
-            state.generateHeader(context.resources, jdn).joinToString("\n")
-        })
+        lruCache(1024, create = { jdn: Jdn -> state.generateHeader(context.resources, jdn) })
     }
 
     Column(modifier) {
         val jdn by remember { derivedStateOf { Jdn(state.date.toCivilDate()) } }
-        SelectionContainer {
-            Text(
-                headerCache[jdn],
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
-            )
+        val contentColor = LocalContentColor.current
+        headerCache[jdn].fastForEach { line ->
+            AnimatedContent(targetState = line, label = "line", transitionSpec = appCrossfadeSpec) {
+                SelectionContainer {
+                    BasicText(
+                        it,
+                        color = { contentColor },
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        softWrap = false,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 9.sp,
+                            maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                        ),
+                    )
+                }
+            }
         }
         Seasons(jdn)
-        AnimatedVisibility(visible = mode == AstronomyMode.Earth) {
+        AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
             Row(Modifier.padding(top = 8.dp)) {
                 Box(Modifier.weight(1f)) {
                     Cell(
                         Modifier.align(Alignment.Center),
-                        0xcceaaa00.toInt(),
+                        Color(0xcceaaa00),
                         stringResource(R.string.sun),
                         sunZodiac.format(context.resources, true) // ☉☀️
                     )
@@ -471,7 +505,7 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
                 Box(Modifier.weight(1f)) {
                     Cell(
                         Modifier.align(Alignment.Center),
-                        0xcc606060.toInt(),
+                        Color(0xcc606060),
                         stringResource(R.string.moon),
                         moonZodiac.format(context.resources, true) // ☽it.moonPhaseEmoji
                     )
@@ -519,14 +553,22 @@ private fun Seasons(jdn: Jdn) {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
 @Composable
-private fun MoonIcon(astronomyState: AstronomyState) {
+private fun SharedTransitionScope.MoonIcon(
+    astronomyState: AstronomyState,
+    animatedContentScope: AnimatedContentScope,
+) {
     val context = LocalContext.current
     val solarDraw = remember { SolarDraw(context.resources) }
     Box(
         modifier = Modifier
             .size(24.dp)
+            .sharedBounds(
+                rememberSharedContentState(key = SHARED_CONTENT_KEY_MOON),
+                animatedVisibilityScope = animatedContentScope,
+            )
             .drawBehind {
                 drawIntoCanvas {
                     val radius = size.minDimension / 2f
@@ -540,20 +582,16 @@ private fun MoonIcon(astronomyState: AstronomyState) {
 
 @Stable
 @Composable
-private fun Cell(modifier: Modifier, @ColorInt color: Int, label: String, value: String) {
+private fun Cell(modifier: Modifier, color: Color, label: String, value: String) {
     Row(
         modifier.animateContentSize(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val context = LocalContext.current
-        val isDynamicGrayscale = remember(LocalConfiguration.current) {
-            theme.value.isDynamicColors() && context.resources.isDynamicGrayscale
-        }
         Text(
             label,
             modifier = Modifier
                 .background(
-                    Color(if (isDynamicGrayscale) 0xcc808080.toInt() else color),
+                    if (isDynamicGrayscale()) Color(0xcc808080) else color,
                     MaterialTheme.shapes.small,
                 )
                 .align(alignment = Alignment.CenterVertically)
@@ -561,9 +599,20 @@ private fun Cell(modifier: Modifier, @ColorInt color: Int, label: String, value:
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White,
         )
-        Spacer(Modifier.width(8.dp))
         SelectionContainer {
-            Text(value, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
+            val contentColor = LocalContentColor.current
+            BasicText(
+                value,
+                style = LocalTextStyle.current,
+                color = { contentColor },
+                modifier = Modifier.padding(start = 8.dp, end = 4.dp),
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = 9.sp,
+                    maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                ),
+            )
         }
     }
 }

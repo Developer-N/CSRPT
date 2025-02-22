@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="ir.namoo.religiousprayers" />
-                  <option name="mobileSdkAppId" value="1:871880945088:android:577e5367b09bfadd" />
-                  <option name="projectId" value="sunnat-religious-prayer" />
-                  <option name="projectNumber" value="871880945088" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

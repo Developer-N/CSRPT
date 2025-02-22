@@ -1,5 +1,6 @@
 package ir.namoo.quran.notes
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.namoo.quran.chapters.data.ChapterEntity
@@ -13,11 +14,11 @@ import kotlinx.coroutines.launch
 class NotesViewModel(
     private val quranRepository: QuranRepository, private val chapterRepository: ChapterRepository
 ) : ViewModel() {
-    private val _notes = MutableStateFlow(mutableListOf<QuranEntity>())
-    val notes = _notes.asStateFlow()
+    private val _notes = mutableStateListOf<QuranEntity>()
+    val notes = _notes
 
-    private val _chapters = MutableStateFlow(listOf<ChapterEntity>())
-    val chapters = _chapters.asStateFlow()
+    private val _chapters = mutableStateListOf<ChapterEntity>()
+    val chapters = _chapters
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -25,16 +26,21 @@ class NotesViewModel(
     fun loadData() {
         viewModelScope.launch {
             _isLoading.value = true
-            _chapters.value = chapterRepository.getAllChapters()
-            _notes.value = quranRepository.getNotes().toMutableList()
+            _chapters.clear()
+            _chapters.addAll(chapterRepository.getAllChapters())
+            _notes.clear()
+            _notes.addAll(quranRepository.getNotes().toMutableList())
             _isLoading.value = false
         }
     }
 
-    fun updateNoteInDB(quranEntity: QuranEntity) {
+    fun updateNote(quranEntity: QuranEntity) {
         viewModelScope.launch {
             _isLoading.value = true
             quranRepository.updateQuran(quranEntity)
+            val index = _notes.indexOfFirst { it.id == quranEntity.id }
+            if (index >= 0)
+                _notes[index] = quranEntity
             _isLoading.value = false
         }
     }
@@ -42,9 +48,8 @@ class NotesViewModel(
     fun deleteNote(quranEntity: QuranEntity) {
         viewModelScope.launch {
             _isLoading.value = true
-            quranEntity.note = null
-            quranRepository.updateQuran(quranEntity)
-            _notes.value.remove(quranEntity)
+            quranRepository.updateQuran(quranEntity.copy(note = null))
+            _notes.remove(quranEntity)
             _isLoading.value = false
         }
     }

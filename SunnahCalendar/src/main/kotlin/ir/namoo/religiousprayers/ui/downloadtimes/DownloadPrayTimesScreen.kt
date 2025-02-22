@@ -1,28 +1,42 @@
 package ir.namoo.religiousprayers.ui.downloadtimes
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -39,31 +53,43 @@ import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import ir.namoo.religiousprayers.ui.shared.SearchAppBar
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun DownloadPrayTimesScreen(
-    openDrawer: () -> Unit, viewModel: DownloadPrayTimesViewModel = koinViewModel()
+fun SharedTransitionScope.DownloadPrayTimesScreen(
+    openDrawer: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+    viewModel: DownloadPrayTimesViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     viewModel.loadData(context)
     val isLoading by viewModel.isLoading.collectAsState()
-    val query by viewModel.query.collectAsState()
-    val addedCities by viewModel.addedCities.collectAsState()
-    val cityItemState by viewModel.cityIteState.collectAsState()
-    val selectedCity by viewModel.selectedCity.collectAsState()
     val isSearchBoxIsOpen by viewModel.isSearchBoxIsOpen.collectAsState()
+    val cityItemState = viewModel.cityIteState
+    var query by remember { mutableStateOf("") }
+    val filteredList by remember {
+        derivedStateOf {
+            if (query.isNotEmpty())
+                cityItemState.filter {
+                    it.name.contains(query, ignoreCase = true)
+                }
+            else cityItemState
+        }
+    }
     Scaffold(topBar = {
         AnimatedVisibility(
             visible = isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
             SearchAppBar(query = query,
-                updateQuery = { viewModel.search(it) },
+                updateQuery = { query = it },
                 closeSearchBar = { viewModel.closeSearch() })
         }
         AnimatedVisibility(
             !isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            DefaultDTTopAppBar(openDrawer = openDrawer, openSearch = { viewModel.openSearch() })
+            DefaultDTTopAppBar(
+                openDrawer = openDrawer,
+                animatedContentScope = animatedContentScope,
+                openSearch = { viewModel.openSearch() })
         }
     }) { paddingValues ->
         Surface(
@@ -75,66 +101,91 @@ fun DownloadPrayTimesScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(4.dp)
+                    .padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = stringResource(id = R.string.available_cities_list),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (addedCities.isNotEmpty()) Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp, 8.dp)
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .weight(4f)
-                            .padding(horizontal = 8.dp),
-                        text = stringResource(id = R.string.city)
-                    )
-                    Text(
-                        modifier = Modifier.weight(5f),
-                        text = stringResource(id = R.string.update_date)
-                    )
-                }
 
                 AnimatedVisibility(visible = isLoading) {
                     LoadingUIElement()
                 }
-                val listState = rememberLazyListState()
-                if (addedCities.isNotEmpty() && cityItemState.isNotEmpty()) {
-                    LazyColumn(state = listState) {
-                        items(items = addedCities, key = { it.id }) { city ->
+                AnimatedVisibility(visible = !isLoading && cityItemState.isNotEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.available_cities_list),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize
+                    )
+                }
+                AnimatedVisibility(visible = filteredList.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp, 8.dp)
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .weight(4f)
+                                .padding(horizontal = 8.dp),
+                            text = stringResource(id = R.string.city),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize
+                        )
+                        Text(
+                            modifier = Modifier.weight(5f),
+                            text = stringResource(id = R.string.update_date),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize
+                        )
+                    }
+                }
+                if (filteredList.isNotEmpty()) {
+                    LazyColumn {
+                        items(items = filteredList, key = { it.id }) { city ->
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .animateItemPlacement()
+                                    .animateItem(
+                                        fadeInSpec = null, fadeOutSpec = null,
+                                        placementSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessMedium
+                                        )
+                                    )
                             ) {
                                 CityItemUIElement(city = city,
                                     searchText = query,
-                                    cityItemState = cityItemState[addedCities.indexOf(city)].apply {
-                                        isSelected = selectedCity == city.name
-                                    },
                                     download = { viewModel.download(city, context) })
                             }
                         }
                     }
                 } else if (!isLoading && query.isNotEmpty()) NothingFoundUIElement()
+                AnimatedVisibility(visible = cityItemState.isEmpty() && !isLoading) {
+                    ElevatedButton(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = { viewModel.loadData(context) }) {
+                        Text(text = stringResource(id = R.string.str_retry))
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                    }
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun DefaultDTTopAppBar(openDrawer: () -> Unit, openSearch: () -> Unit) {
+fun SharedTransitionScope.DefaultDTTopAppBar(
+    openDrawer: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+    openSearch: () -> Unit
+) {
     TopAppBar(title = { Text(text = stringResource(id = R.string.download_upload)) },
         colors = appTopAppBarColors(),
-        navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+        navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
         actions = {
             AppIconButton(
                 title = stringResource(id = R.string.search),

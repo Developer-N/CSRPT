@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -16,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 // Have a look at https://developer.android.com/static/images/jetpack/compose/compose-testing-cheatsheet.pdf
+@OptIn(ExperimentalSharedTransitionApi::class)
 @RunWith(AndroidJUnit4::class)
 class AboutScreenTest {
     @get:Rule
@@ -25,9 +27,10 @@ class AboutScreenTest {
     fun aboutScreenNavigateToDeviceInformation() {
         var navigateToDeviceInformationIsCalled = false
         var deviceInformationString = ""
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             deviceInformationString = stringResource(R.string.device_information)
             AboutScreen(
+                animatedContentScope = scope,
                 openDrawer = {},
                 navigateToDeviceInformation = { navigateToDeviceInformationIsCalled = true },
                 navigateToLicenses = { assert(false) },
@@ -43,9 +46,10 @@ class AboutScreenTest {
     fun aboutScreenNavigateToLicenses() {
         var navigateToLicensesIsCalled = false
         var licensesString = ""
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             licensesString = stringResource(R.string.about_license_title)
             AboutScreen(
+                animatedContentScope = scope,
                 openDrawer = {},
                 navigateToDeviceInformation = { assert(false) },
                 navigateToLicenses = { navigateToLicensesIsCalled = true },
@@ -59,11 +63,13 @@ class AboutScreenTest {
 
     @Test
     fun deviceInformationSmokeTest() {
-        composeTestRule.setContent { DeviceInformationScreen {} }
+        composeTestRule.setContentWithParent { scope ->
+            DeviceInformationScreen({}, scope)
+        }
     }
 
     @Test
     fun licensesSmokeTest() {
-        composeTestRule.setContent { LicensesScreen {} }
+        composeTestRule.setContentWithParent { scope -> LicensesScreen(scope) {} }
     }
 }

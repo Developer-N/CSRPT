@@ -3,9 +3,13 @@ package com.byagowi.persiancalendar.global
 import android.content.Context
 import android.content.res.Resources
 import android.view.accessibility.AccessibilityManager
+import androidx.collection.LongSet
+import androidx.collection.emptyLongSet
+import androidx.collection.longSetOf
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_AM
 import com.byagowi.persiancalendar.DEFAULT_ASCENDING_ATHAN_VOLUME
+import com.byagowi.persiancalendar.DEFAULT_ATHAN_VIBRATION
 import com.byagowi.persiancalendar.DEFAULT_CITY
 import com.byagowi.persiancalendar.DEFAULT_DREAM_NOISE
 import com.byagowi.persiancalendar.DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
@@ -15,13 +19,15 @@ import com.byagowi.persiancalendar.DEFAULT_HOLIDAY
 import com.byagowi.persiancalendar.DEFAULT_IRAN_TIME
 import com.byagowi.persiancalendar.DEFAULT_ISLAMIC_OFFSET
 import com.byagowi.persiancalendar.DEFAULT_LOCAL_DIGITS
-import com.byagowi.persiancalendar.DEFAULT_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.DEFAULT_NOTIFY_DATE
 import com.byagowi.persiancalendar.DEFAULT_NOTIFY_DATE_LOCK_SCREEN
 import com.byagowi.persiancalendar.DEFAULT_PM
 import com.byagowi.persiancalendar.DEFAULT_PRAY_TIME_METHOD
+import com.byagowi.persiancalendar.DEFAULT_RED_HOLIDAYS
 import com.byagowi.persiancalendar.DEFAULT_SECONDARY_CALENDAR_IN_TABLE
 import com.byagowi.persiancalendar.DEFAULT_THEME_GRADIENT
+import com.byagowi.persiancalendar.DEFAULT_VAZIR_ENABLED
+import com.byagowi.persiancalendar.DEFAULT_WALLPAPER_AUTOMATIC
 import com.byagowi.persiancalendar.DEFAULT_WALLPAPER_DARK
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_CLOCK
 import com.byagowi.persiancalendar.DEFAULT_WIDGET_CUSTOMIZATIONS
@@ -34,6 +40,9 @@ import com.byagowi.persiancalendar.PREF_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_ATHAN_NAME
+import com.byagowi.persiancalendar.PREF_ATHAN_VIBRATION
+import com.byagowi.persiancalendar.PREF_CALENDARS_IDS_AS_HOLIDAY
+import com.byagowi.persiancalendar.PREF_CALENDARS_IDS_TO_EXCLUDE
 import com.byagowi.persiancalendar.PREF_CENTER_ALIGN_WIDGETS
 import com.byagowi.persiancalendar.PREF_DREAM_NOISE
 import com.byagowi.persiancalendar.PREF_EASTERN_GREGORIAN_ARABIC_MONTHS
@@ -53,6 +62,7 @@ import com.byagowi.persiancalendar.PREF_NOTIFY_DATE_LOCK_SCREEN
 import com.byagowi.persiancalendar.PREF_NUMERICAL_DATE_PREFERRED
 import com.byagowi.persiancalendar.PREF_OTHER_CALENDARS_KEY
 import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
+import com.byagowi.persiancalendar.PREF_RED_HOLIDAYS
 import com.byagowi.persiancalendar.PREF_SECONDARY_CALENDAR_IN_TABLE
 import com.byagowi.persiancalendar.PREF_SELECTED_LOCATION
 import com.byagowi.persiancalendar.PREF_SHIFT_WORK_RECURS
@@ -60,8 +70,14 @@ import com.byagowi.persiancalendar.PREF_SHIFT_WORK_SETTING
 import com.byagowi.persiancalendar.PREF_SHIFT_WORK_STARTING_JDN
 import com.byagowi.persiancalendar.PREF_SHOW_DEVICE_CALENDAR_EVENTS
 import com.byagowi.persiancalendar.PREF_SHOW_WEEK_OF_YEAR_NUMBER
+import com.byagowi.persiancalendar.PREF_SWIPE_DOWN_ACTION
+import com.byagowi.persiancalendar.PREF_SWIPE_UP_ACTION
+import com.byagowi.persiancalendar.PREF_SYSTEM_DARK_THEME
+import com.byagowi.persiancalendar.PREF_SYSTEM_LIGHT_THEME
 import com.byagowi.persiancalendar.PREF_THEME
 import com.byagowi.persiancalendar.PREF_THEME_GRADIENT
+import com.byagowi.persiancalendar.PREF_VAZIR_ENABLED
+import com.byagowi.persiancalendar.PREF_WALLPAPER_AUTOMATIC
 import com.byagowi.persiancalendar.PREF_WALLPAPER_DARK
 import com.byagowi.persiancalendar.PREF_WEEK_ENDS
 import com.byagowi.persiancalendar.PREF_WEEK_START
@@ -71,19 +87,22 @@ import com.byagowi.persiancalendar.PREF_WIDGET_CLOCK
 import com.byagowi.persiancalendar.PREF_WIDGET_IN_24
 import com.byagowi.persiancalendar.PREF_WIDGET_TRANSPARENCY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.CalendarType
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.EventsRepository
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Language
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.entities.ShiftWorkRecord
 import com.byagowi.persiancalendar.generated.citiesStore
+import com.byagowi.persiancalendar.ui.calendar.SwipeDownAction
+import com.byagowi.persiancalendar.ui.calendar.SwipeUpAction
 import com.byagowi.persiancalendar.ui.theme.Theme
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
 import com.byagowi.persiancalendar.utils.getJdnOrNull
 import com.byagowi.persiancalendar.utils.isIslamicOffsetExpired
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.scheduleAlarms
 import com.byagowi.persiancalendar.utils.splitFilterNotEmpty
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
@@ -94,7 +113,10 @@ import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinates
 import io.github.persiancalendar.praytimes.HighLatitudesMethod
 import io.github.persiancalendar.praytimes.MidnightMethod
+import ir.namoo.commons.PREF_AZKAR_REINDER
+import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.createAthansSettingDB
+import ir.namoo.religiousprayers.ui.azkar.scheduleAzkars
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.TimeZone
@@ -138,8 +160,10 @@ var isWidgetClock = DEFAULT_WIDGET_CLOCK
 private val isNotifyDate_ = MutableStateFlow(DEFAULT_NOTIFY_DATE)
 val isNotifyDate: StateFlow<Boolean> get() = isNotifyDate_
 
-private val notificationAthan_ = MutableStateFlow(DEFAULT_NOTIFICATION_ATHAN)
+private val notificationAthan_ = MutableStateFlow(isNotifyDate.value)
 val notificationAthan: StateFlow<Boolean> get() = notificationAthan_
+private val athanVibration_ = MutableStateFlow(DEFAULT_ATHAN_VIBRATION)
+val athanVibration: StateFlow<Boolean> get() = athanVibration_
 private val ascendingAthan_ = MutableStateFlow(DEFAULT_ASCENDING_ATHAN_VOLUME)
 val ascendingAthan: StateFlow<Boolean> get() = ascendingAthan_
 
@@ -147,8 +171,8 @@ private val calculationMethod_ =
     MutableStateFlow(CalculationMethod.valueOf(DEFAULT_PRAY_TIME_METHOD))
 val calculationMethod: StateFlow<CalculationMethod> get() = calculationMethod_
 
-private val athanSoundName_ = MutableStateFlow("")
-val athanSoundName: StateFlow<String> get() = athanSoundName_
+private val athanSoundName_ = MutableStateFlow<String?>(null)
+val athanSoundName: StateFlow<String?> get() = athanSoundName_
 
 var midnightMethod = calculationMethod.value.defaultMidnight
     private set
@@ -162,11 +186,27 @@ var highLatitudesMethod = HighLatitudesMethod.NightMiddle
 private val language_ = MutableStateFlow(Language.FA)
 val language: StateFlow<Language> get() = language_
 
-private val theme_ = MutableStateFlow(Theme.SYSTEM_DEFAULT)
-val theme: StateFlow<Theme> get() = theme_
+private val userSetTheme_ = MutableStateFlow(Theme.SYSTEM_DEFAULT)
+
+// Don't use this just to detect dark mode as it's invalid in system default
+val userSetTheme: StateFlow<Theme> get() = userSetTheme_
+
+private val systemDarkTheme_ = MutableStateFlow(Theme.SYSTEM_DEFAULT)
+val systemDarkTheme: StateFlow<Theme> get() = systemDarkTheme_
+
+private val systemLightTheme_ = MutableStateFlow(Theme.SYSTEM_DEFAULT)
+val systemLightTheme: StateFlow<Theme> get() = systemLightTheme_
 
 private val isGradient_ = MutableStateFlow(DEFAULT_THEME_GRADIENT)
 val isGradient: StateFlow<Boolean> get() = isGradient_
+
+
+private val isRedHolidays_ = MutableStateFlow(DEFAULT_RED_HOLIDAYS)
+val isRedHolidays: StateFlow<Boolean> get() = isRedHolidays_
+
+
+private val isVazirEnabled_ = MutableStateFlow(DEFAULT_VAZIR_ENABLED)
+val isVazirEnabled: StateFlow<Boolean> get() = isVazirEnabled_
 
 private var alternativeGregorianMonths = false
 
@@ -179,9 +219,9 @@ val cityName: StateFlow<String?> get() = cityName_
 private val widgetTransparency_ = MutableStateFlow(.0f)
 val widgetTransparency: StateFlow<Float> get() = widgetTransparency_
 
-var enabledCalendars = listOf(CalendarType.SHAMSI, CalendarType.GREGORIAN, CalendarType.ISLAMIC)
+var enabledCalendars = listOf(Calendar.SHAMSI, Calendar.GREGORIAN, Calendar.ISLAMIC)
     private set
-val mainCalendar inline get() = enabledCalendars.getOrNull(0) ?: CalendarType.SHAMSI
+val mainCalendar inline get() = enabledCalendars.getOrNull(0) ?: Calendar.SHAMSI
 val mainCalendarDigits
     get() = when {
         secondaryCalendar == null -> preferredDigits
@@ -197,8 +237,6 @@ val secondaryCalendarDigits
         preferredDigits === Language.ARABIC_DIGITS -> Language.ARABIC_DIGITS
         else -> secondaryCalendar?.preferredDigits ?: Language.ARABIC_DIGITS
     }
-var isShowWeekOfYearEnabled = false
-    private set
 var isCenterAlignWidgets = true
     private set
 var weekStartOffset = 0
@@ -206,14 +244,32 @@ var weekStartOffset = 0
 var weekEnds = BooleanArray(7)
     private set
 
+private val isShowWeekOfYearEnabled_ = MutableStateFlow(false)
+val isShowWeekOfYearEnabled: StateFlow<Boolean> get() = isShowWeekOfYearEnabled_
+
 private val dreamNoise_ = MutableStateFlow(DEFAULT_DREAM_NOISE)
 val dreamNoise: StateFlow<Boolean> get() = dreamNoise_
 
 private val wallpaperDark_ = MutableStateFlow(DEFAULT_WALLPAPER_DARK)
 val wallpaperDark: StateFlow<Boolean> get() = wallpaperDark_
 
+private val wallpaperAutomatic_ = MutableStateFlow(DEFAULT_WALLPAPER_AUTOMATIC)
+val wallpaperAutomatic: StateFlow<Boolean> get() = wallpaperAutomatic_
+
+private val preferredSwipeUpAction_ = MutableStateFlow(SwipeUpAction.entries[0])
+val preferredSwipeUpAction: StateFlow<SwipeUpAction> get() = preferredSwipeUpAction_
+
+private val preferredSwipeDownAction_ = MutableStateFlow(SwipeDownAction.entries[0])
+val preferredSwipeDownAction: StateFlow<SwipeDownAction> get() = preferredSwipeDownAction_
+
 private val isShowDeviceCalendarEvents_ = MutableStateFlow(false)
 val isShowDeviceCalendarEvents: StateFlow<Boolean> get() = isShowDeviceCalendarEvents_
+
+private val eventCalendarsIdsToExclude_ = MutableStateFlow(emptyLongSet())
+val eventCalendarsIdsToExclude: StateFlow<LongSet> get() = eventCalendarsIdsToExclude_
+
+private val eventCalendarsIdsAsHoliday_ = MutableStateFlow(emptyLongSet())
+val eventCalendarsIdsAsHoliday: StateFlow<LongSet> get() = eventCalendarsIdsAsHoliday_
 
 var whatToShowOnWidgets = emptySet<String>()
     private set
@@ -247,11 +303,17 @@ var spacedColon = ": "
     private set
 var spacedComma = "، "
     private set
+
+// Otherwise WidgetService might use untranslated messages
+var prayTimesTitles: Map<PrayTime, String> = emptyMap()
+    private set
+var nothingScheduledString = ""
+    private set
 var holidayString = DEFAULT_HOLIDAY
     private set
 var numericalDatePreferred = false
     private set
-var calendarTypesTitleAbbr = emptyList<String>()
+var calendarsTitlesAbbr = emptyList<String>()
     private set
 var eventsRepository: EventsRepository? = null
     private set
@@ -271,14 +333,13 @@ fun initGlobal(context: Context) {
 
 fun configureCalendarsAndLoadEvents(context: Context) {
     debugLog("Utils: configureCalendarsAndLoadEvents is called")
-    val appPrefs = context.appPrefs
+    val preferences = context.preferences
 
-    IslamicDate.islamicOffset = if (appPrefs.isIslamicOffsetExpired) 0 else appPrefs.getString(
-        PREF_ISLAMIC_OFFSET, DEFAULT_ISLAMIC_OFFSET
-    )?.toIntOrNull() ?: 0
+    IslamicDate.islamicOffset = if (preferences.isIslamicOffsetExpired) 0
+    else preferences.getString(PREF_ISLAMIC_OFFSET, DEFAULT_ISLAMIC_OFFSET)?.toIntOrNull() ?: 0
 
-    eventsRepository = EventsRepository(appPrefs, language.value)
-    isIranHolidaysEnabled = eventsRepository?.iranHolidays ?: false
+    eventsRepository = EventsRepository(preferences, language.value)
+    isIranHolidaysEnabled = eventsRepository?.iranHolidays == true
 }
 
 fun loadLanguageResources(resources: Resources) {
@@ -290,143 +351,13 @@ fun loadLanguageResources(resources: Resources) {
     nepaliMonths = language.getNepaliMonths()
     weekDays = language.getWeekDays(resources)
     weekDaysInitials = language.getWeekDaysInitials(resources)
-}
-
-fun updateStoredPreference(context: Context) {
-    debugLog("Utils: updateStoredPreference is called")
-    val prefs = context.appPrefs
-    val language = language.value
-
-    language_.value = prefs.getString(PREF_APP_LANGUAGE, null)?.let(Language::valueOfLanguageCode)
-        ?: Language.getPreferredDefaultLanguage(context)
-    theme_.value = run {
-        val key = prefs.getString(PREF_THEME, null) ?: Theme.SYSTEM_DEFAULT.key
-        Theme.entries.find { it.key == key } ?: Theme.SYSTEM_DEFAULT
-    }
-    isGradient_.value = prefs.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT)
-    alternativeGregorianMonths = when {
-        language.isPersian -> prefs.getBoolean(
-            PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS, DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
-        )
-
-        language.isArabic -> prefs.getBoolean(
-            PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
-        )
-
-        else -> false
-    }
-
-    prefersWidgetsDynamicColors_.value = theme.value.isDynamicColors() &&
-            prefs.getBoolean(PREF_WIDGETS_PREFER_SYSTEM_COLORS, true)
-
-    preferredDigits = if (!prefs.getBoolean(
-            PREF_LOCAL_DIGITS, DEFAULT_LOCAL_DIGITS
-        ) || !language.canHaveLocalDigits
-    ) Language.ARABIC_DIGITS
-    else language.preferredDigits
-
-    clockIn24 = prefs.getBoolean(PREF_WIDGET_IN_24, DEFAULT_WIDGET_IN_24)
-    isForcedIranTimeEnabled_.value = language.showIranTimeOption && prefs.getBoolean(
-        PREF_IRAN_TIME, DEFAULT_IRAN_TIME
-    ) && TimeZone.getDefault().id != IRAN_TIMEZONE_ID
-    isNotifyDateOnLockScreen_.value = prefs.getBoolean(
-        PREF_NOTIFY_DATE_LOCK_SCREEN, DEFAULT_NOTIFY_DATE_LOCK_SCREEN
-    )
-    isWidgetClock = prefs.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
-    isNotifyDate_.value = prefs.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
-    notificationAthan_.value = prefs.getBoolean(PREF_NOTIFICATION_ATHAN, DEFAULT_NOTIFICATION_ATHAN)
-    ascendingAthan_.value =
-        prefs.getBoolean(PREF_ASCENDING_ATHAN_VOLUME, DEFAULT_ASCENDING_ATHAN_VOLUME)
-    isCenterAlignWidgets = prefs.getBoolean(PREF_CENTER_ALIGN_WIDGETS, true)
-
-    // We were using "Jafari" method but later found out Tehran is nearer to time.ir and others
-    // so switched to "Tehran" method as default calculation algorithm
-    calculationMethod_.value = CalculationMethod.valueOf(
-        prefs.getString(PREF_PRAY_TIME_METHOD, null) ?: DEFAULT_PRAY_TIME_METHOD
-    )
-    asrMethod_.value = if (calculationMethod.value.isJafari || !prefs.getBoolean(
-            PREF_ASR_HANAFI_JURISTIC, language.isHanafiMajority
-        )
-    ) AsrMethod.Standard else AsrMethod.Hanafi
-    midnightMethod =
-        prefs.getString(PREF_MIDNIGHT_METHOD, null)?.let(MidnightMethod::valueOf)
-            ?.takeIf { !it.isJafariOnly || calculationMethod.value.isJafari }
-            ?: calculationMethod.value.defaultMidnight
-    highLatitudesMethod = HighLatitudesMethod.valueOf(
-        if (coordinates.value?.enableHighLatitudesConfiguration != true) DEFAULT_HIGH_LATITUDES_METHOD
-        else prefs.getString(PREF_HIGH_LATITUDES_METHOD, null) ?: DEFAULT_HIGH_LATITUDES_METHOD
-    )
-    athanSoundName_.value =
-        prefs.getString(PREF_ATHAN_NAME, null) ?: context.getString(R.string.default_athan)
-
-    dreamNoise_.value = prefs.getBoolean(PREF_DREAM_NOISE, DEFAULT_DREAM_NOISE)
-    wallpaperDark_.value = prefs.getBoolean(PREF_WALLPAPER_DARK, DEFAULT_WALLPAPER_DARK)
-
-    val storedCity = prefs.getString(PREF_SELECTED_LOCATION, null)
-        ?.takeIf { it.isNotEmpty() && it != DEFAULT_CITY }?.let { citiesStore[it] }
-    coordinates_.value = storedCity?.coordinates ?: run {
-        listOf(PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE).map {
-            prefs.getString(it, null)?.toDoubleOrNull() ?: .0
-        }.takeIf { coords -> coords.any { it != .0 } } // if all were zero preference isn't set yet
-            ?.let { (lat, lng, alt) -> Coordinates(lat, lng, alt) }
-    }
-    cityName_.value = storedCity?.let(language::getCityName)
-        ?: prefs.getString(PREF_GEOCODED_CITYNAME, null)?.takeIf { it.isNotEmpty() }
-
-    widgetTransparency_.value =
-        prefs.getFloat(PREF_WIDGET_TRANSPARENCY, DEFAULT_WIDGET_TRANSPARENCY)
-
-    runCatching {
-        val mainCalendar = CalendarType.valueOf(
-            prefs.getString(PREF_MAIN_CALENDAR_KEY, null) ?: language.defaultMainCalendar
-        )
-        val otherCalendars = (prefs.getString(PREF_OTHER_CALENDARS_KEY, null)
-            ?: language.defaultOtherCalendars).splitFilterNotEmpty(",").map(CalendarType::valueOf)
-        enabledCalendars = (listOf(mainCalendar) + otherCalendars).distinct()
-        secondaryCalendarEnabled = prefs.getBoolean(
-            PREF_SECONDARY_CALENDAR_IN_TABLE, DEFAULT_SECONDARY_CALENDAR_IN_TABLE
-        )
-    }.onFailure(logException).onFailure {
-        // This really shouldn't happen, just in case
-        enabledCalendars = listOf(CalendarType.SHAMSI, CalendarType.GREGORIAN, CalendarType.ISLAMIC)
-        secondaryCalendarEnabled = false
-    }.getOrNull().debugAssertNotNull
-
-    isShowWeekOfYearEnabled = prefs.getBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, false)
-    weekStartOffset =
-        (prefs.getString(PREF_WEEK_START, null) ?: language.defaultWeekStart).toIntOrNull() ?: 0
-
-    weekEnds = BooleanArray(7)
-    (prefs.getStringSet(PREF_WEEK_ENDS, null)
-        ?: language.defaultWeekEnds).mapNotNull(String::toIntOrNull).forEach { weekEnds[it] = true }
-
-    isShowDeviceCalendarEvents_.value =
-        prefs.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false)
-    val resources = context.resources
-    whatToShowOnWidgets =
-        prefs.getStringSet(PREF_WHAT_TO_SHOW_WIDGETS, null) ?: DEFAULT_WIDGET_CUSTOMIZATIONS
-
-    isAstronomicalExtraFeaturesEnabled = prefs.getBoolean(PREF_ASTRONOMICAL_FEATURES, false)
-    numericalDatePreferred = prefs.getBoolean(PREF_NUMERICAL_DATE_PREFERRED, false)
-
-    // TODO: probably can be done in applyAppLanguage itself?
-    if (language.language != resources.getString(R.string.code)) applyAppLanguage(context)
-
-    calendarTypesTitleAbbr = CalendarType.entries.map { context.getString(it.shortTitle) }
-
-    shiftWorks = (prefs.getString(PREF_SHIFT_WORK_SETTING, null) ?: "").splitFilterNotEmpty(",")
-        .map { it.splitFilterNotEmpty("=") }.filter { it.size == 2 }
-        .map { ShiftWorkRecord(it[0], it[1].toIntOrNull() ?: 1) }
-    shiftWorkPeriod = shiftWorks.sumOf { it.length }
-    shiftWorkStartingJdn = prefs.getJdnOrNull(PREF_SHIFT_WORK_STARTING_JDN)
-    shiftWorkRecurs = prefs.getBoolean(PREF_SHIFT_WORK_RECURS, true)
     shiftWorkTitles = mapOf(
-        "d" to context.getString(R.string.shift_work_morning), // d -> day work, legacy key
-        "r" to context.getString(R.string.shift_work_off), // r -> rest, legacy key
-        "e" to context.getString(R.string.shift_work_evening),
-        "n" to context.getString(R.string.shift_work_night)
+        "d" to resources.getString(R.string.shift_work_morning), // d -> day work, legacy key
+        "r" to resources.getString(R.string.shift_work_off), // r -> rest, legacy key
+        "e" to resources.getString(R.string.shift_work_evening),
+        "n" to resources.getString(R.string.shift_work_night)
     )
-
+    calendarsTitlesAbbr = Calendar.entries.map { resources.getString(it.shortTitle) }
     when {
         // This is mostly pointless except we want to make sure even on broken language resources state
         // which might happen in widgets updates we don't have wrong values for these important two
@@ -436,31 +367,195 @@ fun updateStoredPreference(context: Context) {
         }
 
         else -> {
-            amString = context.getString(R.string.am)
-            pmString = context.getString(R.string.pm)
+            amString = resources.getString(R.string.am)
+            pmString = resources.getString(R.string.pm)
         }
     }
     holidayString = when {
         language.isPersian -> DEFAULT_HOLIDAY
         language.isDari -> "رخصتی"
-        else -> context.getString(R.string.holiday)
+        else -> resources.getString(R.string.holiday)
     }
-    spacedOr = context.getString(R.string.spaced_or)
+    nothingScheduledString = resources.getString(R.string.nothing_scheduled)
+    prayTimesTitles = PrayTime.entries.associateWith { resources.getString(it.stringRes) }
+    spacedOr = resources.getString(R.string.spaced_or)
     spacedAndInDates = if (language.languagePrefersHalfSpaceAndInDates) " "
-    else context.getString(R.string.spaced_and)
-    spacedColon = context.getString(R.string.spaced_colon)
-    spacedComma = context.getString(R.string.spaced_comma)
+    else resources.getString(R.string.spaced_and)
+    spacedColon = resources.getString(R.string.spaced_colon)
+    spacedComma = resources.getString(R.string.spaced_comma)
+}
+
+fun updateStoredPreference(context: Context) {
+    debugLog("Utils: updateStoredPreference is called")
+    val preferences = context.preferences
+    val language = language.value
+
+    language_.value = preferences.getString(PREF_APP_LANGUAGE, null)
+        ?.let(Language::valueOfLanguageCode) ?: Language.getPreferredDefaultLanguage(context)
+    userSetTheme_.value = run {
+        val key = preferences.getString(PREF_THEME, null)
+        Theme.entries.find { it.key == key }
+    } ?: Theme.SYSTEM_DEFAULT
+    systemDarkTheme_.value = run {
+        val key = preferences.getString(PREF_SYSTEM_DARK_THEME, null)
+        Theme.entries.find { it.key == key }.takeIf { it != Theme.SYSTEM_DEFAULT }
+    } ?: Theme.DARK
+    systemLightTheme_.value = run {
+        val key = preferences.getString(PREF_SYSTEM_LIGHT_THEME, null)
+        Theme.entries.find { it.key == key }.takeIf { it != Theme.SYSTEM_DEFAULT }
+    } ?: Theme.LIGHT
+    isGradient_.value = preferences.getBoolean(PREF_THEME_GRADIENT, DEFAULT_THEME_GRADIENT)
+    isRedHolidays_.value = preferences.getBoolean(PREF_RED_HOLIDAYS, DEFAULT_RED_HOLIDAYS)
+    isVazirEnabled_.value = preferences.getBoolean(PREF_VAZIR_ENABLED, DEFAULT_VAZIR_ENABLED)
+    alternativeGregorianMonths = when {
+        language.isPersian -> preferences.getBoolean(
+            PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS, DEFAULT_ENGLISH_GREGORIAN_PERSIAN_MONTHS
+        )
+
+        language.isArabic -> preferences.getBoolean(
+            PREF_EASTERN_GREGORIAN_ARABIC_MONTHS, DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
+        )
+
+        else -> false
+    }
+
+    prefersWidgetsDynamicColors_.value =
+        userSetTheme.value.isDynamicColors && preferences.getBoolean(
+            PREF_WIDGETS_PREFER_SYSTEM_COLORS,
+            true
+        )
+
+    preferredDigits = if (!preferences.getBoolean(
+            PREF_LOCAL_DIGITS, DEFAULT_LOCAL_DIGITS
+        ) || !language.canHaveLocalDigits
+    ) Language.ARABIC_DIGITS
+    else language.preferredDigits
+
+    clockIn24 = preferences.getBoolean(PREF_WIDGET_IN_24, DEFAULT_WIDGET_IN_24)
+    isForcedIranTimeEnabled_.value = language.showIranTimeOption && preferences.getBoolean(
+        PREF_IRAN_TIME, DEFAULT_IRAN_TIME
+    ) && TimeZone.getDefault().id != IRAN_TIMEZONE_ID
+    isNotifyDateOnLockScreen_.value = preferences.getBoolean(
+        PREF_NOTIFY_DATE_LOCK_SCREEN, DEFAULT_NOTIFY_DATE_LOCK_SCREEN
+    )
+    isWidgetClock = preferences.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
+    isNotifyDate_.value = preferences.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
+    notificationAthan_.value = preferences.getBoolean(PREF_NOTIFICATION_ATHAN, isNotifyDate.value)
+    athanVibration_.value = preferences.getBoolean(PREF_ATHAN_VIBRATION, DEFAULT_ATHAN_VIBRATION)
+    ascendingAthan_.value =
+        preferences.getBoolean(PREF_ASCENDING_ATHAN_VOLUME, DEFAULT_ASCENDING_ATHAN_VOLUME)
+    isCenterAlignWidgets = preferences.getBoolean(PREF_CENTER_ALIGN_WIDGETS, true)
+
+    // We were using "Jafari" method but later found out Tehran is nearer to time.ir and others
+    // so switched to "Tehran" method as default calculation algorithm
+    calculationMethod_.value = CalculationMethod.valueOf(
+        preferences.getString(PREF_PRAY_TIME_METHOD, null) ?: DEFAULT_PRAY_TIME_METHOD
+    )
+    asrMethod_.value = if (calculationMethod.value.isJafari || !preferences.getBoolean(
+            PREF_ASR_HANAFI_JURISTIC, language.isHanafiMajority
+        )
+    ) AsrMethod.Standard else AsrMethod.Hanafi
+    midnightMethod = preferences.getString(PREF_MIDNIGHT_METHOD, null)?.let(MidnightMethod::valueOf)
+        ?.takeIf { !it.isJafariOnly || calculationMethod.value.isJafari }
+        ?: calculationMethod.value.defaultMidnight
+    highLatitudesMethod = HighLatitudesMethod.valueOf(
+        if (coordinates.value?.enableHighLatitudesConfiguration != true) DEFAULT_HIGH_LATITUDES_METHOD
+        else preferences.getString(PREF_HIGH_LATITUDES_METHOD, null)
+            ?: DEFAULT_HIGH_LATITUDES_METHOD
+    )
+    athanSoundName_.value = preferences.getString(PREF_ATHAN_NAME, null)
+
+    dreamNoise_.value = preferences.getBoolean(PREF_DREAM_NOISE, DEFAULT_DREAM_NOISE)
+    wallpaperDark_.value = preferences.getBoolean(PREF_WALLPAPER_DARK, DEFAULT_WALLPAPER_DARK)
+    wallpaperAutomatic_.value =
+        preferences.getBoolean(PREF_WALLPAPER_AUTOMATIC, DEFAULT_WALLPAPER_AUTOMATIC)
+
+    preferredSwipeUpAction_.value = SwipeUpAction.entries.firstOrNull {
+        it.name == preferences.getString(PREF_SWIPE_UP_ACTION, null)
+    } ?: SwipeUpAction.entries[0]
+    preferredSwipeDownAction_.value = SwipeDownAction.entries.firstOrNull {
+        it.name == preferences.getString(PREF_SWIPE_DOWN_ACTION, null)
+    } ?: SwipeDownAction.entries[0]
+
+    val storedCity = preferences.getString(PREF_SELECTED_LOCATION, null)
+        ?.takeIf { it.isNotEmpty() && it != DEFAULT_CITY }?.let { citiesStore[it] }
+    coordinates_.value = storedCity?.coordinates ?: run {
+        listOf(PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE).map {
+            preferences.getString(it, null)?.toDoubleOrNull() ?: .0
+        }.takeIf { coords -> coords.any { it != .0 } } // if all were zero preference isn't set yet
+            ?.let { (lat, lng, alt) -> Coordinates(lat, lng, alt) }
+    }
+    cityName_.value = storedCity?.let(language::getCityName) ?: preferences.getString(
+        PREF_GEOCODED_CITYNAME,
+        null
+    )?.takeIf { it.isNotEmpty() }
+
+    widgetTransparency_.value =
+        preferences.getFloat(PREF_WIDGET_TRANSPARENCY, DEFAULT_WIDGET_TRANSPARENCY)
+
+    runCatching {
+        val mainCalendar = Calendar.valueOf(
+            preferences.getString(PREF_MAIN_CALENDAR_KEY, null) ?: language.defaultMainCalendar
+        )
+        val otherCalendars = (preferences.getString(PREF_OTHER_CALENDARS_KEY, null)
+            ?: language.defaultOtherCalendars).splitFilterNotEmpty(",").map(Calendar::valueOf)
+        enabledCalendars = (listOf(mainCalendar) + otherCalendars).distinct()
+        secondaryCalendarEnabled = preferences.getBoolean(
+            PREF_SECONDARY_CALENDAR_IN_TABLE, DEFAULT_SECONDARY_CALENDAR_IN_TABLE
+        )
+    }.onFailure(logException).onFailure {
+        // This really shouldn't happen, just in case
+        enabledCalendars = listOf(Calendar.SHAMSI, Calendar.GREGORIAN, Calendar.ISLAMIC)
+        secondaryCalendarEnabled = false
+    }.getOrNull().debugAssertNotNull
+
+    isShowWeekOfYearEnabled_.value = preferences.getBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, false)
+    weekStartOffset =
+        (preferences.getString(PREF_WEEK_START, null) ?: language.defaultWeekStart).toIntOrNull()
+            ?: 0
+
+    weekEnds = BooleanArray(7)
+    (preferences.getStringSet(PREF_WEEK_ENDS, null)
+        ?: language.defaultWeekEnds).mapNotNull(String::toIntOrNull).forEach { weekEnds[it] = true }
+
+    isShowDeviceCalendarEvents_.value =
+        preferences.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false)
+    eventCalendarsIdsToExclude_.value = if (isShowDeviceCalendarEvents_.value) longSetOf(
+        *(preferences.getString(PREF_CALENDARS_IDS_TO_EXCLUDE, null) ?: "").splitFilterNotEmpty(",")
+            .mapNotNull { it.toLongOrNull() }.toLongArray()
+    ) else emptyLongSet()
+    eventCalendarsIdsAsHoliday_.value = if (isShowDeviceCalendarEvents_.value) longSetOf(
+        *(preferences.getString(PREF_CALENDARS_IDS_AS_HOLIDAY, null) ?: "").splitFilterNotEmpty(",")
+            .mapNotNull { it.toLongOrNull() }.toLongArray()
+    ) else emptyLongSet()
+
+    whatToShowOnWidgets =
+        preferences.getStringSet(PREF_WHAT_TO_SHOW_WIDGETS, null) ?: DEFAULT_WIDGET_CUSTOMIZATIONS
+
+    isAstronomicalExtraFeaturesEnabled = preferences.getBoolean(PREF_ASTRONOMICAL_FEATURES, false)
+    numericalDatePreferred = preferences.getBoolean(PREF_NUMERICAL_DATE_PREFERRED, false)
+
+    // TODO: probably can be done in applyAppLanguage itself?
+    if (language.language != context.getString(R.string.code)) applyAppLanguage(context)
+
+    shiftWorks =
+        (preferences.getString(PREF_SHIFT_WORK_SETTING, null) ?: "").splitFilterNotEmpty(",")
+            .map { it.splitFilterNotEmpty("=") }.filter { it.size == 2 }
+            .map { ShiftWorkRecord(it[0], it[1].toIntOrNull() ?: 1) }
+    shiftWorkPeriod = shiftWorks.sumOf { it.length }
+    shiftWorkStartingJdn = preferences.getJdnOrNull(PREF_SHIFT_WORK_STARTING_JDN)
+    shiftWorkRecurs = preferences.getBoolean(PREF_SHIFT_WORK_RECURS, true)
 
     isTalkBackEnabled = context.getSystemService<AccessibilityManager>()?.let {
         it.isEnabled && it.isTouchExplorationEnabled
-    } ?: false
+    } == true
 
     // https://stackoverflow.com/a/61599809
     isHighTextContrastEnabled = runCatching {
         context.getSystemService<AccessibilityManager>()?.let {
             it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean
         }
-    }.onFailure(logException).getOrNull() ?: false
+    }.onFailure(logException).getOrNull() == true
 }
 
 // A very special case to trig coordinates mechanism in saveLocation

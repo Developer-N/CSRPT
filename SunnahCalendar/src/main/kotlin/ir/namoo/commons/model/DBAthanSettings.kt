@@ -19,40 +19,24 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Entity(tableName = "athans_settings")
 data class AthanSetting(
-    @ColumnInfo(name = "athan_key")
-    var athanKey: String,
-    @ColumnInfo(name = "state")
-    var state: Boolean,
-    @ColumnInfo(name = "play_doa")
-    var playDoa: Boolean,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id: Int = 0,
+    @ColumnInfo(name = "athan_key") var athanKey: String,
+    @ColumnInfo(name = "state") var state: Boolean,
+    @ColumnInfo(name = "play_doa") var playDoa: Boolean,
     // 0-FullScreen 1-InNotificationArea 2-JustNotification
-    @ColumnInfo(name = "play_type")
-    var playType: Int,
-    @ColumnInfo(name = "is_before_enabled")
-    var isBeforeEnabled: Boolean,
-    @ColumnInfo(name = "before_minute")
-    var beforeAlertMinute: Int,
-    @ColumnInfo(name = "is_after_enabled")
-    var isAfterEnabled: Boolean,
-    @ColumnInfo(name = "after_minute")
-    var afterAlertMinute: Int,
-    @ColumnInfo(name = "is_silent_enabled")
-    var isSilentEnabled: Boolean,
-    @ColumnInfo(name = "silent_minute")
-    var silentMinute: Int,
-    @ColumnInfo(name = "is_ascending")
-    var isAscending: Boolean,
-    @ColumnInfo(name = "athan_volume")
-    var athanVolume: Int,
-    @ColumnInfo(name = "athan_uri")
-    var athanURI: String,
-    @ColumnInfo(name = "alert_uri")
-    var alertURI: String
-) {
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    var id: Int = 0
-}
+    @ColumnInfo(name = "play_type") var playType: Int,
+    @ColumnInfo(name = "is_before_enabled") var isBeforeEnabled: Boolean,
+    @ColumnInfo(name = "before_minute") var beforeAlertMinute: Int,
+    @ColumnInfo(name = "is_after_enabled") var isAfterEnabled: Boolean,
+    @ColumnInfo(name = "after_minute") var afterAlertMinute: Int,
+    @ColumnInfo(name = "is_silent_enabled") var isSilentEnabled: Boolean,
+    @ColumnInfo(name = "silent_minute") var silentMinute: Int,
+    @ColumnInfo(name = "is_ascending") var isAscending: Boolean,
+    @ColumnInfo(name = "athan_volume") var athanVolume: Int,
+    @ColumnInfo(name = "athan_uri") var athanURI: String,
+    @ColumnInfo(name = "alert_uri") var alertURI: String,
+    @ColumnInfo(name = "background_uri") var backgroundUri: String?
+)
 
 @Dao
 interface AthanSettingsDAO {
@@ -72,7 +56,7 @@ interface AthanSettingsDAO {
     fun delete(athanSetting: AthanSetting)
 }
 
-@Database(entities = [AthanSetting::class], version = 7, exportSchema = false)
+@Database(entities = [AthanSetting::class], version = 8, exportSchema = false)
 abstract class AthanSettingsDB : RoomDatabase() {
     abstract fun athanSettingsDAO(): AthanSettingsDAO
 
@@ -81,10 +65,10 @@ abstract class AthanSettingsDB : RoomDatabase() {
         fun getInstance(applicationContext: Context): AthanSettingsDB {
             return instance ?: synchronized(AthanSettingsDB::class) {
                 val ins = Room.databaseBuilder(
-                    applicationContext,
-                    AthanSettingsDB::class.java, "athan_settings.db"
-                ).addMigrations(MIGRATION_5_6, Migration_6_7).fallbackToDestructiveMigration()
-                    .allowMainThreadQueries().build()
+                    applicationContext, AthanSettingsDB::class.java, "athan_settings.db"
+                ).addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .fallbackToDestructiveMigration(dropAllTables = true).allowMainThreadQueries()
+                    .build()
                 instance = ins
                 ins
             }
@@ -96,10 +80,15 @@ abstract class AthanSettingsDB : RoomDatabase() {
                 db.execSQL("ALTER TABLE athans_settings ADD COLUMN after_minute INTEGER NOT NULL DEFAULT 10")
             }
         }
-        private val Migration_6_7: Migration = object : Migration(6, 7) {
+        private val MIGRATION_6_7: Migration = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE athans_settings ADD COLUMN is_silent_enabled INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE athans_settings ADD COLUMN silent_minute INTEGER NOT NULL DEFAULT 20")
+            }
+        }
+        private val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE athans_settings ADD COLUMN background_uri TEXT")
             }
         }
     }

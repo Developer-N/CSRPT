@@ -1,5 +1,6 @@
 package ir.namoo.quran.bookmarks
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ir.namoo.quran.chapters.data.ChapterEntity
@@ -14,11 +15,11 @@ class BookmarkViewModel(
     private val quranRepository: QuranRepository, private val chapterRepository: ChapterRepository
 ) : ViewModel() {
 
-    private val _bookmarks = MutableStateFlow(mutableListOf<QuranEntity>())
-    val bookmarks = _bookmarks.asStateFlow()
+    private val _bookmarks = mutableStateListOf<QuranEntity>()
+    val bookmarks = _bookmarks
 
-    private val _chapters = MutableStateFlow(listOf<ChapterEntity>())
-    val chapters = _chapters.asStateFlow()
+    private val _chapters = mutableStateListOf<ChapterEntity>()
+    val chapters = _chapters
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -26,8 +27,10 @@ class BookmarkViewModel(
     fun loadData() {
         viewModelScope.launch {
             _isLoading.value = true
-            _chapters.value = chapterRepository.getAllChapters()
-            _bookmarks.value = quranRepository.getBookmarks().toMutableList()
+            _chapters.clear()
+            _chapters.addAll(chapterRepository.getAllChapters())
+            _bookmarks.clear()
+            _bookmarks.addAll(quranRepository.getBookmarks().toMutableList())
             _isLoading.value = false
         }
     }
@@ -35,9 +38,8 @@ class BookmarkViewModel(
     fun removeBookmark(quranEntity: QuranEntity) {
         viewModelScope.launch {
             _isLoading.value = true
-            _bookmarks.value.remove(quranEntity)
-            quranEntity.fav = 0
-            quranRepository.updateQuran(quranEntity)
+            _bookmarks.remove(quranEntity)
+            quranRepository.updateQuran(quranEntity.copy(fav = 0))
             _isLoading.value = false
         }
     }

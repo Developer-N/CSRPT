@@ -11,9 +11,9 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -21,16 +21,16 @@
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         tools:ignore="LeanbackUsesWifi" />
-    <uses-permission android:name="android.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
     <uses-permission android:name="com.htc.launcher.permission.UPDATE_SHORTCUT" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -66,6 +66,7 @@
         android:allowBackup="true"
         android:banner="@mipmap/ic_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -145,7 +146,8 @@
         <activity
             android:name=".ui.settings.widgetnotification.WidgetConfigurationActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@android:style/Theme.Material.Wallpaper.NoTitleBar">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -155,7 +157,8 @@
             android:name=".ui.settings.agewidget.AgeWidgetConfigureActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="true"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Material.Wallpaper.NoTitleBar">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -165,13 +168,15 @@
             android:name=".ui.settings.wallpaper.WallpaperSettingsActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="true"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Material.Wallpaper.NoTitleBar" />
 
         <activity
             android:name=".ui.settings.wallpaper.DreamSettingsActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:exported="true"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.Material.Wallpaper.NoTitleBar" />
 
         <receiver
             android:name=".Widget1x1"
@@ -185,10 +190,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider1x1" />
-
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
 
         <receiver
@@ -203,10 +204,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider4x1" />
-
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
 
         <receiver
@@ -221,10 +218,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider4x2" />
-
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
 
         <receiver
@@ -239,10 +232,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider2x2" />
-
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
 
         <receiver
@@ -257,10 +246,20 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider_sun_view" />
+        </receiver>
+
+        <receiver
+            android:name=".WidgetMonth"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/month_overview">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
 
             <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider_month" />
         </receiver>
 
         <receiver
@@ -275,11 +274,8 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/persiancalendar_provider_month_view" />
-
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
+
         <receiver
             android:name=".NWidget"
             android:exported="false"
@@ -292,10 +288,8 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/ptwidget_info" />
-            <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity" />
         </receiver>
+
         <receiver
             android:name=".WidgetMap"
             android:exported="false"
@@ -336,10 +330,20 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/age_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".WidgetSchedule"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/schedule">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
 
             <meta-data
-                android:name="android.appwidget.provider.semConfigureActivity"
-                android:value="com.byagowi.persiancalendar.ui.settings.agewidget.WidgetAgeConfigureActivity" />
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider_schedule" />
         </receiver>
 
         <service
@@ -351,12 +355,12 @@
         <service
             android:name=".service.AthanNotification"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback"
             android:label="Athan Service" />
 
         <service
             android:name="ir.namoo.religiousprayers.ui.athan.NAthanNotification"
             android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
             android:label="Athan Service" />
 
         <service
@@ -403,6 +407,10 @@
                 android:name="android.service.dream"
                 android:resource="@xml/dream" />
         </service>
+
+        <service
+            android:name=".service.ScheduleWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <activity
             android:name="ir.namoo.quran.QuranActivity"

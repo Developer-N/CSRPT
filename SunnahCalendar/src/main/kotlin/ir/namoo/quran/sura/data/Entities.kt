@@ -12,8 +12,8 @@ data class QuranEntity(
     @ColumnInfo("page") val page: Int,
     @ColumnInfo("quran_arabic") val quranArabic: String,
     @ColumnInfo("quran_withoutharkat") val quranClean: String,
-    @ColumnInfo("note") var note: String?,
-    @ColumnInfo("fav") var fav: Int
+    @ColumnInfo("note") val note: String?,
+    @ColumnInfo("fav") val fav: Int
 )
 
 @Entity(tableName = "bywords")

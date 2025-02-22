@@ -16,42 +16,41 @@ import androidx.room.Update
 
 @Entity(tableName = "athans")
 data class Athan(
-    @ColumnInfo(name = "name")
-    var name: String,
-    @ColumnInfo(name = "link")
-    var link: String,
-    @ColumnInfo(name = "type")
-    var type: Int,
-    @ColumnInfo(name = "title")
-    var fileName: String = ""
-) {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    var id: Int = 0
-}
+    val id: Int = 0,
+    @ColumnInfo(name = "name")
+    val name: String,
+    @ColumnInfo(name = "link")
+    val link: String,
+    @ColumnInfo(name = "type")
+    val type: Int,
+    @ColumnInfo(name = "title")
+    val fileName: String
+)
 
 @Dao
 interface AthanDAO {
     @Query("select * from athans")
-    fun getAllAthans(): List<Athan>
+    suspend fun getAllAthans(): List<Athan>
 
     @Query("delete from athans")
-    fun clearDB()
+    suspend fun clearDB()
 
     @Query("select * from athans where id=:id")
-    fun getAthan(id: Int): Athan?
+    suspend fun getAthan(id: Int): Athan?
 
     @Query("select * from athans where name=:name")
-    fun getAthan(name: String): Athan?
+    suspend fun getAthan(name: String): Athan?
 
     @Update
-    fun update(athan: Athan)
+    suspend fun update(athan: Athan)
 
-    @Insert(onConflict = REPLACE)
-    fun insert(athan: Athan)
+    @Insert
+    suspend fun insert(athan: Athan)
 
     @Delete
-    fun delete(athan: Athan)
+    suspend fun delete(athan: Athan)
 
 }
 
@@ -65,7 +64,8 @@ abstract class AthanDB : RoomDatabase() {
             return instance ?: synchronized(AthanDB::class) {
                 val ins = Room.databaseBuilder(
                     applicationContext, AthanDB::class.java, "athan.db"
-                ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
                 instance = ins
                 ins
             }

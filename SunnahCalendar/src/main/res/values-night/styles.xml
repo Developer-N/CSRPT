@@ -4,4 +4,19 @@
     <!-- There is an override of this in values-night-v31/styles.xml, keep that synced -->
     <style name="BaseDayNightTheme" parent="android:Theme.Material.NoActionBar" />
 
+    <color name="widget_add_event_icon">#062E6F</color>
+    <color name="widget_add_event">#D3E3FD</color>
+    <color name="widget_schedule_day_first_line">#6CD58B</color>
+    <color name="widget_schedule_today_text">#072E6F</color>
+    <color name="widget_schedule_today">#A8C7FA</color>
+    <color name="widget_modern_background">#131314</color>
+    <color name="widget_modern_text">#EAECF0</color>
+    <color name="widget_schedule_title">#FFFFFF</color>
+    <color name="widget_schedule_event">#000000</color>
+    <color name="widget_nothing_scheduled">#DCE2F9</color>
+    <color name="widget_month_week_number">#004A76</color>
+    <color name="widget_month_line">#454746</color>
+    <color name="widget_schedule_highlight">#004A76</color>
+    <color name="widget_schedule_highlight_text">#73A8C8</color>
+    <color name="ripple_color">#40FFFFFF</color>
 </resources>

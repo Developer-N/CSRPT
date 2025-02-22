@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
-class QuranActivityViewModel(private val qariRepository: QariRepository) : ViewModel() {
+@SuppressLint("SdCardPath")
+class QuranActivityViewModel(
+    private val qariRepository: QariRepository
+) : ViewModel() {
     private val _isDBExist = MutableStateFlow(false)
     val isDBExist = _isDBExist.asStateFlow()
 

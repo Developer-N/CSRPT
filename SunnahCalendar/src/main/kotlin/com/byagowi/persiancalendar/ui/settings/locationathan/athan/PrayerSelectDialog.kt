@@ -21,14 +21,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import com.byagowi.persiancalendar.ATHANS_LIST
 import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
-import com.byagowi.persiancalendar.utils.appPrefs
-import com.byagowi.persiancalendar.utils.getPrayTimeName
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.splitFilterNotEmpty
 import com.byagowi.persiancalendar.utils.startAthan
 
@@ -38,8 +37,8 @@ fun PrayerSelectDialog(onDismissRequest: () -> Unit) {
     val alarms = rememberSaveable(
         saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })
     ) {
-        (context.appPrefs.getString(PREF_ATHAN_ALARM, null) ?: "")
-            .splitFilterNotEmpty(",").toMutableStateList()
+        (context.preferences.getString(PREF_ATHAN_ALARM, null) ?: "")
+            .splitFilterNotEmpty(",").mapNotNull(PrayTime::fromName).toMutableStateList()
     }
     AppDialog(
         onDismissRequest = onDismissRequest,
@@ -47,25 +46,25 @@ fun PrayerSelectDialog(onDismissRequest: () -> Unit) {
         confirmButton = {
             TextButton(onClick = {
                 onDismissRequest()
-                context.appPrefs.edit { putString(PREF_ATHAN_ALARM, alarms.joinToString(",")) }
+                context.preferences.edit { putString(PREF_ATHAN_ALARM, alarms.joinToString(",")) }
             }) { Text(stringResource(R.string.accept)) }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) { Text(stringResource(R.string.cancel)) }
         },
     ) {
-        ATHANS_LIST.forEach { key ->
+        PrayTime.athans.forEach {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clickable { if (key in alarms) alarms.remove(key) else alarms.add(key) }
+                    .clickable { if (it in alarms) alarms.remove(it) else alarms.add(it) }
                     .padding(horizontal = SettingsHorizontalPaddingItem.dp)
                     .height(SettingsItemHeight.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Checkbox(checked = key in alarms, onCheckedChange = null)
+                Checkbox(checked = it in alarms, onCheckedChange = null)
                 Spacer(modifier = Modifier.width(SettingsHorizontalPaddingItem.dp))
-                Text(stringResource(getPrayTimeName(key)), Modifier.weight(1f, fill = true))
+                Text(stringResource(it.stringRes), Modifier.weight(1f, fill = true))
             }
         }
     }
@@ -81,18 +80,18 @@ fun PrayerSelectPreviewDialog(onDismissRequest: () -> Unit) {
         },
     ) {
         val context = LocalContext.current
-        ATHANS_LIST.forEach {
+        PrayTime.athans.forEach {
             Box(
                 contentAlignment = Alignment.CenterStart,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
                         onDismissRequest()
-                        startAthan(context, it, null)
+                        startAthan(context, it.name, null)
                     }
                     .height(SettingsItemHeight.dp)
                     .padding(horizontal = SettingsHorizontalPaddingItem.dp)
-            ) { Text(stringResource(getPrayTimeName(it))) }
+            ) { Text(stringResource(it.stringRes)) }
         }
     }
 }

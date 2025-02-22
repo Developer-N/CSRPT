@@ -29,13 +29,11 @@ import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.ui.MainActivity
 import com.byagowi.persiancalendar.ui.theme.AppTheme
 import com.byagowi.persiancalendar.ui.utils.isLight
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
+import com.byagowi.persiancalendar.utils.preferences
 import io.github.persiancalendar.praytimes.CalculationMethod
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.PREF_FIRST_START
-import ir.namoo.commons.PREF_FULL_SCREEN_METHOD
-import ir.namoo.commons.PREF_NOTIFICATION_METHOD
 import ir.namoo.commons.SYSTEM_DEFAULT_FONT
 import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.getAppFont
@@ -57,25 +55,23 @@ class IntroActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            val font = appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
-            if (!font.isNullOrEmpty() && font != SYSTEM_DEFAULT_FONT) appPrefs.edit {
+            val font = preferences.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
+            if (!font.isNullOrEmpty() && font != SYSTEM_DEFAULT_FONT) preferences.edit {
                 putString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
             }
-            if (appPrefs.getBoolean(PREF_FIRST_START, true) ||
-                appPrefs.getString(PREF_GEOCODED_CITYNAME, "").isNullOrEmpty() ||
-                appPrefs.getString(PREF_LATITUDE, "0.0") == "0.0" ||
-                appPrefs.getString(PREF_LONGITUDE, "0.0") == "0.0" ||
+            if (preferences.getBoolean(PREF_FIRST_START, true) ||
+                preferences.getString(PREF_GEOCODED_CITYNAME, "").isNullOrEmpty() ||
+                preferences.getString(PREF_LATITUDE, "0.0") == "0.0" ||
+                preferences.getString(PREF_LONGITUDE, "0.0") == "0.0" ||
                 prayTimeRepository.getLocalCityList().isEmpty()
             ) {
-                appPrefs.edit {
+                preferences.edit {
                     putString(PREF_APP_LANGUAGE, Language.FA.code)
                     putString(PREF_PRAY_TIME_METHOD, CalculationMethod.Karachi.name)
                     putBoolean(PREF_ASR_HANAFI_JURISTIC, false)
                     putBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, true)
                     putBoolean(PREF_WIDGET_IN_24, true)
                     putInt(LAST_CHOSEN_TAB_KEY, 2)
-                    putInt(PREF_NOTIFICATION_METHOD, 1)
-                    putInt(PREF_FULL_SCREEN_METHOD, 1)
                 }
                 overrideFont("SANS_SERIF", getAppFont(applicationContext))
                 applyAppLanguage(this@IntroActivity)

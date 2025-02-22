@@ -11,6 +11,17 @@ class AzkarRepository(private val azkarDB: AzkarDB) {
 
     suspend fun getAzkarItem(chapterID: Int): List<AzkarItem> {
         runCatching {
+            //fix sunset sound files
+            if (chapterID == 28 && azkarDB.azkarDao().getAzkarItem(100)?.sound == null) {
+                listOf(100, 101, 103, 104, 112, 113).zip(
+                    listOf("abc", "abd", "aba", "abe", "abf", "abg")
+                ).forEach { item ->
+                    azkarDB.azkarDao().getAzkarItem(item.first)?.let { zkr ->
+                        zkr.sound = item.second
+                        azkarDB.azkarDao().updateAzkarItem(zkr)
+                    }
+                }
+            }
             return azkarDB.azkarDao().getAzkarItems(chapterID)
         }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }

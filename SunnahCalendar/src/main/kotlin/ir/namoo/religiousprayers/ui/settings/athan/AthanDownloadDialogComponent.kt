@@ -86,7 +86,7 @@ fun AthanDownloadComponent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(2.dp)
-                            .animateItemPlacement()
+                            .animateItem()
                             .animateContentSize(
                                 spring(
                                     dampingRatio = Spring.DampingRatioLowBouncy,

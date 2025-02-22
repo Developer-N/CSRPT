@@ -1,22 +1,13 @@
 package ir.namoo.religiousprayers.ui.settings
 
-import android.Manifest
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material.icons.automirrored.filled.LiveHelp
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,15 +36,14 @@ import com.byagowi.persiancalendar.ui.settings.SettingsClickable
 import com.byagowi.persiancalendar.ui.settings.SettingsSection
 import com.byagowi.persiancalendar.ui.settings.SettingsSingleSelect
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.titleStringId
 import com.byagowi.persiancalendar.utils.update
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
+import ir.namoo.commons.PREF_SHOW_SYSTEM_RINGTONES
 import ir.namoo.commons.PREF_SUMMER_TIME
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSettingsDB
@@ -65,7 +55,6 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.io.File
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun NSettingsScreen(
     navigateToAthanSettings: (Int) -> Unit,
@@ -73,7 +62,9 @@ fun NSettingsScreen(
     athanDB: AthanDB = koinInject()
 ) {
     val context = LocalContext.current
-    val prefs = context.appPrefs
+    val prefs = context.preferences
+    val coroutineScope = rememberCoroutineScope()
+    val allAthansSetting = athanSettings.athanSettingsDAO().getAllAthanSettings()
     SettingsSection(title = stringResource(id = R.string.location))
     run {
         var summary by mutableStateOf(
@@ -101,78 +92,30 @@ fun NSettingsScreen(
     HorizontalDivider()
     SettingsSection(title = stringResource(id = R.string.athan_settings))
     run {
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
-        val coroutineScope = rememberCoroutineScope()
-        var isAthanNotificationEnable = false
-        val allAthansSetting = athanSettings.athanSettingsDAO().getAllAthanSettings()
-        allAthansSetting.forEach {
-            if (it.state) isAthanNotificationEnable = true
+        var showHelpDialog by remember { mutableStateOf(false) }
+        ElevatedButton(modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 16.dp),
+            onClick = { showHelpDialog = true }) {
+            Text(
+                text = stringResource(id = R.string.help_fix_athan_problems),
+                fontWeight = FontWeight.Bold,
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize
+            )
+            Spacer(modifier = Modifier.padding(4.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.LiveHelp,
+                contentDescription = "Help",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
-        val phoneStatePermissions = rememberMultiplePermissionsState(
-            permissions = listOf(Manifest.permission.READ_PHONE_STATE)
-        )
-        var showPermissionMessage by remember { mutableStateOf(!phoneStatePermissions.allPermissionsGranted) }
-        var showOverlayMessage by remember { mutableStateOf(false) }
-        AnimatedVisibility(
-            visible = isAthanNotificationEnable && showPermissionMessage,
-            enter = slideInVertically(tween()), exit = shrinkVertically(tween())
-        ) {
-            ElevatedAssistChip(modifier = Modifier
-                .padding(vertical = 4.dp, horizontal = 16.dp)
-                .fillMaxWidth(),
-                onClick = {
-                    showPermissionMessage = false
-                    phoneStatePermissions.launchMultiplePermissionRequest()
-                },
-                label = {
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = stringResource(id = R.string.phone_state_permission_message),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = stringResource(id = R.string.warning),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                })
+        AnimatedVisibility(visible = showHelpDialog) {
+            HelpFixAthanProblemDialog {
+                showHelpDialog = false
+            }
         }
-        AnimatedVisibility(
-            visible = showOverlayMessage,
-            enter = slideInVertically(tween()),
-            exit = shrinkVertically(tween())
-        ) {
-            ElevatedAssistChip(modifier = Modifier
-                .padding(vertical = 4.dp, horizontal = 16.dp)
-                .fillMaxWidth(),
-                onClick = {
-                    showOverlayMessage = false
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        context.startActivity(
-                            Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:" + context.packageName)
-                            )
-                        )
-                    }
-                },
-                label = {
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = stringResource(id = R.string.need_full_screen_permision),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = stringResource(id = R.string.warning),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                })
-        }
+    }
+    run {
         val athans = listOf(
             context.getString(R.string.fajr),
             context.getString(R.string.sunrise),
@@ -191,10 +134,6 @@ fun NSettingsScreen(
                     athanSettings.athanSettingsDAO().update(athan.second.apply {
                         state = isActive
                     })
-                    if (isActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(
-                            context
-                        )
-                    ) showOverlayMessage = true
                 }
             })
         }
@@ -202,7 +141,7 @@ fun NSettingsScreen(
 
     HorizontalDivider()
     var isChecked by remember {
-        mutableStateOf(context.appPrefs.getBoolean(PREF_SUMMER_TIME, false))
+        mutableStateOf(prefs.getBoolean(PREF_SUMMER_TIME, false))
     }
     SettingsSwitch(key = PREF_SUMMER_TIME,
         value = isChecked,
@@ -226,38 +165,37 @@ fun NSettingsScreen(
         title = stringResource(R.string.asr_hanafi_juristic)
     )
     HorizontalDivider()
+    var isShown by remember {
+        mutableStateOf(prefs.getBoolean(PREF_SHOW_SYSTEM_RINGTONES, false))
+    }
+    SettingsSwitch(key = PREF_SHOW_SYSTEM_RINGTONES,
+        value = isShown,
+        title = stringResource(R.string.show_system_ringtones),
+        summary = stringResource(R.string.show_system_ringtones_msg),
+        onBeforeToggle = {
+            isShown = it
+            isShown
+        })
     SettingsSection(title = stringResource(id = R.string.add_normal_athans))
     AthanAlarmComponent(type = 1)
     SettingsSection(title = stringResource(id = R.string.add_alarm))
     AthanAlarmComponent(type = 2)
-    HorizontalDivider()
     ClearAthansComponent {
         runCatching {
-            athanDB.athanDAO().clearDB()
-            val dir = File(getAthansDirectoryPath(context)).listFiles()
-            if (dir != null && dir.isNotEmpty()) for (f in dir) f.delete()
-            Toast.makeText(
-                context, context.getString(R.string.done), Toast.LENGTH_SHORT
-            ).show()
-            val settings = athanSettings.athanSettingsDAO().getAllAthanSettings()
-            if (settings.isNotEmpty()) for (s in settings) {
-                s.athanURI = ""
-                s.alertURI = ""
-                athanSettings.athanSettingsDAO().update(s)
+            coroutineScope.launch {
+                athanDB.athanDAO().clearDB()
+                val dir = File(getAthansDirectoryPath(context)).listFiles()
+                if (dir != null && dir.isNotEmpty()) for (f in dir) f.delete()
+                Toast.makeText(
+                    context, context.getString(R.string.done), Toast.LENGTH_SHORT
+                ).show()
+                val settings = athanSettings.athanSettingsDAO().getAllAthanSettings()
+                if (settings.isNotEmpty()) for (s in settings) {
+                    s.athanURI = ""
+                    s.alertURI = ""
+                    athanSettings.athanSettingsDAO().update(s)
+                }
             }
         }.onFailure(logException)
     }
-    HorizontalDivider()
-    SettingsSection(title = stringResource(id = R.string.play_athan_problem))
-    Text(
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 22.dp),
-        text = stringResource(id = R.string.notification)
-    )
-    MethodsModeToggle(context = context, type = 1)
-    Text(
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 22.dp),
-        text = stringResource(id = R.string.full_screen)
-    )
-
-    MethodsModeToggle(context = context, type = 2)
 }

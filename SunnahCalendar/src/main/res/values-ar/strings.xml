@@ -28,8 +28,6 @@
     <string name="device_does_not_support">تطبيق التقويم الجهاز لا يدعم هذه عملية</string>
     <string name="today">اليوم</string>
     <string name="return_to_today">الرجوع إلى اليوم</string>
-    <string name="goto_date">الذهاب إلى تاريخٍ معين</string>
-    <string name="go">إذهب</string>
     <string name="search_in_events">البحث في المناسبات</string>
     <string name="days_distance">الفرق</string>
     <string name="start_of_year_diff">%1$s يوماً (~%2$s أسبوعاً أو %3$s شهراً) من بداية السنة</string>
@@ -47,7 +45,7 @@
     <string name="animal_year_name_dragon">التنين</string>
     <string name="animal_year_name_snake">الأفعى</string>
     <string name="animal_year_name_horse">الحصان</string>
-    <string name="animal_year_name_goat">الخروف</string>
+    <string name="animal_year_name_goat">الماعز</string>
     <string name="zodiac">الأبراج الفلكية</string>
     <string name="capricorn">جدي</string>
     <string name="aquarius">دلو</string>
@@ -61,13 +59,13 @@
     <string name="libra">ميزان</string>
     <string name="scorpio">عقرب</string>
     <string name="sagittarius">قوس</string>
-    <string name="moonInScorpio">القمر في العقرب</string>
+    <string name="moon_in_scorpio">القمر في العقرب</string>
     <string name="events">المناسبات</string>
     <string name="no_event">تعذّر العثور على أحداث أو مناسبات أو عُطل لليوم</string>
     <string name="warn_if_events_not_set">لإختيار وإظهار المناسبات والعُطل إذهب إلى الإعدادات &gt; المناسبات</string>
-    <string name="sunriseSunView">الشروق</string>
-    <string name="middaySunView">الظهر</string>
-    <string name="sunsetSunView">الغروب</string>
+    <string name="sunrise_sun_view">الشروق</string>
+    <string name="midday_sun_view">الظهر</string>
+    <string name="sunset_sun_view">الغروب</string>
     <string name="length_of_day">النهار</string>
     <string name="remaining_daylight">الوقت المتبقي</string>
     <string name="n_hours_minutes">%1$sس %2$sد</string>
@@ -153,7 +151,7 @@
     <string name="gps_internet_desc">يرجى تفعيل ال GPS أو الإتصال بالشبكة ليتم تحديد المكان.
 \n
 \nالتطبيق يحتاج هذا مرة واحدة، ولكن إذا تم تغير المكان يجب إعادة تفعيل ال GPS والشبكة لتحديد المكان الجديد.</string>
-    <string name="pleasewaitgps">جارٍ البحث يرجى الانتظار … تأكد أن ال GPS فعال، إذا لم يظهر أسم مدينتك خلال دقائق جرب الخيارات الأخرى</string>
+    <string name="wait_for_gps">جارٍ البحث يرجى الانتظار … تأكد أن ال GPS فعال، إذا لم يظهر أسم مدينتك خلال دقائق جرب الخيارات الأخرى</string>
     <string name="location">المكان</string>
     <string name="location_help">إذا لم يكن أسم مدينتك موجوداً، حدد الإحداثيات اللازمة أدناه</string>
     <string name="latitude">خط العرض</string>
@@ -194,9 +192,9 @@
     <string name="about_support_developers">دعم المطورين</string>
     <string name="about_report_bug">الإبلاغ عن الأخطاء</string>
     <string name="about_report_bug_sum">للإبلاغ عن الأخطاء وطلب ميزات جديدة يرجى إستخدام خدمة Github</string>
-    <string name="about_sendMail">البريد الإلكتروني</string>
+    <string name="about_send_mail">البريد الإلكتروني</string>
     <string name="about_email_sum">إرسال بريد إلكتروني لمطوري التطبيق</string>
-    <string name="about_noClient">تعذّر العثور على تطبيق البريد الإلكتروني</string>
+    <string name="about_no_client">تعذّر العثور على تطبيق البريد الإلكتروني</string>
     <string name="about_developers">المطوّرون (مرتب عشوائيا)</string>
     <!--TalkBack, a11y-->
     <string name="previous_x">%1$s السابق</string>
@@ -221,7 +219,7 @@
     <string name="recurs">تكرار</string>
     <string name="am">ص</string>
     <string name="pm">م</string>
-    <string name="holiday">عُطل</string>
+    <string name="holiday">عطلة</string>
     <string name="shift_work_days_head">طول</string>
     <string name="prefer_linear_date_summary">إستخدام صيغة (1432/12/24) بدل (1432 ذي الحجة 24) في المصغر والتنبيهات</string>
     <string name="prefer_linear_date">إظهار التاريخ بالصيغة الرقمية</string>
@@ -272,8 +270,8 @@
     <string name="afghanistan_others">المناسبات الأخرى (أفعانستان)</string>
     <string name="iran_official_events">مرکز تقویم دانشگاه تهران، رسمی</string>
     <string name="afghanistan_events">افغانستان</string>
-    <string name="other_holidays">سایر</string>
-    <string name="view_source">مشاهده منبع</string>
+    <string name="other_holidays">عُطلٌ أخرى</string>
+    <string name="view_source">عرض المصدر</string>
     <!--Widget customizations-->
     <string name="widget_customization_other_calendars">التقاويم الأخرى على مصغر 1×4 أو 2×2</string>
     <string name="widget_customization_non_holiday_events">المناسبات (غير العُطل) على مصغر 2×2 والتنبه</string>
@@ -344,7 +342,7 @@
     <string name="high_latitudes_one_seventh">سُبٌع</string>
     <string name="none">لا شيء</string>
     <string name="country_emoji">🇸🇦🇮🇶🇦🇪</string>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="zero">لا دقائق</item>
         <item quantity="one">دقيقة واحدة</item>
         <item quantity="two">دقيقتان</item>
@@ -352,7 +350,7 @@
         <item quantity="many">%1$s دقيقة</item>
         <item quantity="other">%1$s دقيقة</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="zero">لا ساعة</item>
         <item quantity="one">ساعة واحدة</item>
         <item quantity="two">ساعتان</item>
@@ -360,7 +358,7 @@
         <item quantity="many">%1$s ساعة</item>
         <item quantity="other">%1$s ساعة</item>
     </plurals>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="zero">لا يوم</item>
         <item quantity="one">يوم واحد</item>
         <item quantity="two">يومان</item>
@@ -368,7 +366,7 @@
         <item quantity="many">%1$s يوما</item>
         <item quantity="other">%1$s يوم</item>
     </plurals>
-    <plurals name="n_weeks">
+    <plurals name="weeks">
         <item quantity="zero">لا أسبوع</item>
         <item quantity="one">أسبوع واحد</item>
         <item quantity="two">إسبوعين</item>
@@ -376,7 +374,7 @@
         <item quantity="many">%1$s أسبوعا</item>
         <item quantity="other">%1$s أسبوعا</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="zero">لا شهر</item>
         <item quantity="one">شهر واحد</item>
         <item quantity="two">شهرين</item>
@@ -385,7 +383,7 @@
         <item quantity="other">%1$s شهر</item>
     </plurals>
     <!-- e.g. zero years, one year, two years, 6 years, 14 years, 200 years, en->ar in Google Traslate -->
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="zero">لا سنة</item>
         <item quantity="one">سنة واحدة</item>
         <item quantity="two">سنتان</item>
@@ -438,9 +436,9 @@
     <string name="full_screen">ملء الشاشة</string>
     <string name="exit_full_screen">الخروج من وضع ملء الشاشة</string>
     <string name="color_gradient">تدرج اللون</string>
-    <string name="qr_code">كيو آر كد</string>
-    <string name="time_zones">منطقة زمنية</string>
-    <plurals name="n_work_days">
+    <string name="qr_code">رمز QR</string>
+    <string name="time_zones">المناطق الزمنية</string>
+    <plurals name="work_days">
         <item quantity="zero">لا يوم العمل</item>
         <item quantity="one">العمل يوم واحد</item>
         <item quantity="two">يومان العمل</item>
@@ -449,7 +447,7 @@
         <item quantity="other">%1$s يوم العمل</item>
     </plurals>
     <string name="navigate_up">انتقال للأعلى</string>
-    <plurals name="n_seconds">
+    <plurals name="seconds">
         <item quantity="zero">%1$s ثانية</item>
         <item quantity="one">%1$s ثانية</item>
         <item quantity="two">%1$s ثانيتين</item>
@@ -464,4 +462,15 @@
     <string name="year_view">عرض السنوي</string>
     <string name="ask_for_calendar_permission">هل ترغب في تمكين الأحداث الشخصية من تقويم جهازك؟</string>
     <string name="exempt_app_battery_optimization">هل ترغب في إضافة التطبيق إلى قائمة استثناءات تحسين البطارية لضمان وظائف الإشعار بشكل صحيح؟</string>
+    <string name="widget_background_transparency">شفافية خلفية المصغر</string>
+    <string name="save">حفظ</string>
+    <string name="holidays_in_red">العطل باللون الأحمر</string>
+    <string name="add_widget">إضافة المصغر</string>
+    <string name="week_view">العرض أسبوعي</string>
+    <string name="schedule">الجدول</string>
+    <string name="print">طباعة</string>
+    <string name="daily_schedule">الجدول اليومي</string>
+    <string name="day_view">العرض اليومي</string>
+    <string name="vibration">الاهتزاز</string>
+    <string name="starting_date">تاريخ البدء</string>
 </resources>

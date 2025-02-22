@@ -51,19 +51,19 @@ fun generateYearName(
 ): String {
     val yearNames = listOfNotNull(
         language.value.inParentheses.format(
-            ChineseZodiac.fromPersianCalendar(persianDate).format(resources, withEmoji),
+            ChineseZodiac.fromPersianCalendar(persianDate).format(resources, withEmoji, true),
             resources.getString(R.string.shamsi_calendar_short)
         ),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val date = ChineseCalendar((time ?: Jdn(persianDate).toGregorianCalendar()).time)
             val year = date[ChineseCalendar.YEAR]
             language.value.inParentheses.format(
-                ChineseZodiac.fromChineseCalendar(date).format(resources, withEmoji),
+                ChineseZodiac.fromChineseCalendar(date).format(resources, withEmoji, false),
                 resources.getString(R.string.chinese) + spacedComma + formatNumber(year)
             )
         } else null
     ).let { if (language.value.isUserAbleToReadPersian) it else it.reversed() }.joinToString(" ")
-    return "%s$spacedColon%s".format(resources.getString(R.string.year_name), yearNames)
+    return "${resources.getString(R.string.year_name)}$spacedColon${yearNames}"
 }
 
 // https://github.com/cosinekitty/astronomy/blob/0547aaf/demo/csharp/camera/camera.cs#L98
@@ -80,7 +80,8 @@ fun sunlitSideMoonTiltAngle(time: Time, observer: Observer): Double {
 }
 
 val Body.titleStringId
-    get(): @StringRes Int = when (this) {
+    @StringRes
+    get(): Int = when (this) {
         Body.Mercury -> R.string.mercury
         Body.Venus -> R.string.venus
         Body.Earth -> R.string.earth

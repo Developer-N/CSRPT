@@ -9,6 +9,8 @@ data class ServerAthanModel(
     val name: String,
     @SerialName("file_link")
     val fileLink: String,
+    @SerialName("github_link")
+    val githubLink: String,
     @SerialName("file_title")
     val fileTitle: String
 )

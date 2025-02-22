@@ -21,23 +21,21 @@ fun AppDropdownMenu(
     minWidth: Dp = 200.dp,
     content: @Composable ColumnScope.(closeMenu: () -> Unit) -> Unit,
 ) {
-    val defaultShapes = MaterialTheme.shapes
-    MaterialTheme(shapes = MaterialTheme.shapes.copy(extraSmall = MaterialTheme.shapes.extraLarge)) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = Modifier.defaultMinSize(minWidth = minWidth),
-            content = { MaterialTheme(shapes = defaultShapes) { content(onDismissRequest) } },
-        )
-    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.defaultMinSize(minWidth = minWidth),
+        shape = MaterialTheme.shapes.extraLarge,
+        content = { content(onDismissRequest) },
+    )
 }
 
 @Composable
 fun AppDropdownMenuItem(
     text: @Composable () -> Unit,
-    onClick: () -> Unit,
     trailingIcon: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
+    onClick: () -> Unit,
 ) {
     MaterialTheme(
         typography = MaterialTheme.typography.copy(labelLarge = MaterialTheme.typography.bodyLarge),
@@ -61,8 +59,7 @@ fun AppDropdownMenuRadioItem(
     AppDropdownMenuItem(
         text = { Text(text) },
         trailingIcon = { RadioButton(selected = isSelected, onClick = null) },
-        onClick = { setSelected(!isSelected) },
-    )
+    ) { setSelected(!isSelected) }
 }
 
 @Composable
@@ -74,15 +71,14 @@ fun AppDropdownMenuCheckableItem(
     AppDropdownMenuItem(
         text = { Text(text) },
         trailingIcon = { Checkbox(checked = isChecked, onCheckedChange = null) },
-        onClick = { setChecked(!isChecked) },
-    )
+    ) { setChecked(!isChecked) }
 }
 
 @Composable
 fun AppDropdownMenuExpandableItem(
     text: String,
     isExpanded: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     AppDropdownMenuItem(
         text = { Text(text) },

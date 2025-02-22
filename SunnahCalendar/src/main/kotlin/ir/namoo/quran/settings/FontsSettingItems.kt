@@ -1,9 +1,8 @@
 package ir.namoo.quran.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,8 +34,7 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
     val englishFontName by viewModel.englishFontName.collectAsState()
     val englishFontSize by viewModel.englishFontSize.collectAsState()
 
-
-    ElevatedCard(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(2.dp)
@@ -51,7 +49,6 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = quranFontSize,
             onFontFamilyChanged = { viewModel.updateQuranFontName(it) },
             onFontSizeChanged = { viewModel.updateQuranFontSize(it) })
-        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- Kurdish
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.kurdish_font_setting),
@@ -62,7 +59,6 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = kurdishFontSize,
             onFontFamilyChanged = { viewModel.updateKurdishFontName(it) },
             onFontSizeChanged = { viewModel.updateKurdishFontSize(it) })
-        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- Farsi
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.farsi_font_setting),
@@ -73,7 +69,6 @@ fun FontSettingItems(viewModel: SettingViewModel = koinViewModel()) {
             fontSize = farsiFontSize,
             onFontFamilyChanged = { viewModel.updateFarsiFontName(it) },
             onFontSizeChanged = { viewModel.updateFarsiFontSize(it) })
-        HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp))
         // -------------------------------------------------------------------- English
         MyFontSelector(modifier = Modifier.padding(2.dp),
             title = stringResource(id = R.string.english_font_setting),

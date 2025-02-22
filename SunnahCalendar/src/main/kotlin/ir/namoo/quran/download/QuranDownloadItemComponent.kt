@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,11 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.theme.AppTheme
 import com.byagowi.persiancalendar.utils.formatNumber
 
 @Composable
@@ -46,11 +45,12 @@ fun QuranDownloadItem(
     onDelete: () -> Unit,
     onCancel: () -> Unit
 ) {
-    val progress by animateFloatAsState(targetValue = state.progress, label = "")
+    val progress by animateFloatAsState(targetValue = state.progress, label = "progress")
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
-            .padding(2.dp)
+            .padding(2.dp),
+        shape = MaterialTheme.shapes.extraLarge
     ) {
         Row(
             modifier = Modifier
@@ -60,7 +60,7 @@ fun QuranDownloadItem(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Text(
-                modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
+                modifier = Modifier.padding(vertical = 2.dp, horizontal = 8.dp),
                 text = formatNumber(title),
                 fontWeight = FontWeight.SemiBold
             )
@@ -70,9 +70,7 @@ fun QuranDownloadItem(
                 enter = expandHorizontally(),
                 exit = shrinkHorizontally()
             ) {
-                IconButton(
-                    onClick = { onDelete() }
-                ) {
+                IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = stringResource(id = R.string.delete),
@@ -85,11 +83,14 @@ fun QuranDownloadItem(
                 enter = expandHorizontally(),
                 exit = shrinkHorizontally()
             ) {
-                IconButton(onClick = { onDownload() }) {
+                IconButton(
+                    onClick = onDownload,
+                    enabled = !state.isDownloaded,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
                     Icon(
                         imageVector = if (state.isDownloaded) Icons.Filled.FileDownloadDone else Icons.Filled.CloudDownload,
-                        contentDescription = stringResource(id = R.string.download),
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = stringResource(id = R.string.download)
                     )
                 }
             }
@@ -98,11 +99,13 @@ fun QuranDownloadItem(
                 enter = expandHorizontally(),
                 exit = shrinkHorizontally()
             ) {
-                IconButton(onClick = { onCancel() }) {
+                IconButton(
+                    onClick = onCancel,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
                     Icon(
                         imageVector = Icons.Filled.StopCircle,
-                        contentDescription = stringResource(id = R.string.download),
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = stringResource(id = R.string.download)
                     )
                 }
             }
@@ -114,7 +117,7 @@ fun QuranDownloadItem(
                 CircularProgressIndicator(
                     modifier = Modifier.size(32.dp),
                     strokeCap = StrokeCap.Round,
-                    strokeWidth = 2.dp
+                    strokeWidth = 4.dp
                 )
             }
             AnimatedVisibility(
@@ -140,9 +143,13 @@ fun QuranDownloadItem(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        val text =
+                            if (state.totalSize / 1024 / 1024 < 1)
+                                formatNumber((state.totalSize / 1024).toInt()) + "KB"
+                            else formatNumber((state.totalSize / 1024 / 1024).toInt()) + "MB"
                         Text(
                             lineHeight = 8.sp,
-                            text = formatNumber(if ((state.totalSize / 1024 / 1024).toInt() == 0) 1 else (state.totalSize / 1024 / 1024).toInt()) + "MB",
+                            text = text,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
@@ -151,25 +158,5 @@ fun QuranDownloadItem(
                 }
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true, locale = "fa")
-@Composable
-fun PrevQDI() {
-    AppTheme {
-        QuranDownloadItem(
-            modifier = Modifier,
-            title = "1: الفاتحه",
-            state = QuranDownloadItemState(1).apply {
-                progress = 0.9f
-                isChecking = false
-                isDownloading = true
-                totalSize = 256 * 1024 * 1024
-            },
-            onDownload = {},
-            onDelete = {}
-        ) {}
     }
 }

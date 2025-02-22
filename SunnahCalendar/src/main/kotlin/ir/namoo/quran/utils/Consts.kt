@@ -17,7 +17,7 @@ const val PREF_ENGLISH_FONT_SIZE = "key_english_font_size"
 const val DEFAULT_ENGLISH_FONT_SIZE = 16f
 
 const val PREF_KURDISH_FONT = "key_kurdish_font"
-const val DEFAULT_KURDISH_FONT = "fonts/kurdish_KTishk.ttf"
+const val DEFAULT_KURDISH_FONT = "fonts/Vazirmatn.ttf"
 
 const val PREF_KURDISH_FONT_SIZE = "key_kurdish_font_size"
 const val DEFAULT_KURDISH_FONT_SIZE = 16f
@@ -87,10 +87,11 @@ val kurdishFonts = listOf(
     "fonts/kurdish_KPenos.ttf",
     "fonts/kurdish_KChimen.ttf",
     "fonts/kurdish_KudrLav.ttf",
-    "fonts/Vazirmatn.ttf"
+    "fonts/Vazirmatn.ttf",
+    "fonts/Vazirmatn-Light.ttf"
 )
 val kurdishFontNames = listOf(
-    "Mestan", "Tishk", "Penos", "Chimen", "KudrLav", "Vazirmatn"
+    "Mestan", "Tishk", "Penos", "Chimen", "KudrLav", "Vazirmatn", "Vazirmatn-Light"
 )
 
 val englishFonts = listOf(
@@ -110,3 +111,6 @@ const val PREF_PLAY_NEXT_SURA = "play_next_sura"
 const val DEFAULT_PLAY_NEXT_SURA = false
 
 const val PREF_IS_SURA_VIEW_IS_OPEN = "is_sura_view_is_open"
+
+const val PREF_PLAYER_SPEED = "player_speed"
+const val DEFAULT_PLAYER_SPEED = 1f

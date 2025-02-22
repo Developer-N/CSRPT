@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "871880945088",
+    "firebase_url": "https://sunnat-religious-prayer.firebaseio.com",
+    "project_id": "sunnat-religious-prayer",
+    "storage_bucket": "sunnat-religious-prayer.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:871880945088:android:577e5367b09bfadd",
+        "android_client_info": {
+          "package_name": "ir.namoo.religiousprayers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "871880945088-pdpc9o23ki91nj5dsis1ekr3h91laig0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ir.namoo.religiousprayers",
+            "certificate_hash": "a28ec93527ebd0c396a53b9d23a063a003088cbe"
+          }
+        },
+        {
+          "client_id": "871880945088-gsidj7q53b7rcaufgsbbrod10kp77snt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmpjOHBEdIy-j6cN9LSef_dU67iXZqC_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "871880945088-gsidj7q53b7rcaufgsbbrod10kp77snt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:871880945088:android:fd79c93ad6cfaab6642c25",
+        "android_client_info": {
+          "package_name": "ir.namoo.religiousprayers.minApi21"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "871880945088-gsidj7q53b7rcaufgsbbrod10kp77snt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmpjOHBEdIy-j6cN9LSef_dU67iXZqC_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "871880945088-gsidj7q53b7rcaufgsbbrod10kp77snt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

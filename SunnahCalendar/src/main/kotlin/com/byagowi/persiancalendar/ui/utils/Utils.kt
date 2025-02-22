@@ -9,18 +9,16 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
-import android.view.Window
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.language
@@ -32,8 +30,6 @@ import java.io.File
 inline val Resources.isRtl get() = configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL || language.value.isLessKnownRtl
 inline val Resources.isLandscape get() = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 inline val Resources.dp: Float get() = displayMetrics.density
-fun Resources.sp(value: Float): Float =
-    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, displayMetrics)
 
 fun Context.bringMarketPage() {
     runCatching {
@@ -46,7 +42,7 @@ fun Context.bringMarketPage() {
     }
 }
 
-fun Bitmap.toByteArray(): ByteArray {
+fun Bitmap.toPngByteArray(): ByteArray {
     val buffer = ByteArrayOutputStream()
     this.compress(Bitmap.CompressFormat.PNG, 100, buffer)
     return buffer.toByteArray()
@@ -57,8 +53,7 @@ fun Bitmap.toByteArray(): ByteArray {
 
 private inline fun Context.saveAsFile(fileName: String, crossinline action: (File) -> Unit): Uri {
     return FileProvider.getUriForFile(
-        applicationContext, "$packageName.provider",
-        File(externalCacheDir, fileName).also(action)
+        applicationContext, "$packageName.provider", File(externalCacheDir, fileName).also(action)
     )
 }
 
@@ -72,11 +67,8 @@ fun Context.openHtmlInBrowser(html: String) {
 
 fun Context.shareText(text: String, chooserTitle: String) {
     runCatching {
-        ShareCompat.IntentBuilder(this)
-            .setType("text/plain")
-            .setChooserTitle(chooserTitle)
-            .setText(text)
-            .startChooser()
+        ShareCompat.IntentBuilder(this).setType("text/plain").setChooserTitle(chooserTitle)
+            .setText(text).startChooser()
     }.onFailure(logException)
 }
 
@@ -97,14 +89,8 @@ fun Context.shareBinaryFile(binary: ByteArray, fileName: String, mime: String) =
 
 // https://stackoverflow.com/a/58249983
 // Akin to https://github.com/material-components/material-components-android/blob/8938da8c/lib/java/com/google/android/material/internal/ContextUtils.java#L40
-tailrec fun Context.getActivity(): ComponentActivity? = this as? ComponentActivity
-    ?: (this as? ContextWrapper)?.baseContext?.getActivity()
-
-fun Window.makeWallpaperTransparency() {
-    this.navigationBarColor = Color.TRANSPARENT
-    this.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
-    this.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
-}
+tailrec fun Context.getActivity(): ComponentActivity? =
+    this as? ComponentActivity ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
 fun createFlingDetector(
     context: Context, callback: (velocityX: Float, velocityY: Float) -> Boolean
@@ -125,7 +111,7 @@ fun createFlingDetector(
 fun isSystemInDarkTheme(configuration: Configuration): Boolean =
     configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
-// Android 14 will have a grayscale dynamic colors mode and this is somehow a hack to check for that
+// Android 14 has a grayscale dynamic colors mode and this is somehow a hack to check for that
 // I guess there will be better ways to check for that in the future I guess but this does the trick
 // Android 13, at least in Extension 5 emulator image, also provides such theme.
 // https://stackoverflow.com/a/76272434
@@ -143,4 +129,9 @@ val Resources.isDynamicGrayscale: Boolean
 fun View.performHapticFeedbackVirtualKey() {
     debugLog("Preformed a haptic feedback virtual key")
     performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+}
+
+fun HapticFeedback.performLongPress() {
+    debugLog("Preformed a haptic feedback long press")
+    performHapticFeedback(HapticFeedbackType.LongPress)
 }

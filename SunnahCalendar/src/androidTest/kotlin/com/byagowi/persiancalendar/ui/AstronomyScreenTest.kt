@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,14 +12,15 @@ import com.byagowi.persiancalendar.ui.astronomy.AstronomyScreen
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 class AstronomyScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
     fun basicSmokeTest() {
-        composeTestRule.setContent {
-            AstronomyScreen({}, {}, viewModel())
+        composeTestRule.setContentWithParent { scope ->
+            AstronomyScreen(scope, {}, {}, viewModel())
         }
     }
 
@@ -26,9 +28,9 @@ class AstronomyScreenTest {
     fun astronomyScreenNavigateToMap() {
         var navigateToMapIsCalled = false
         var mapString = ""
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             mapString = stringResource(R.string.map)
-            AstronomyScreen({}, { navigateToMapIsCalled = true }, viewModel())
+            AstronomyScreen(scope, {}, { navigateToMapIsCalled = true }, viewModel())
         }
         composeTestRule.onNodeWithContentDescription(mapString)
             .assertHasClickAction()

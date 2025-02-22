@@ -16,7 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,8 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.getSystemService
@@ -39,12 +44,14 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.ui.common.AppDialog
+import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
+import com.byagowi.persiancalendar.ui.utils.shareText
 import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.TWO_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.formatCoordinateISO6709
 import com.byagowi.persiancalendar.utils.friendlyName
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.saveLocation
 import com.google.openlocationcode.OpenLocationCode
 import io.github.persiancalendar.praytimes.Coordinates
@@ -61,7 +68,7 @@ private fun AskForLocationPermissionDialog(setGranted: (Boolean) -> Unit) {
     ) { setGranted(it.entries.any()) }
 
     var showDialog by rememberSaveable { mutableStateOf(true) }
-    if (showDialog) AlertDialog(
+    if (showDialog) AppDialog(
         title = { Text(stringResource(R.string.location_access)) },
         confirmButton = {
             TextButton(onClick = {
@@ -77,9 +84,13 @@ private fun AskForLocationPermissionDialog(setGranted: (Boolean) -> Unit) {
         dismissButton = {
             TextButton(onClick = { setGranted(false) }) { Text(stringResource(R.string.cancel)) }
         },
-        onDismissRequest = { setGranted(false) },
-        text = { Text(stringResource(R.string.phone_location_required)) }
-    )
+        onDismissRequest = { setGranted(false) }
+    ) {
+        Text(
+            stringResource(R.string.phone_location_required),
+            Modifier.padding(horizontal = SettingsHorizontalPaddingItem.dp),
+        )
+    }
 }
 
 @Composable
@@ -96,7 +107,7 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
         else onDismissRequest()
     }
 
-    var message by remember { mutableStateOf(context.getString(R.string.pleasewaitgps)) }
+    var message by remember { mutableStateOf(context.getString(R.string.wait_for_gps)) }
     var coordinates by remember { mutableStateOf<Coordinates?>(null) }
     var cityName by remember { mutableStateOf<String?>(null) }
     var countryCode by remember { mutableStateOf<String?>(null) }
@@ -116,8 +127,7 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
             }.onFailure(logException)
         }
         if (showPhoneSettingsDialog) {
-            return AlertDialog(
-                text = { Text(stringResource(R.string.gps_internet_desc)) },
+            return AppDialog(
                 onDismissRequest = onDismissRequest,
                 confirmButton = {
                     TextButton(onClick = {
@@ -127,7 +137,12 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
                         }.onFailure(logException)
                     }) { Text(stringResource(R.string.accept)) }
                 }
-            )
+            ) {
+                Text(
+                    stringResource(R.string.gps_internet_desc),
+                    modifier = Modifier.padding(horizontal = SettingsHorizontalPaddingItem.dp),
+                )
+            }
         }
     }
 
@@ -144,7 +159,7 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
 
             override fun onProviderEnabled(provider: String) {
                 isOneProviderEnabled = true
-                message = context.getString(R.string.pleasewaitgps)
+                message = context.getString(R.string.wait_for_gps)
             }
 
             override fun onProviderDisabled(provider: String) {
@@ -190,7 +205,7 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
         LaunchedEffect(coord.latitude, coord.longitude) {
             // Don't set elevation/altitude even from GPS, See #1011
             val coordinate = Coordinates(coord.latitude, coord.longitude, .0)
-            context.appPrefs.saveLocation(coordinate, cityName ?: "", countryCode ?: "")
+            context.preferences.saveLocation(coordinate, cityName ?: "", countryCode ?: "")
         }
     }
 
@@ -206,14 +221,16 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
         },
     ) {
         val textModifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-        val coord =
-            coordinates ?: return@AppDialog Text(
-                message,
-                textModifier,
-                textAlign = TextAlign.Center
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 16.dp,
+                bottom = (if (coordinates == null) 16 else 0).dp,
             )
+            .fillMaxWidth()
+        val coord = coordinates ?: return@AppDialog Text(
+            message, textModifier, textAlign = TextAlign.Center,
+        )
         val text = buildAnnotatedString {
             appendLine(
                 "%s$spacedColon%.2f%s%s$spacedColon%.7f".format(
@@ -222,11 +239,34 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
                     stringResource(R.string.longitude), coord.longitude
                 )
             )
+            val geoLink = "geo:${coord.latitude},${coord.longitude}"
+            withLink(
+                link = LinkAnnotation.Clickable(
+                    tag = "pluscode",
+                    styles = TextLinkStyles(
+                        SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    )
+                ) { context.shareText(geoLink, cityName ?: "") }
+            ) { appendLine(geoLink) }
             appendLine(formatCoordinateISO6709(coord.latitude, coord.longitude, coord.elevation))
             cityName?.also(::appendLine)
             countryCode?.also(::appendLine)
-            append("https://plus.codes/")
-            append(OpenLocationCode.encode(coord.latitude, coord.longitude))
+            val plusLink =
+                "https://plus.codes/" + OpenLocationCode.encode(coord.latitude, coord.longitude)
+            withLink(
+                link = LinkAnnotation.Clickable(
+                    tag = "pluscode",
+                    styles = TextLinkStyles(
+                        SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        )
+                    )
+                ) { context.shareText(plusLink, cityName ?: "") }
+            ) { append(plusLink) }
         }
         SelectionContainer { Text(text, modifier = textModifier, textAlign = TextAlign.Center) }
     }

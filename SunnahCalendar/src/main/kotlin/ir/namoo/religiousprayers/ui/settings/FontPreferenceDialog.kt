@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.theme.AppTheme
-import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.SYSTEM_DEFAULT_FONT
 
@@ -42,10 +42,10 @@ fun FontPreferencesDialog(closeDialog: () -> Unit) {
             context.getString(R.string.vazir_light)
         )
         val fontValues = listOf("", SYSTEM_DEFAULT_FONT, "fonts/Vazirmatn-Light.ttf")
-        val fontInPref = context.appPrefs.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
+        val fontInPref = context.preferences.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
         val currentFont = fontNames[fontValues.indexOf(fontInPref)]
         fun onClick(item: String) {
-            context.appPrefs.edit {
+            context.preferences.edit {
                 putString(PREF_APP_FONT, fontValues[fontNames.indexOf(item)])
             }
             closeDialog()

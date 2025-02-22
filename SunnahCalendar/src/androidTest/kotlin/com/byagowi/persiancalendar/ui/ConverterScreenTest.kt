@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,58 +14,62 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @RunWith(AndroidJUnit4::class)
 class ConverterScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    @OptIn(ExperimentalSharedTransitionApi::class)
     @Test
     fun converterScreenSmokeTest() {
-        composeTestRule.setContent { ConverterScreen({}, viewModel()) }
+        composeTestRule.setContentWithParent { scope ->
+            ConverterScreen(scope, {}, viewModel())
+        }
     }
 
     @Test
     fun converterScreenConverterSmokeTest() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             val viewModel = viewModel<ConverterViewModel>()
-            viewModel.changeScreenMode(ConverterScreenMode.Converter)
-            ConverterScreen({}, viewModel)
+            viewModel.changeScreenMode(ConverterScreenMode.CONVERTER)
+            ConverterScreen(scope, {}, viewModel)
         }
     }
 
     @Test
     fun converterScreenDistanceSmokeTest() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             val viewModel = viewModel<ConverterViewModel>()
-            viewModel.changeScreenMode(ConverterScreenMode.Distance)
-            ConverterScreen({}, viewModel)
+            viewModel.changeScreenMode(ConverterScreenMode.DISTANCE)
+            ConverterScreen(scope, {}, viewModel)
         }
     }
 
     @Test
     fun converterScreenCalculatorSmokeTest() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             val viewModel = viewModel<ConverterViewModel>()
-            viewModel.changeScreenMode(ConverterScreenMode.Calculator)
-            ConverterScreen({}, viewModel)
+            viewModel.changeScreenMode(ConverterScreenMode.CALCULATOR)
+            ConverterScreen(scope, {}, viewModel)
         }
     }
 
     @Test
     fun converterScreenQrCodeSmokeTest() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             val viewModel = viewModel<ConverterViewModel>()
-            viewModel.changeScreenMode(ConverterScreenMode.QrCode)
-            ConverterScreen({}, viewModel)
+            viewModel.changeScreenMode(ConverterScreenMode.QR_CODE)
+            ConverterScreen(scope, {}, viewModel)
         }
     }
 
     @Test
     fun converterScreenTimeZonesSmokeTest() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithParent { scope ->
             val viewModel = viewModel<ConverterViewModel>()
-            viewModel.changeScreenMode(ConverterScreenMode.TimeZones)
-            ConverterScreen({}, viewModel)
+            viewModel.changeScreenMode(ConverterScreenMode.TIME_ZONES)
+            ConverterScreen(scope, {}, viewModel)
         }
     }
 
@@ -90,15 +95,15 @@ class ConverterScreenTest {
             LaunchedEffect(Unit) { viewModel.todayButtonVisibility.collect(values::add) }
         }
         listOf(
-            { viewModel.changeScreenMode(ConverterScreenMode.Distance) },
+            { viewModel.changeScreenMode(ConverterScreenMode.DISTANCE) },
             { viewModel.changeSecondSelectedDate(Jdn.today() + 1) },
             { viewModel.changeSecondSelectedDate(Jdn.today()) },
             { viewModel.changeSecondSelectedDate(Jdn.today() + 1) },
-            { viewModel.changeScreenMode(ConverterScreenMode.Converter) },
+            { viewModel.changeScreenMode(ConverterScreenMode.CONVERTER) },
             { viewModel.changeSecondSelectedDate(Jdn.today()) },
-            { viewModel.changeScreenMode(ConverterScreenMode.Calculator) },
+            { viewModel.changeScreenMode(ConverterScreenMode.CALCULATOR) },
             { viewModel.changeSecondSelectedDate(Jdn.today()) },
-            { viewModel.changeScreenMode(ConverterScreenMode.QrCode) },
+            { viewModel.changeScreenMode(ConverterScreenMode.QR_CODE) },
             { viewModel.changeSecondSelectedDate(Jdn.today()) },
         ).forEach { it(); composeTestRule.waitForIdle() }
         assertEquals(listOf(false, true, false, true, false), values)

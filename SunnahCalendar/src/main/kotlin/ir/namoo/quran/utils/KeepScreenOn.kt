@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun KeepScreenOn(timeoutMillis: Long = 10 * 60 * 1000) {
+fun KeepScreenOn(timeoutMillis: Long = 30 * 60 * 1000) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 

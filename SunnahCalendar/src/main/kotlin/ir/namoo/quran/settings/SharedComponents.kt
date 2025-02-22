@@ -1,13 +1,15 @@
 package ir.namoo.quran.settings
 
 import android.graphics.Typeface
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,13 +20,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandCircleDown
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,23 +36,23 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import kotlinx.coroutines.launch
 
 @Composable
 fun MySwitchBox(
@@ -57,51 +61,52 @@ fun MySwitchBox(
     label: String,
     onCheckChanged: (Boolean) -> Unit
 ) {
-    ElevatedCard(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .padding(vertical = 2.dp, horizontal = 4.dp)
-            .clickable {
-                onCheckChanged(!checked)
+    Row(modifier = modifier
+        .clickable { onCheckChanged(!checked) }
+        .padding(2.dp)
+        .background(
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = MaterialTheme.shapes.extraLarge
+        )
+        .padding(6.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            modifier = Modifier.padding(4.dp),
+            text = label,
+            fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Normal
+        )
+        Switch(checked = checked, onCheckedChange = null, thumbContent = {
+            AnimatedVisibility(
+                visible = checked, enter = expandHorizontally(), exit = shrinkHorizontally()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Check",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-    ) {
-        Row(
-            modifier = Modifier.padding(vertical = 0.dp, horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = label,
-                fontSize = 16.sp
-            )
-            Switch(checked = checked, onCheckedChange = {
-                onCheckChanged(it)
-            }, thumbContent = {
-                AnimatedVisibility(
-                    visible = checked, enter = expandVertically(), exit = shrinkVertically()
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Check",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            })
-        }
+            AnimatedVisibility(
+                visible = !checked, enter = expandHorizontally(), exit = shrinkHorizontally()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Check",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        })
     }
 }
 
 @Composable
 fun MySlider(modifier: Modifier = Modifier, value: Float, onValueChanged: (Float) -> Unit) {
-    ElevatedCard(modifier = modifier.clip(MaterialTheme.shapes.extraLarge)) {
-        Slider(
-            modifier = modifier,
-            value = value,
-            onValueChange = { onValueChanged(it) },
-            valueRange = 10f..52f,
-            steps = 40
-        )
-    }
+    Slider(
+        modifier = modifier,
+        value = value,
+        onValueChange = { onValueChanged(it) },
+        valueRange = 10f..52f,
+        steps = 40
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -114,50 +119,43 @@ fun MyBtnGroup(
     onCheckChanged: (String) -> Unit,
     isPathSetting: Boolean = false
 ) {
-    ElevatedCard(
+    Column(
         modifier = modifier
-            .clip(MaterialTheme.shapes.extraLarge)
             .fillMaxWidth()
-    ) {
-        if (title.isNotEmpty())
-            Text(
-                modifier = Modifier.padding(16.dp, 4.dp),
-                text = title,
-                fontSize = 16.sp
+            .background(
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.extraLarge
             )
+    ) {
+        if (title.isNotEmpty()) Text(
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+            text = title,
+            fontWeight = FontWeight.SemiBold
+        )
         FlowRow(
-            modifier = Modifier
-                .padding(2.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalArrangement = Arrangement.Center
         ) {
             items.forEach {
-                ElevatedAssistChip(
+                ElevatedButton(
                     modifier = Modifier
                         .padding(2.dp)
                         .animateContentSize(animationSpec = spring()),
-                    label = {
-                        Text(
-                            text = if (isPathSetting) {
-                                if (it.contains("emulated")) stringResource(id = R.string.internal)
-                                else stringResource(id = R.string.external)
-                            } else it
-                        )
-                    },
                     onClick = { onCheckChanged(it) },
-                    trailingIcon = {
-                        AnimatedVisibility(
-                            visible = it == checkedItem,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
-                        ) {
-                            Icon(imageVector = Icons.Filled.Check, contentDescription = "Check")
-                        }
-                    },
-                    shape = MaterialTheme.shapes.extraLarge,
-                    colors = AssistChipDefaults.elevatedAssistChipColors()
-                )
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = if (it == checkedItem) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        contentColor = if (it == checkedItem) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Text(
+                        text = if (isPathSetting) {
+                            if (it.contains("emulated")) stringResource(id = R.string.internal)
+                            else stringResource(id = R.string.external)
+                        } else it,
+                        fontWeight = if (it == checkedItem) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
             }
         }
     }
@@ -175,71 +173,53 @@ fun MyFontSelector(
     onFontFamilyChanged: (String) -> Unit,
     onFontSizeChanged: (Float) -> Unit
 ) {
-    val expanded = remember { mutableStateOf(false) }
-    val rotate = remember { Animatable(0f) }
-    val coroutineScope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
+    val rotate by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f, label = "rotate", animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium
+        )
+    )
 
     ElevatedCard(
         modifier = modifier
-            .clip(MaterialTheme.shapes.extraLarge)
             .fillMaxWidth()
+            .padding(2.dp), shape = MaterialTheme.shapes.medium
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                modifier = Modifier
-                    .padding(16.dp, 4.dp)
-                    .weight(2f),
+                modifier = Modifier.padding(start = 8.dp),
                 text = title,
-                fontSize = 16.sp
+                fontWeight = FontWeight.SemiBold
             )
-            ElevatedAssistChip(modifier = Modifier
-                .padding(4.dp, 2.dp)
-                .weight(1f), onClick = {
-                expanded.value = !expanded.value
-                coroutineScope.launch {
-                    rotate.animateTo(
-                        if (expanded.value) 180f else 0f, animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMedium
-                        )
-                    )
-                }
-            }, label = {
-                Text(text = stringResource(id = R.string.select_font))
-            }, leadingIcon = {
+            ElevatedButton(
+                modifier = Modifier.padding(end = 8.dp),
+                onClick = { expanded = !expanded }) {
                 Icon(
-                    modifier = Modifier.rotate(rotate.value),
+                    modifier = Modifier.rotate(rotate),
                     imageVector = Icons.Filled.ExpandCircleDown,
                     contentDescription = "DropDown"
                 )
-                DropdownMenu(expanded = expanded.value, onDismissRequest = {
-                    expanded.value = false
-                    coroutineScope.launch {
-                        rotate.animateTo(
-                            if (expanded.value) 180f else 0f, animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMedium
-                            )
-                        )
-                    }
-                }) {
+                Spacer(modifier = Modifier.width(8.dp))
+                AnimatedContent(
+                    targetState = fontNames[fontList.indexOf(selectedFont)],
+                    label = "font"
+                ) {
+                    Text(text = it)
+                }
+                DropdownMenu(expanded = expanded,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    onDismissRequest = { expanded = false }) {
                     fontList.forEach { font ->
                         DropdownMenuItem(text = { Text(text = fontNames[fontList.indexOf(font)]) },
                             onClick = {
+                                expanded = false
                                 onFontFamilyChanged(font)
-                                expanded.value = false
-                                coroutineScope.launch {
-                                    rotate.animateTo(
-                                        if (expanded.value) 180f else 0f,
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessMedium
-                                        )
-                                    )
-                                }
-                            }, trailingIcon = {
+                            },
+                            trailingIcon = {
                                 if (selectedFont == font) Icon(
                                     imageVector = Icons.Filled.Check,
                                     contentDescription = "Check",
@@ -248,8 +228,7 @@ fun MyFontSelector(
                             })
                     }
                 }
-
-            })
+            }
         }
 
         MySlider(modifier = Modifier.padding(16.dp, 2.dp),

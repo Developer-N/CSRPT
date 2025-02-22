@@ -12,3 +12,5 @@
 /captures
 .externalNativeBuild
 .cxx
+/SunnahCalendar/google-services.json
+/SunnahCalendar/build

@@ -11,8 +11,8 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.TypedValue
 import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.withRotation
 import com.byagowi.persiancalendar.QIBLA_LATITUDE
@@ -25,7 +25,6 @@ import com.byagowi.persiancalendar.ui.common.AngleDisplay
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.ui.utils.sp
 import com.byagowi.persiancalendar.utils.toObserver
 import java.util.GregorianCalendar
 import kotlin.math.cbrt
@@ -49,15 +48,15 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
 
     private val northwardShapePath = Path()
     private val northArrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.north_arrow)
+        it.color = 0xFFFF0000.toInt()
         it.style = Paint.Style.FILL
     }
     private val markerPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.color = Color.GRAY
     }
     private val dp = resources.dp
     private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.color = Color.GRAY
         it.strokeWidth = .5f * dp
         it.style = Paint.Style.STROKE // Sadece Cember ciziyor.
     }
@@ -81,7 +80,8 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
     private val qiblaPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0xFF009000.toInt()
         it.style = Paint.Style.FILL_AND_STROKE
-        it.pathEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
+        val dashSize = 4 * dp
+        it.pathEffect = DashPathEffect(floatArrayOf(dashSize, dashSize / 2), 0f)
     }
     private val kaaba = resources.getDrawable(R.drawable.kaaba, null)
         .toBitmap((32 * dp).toInt(), (32 * dp).toInt())
@@ -94,14 +94,13 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
     private val observer = coordinates.value?.toObserver()
     private var astronomyState = observer?.let { AstronomyState(it, GregorianCalendar()) }
 
-    private val fullDay = Clock(24, 0).toMinutes().toFloat()
-    private var sunProgress = Clock(GregorianCalendar()).toMinutes() / fullDay
+    private var sunProgress = (Clock(GregorianCalendar()).value / 24).toFloat()
 
     private val enableShade = false
 
     fun setTime(time: GregorianCalendar) {
         astronomyState = observer?.let { AstronomyState(it, time) }
-        sunProgress = Clock(time).toMinutes() / fullDay
+        sunProgress = (Clock(time).value / 24).toFloat()
         invalidate()
     }
 
@@ -120,11 +119,11 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
             invalidate()
         }
     private val planetsPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.color = Color.GRAY
         it.textAlign = Paint.Align.CENTER
     }
     private val textPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
-        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.color = Color.GRAY
         it.textAlign = Paint.Align.CENTER
     }
     private val textStrokePaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
@@ -162,7 +161,8 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
     init {
         val matrixProperties = FloatArray(9)
         maxScale = 2f
-        val textSize = resources.sp(12f)
+        val textSize =
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12f, resources.displayMetrics)
         val dashSize = 1 * dp
         onDraw = fun(canvas: Canvas, matrix: Matrix) {
             matrix.getValues(matrixProperties)

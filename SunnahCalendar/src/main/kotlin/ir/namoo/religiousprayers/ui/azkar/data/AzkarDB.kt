@@ -44,7 +44,7 @@ abstract class AzkarDB : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_1_2 = object:Migration(1,2){
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("update azkar_items set ar = \"رَضِيتُ بِاللَّهِ رَبَّاً، وَبِالْإِسْلاَمِ دِيناً، وَبِمُحَمَّدٍ صلى الله عليه وسلم نَبِيّاً (ثلاث مرات)\" where id = 110")
             }
@@ -89,6 +89,12 @@ interface AzkarDAO {
     @Query("select * from azkar_items where chapter_id=:chapterID")
     suspend fun getAzkarItems(chapterID: Int): List<AzkarItem>
 
+    @Query("select * from azkar_items where id=:itemID")
+    suspend fun getAzkarItem(itemID: Int): AzkarItem?
+
+    @Update
+    suspend fun updateAzkarItem(azkarItem: AzkarItem)
+
     @Query("select * from azkar_references where chapter_id=:chapterID")
     suspend fun getAzkarReferences(chapterID: Int): List<AzkarReference>
 
@@ -114,7 +120,7 @@ data class AzkarChapter(
     @ColumnInfo(name = "ar") val arabic: String?,
     @ColumnInfo(name = "fa") val persian: String?,
     @ColumnInfo(name = "en") val english: String?,
-    @ColumnInfo(name = "fav") var fav: Int
+    @ColumnInfo(name = "fav") val fav: Int
 )
 
 @Entity(tableName = "azkar_items")
@@ -125,7 +131,7 @@ data class AzkarItem(
     @ColumnInfo(name = "ar") val arabic: String?,
     @ColumnInfo(name = "fa") val persian: String?,
     @ColumnInfo(name = "en") val english: String?,
-    @ColumnInfo(name = "sound") val sound: String?
+    @ColumnInfo(name = "sound") var sound: String?
 )
 
 @Entity(tableName = "azkar_references")

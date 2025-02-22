@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat
 import com.byagowi.persiancalendar.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -16,7 +15,6 @@ class LocationTracker(
     private val fusedLocationProviderClient: FusedLocationProviderClient,
     private val context: Context
 ) : LocationTrackerInterface {
-    @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getCurrentLocation() = flow {
         emit(LocationResult.Loading)
         val hasAccessFineLocationPermission = ContextCompat.checkSelfPermission(
@@ -28,9 +26,7 @@ class LocationTracker(
         ) == PackageManager.PERMISSION_GRANTED
 
 
-        val locationManager = context.getSystemService(
-            Context.LOCATION_SERVICE
-        ) as LocationManager
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val isGpsEnabled =
             locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) || locationManager.isProviderEnabled(
@@ -52,9 +48,9 @@ class LocationTracker(
                     }
                     if (isComplete) {
                         if (isSuccessful) {
-                            cont.resume(LocationResult.Success(result)) {}
+                            cont.resume(LocationResult.Success(result))
                         } else {
-                            cont.resume(LocationResult.Error(context.getString(R.string.location_not_detected))) {}
+                            cont.resume(LocationResult.Error(context.getString(R.string.location_not_detected)))
                         }
                         return@suspendCancellableCoroutine
                     }

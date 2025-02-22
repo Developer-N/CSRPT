@@ -6,13 +6,19 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.update
+import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
+import ir.namoo.commons.PREF_JUMMA_SILENT
+import ir.namoo.commons.PREF_JUMMA_SILENT_MINUTE
+import ir.namoo.commons.PREF_SHOW_SYSTEM_RINGTONES
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
@@ -62,6 +68,12 @@ class AthanSettingsViewModel(
     private val _silentMinute = MutableStateFlow(10)
     val silentMinute = _silentMinute.asStateFlow()
 
+    private val _enableJummaSilent = MutableStateFlow(false)
+    val enableJummaSilent = _enableJummaSilent.asStateFlow()
+
+    private val _silentJummaMinute = MutableStateFlow(40)
+    val silentJummaMinute = _silentJummaMinute.asStateFlow()
+
     private val _ascendingVolume = MutableStateFlow(false)
     val ascendingVolume = _ascendingVolume.asStateFlow()
 
@@ -92,6 +104,9 @@ class AthanSettingsViewModel(
     private val _isAlarmPlaying = MutableStateFlow(false)
     val isAlarmPlaying = _isAlarmPlaying.asStateFlow()
 
+    private val _selectedBackground = MutableStateFlow<String?>(null)
+    val selectedBackground = _selectedBackground.asStateFlow()
+
     fun loadData(context: Context, id: Int) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -109,7 +124,11 @@ class AthanSettingsViewModel(
             _silentMinute.value = athanSettings.silentMinute
             _ascendingVolume.value = athanSettings.isAscending
             _volume.value = athanSettings.athanVolume
+            _selectedBackground.value = athanSettings.backgroundUri
 
+            _enableJummaSilent.value = context.preferences.getBoolean(PREF_JUMMA_SILENT, false)
+            _silentJummaMinute.value =
+                context.preferences.getInt(PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE)
 
             val cursor = RingtoneManager(context).cursor
             val tmpNames = mutableListOf<String>()
@@ -149,8 +168,11 @@ class AthanSettingsViewModel(
                     }
             }
             _athanNames.value =
-                (getNames(if (athanId == 1) 1 else 0, context) + systemRingtoneNames.value).toList()
-
+                if (context.preferences.getBoolean(PREF_SHOW_SYSTEM_RINGTONES, false))
+                    (getNames(if (athanId == 1) 1 else 0, context) + systemRingtoneNames.value)
+                        .toList()
+                else
+                    getNames(if (athanId == 1) 1 else 0, context).toList()
             _selectedAlarm.value = context.getString(R.string.default_alert_before_name)
             if (athanSettings.alertURI.isNotEmpty()) {
                 _selectedAlarm.value =
@@ -168,7 +190,11 @@ class AthanSettingsViewModel(
                         }
                     }
             }
-            _alarmNames.value = (getNames(2, context) + systemRingtoneNames.value).toList()
+            _alarmNames.value =
+                if (context.preferences.getBoolean(PREF_SHOW_SYSTEM_RINGTONES, false))
+                    (getNames(2, context) + systemRingtoneNames.value).toList()
+                else
+                    getNames(2, context).toList()
 
             _isLoading.value = false
         }
@@ -245,12 +271,31 @@ class AthanSettingsViewModel(
         }
     }
 
-
     fun updateSilentMinutes(context: Context, minutes: Int) {
         viewModelScope.launch {
             athanSettings.silentMinute = minutes
             _silentMinute.value = minutes
             athanSettingsDB.athanSettingsDAO().update(athanSettings)
+            update(context, true)
+        }
+    }
+
+    fun updateJummaSilentState(context: Context) {
+        viewModelScope.launch {
+            context.preferences.edit {
+                putBoolean(PREF_JUMMA_SILENT, !enableJummaSilent.value)
+            }
+            _enableJummaSilent.value = !enableJummaSilent.value
+            update(context, true)
+        }
+    }
+
+    fun updateJummaSilentMinute(context: Context, minutes: Int) {
+        viewModelScope.launch {
+            context.preferences.edit {
+                putInt(PREF_JUMMA_SILENT_MINUTE, minutes)
+            }
+            _silentJummaMinute.value = minutes
             update(context, true)
         }
     }
@@ -325,7 +370,7 @@ class AthanSettingsViewModel(
         }
     }
 
-    private fun getNames(type: Int, context: Context): Array<String> {
+    private suspend fun getNames(type: Int, context: Context): Array<String> {
         val athanNames = arrayListOf<String>()
         athanNames.add(
             when (type) {
@@ -336,12 +381,13 @@ class AthanSettingsViewModel(
         )
 
         val existsFiles = getAllAvailableAthans(context)
-        val inDB = athanDB.athanDAO().getAllAthans()
-        for (f in existsFiles) {
-            val fName = getFileNameFromLink(f.absolutePath)
-            for (d in inDB) if ((d.link.contains(fName) || d.fileName.contains(fName)) && (d.type == type || (type == 1 && d.type == 0) || (type == 0 && d.type == 1))) athanNames.add(
-                d.name
-            )
+        val athansInDB = athanDB.athanDAO().getAllAthans()
+        for (file in existsFiles) {
+            val fileName = getFileNameFromLink(file.absolutePath)
+            for (athan in athansInDB)
+                if (athan.link.split("/").last() == fileName)
+                    if (((type == 0 || type == 1) && athan.type == 1) || (type == 2 && athan.type == 2))
+                        athanNames.add(athan.name)
         }
 
         val res = Array(athanNames.size, init = { i -> "$i" })
@@ -407,6 +453,16 @@ class AthanSettingsViewModel(
                     }.onFailure(logException)
                 }
             }
+        }
+    }
+
+    fun updateSelectedBackground(newBackground: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            athanSettings.backgroundUri = newBackground
+            _selectedBackground.value = newBackground
+            athanSettingsDB.athanSettingsDAO().update(athanSettings)
+            _isLoading.value = false
         }
     }
 

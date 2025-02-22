@@ -33,7 +33,6 @@ import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.getFromStringId
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.variants.debugLog
 import io.github.persiancalendar.praytimes.PrayTimes
@@ -50,26 +49,20 @@ import kotlin.math.abs
 
 fun scheduleAzkars(context: Context, prayTimeProvider: PrayTimeProvider) {
     var prayTimes: PrayTimes = coordinates.value?.calculatePrayTimes() ?: return
-    prayTimeProvider.replace(prayTimes, Jdn.today())?.let {
-        prayTimes = it
-    }
+    prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())
     val morningAzkarTime = Calendar.getInstance().also {
-        val alarmTime = Clock.fromMinutesCount(
-            prayTimes.getFromStringId(R.string.fajr).toMinutes() + 30
-        )
-        it[Calendar.HOUR_OF_DAY] = alarmTime.hours
-        it[Calendar.MINUTE] = alarmTime.minutes
+        val alarmTime = Clock(prayTimes.fajr).plus(Clock(0.5)).toHoursAndMinutesPair()
+        it[Calendar.HOUR_OF_DAY] = alarmTime.first
+        it[Calendar.MINUTE] = alarmTime.second
         it[Calendar.SECOND] = 0
     }.timeInMillis
 
     scheduleAzkar(context, "morning", morningAzkarTime, 17)
 
     val eveningAzkarTime = Calendar.getInstance().also {
-        val alarmTime = Clock.fromMinutesCount(
-            prayTimes.getFromStringId(R.string.asr).toMinutes() + 45
-        )
-        it[Calendar.HOUR_OF_DAY] = alarmTime.hours
-        it[Calendar.MINUTE] = alarmTime.minutes
+        val alarmTime = Clock(prayTimes.asr).plus(Clock(0.75)).toHoursAndMinutesPair()
+        it[Calendar.HOUR_OF_DAY] = alarmTime.first
+        it[Calendar.MINUTE] = alarmTime.second
         it[Calendar.SECOND] = 0
     }.timeInMillis
     scheduleAzkar(context, "evening", eveningAzkarTime, 18)
@@ -167,9 +160,10 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
         }
         notificationManager?.createNotificationChannel(notificationChannel)
     }
-    val title =
+    val title = context.getString(R.string.azkar_notification_title)
+    val zikrTitle =
         if (name == "morning") context.getString(R.string.morning_azkar) else context.getString(R.string.evening_azkar)
-    val subtitle = String.format(context.getString(R.string.for_read_azkar_tap), title)
+    val subtitle = String.format(context.getString(R.string.azkar_notification_message), zikrTitle)
     val notificationBuilder = NotificationCompat.Builder(context, notificationChannelId)
 
     val id = if (name == "morning") 27 else 28
@@ -190,6 +184,13 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
         .setCategory(NotificationCompat.CATEGORY_ALARM)
         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         .setContentIntent(pendingIntent)
+        .addAction(
+            NotificationCompat.Action.Builder(
+                R.drawable.ic_azkar,
+                context.getString(R.string.read_azkar),
+                pendingIntent
+            ).build()
+        )
     with(NotificationManagerCompat.from(context)) {
         if (ActivityCompat.checkSelfPermission(
                 context, Manifest.permission.POST_NOTIFICATIONS

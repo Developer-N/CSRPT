@@ -3,19 +3,26 @@ package com.byagowi.persiancalendar.ui.level
 import android.content.pm.ActivityInfo
 import android.os.PowerManager
 import android.view.Surface
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.safeGesturesPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material.icons.Icons
@@ -23,10 +30,8 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.SyncAlt
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -37,8 +42,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -48,9 +54,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_COMPASS
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_LEVEL
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_STOP
+import com.byagowi.persiancalendar.ui.common.AppBottomAppBar
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ShrinkingFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.StopButton
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
@@ -60,8 +72,13 @@ import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.variants.debugLog
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
+fun SharedTransitionScope.LevelScreen(
+    navigateUp: () -> Unit,
+    navigateToCompass: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+) {
     var isStopped by remember { mutableStateOf(false) }
     var orientationProvider by remember { mutableStateOf<OrientationProvider?>(null) }
     val announcer = remember { SensorEventAnnouncer(R.string.level) }
@@ -70,7 +87,7 @@ fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
     val context = LocalContext.current
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(Unit) {
+    DisposableEffect(lifecycleOwner) {
         val activity = context.getActivity() ?: return@DisposableEffect onDispose {}
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -123,10 +140,17 @@ fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
                 colors = appTopAppBarColors(),
                 navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
                 actions = {
-                    AppIconButton(
-                        icon = Icons.Default.SyncAlt,
-                        title = "cm / in",
-                    ) { cmInchFlip = !cmInchFlip }
+                    run {
+                        val rotation by animateFloatAsState(
+                            if (cmInchFlip) 180f else 0f, label = "rotation",
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        )
+                        AppIconButton(
+                            icon = Icons.Default.SyncAlt,
+                            title = "cm / in",
+                            iconModifier = Modifier.rotate(rotation),
+                        ) { cmInchFlip = !cmInchFlip }
+                    }
                     AppIconButton(
                         icon = Icons.Default.Fullscreen,
                         title = stringResource(R.string.full_screen),
@@ -140,13 +164,14 @@ fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
             animationSpec = tween(durationMillis = 500, easing = LinearEasing),
             label = "corner",
         )
-        Surface(
+        ScreenSurface(
+            animatedContentScope = animatedContentScope,
             shape = MaterialTheme.shapes.large.copy(
                 topStart = CornerSize(topCornersRoundness),
                 topEnd = CornerSize(topCornersRoundness),
                 bottomStart = ZeroCornerSize,
                 bottomEnd = ZeroCornerSize,
-            )
+            ),
         ) {
             Box {
                 Crossfade(targetState = cmInchFlip, label = "ruler") { state ->
@@ -165,7 +190,11 @@ fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
                     AndroidView(
                         modifier = Modifier
                             .weight(1f, fill = false)
-                            .then(if (isFullscreen) Modifier.safeDrawingPadding() else Modifier),
+                            .then(if (isFullscreen) Modifier.safeDrawingPadding() else Modifier)
+                            .sharedBounds(
+                                rememberSharedContentState(key = SHARED_CONTENT_KEY_LEVEL),
+                                animatedVisibilityScope = animatedContentScope,
+                            ),
                         factory = {
                             val levelView = LevelView(it)
                             context.getActivity()?.let { activity ->
@@ -186,25 +215,36 @@ fun LevelScreen(navigateUp: () -> Unit, navigateToCompass: () -> Unit) {
                         },
                     )
                     AnimatedVisibility(visible = !isFullscreen) {
-                        BottomAppBar {
-                            Spacer(Modifier.width(8.dp))
-                            AnimatedVisibility(visible = !isFullscreen) {
-                                AppIconButton(
-                                    icon = Icons.Default.Explore,
-                                    title = stringResource(R.string.compass),
-                                    onClick = navigateToCompass,
+                        AppBottomAppBar {
+                            AppIconButton(
+                                icon = Icons.Default.Explore,
+                                title = stringResource(R.string.compass),
+                                iconModifier = Modifier.sharedBounds(
+                                    rememberSharedContentState(key = SHARED_CONTENT_KEY_COMPASS),
+                                    animatedVisibilityScope = animatedContentScope,
+                                ),
+                                onClick = navigateToCompass,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Box(
+                                Modifier.sharedElement(
+                                    rememberSharedContentState(SHARED_CONTENT_KEY_STOP),
+                                    animatedVisibilityScope = animatedContentScope,
                                 )
-                            }
-                            Spacer(Modifier.weight(1f, fill = true))
-                            StopButton(isStopped) { isStopped = it }
-                            Spacer(Modifier.width(16.dp))
+                            ) { StopButton(isStopped) { isStopped = it } }
                         }
                     }
                 }
+
+                var bottomWindowInset by remember { mutableStateOf(0.dp) }
+                if (!isFullscreen) bottomWindowInset = with(LocalDensity.current) {
+                    WindowInsets.systemBars.getBottom(this).toDp()
+                }
+
                 if (isFullscreen) Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(horizontal = 20.dp, vertical = 32.dp),
+                        .padding(end = 24.dp, bottom = bottomWindowInset + 16.dp),
                 ) { StopButton(isStopped) { isStopped = it } }
 
                 ShrinkingFloatingActionButton(

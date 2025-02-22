@@ -234,80 +234,77 @@ public val citiesStore: Map<String, CityItem> = mapOf(
         key = "BALKH",
         en = "Balkh", fa = "بلخ", ckb = "بەلخ", ar = "بلخ",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(36.7, 67.11, 0.0)
     ),
     "BAMYAN" to CityItem(
         key = "BAMYAN",
         en = "Bamyan", fa = "بامیان", ckb = "بامیان", ar = "باميان",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(34.81, 67.81, 0.0)
     ),
     "DAYKUNDI" to CityItem(
         key = "DAYKUNDI",
         en = "Daykundi", fa = "دایکندی", ckb = "دایکوندی", ar = "دايكندي",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(33.75, 66.25, 0.0)
     ),
     "GHAZNI" to CityItem(
         key = "GHAZNI",
         en = "Ghazni", fa = "غزنی", ckb = "غەزنی", ar = "غزني",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(33.55, 68.41, 0.0)
+    ),
+    "GHOR" to CityItem(
+        key = "GHOR",
+        en = "Ghor", fa = "غور", ckb = "غۆر", ar = "غور",
+        countryCode = "af",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
+        coordinates = Coordinates(34.0, 65.0, 0.0)
     ),
     "HELMAND" to CityItem(
         key = "HELMAND",
         en = "Helmand", fa = "هلمند", ckb = "ھێلمەند", ar = "هلمند",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(31.58, 64.36, 0.0)
     ),
     "HERAT" to CityItem(
         key = "HERAT",
         en = "Herat", fa = "هرات", ckb = "ھەرات", ar = "هرات",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(34.34, 62.2, 0.0)
     ),
     "KABUL" to CityItem(
         key = "KABUL",
         en = "Kabul", fa = "کابل", ckb = "کابول", ar = "كابل",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(34.53, 69.16, 0.0)
     ),
     "KANDAHAR" to CityItem(
         key = "KANDAHAR",
         en = "Kandahar", fa = "قندهار", ckb = "قەندەھار", ar = "قندهار",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(31.61, 65.71, 0.0)
     ),
     "KUNDUZ" to CityItem(
         key = "KUNDUZ",
         en = "Kunduz", fa = "قندوز", ckb = "کوندوز", ar = "قندوز",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(36.728, 68.868, 0.0)
     ),
     "NANGARHAR" to CityItem(
         key = "NANGARHAR",
         en = "Nangarhar", fa = "ننگرهار", ckb = "نەنگەرھار", ar = "ننجرهار",
         countryCode = "af",
-        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr =
-        "أفغانستان",
+        countryEn = "Afghanistan", countryFa = "افغانستان", countryCkb = "ئەفغانستان", countryAr = "أفغانستان",
         coordinates = Coordinates(34.43, 70.44, 0.0)
     ),
     "KARBALA" to CityItem(

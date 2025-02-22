@@ -6,14 +6,15 @@ import android.graphics.Matrix
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,18 +38,17 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.NightlightRound
 import androidx.compose.material.icons.filled.SocialDistance
 import androidx.compose.material.icons.filled._3dRotation
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -62,33 +62,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.PREF_SHOW_QIBLA_IN_COMPASS
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MAP
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_TIME_BAR
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.ui.calendar.dialogs.DayPickerDialog
 import com.byagowi.persiancalendar.ui.common.AppDialog
+import com.byagowi.persiancalendar.ui.common.DatePickerDialog
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.CoordinatesDialog
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.GPSLocationDialog
+import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
-import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
+import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.utils.ONE_MINUTE_IN_MILLIS
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import io.github.persiancalendar.praytimes.Coordinates
@@ -96,9 +99,14 @@ import kotlinx.coroutines.delay
 import java.util.Date
 import kotlin.math.abs
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewModel) {
+fun SharedTransitionScope.MapScreen(
+    animatedContentScope: AnimatedContentScope,
+    navigateUp: () -> Unit,
+    fromSettings: Boolean,
+    viewModel: MapViewModel,
+) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val mapDraw = remember { MapDraw(context.resources) }
@@ -147,8 +155,16 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
-    val menu = listOf<Triple<ImageVector, @StringRes Int, () -> Unit>>(
-        Triple(Icons.Default._3dRotation, R.string.show_globe_view_label) onClick@{
+
+    class MenuItem(
+        val icon: ImageVector,
+        @StringRes val title: Int,
+        val isEnabled: () -> Boolean = { false },
+        val onClick: () -> Unit
+    )
+
+    val menu = listOf(
+        MenuItem(Icons.Default._3dRotation, R.string.show_globe_view_label) onClick@{
             val textureSize = 2048
             val bitmap =
                 runCatching { createBitmap(textureSize, textureSize) }.onFailure(logException)
@@ -169,24 +185,33 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
             showGlobeDialog(context, bitmap, lifecycleOwner.lifecycle)
             // DO NOT use bitmap after this
         },
-        Triple(Icons.Default.SocialDistance, R.string.show_direct_path_label) {
+        MenuItem(Icons.Default.SocialDistance,
+            R.string.show_direct_path_label,
+            { state.isDirectPathMode }) {
             if (state.coordinates == null) showGpsDialog = true
             else viewModel.toggleDirectPathMode()
         },
-        Triple(Icons.Default.Grid3x3, R.string.show_grid_label) {
+        MenuItem(Icons.Default.Grid3x3, R.string.show_grid_label, { state.displayGrid }) {
             viewModel.toggleDisplayGrid()
         },
-        Triple(Icons.Default.MyLocation, R.string.show_my_location_label) { showGpsDialog = true },
-        Triple(Icons.Default.LocationOn, R.string.show_location_label) {
+        MenuItem(Icons.Default.MyLocation, R.string.show_my_location_label) {
+            showGpsDialog = true
+        },
+        MenuItem(Icons.Default.LocationOn,
+            R.string.show_location_label,
+            { state.coordinates != null && state.displayLocation }) {
             if (state.coordinates == null) showGpsDialog = true
             else viewModel.toggleDisplayLocation()
         },
-        Triple(Icons.Default.NightlightRound, R.string.show_night_mask_label) {
-            if (viewModel.state.value.mapType == MapType.None) showMapTypesDialog = true
-            else viewModel.changeMapType(MapType.None)
+        MenuItem(
+            Icons.Default.NightlightRound, R.string.show_night_mask_label,
+            { state.mapType != MapType.NONE },
+        ) {
+            if (viewModel.state.value.mapType == MapType.NONE) showMapTypesDialog = true
+            else viewModel.changeMapType(MapType.NONE)
         },
     )
-    val showKaaba = remember { context.appPrefs.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true) }
+    val showKaaba = remember { context.preferences.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true) }
     var formattedTime by remember { mutableStateOf("") }
     Box {
         // Best effort solution for landscape view till figuring out something better
@@ -194,11 +219,16 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
             Column {
                 Spacer(Modifier.windowInsetsTopHeight(WindowInsets.systemBars))
                 Spacer(Modifier.height((16 + menuHeight + 16).dp))
-                Surface(Modifier.fillMaxSize(), shape = materialCornerExtraLargeTop()) {}
+                ScreenSurface(animatedContentScope) { Box(Modifier.fillMaxSize()) }
             }
         }
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .sharedBounds(
+                    rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
+                    animatedVisibilityScope = animatedContentScope,
+                ),
             factory = {
                 val root = ZoomableView(it)
                 root.contentWidth = mapDraw.mapWidth.toFloat()
@@ -270,29 +300,22 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
                     )
                 },
             )
-            menu.forEach { (icon, title, action) ->
+            menu.forEach {
                 NavigationRailItem(
                     modifier = Modifier.weight(1f),
-                    onClick = action,
+                    onClick = it.onClick,
                     selected = false,
                     icon = {
                         TooltipBox(
                             positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            tooltip = { PlainTooltip { Text(text = stringResource(title)) } },
+                            tooltip = { PlainTooltip { Text(text = stringResource(it.title)) } },
                             state = rememberTooltipState()
                         ) {
-                            Icon(
-                                icon, contentDescription = stringResource(title),
-                                // We need more than Triple or defining a new class, oh well
-                                tint = if (when (title) {
-                                        R.string.show_grid_label -> state.displayGrid
-                                        R.string.show_location_label -> state.coordinates != null && state.displayLocation
-                                        R.string.show_direct_path_label -> state.isDirectPathMode
-                                        R.string.show_night_mask_label -> state.mapType != MapType.None
-                                        else -> false
-                                    }
-                                ) MaterialTheme.colorScheme.inversePrimary else LocalContentColor.current
+                            val tint by animateColor(
+                                if (it.isEnabled()) MaterialTheme.colorScheme.inversePrimary
+                                else LocalContentColor.current
                             )
+                            Icon(it.icon, stringResource(it.title), tint = tint)
                         }
                     },
                 )
@@ -300,12 +323,12 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
         }
     }
 
-    var showDayPickerDialog by rememberSaveable { mutableStateOf(false) }
-    if (showDayPickerDialog) {
+    var showDatePickerDialog by rememberSaveable { mutableStateOf(false) }
+    if (showDatePickerDialog) {
         val currentJdn = Jdn(Date(state.time).toGregorianCalendar().toCivilDate())
-        DayPickerDialog(currentJdn, R.string.accept, { jdn ->
+        DatePickerDialog(currentJdn, { showDatePickerDialog = false }) { jdn ->
             viewModel.addDays(jdn - currentJdn)
-        }) { showDayPickerDialog = false }
+        }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -317,7 +340,7 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            @OptIn(ExperimentalFoundationApi::class) Row(
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .padding(all = 16.dp)
@@ -337,10 +360,14 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
                         modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
-                                onClick = { showDayPickerDialog = true },
-                                onClickLabel = stringResource(R.string.goto_date),
+                                onClick = { showDatePickerDialog = true },
+                                onClickLabel = stringResource(R.string.select_date),
                                 onLongClick = { viewModel.changeToTime(Date()) },
                                 onLongClickLabel = stringResource(R.string.today),
+                            )
+                            .sharedElement(
+                                rememberSharedContentState(key = SHARED_CONTENT_KEY_TIME_BAR),
+                                animatedVisibilityScope = animatedContentScope,
                             ),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -351,7 +378,6 @@ fun MapScreen(navigateUp: () -> Unit, fromSettings: Boolean, viewModel: MapViewM
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TimeArrow(mapDraw: MapDraw, viewModel: MapViewModel, isPrevious: Boolean) {
     val hapticFeedback = LocalHapticFeedback.current
@@ -363,10 +389,10 @@ private fun TimeArrow(mapDraw: MapDraw, viewModel: MapViewModel, isPrevious: Boo
             stringResource(R.string.day),
         ),
         Modifier.combinedClickable(
-            indication = rememberRipple(bounded = false),
-            interactionSource = remember { MutableInteractionSource() },
+            indication = ripple(bounded = false),
+            interactionSource = null,
             onClick = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                hapticFeedback.performLongPress()
                 if (mapDraw.currentMapType.isCrescentVisibility) viewModel.addDays(if (isPrevious) -1 else 1)
                 else {
                     if (isPrevious) viewModel.subtractOneHour() else viewModel.addOneHour()

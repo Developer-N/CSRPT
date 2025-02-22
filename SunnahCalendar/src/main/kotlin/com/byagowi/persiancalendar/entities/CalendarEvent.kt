@@ -6,7 +6,7 @@ import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.NepaliDate
 import io.github.persiancalendar.calendar.PersianDate
-import java.util.Date
+import java.util.GregorianCalendar
 
 sealed class CalendarEvent<T : AbstractDate>(
     val title: String, val isHoliday: Boolean, val date: T
@@ -20,12 +20,17 @@ sealed class CalendarEvent<T : AbstractDate>(
     class PersianCalendarEvent(title: String, isHoliday: Boolean, date: PersianDate) :
         CalendarEvent<PersianDate>(title, isHoliday, date)
 
+    class EquinoxCalendarEvent(
+        title: String, isHoliday: Boolean, date: PersianDate, val remainingMillis: Long
+    ) : CalendarEvent<PersianDate>(title, isHoliday, date)
+
     class NepaliCalendarEvent(title: String, isHoliday: Boolean, date: NepaliDate) :
         CalendarEvent<NepaliDate>(title, isHoliday, date)
 
     class DeviceCalendarEvent(
         date: CivilDate, title: String, isHoliday: Boolean, val id: Long, val description: String,
-        val start: Date, val end: Date, val color: String, val time: String?,
+        val start: GregorianCalendar, val end: GregorianCalendar, val color: String,
+        val time: String?,
     ) : CalendarEvent<CivilDate>(title, isHoliday, date)
 
     val oneLinerTitleWithTime
@@ -42,6 +47,7 @@ sealed class CalendarEvent<T : AbstractDate>(
             is GregorianCalendarEvent,
             is IslamicCalendarEvent,
             is PersianCalendarEvent,
+            is EquinoxCalendarEvent,
             is NepaliCalendarEvent -> title
 
             is DeviceCalendarEvent -> oneLinerTitleWithTime +

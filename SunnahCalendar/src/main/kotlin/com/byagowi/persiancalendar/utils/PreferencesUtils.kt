@@ -3,10 +3,12 @@ package com.byagowi.persiancalendar.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
 import com.byagowi.persiancalendar.DEFAULT_CITY
 import com.byagowi.persiancalendar.PREF_ALTITUDE
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
+import com.byagowi.persiancalendar.PREF_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET_SET_DATE
@@ -30,26 +32,21 @@ import java.util.Locale
 // Instead of:
 //   androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
 // Per https://stackoverflow.com/a/62897591
-val Context.appPrefs: SharedPreferences
+val Context.preferences: SharedPreferences
     get() = getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
-
-//val Context.dataStore by preferencesDataStore(
-//    name = "preferences",
-//    produceMigrations = { context ->
-//        listOf(SharedPreferencesMigration(context, "${context.packageName}_preferences"))
-//    }
-//)
 
 fun SharedPreferences.Editor.putJdn(key: String, jdn: Jdn) {
     putLong(key, jdn.value)
 }
 
 fun SharedPreferences.getJdnOrNull(key: String): Jdn? =
-    getLong(key, -1).takeIf { it != -1L }?.let { Jdn(it) }
+    getLong(key, -1).takeIf { it != -1L }?.let(::Jdn)
 
 // Ignore offset if it isn't set in less than month ago
 val SharedPreferences.isIslamicOffsetExpired
-    get() = getJdnOrNull(PREF_ISLAMIC_OFFSET_SET_DATE)?.let { Jdn.today() - it > 30 } ?: true
+    get() = getJdnOrNull(PREF_ISLAMIC_OFFSET_SET_DATE)?.let { Jdn.today() - it > 30 } != false
+
+val SharedPreferences.athanVolume: Int get() = getInt(PREF_ATHAN_VOLUME, DEFAULT_ATHAN_VOLUME)
 
 fun SharedPreferences.saveCity(city: CityItem) = edit {
     listOf(PREF_GEOCODED_CITYNAME, PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE).forEach(::remove)

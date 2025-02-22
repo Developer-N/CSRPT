@@ -25,7 +25,7 @@ import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
-import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.saveLocation
 import io.github.persiancalendar.praytimes.Coordinates
 
@@ -33,10 +33,7 @@ import io.github.persiancalendar.praytimes.Coordinates
 fun ProvincesDialog(onDismissRequest: () -> Unit) {
     var province by rememberSaveable { mutableStateOf<String?>(null) }
     if (province != null) return DistrictsDialog(province ?: "", onDismissRequest)
-    AppDialog(
-        title = { Text("انتخاب استان برای مشاهدهٔ بخش‌ها") },
-        onDismissRequest = onDismissRequest,
-    ) {
+    AppDialog(title = { Text("انتخاب استان") }, onDismissRequest = onDismissRequest) {
         districtsStore.forEach { (provinceName, _) ->
             Box(
                 contentAlignment = Alignment.CenterStart,
@@ -58,10 +55,7 @@ fun DistrictsDialog(province: String, onDismissRequest: () -> Unit) {
             countyDetails.drop(1).map { it.split(":") to countyDetails[0] }
         }.sortedBy { (district, _) -> language.value.prepareForSort(district[0/*district name*/]) }
     }
-    AppDialog(
-        title = { Text(province) },
-        onDismissRequest = onDismissRequest,
-    ) {
+    AppDialog(title = { Text(province) }, onDismissRequest = onDismissRequest) {
         val context = LocalContext.current
         districts.forEachIndexed { index, (district, county) ->
             Box(
@@ -75,7 +69,7 @@ fun DistrictsDialog(province: String, onDismissRequest: () -> Unit) {
                             districts[index].first[2/*longitude*/].toDoubleOrNull() ?: 0.0,
                             0.0,
                         )
-                        context.appPrefs.saveLocation(coordinates, districts[index].first[0])
+                        context.preferences.saveLocation(coordinates, districts[index].first[0])
                     }
                     .height(SettingsItemHeight.dp)
                     .padding(horizontal = SettingsHorizontalPaddingItem.dp)
@@ -86,7 +80,7 @@ fun DistrictsDialog(province: String, onDismissRequest: () -> Unit) {
                         append(" ")
                         withStyle(
                             LocalTextStyle.current.toSpanStyle().copy(
-                                color = LocalContentColor.current.copy(.5f)
+                                color = LocalContentColor.current.copy(alpha = .5f)
                             )
                         ) { append(county) }
                     }

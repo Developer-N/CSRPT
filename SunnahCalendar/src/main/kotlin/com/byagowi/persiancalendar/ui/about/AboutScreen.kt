@@ -5,7 +5,12 @@ import android.content.Intent
 import android.os.Build
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -13,10 +18,11 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,23 +51,23 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -73,10 +79,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
@@ -84,26 +89,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_DEVELOPER
 import com.byagowi.persiancalendar.generated.faq
+import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.ExpandArrow
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.icons.MaterialIconDimension
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.getActivity
+import com.byagowi.persiancalendar.ui.utils.isOnCI
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 
-@Preview
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun AboutScreenPreview() = AboutScreen({}, {}, {})
-
-@Composable
-fun AboutScreen(
+fun SharedTransitionScope.AboutScreen(
+    animatedContentScope: AnimatedContentScope,
     openDrawer: () -> Unit,
     navigateToDeviceInformation: () -> Unit,
     navigateToLicenses: () -> Unit,
@@ -111,17 +119,13 @@ fun AboutScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
+            @OptIn(ExperimentalMaterial3Api::class) TopAppBar(
                 title = { Text(stringResource(R.string.about)) },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
                 actions = {
-//                    val context = LocalContext.current
-//                    AppIconButton(
-//                        icon = Icons.Default.Share,
-//                        title = stringResource(R.string.share),
-//                    ) { shareApplication(context) }
+                    val context = LocalContext.current
+//                    ShareActionButton(animatedContentScope) { shareApplication(context) }
                     AppIconButton(
                         icon = Icons.Default.PermDeviceInformation,
                         title = stringResource(R.string.device_information),
@@ -129,7 +133,7 @@ fun AboutScreen(
                     )
                 },
             )
-        }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -139,10 +143,11 @@ fun AboutScreen(
             val scrollState = rememberScrollState()
             Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Box(Modifier.offset { IntOffset(0, scrollState.value * 3 / 4) }) { Header() }
-                Surface(shape = materialCornerExtraLargeTop()) {
+                ScreenSurface(animatedContentScope) {
                     AboutScreenContent(navigateToLicenses, paddingValues.calculateBottomPadding())
                 }
             }
+            ScrollShadow(scrollState, top = false)
         }
     }
 }
@@ -160,10 +165,12 @@ private fun Header() {
         else null
     }
 
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         Modifier
             .height(250.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .indication(interactionSource = interactionSource, indication = ripple()),
     ) {
         Box(
             Modifier
@@ -181,7 +188,7 @@ private fun Header() {
                 )
                 Text(
                     buildString {
-                        val version = formatNumber("9.1.0")
+                        val version = formatNumber("9.7.0")
                         // Don't formatNumber it if is multi-parted
 //                            if ("-" in BuildConfig.VERSION_NAME) BuildConfig.VERSION_NAME
 //                            else formatNumber(BuildConfig.VERSION_NAME)
@@ -206,8 +213,8 @@ private fun Header() {
         Box(
             Modifier
                 .weight(1f)
-                .semantics { @OptIn(ExperimentalComposeUiApi::class) this.invisibleToUser() }
-                .clickable {
+                .semantics { this.hideFromAccessibility() }
+                .clickable(indication = null, interactionSource = interactionSource) {
                     logoAnimationAtEnd = !logoAnimationAtEnd
                     clickHandlerDialog(context.getActivity())
                     logoEffect = effectsGenerator
@@ -258,7 +265,7 @@ private fun AboutScreenContent(navigateToLicenses: () -> Unit, bottomPadding: Dp
             icon = Icons.Default.Folder,
             action = { navigateToLicenses() },
             title = R.string.about_license_title,
-            summary = R.string.about_license_sum
+            summary = R.string.about_license_sum,
         )
 
         // Help
@@ -298,36 +305,27 @@ private fun AboutScreenContent(navigateToLicenses: () -> Unit, bottomPadding: Dp
             AboutScreenButton(
                 icon = Icons.Default.Email,
                 action = { showDialog = true },
-                title = R.string.about_sendMail,
+                title = R.string.about_send_mail,
                 summary = R.string.about_email_sum
             )
             if (showDialog) EmailDialog { showDialog = false }
         }
 
         // Developers
-        Text(
-            stringResource(R.string.about_developers),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 24.dp, end = 12.dp, top = 12.dp),
-        )
-        DevelopersChips()
+        Developers()
 
         Spacer(Modifier.height(bottomPadding))
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun HelpItems() {
     val sections = remember {
-        faq
-            .split(Regex("^={4}$", RegexOption.MULTILINE))
-            .map { it.trim().lines() }
-            .map { lines ->
-                val title = lines.first()
-                val body = lines.drop(1).joinToString("\n").trim()
-                title to body
-            }
+        faq.split(Regex("^={4}$", RegexOption.MULTILINE)).map { it.trim().lines() }.map { lines ->
+            val title = lines.first()
+            val body = lines.drop(1).joinToString("\n").trim()
+            title to body
+        }
     }
     Column {
         sections.forEach { (title, body) ->
@@ -366,12 +364,14 @@ private fun AboutScreenButton(
     action: (context: Context) -> Unit,
     @StringRes title: Int,
     @StringRes summary: Int,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     Box(
         modifier = Modifier
             .clickable { action(context) }
-            .padding(start = 20.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+            .padding(start = 20.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
+            .then(modifier),
     ) {
         Row {
             Icon(
@@ -399,11 +399,11 @@ private fun launchReportIntent(context: Context) {
     }.onFailure(logException)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun DevelopersChips() {
+private fun Developers() {
     val context = LocalContext.current
-    val developers = remember {
+    val developersBeforeShuffle = remember {
         listOf(
             R.string.about_developers_list to Icons.Default.Android,
             R.string.about_designers_list to Icons.Default.Palette,
@@ -414,39 +414,62 @@ private fun DevelopersChips() {
                 val (username, displayName) = it.split(": ")
                 Triple(username, displayName, icon)
             }
-        }.shuffled()
+        }
     }
+    var refreshToken by remember { mutableIntStateOf(0) }
+    val developers = remember(refreshToken) { developersBeforeShuffle.shuffled() }
+
+    Text(
+        stringResource(R.string.about_developers),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .padding(start = 24.dp, end = 12.dp, top = 12.dp)
+            .then(if (isTalkBackEnabled) Modifier else Modifier.clickable(
+                interactionSource = null,
+                indication = ripple(bounded = false),
+            ) { ++refreshToken }),
+    )
     CompositionLocalProvider(
         LocalLayoutDirection provides LayoutDirection.Ltr,
-        LocalMinimumInteractiveComponentEnforcement provides false,
+        LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
     ) {
-        @OptIn(ExperimentalLayoutApi::class)
-        FlowRow(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-        ) {
-            developers.forEach { (username, displayName, icon) ->
-                ElevatedFilterChip(
-                    modifier = Modifier.padding(all = 4.dp),
-                    onClick = click@{
-                        if (username == "ImanSoltanian") return@click // The only person without GitHub account
-                        runCatching {
-                            val uri = "https://github.com/$username".toUri()
-                            CustomTabsIntent.Builder().build().launchUrl(context, uri)
-                        }.onFailure(logException)
-                    },
-                    label = { Text(displayName) },
-                    selected = true,
-                    colors = FilterChipDefaults.elevatedFilterChipColors(),
-                    leadingIcon = {
-                        Icon(
-                            icon,
-                            contentDescription = displayName,
-                            Modifier.size(AssistChipDefaults.IconSize)
+        SharedTransitionLayout {
+            AnimatedContent(targetState = developers, label = "developers") { state ->
+                FlowRow(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    state.forEach { (username, displayName, icon) ->
+                        ElevatedFilterChip(
+                            modifier = Modifier
+                                .padding(all = 4.dp)
+                                .then(
+                                    if (LocalContext.current.isOnCI()) Modifier else Modifier.sharedElement(
+                                        rememberSharedContentState(key = SHARED_CONTENT_KEY_DEVELOPER + username),
+                                        animatedVisibilityScope = this@AnimatedContent,
+                                    )
+                                ),
+                            onClick = click@{
+                                if (username == "ImanSoltanian") return@click // The only person without GitHub account
+                                runCatching {
+                                    val uri = "https://github.com/$username".toUri()
+                                    CustomTabsIntent.Builder().build().launchUrl(context, uri)
+                                }.onFailure(logException)
+                            },
+                            label = { Text(displayName) },
+                            selected = true,
+                            colors = FilterChipDefaults.elevatedFilterChipColors(),
+                            leadingIcon = {
+                                Icon(
+                                    icon,
+                                    contentDescription = displayName,
+                                    Modifier.size(AssistChipDefaults.IconSize)
+                                )
+                            },
                         )
                     }
-                )
+                }
             }
         }
     }

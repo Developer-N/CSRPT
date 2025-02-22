@@ -16,8 +16,9 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun SelectionIndicator(color: Color, radius: Float, center: Offset?) {
     val animatedCenter = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val animatedRadius = remember { Animatable(0f) }
+    val animatedRadius = remember { Animatable(if (center == null) 0f else 1f) }
 
+    // Handles circle radius change animation, initial selection reveal and hide
     LaunchedEffect(key1 = center != null) {
         if (center != null) animatedCenter.snapTo(center)
         val target = if (center != null) 1f else 0f
@@ -27,6 +28,7 @@ fun SelectionIndicator(color: Color, radius: Float, center: Offset?) {
         )
     }
 
+    // Handles circle moves animation, change of the selected day
     LaunchedEffect(key1 = center) {
         if (center != null) animatedCenter.animateTo(
             targetValue = center,

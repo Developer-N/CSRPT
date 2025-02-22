@@ -32,7 +32,7 @@ import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.global.theme
+import com.byagowi.persiancalendar.global.userSetTheme
 import com.byagowi.persiancalendar.ui.utils.isDynamicGrayscale
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import kotlinx.coroutines.delay
@@ -63,11 +63,11 @@ fun NDrawerPager(drawerState: DrawerState) {
     }
 
     val context = LocalContext.current
-    val theme by theme.collectAsState()
+    val theme by userSetTheme.collectAsState()
     val imageFilter = remember(LocalConfiguration.current, theme) {
         // Consider gray scale themes of Android 14
         // And apply a gray scale filter https://stackoverflow.com/a/75698731
-        if (theme.isDynamicColors() && context.resources.isDynamicGrayscale) {
+        if (theme.isDynamicColors && context.resources.isDynamicGrayscale) {
             ColorFilter.colorMatrix(ColorMatrix().also { it.setToSaturation(0f) })
         } else null
     }

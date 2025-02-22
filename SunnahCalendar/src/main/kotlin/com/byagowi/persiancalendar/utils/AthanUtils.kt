@@ -13,10 +13,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RawRes
-import androidx.annotation.StringRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.AlarmManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.work.Data
@@ -25,33 +23,25 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.byagowi.persiancalendar.ALARMS_BASE_ID
 import com.byagowi.persiancalendar.ALARM_TAG
-import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.BROADCAST_ALARM
-import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
-import com.byagowi.persiancalendar.DHUHR_KEY
-import com.byagowi.persiancalendar.FAJR_KEY
-import com.byagowi.persiancalendar.ISHA_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER_TIME
-import com.byagowi.persiancalendar.MAGHRIB_KEY
+import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
 import com.byagowi.persiancalendar.PREF_ATHAN_GAP
 import com.byagowi.persiancalendar.PREF_ATHAN_URI
-import com.byagowi.persiancalendar.PREF_ATHAN_VOLUME
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.global.calculationMethod
+import com.byagowi.persiancalendar.entities.PrayTime
+import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.variants.debugLog
-import io.github.persiancalendar.praytimes.PrayTimes
-import ir.namoo.commons.DEFAULT_FULL_SCREEN_METHOD
-import ir.namoo.commons.DEFAULT_NOTIFICATION_METHOD
+import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.PREF_AZKAR_REINDER
-import ir.namoo.commons.PREF_FULL_SCREEN_METHOD
-import ir.namoo.commons.PREF_NOTIFICATION_METHOD
+import ir.namoo.commons.PREF_JUMMA_SILENT
+import ir.namoo.commons.PREF_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.koin.getKoinInstance
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.appPrefsLite
@@ -70,10 +60,8 @@ fun Resources.getRawUri(@RawRes rawRes: Int) = "%s://%s/%s/%s".format(
     this.getResourceTypeName(rawRes), this.getResourceEntryName(rawRes)
 )
 
-val Context.athanVolume: Int get() = appPrefs.getInt(PREF_ATHAN_VOLUME, DEFAULT_ATHAN_VOLUME)
-
 fun getAthanUri(context: Context): Uri =
-    (context.appPrefs.getString(PREF_ATHAN_URI, null)?.takeIf { it.isNotEmpty() }
+    (context.preferences.getString(PREF_ATHAN_URI, null)?.takeIf { it.isNotEmpty() }
         ?: context.resources.getRawUri(R.raw.special)).toUri()
 
 private var lastAthanKey = ""
@@ -82,42 +70,46 @@ private var lastAAthanKey = ""
 private var lastSAthanKey = ""
 private var lastSSAthanKey = ""
 private var lastAthanJdn: Jdn? = null
-fun startAthan(context: Context, prayTimeKey: String, intendedTime: Long?) {
-    debugLog("Alarms: startAthan for $prayTimeKey")
-    if (intendedTime == null || prayTimeKey.startsWith("SS_"))
-        return startAthanBody(context, prayTimeKey)
+
+fun startAthan(context: Context, prayTime: String, intendedTime: Long?) {
+    debugLog("Alarms: startAthan for $prayTime")
+    if (intendedTime == null || prayTime.startsWith("SS_"))
+        return startAthanBody(context, prayTime)
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return
 
     // If at the of being is disabled by user, skip
-    if (prayTimeKey !in getEnabledAlarms(context)) return
+    if (prayTime !in getEnabledAlarms2(context)) return
 
-    startAthanBody(context, prayTimeKey)
+    startAthanBody(context, prayTime)
 }
 
-private fun startAthanBody(context: Context, prayTimeKey: String) {
+private fun startAthanBody(context: Context, prayTime: String) {
     runCatching {
         // skips if already called through either WorkManager or AlarmManager
         val today = Jdn.today()
-        if (lastAthanJdn == today && (lastAthanKey == prayTimeKey || lastBAthanKey == prayTimeKey || lastAAthanKey == prayTimeKey || lastSAthanKey == prayTimeKey || lastSSAthanKey == prayTimeKey)) return
+        if (lastAthanJdn == today && (lastAthanKey == prayTime || lastBAthanKey == prayTime || lastAAthanKey == prayTime || lastSAthanKey == prayTime || lastSSAthanKey == prayTime)) return
         lastAthanJdn = today
-        if (prayTimeKey.startsWith("B")) lastBAthanKey = prayTimeKey
-        else if (prayTimeKey.startsWith("A") && prayTimeKey != ASR_KEY) lastAAthanKey = prayTimeKey
-        else if (prayTimeKey.startsWith("S_")) lastSAthanKey = prayTimeKey
-        else if (prayTimeKey.startsWith("SS_")) lastSSAthanKey = prayTimeKey
-        else lastAthanKey = prayTimeKey
-        debugLog("Alarms: startAthanBody for $prayTimeKey")
+        if (prayTime.startsWith("B")) lastBAthanKey = prayTime
+        else if (prayTime.startsWith("A") && prayTime != PrayTime.ASR.name) lastAAthanKey = prayTime
+        else if (prayTime.startsWith("S_")) lastSAthanKey = prayTime
+        else if (prayTime.startsWith("SS_")) lastSSAthanKey = prayTime
+        else lastAthanKey = prayTime
+
+        debugLog("Alarms: startAthanBody for $prayTime")
 
         runCatching {
+            @Suppress("DEPRECATION")
             context.getSystemService<PowerManager>()?.newWakeLock(
                 PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
-                "SunnahCalendar:alarm"
+                "persiancalendar:alarm"
             )?.acquire(THIRTY_SECONDS_IN_MILLIS)
         }.onFailure(logException)
-        val setting = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
-            .getAllAthanSettings().find { prayTimeKey.contains(it.athanKey) } ?: return@runCatching
+        val setting = AthanSettingsDB.getInstance(context.applicationContext)
+            .athanSettingsDAO().getAllAthanSettings().find { prayTime.contains(it.athanKey) }
+            ?: return@runCatching
         when {
-            prayTimeKey.startsWith("SS_") -> {
+            prayTime.startsWith("SS_") -> {
                 runCatching {
                     context.getSystemService<AudioManager>()?.let { audioManager ->
                         audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
@@ -125,22 +117,32 @@ private fun startAthanBody(context: Context, prayTimeKey: String) {
                 }
             }
 
-            prayTimeKey.startsWith("S_") -> {
+            prayTime.startsWith("S_") -> {
                 runCatching {
                     context.getSystemService<AudioManager>()?.let { audioManager ->
                         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
                         val time = Calendar.getInstance().also {
-                            it.add(Calendar.MINUTE, setting.silentMinute)
+                            it.add(
+                                Calendar.MINUTE,
+                                if (Jdn.today().weekDay == 6 && prayTime.contains(PrayTime.DHUHR.name) && context.preferences.getBoolean(
+                                        PREF_JUMMA_SILENT,
+                                        false
+                                    )
+                                ) context.preferences.getInt(
+                                    PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE
+                                )
+                                else setting.silentMinute
+                            )
                         }
                         val id = when {
-                            prayTimeKey.contains(FAJR_KEY) -> 123
-                            prayTimeKey.contains(DHUHR_KEY) -> 124
-                            prayTimeKey.contains(ASR_KEY) -> 125
-                            prayTimeKey.contains(MAGHRIB_KEY) -> 126
-                            prayTimeKey.contains(ISHA_KEY) -> 127
+                            prayTime.contains(PrayTime.FAJR.name) -> 123
+                            prayTime.contains(PrayTime.DHUHR.name) -> 124
+                            prayTime.contains(PrayTime.ASR.name) -> 125
+                            prayTime.contains(PrayTime.MAGHRIB.name) -> 126
+                            prayTime.contains(PrayTime.ISHA.name) -> 127
                             else -> 122
                         }
-                        scheduleAlarm(context, "S$prayTimeKey", time.timeInMillis, id)
+                        scheduleAlarm(context, "S$prayTime", time.timeInMillis, id)
                     }
                 }
             }
@@ -148,31 +150,49 @@ private fun startAthanBody(context: Context, prayTimeKey: String) {
             setting.playType != 0 && ActivityCompat.checkSelfPermission(
                 context, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED -> {
-                ContextCompat.startForegroundService(
-                    context, Intent(context, NAthanNotification::class.java).putExtra(
-                        KEY_EXTRA_PRAYER, prayTimeKey
-                    )
+                context.startService(
+                    Intent(context, NAthanNotification::class.java)
+                        .putExtra(KEY_EXTRA_PRAYER, prayTime)
                 )
             }
 
-            else -> startAthanActivity(context, prayTimeKey)
+            else -> startAthanActivity(context, prayTime)
         }
-    }.onFailure(logException).let {}
+    }.onFailure(logException)
 }
 
-fun startAthanActivity(context: Context, prayerKey: String?) {
+fun startAthanActivity(context: Context, prayTime: String?) {
     context.startActivity(
         Intent(context, NAthanActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .putExtra(KEY_EXTRA_PRAYER, prayerKey)
+            .putExtra(KEY_EXTRA_PRAYER, prayTime)
     )
 }
 
-fun getEnabledAlarms(context: Context): Set<String> {
-//    if (coordinates.value == null) return emptySet()
-//    return (context.appPrefs.getString(PREF_ATHAN_ALARM, null)?.trim() ?: return emptySet())
-//        .splitIgnoreEmpty(",")
-//        .toSet()
+fun getEnabledAlarms(context: Context): Set<PrayTime> {
+    if (coordinates.value == null) return emptySet()
+    return (context.preferences.getString(PREF_ATHAN_ALARM, null)?.trim() ?: return emptySet())
+        .splitFilterNotEmpty(",")
+        .mapNotNull { PrayTime.fromName(it) }
+        .toSet()
+}
+
+fun getEnabledAlarms3(context: Context): Set<PrayTime> {
+    if (coordinates.value == null) return emptySet()
+    val athans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
+        .getAllAthanSettings()
+    return if (athans.isEmpty()) emptySet()
+    else {
+        val result = mutableSetOf<PrayTime>()
+        for (athan in athans) {
+            if (athan.state) PrayTime.fromName(athan.athanKey)?.let { result.add(it) }
+        }
+        result
+    }
+}
+
+fun getEnabledAlarms2(context: Context): Set<String> {
+    if (coordinates.value == null) return emptySet()
     val athans = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
     return if (athans.isEmpty()) emptySet()
@@ -183,166 +203,160 @@ fun getEnabledAlarms(context: Context): Set<String> {
             if (athan.isBeforeEnabled) result.add("B${athan.athanKey}")
             if (athan.isAfterEnabled) result.add("A${athan.athanKey}")
             if (athan.isSilentEnabled) result.add("S_${athan.athanKey}")
+            if (
+                athan.athanKey == PrayTime.DHUHR.name && Jdn.today().weekDay == 6 &&
+                context.preferences.getBoolean(PREF_JUMMA_SILENT, false) &&
+                !result.contains("S_${athan.athanKey}")
+            )
+                result.add("S_${athan.athanKey}")
         }
         result
     }
 }
 
 fun scheduleAlarms(context: Context) {
-    val enabledAlarms = getEnabledAlarms(context).takeIf { it.isNotEmpty() } ?: return
+    val prayTimeProvider: PrayTimeProvider = getKoinInstance()
+    if (context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false))
+        scheduleAzkars(context, prayTimeProvider)
+    val enabledAlarms = getEnabledAlarms2(context).takeIf { it.isNotEmpty() } ?: return
     val athanGap =
-        ((context.appPrefs.getString(PREF_ATHAN_GAP, null)?.toDoubleOrNull()
+        ((context.preferences.getString(PREF_ATHAN_GAP, null)?.toDoubleOrNull()
             ?: .0) * 60.0 * 1000.0).toLong()
     val athanSettings = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
-    val prayTimeProvider: PrayTimeProvider = getKoinInstance()
     var prayTimes = coordinates.value?.calculatePrayTimes() ?: return
-    prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())!!
+    prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())
     // convert spacedComma separated string to a set
-    enabledAlarms.forEachIndexed { _, name ->
+    enabledAlarms.forEachIndexed { i, prayTime ->
         var id = -1
         val time = Calendar.getInstance().also {
             // if (name == ISHA_KEY) return@also it.add(Calendar.SECOND, 5)
-
-            val alarmTime = when (name) {
-                "B$FAJR_KEY" -> {
+            val minute: Int
+            val clock: Clock
+            when (prayTime) {
+                "B${PrayTime.FAJR.name}" -> {
                     id = 7
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.fajr)
-                            .toMinutes() - athanSettings[0].beforeAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.FAJR]
+                    minute = -athanSettings[0].beforeAlertMinute
                 }
 
-                "A$FAJR_KEY" -> {
+                "A${PrayTime.FAJR.name}" -> {
                     id = 12
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.fajr)
-                            .toMinutes() + athanSettings[0].afterAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.FAJR]
+                    minute = athanSettings[0].afterAlertMinute
                 }
 
-                "S_$FAJR_KEY" -> {
+                "S_${PrayTime.FAJR.name}" -> {
                     id = 17
-                    Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.fajr).toMinutes())
+                    clock = prayTimes[PrayTime.FAJR]
+                    minute = 0
                 }
 
-                "B$DHUHR_KEY" -> {
+                "B${PrayTime.DHUHR.name}" -> {
                     id = 8
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.dhuhr)
-                            .toMinutes() - athanSettings[2].beforeAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.DHUHR]
+                    minute = -athanSettings[2].beforeAlertMinute
                 }
 
-                "A$DHUHR_KEY" -> {
+                "A${PrayTime.DHUHR.name}" -> {
                     id = 13
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.dhuhr)
-                            .toMinutes() + athanSettings[2].afterAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.DHUHR]
+                    minute = athanSettings[2].afterAlertMinute
                 }
 
-                "S_$DHUHR_KEY" -> {
+                "S_${PrayTime.DHUHR.name}" -> {
                     id = 18
-                    Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.dhuhr).toMinutes())
+                    clock = prayTimes[PrayTime.DHUHR]
+                    minute = 0
                 }
 
-                "B$ASR_KEY" -> {
+                "B${PrayTime.ASR.name}" -> {
                     id = 9
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.asr)
-                            .toMinutes() - athanSettings[3].beforeAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.ASR]
+                    minute = -athanSettings[3].beforeAlertMinute
                 }
 
-                "A$ASR_KEY" -> {
+                "A${PrayTime.ASR.name}" -> {
                     id = 14
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.asr)
-                            .toMinutes() + athanSettings[3].afterAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.ASR]
+                    minute = athanSettings[3].afterAlertMinute
                 }
 
-                "S_$ASR_KEY" -> {
+                "S_${PrayTime.ASR.name}" -> {
                     id = 19
-                    Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.asr).toMinutes())
+                    clock = prayTimes[PrayTime.ASR]
+                    minute = 0
                 }
 
-                "B$MAGHRIB_KEY" -> {
+                "B${PrayTime.MAGHRIB.name}" -> {
                     id = 10
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.maghrib)
-                            .toMinutes() - athanSettings[4].beforeAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.MAGHRIB]
+                    minute = -athanSettings[4].beforeAlertMinute
                 }
 
-                "A$MAGHRIB_KEY" -> {
+                "A${PrayTime.MAGHRIB.name}" -> {
                     id = 15
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.maghrib)
-                            .toMinutes() + athanSettings[4].afterAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.MAGHRIB]
+                    minute = athanSettings[4].afterAlertMinute
                 }
 
-                "S_$MAGHRIB_KEY" -> {
+                "S_${PrayTime.MAGHRIB.name}" -> {
                     id = 20
-                    Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.maghrib).toMinutes())
+                    clock = prayTimes[PrayTime.MAGHRIB]
+                    minute = 0
                 }
 
-                "B$ISHA_KEY" -> {
+                "B${PrayTime.ISHA.name}" -> {
                     id = 11
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.isha)
-                            .toMinutes() - athanSettings[5].beforeAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.ISHA]
+                    minute = -athanSettings[5].beforeAlertMinute
                 }
 
-                "A$ISHA_KEY" -> {
+                "A${PrayTime.ISHA.name}" -> {
                     id = 16
-                    Clock.fromMinutesCount(
-                        prayTimes.getFromStringId(R.string.isha)
-                            .toMinutes() + athanSettings[5].afterAlertMinute
-                    )
+                    clock = prayTimes[PrayTime.ISHA]
+                    minute = athanSettings[5].afterAlertMinute
                 }
 
-                "S_$ISHA_KEY" -> {
+                "S_${PrayTime.ISHA.name}" -> {
                     id = 21
-                    Clock.fromMinutesCount(prayTimes.getFromStringId(R.string.isha).toMinutes())
+                    clock = prayTimes[PrayTime.ISHA]
+                    minute = 0
                 }
 
                 else -> {
-                    id = athanSettings.find { aS -> aS.athanKey == name }?.id ?: -1
-                    prayTimes.getFromStringId(getPrayTimeName(name))
+                    id = athanSettings.find { aS -> aS.athanKey == prayTime }?.id ?: 1
+                    clock = prayTimes[PrayTime.fromName(prayTime) ?: PrayTime.FAJR]
+                    minute = 0
                 }
             }
-            it[GregorianCalendar.HOUR_OF_DAY] = alarmTime.hours
-            it[GregorianCalendar.MINUTE] = alarmTime.minutes
+            var h = clock.toHoursAndMinutesPair().first
+            var m = clock.toHoursAndMinutesPair().second
+            m += minute
+            if (m > 59) {
+                h++
+                m -= 60
+            }
+            if (m < 0) {
+                h--
+                m += 60
+            }
+            it[GregorianCalendar.HOUR_OF_DAY] = h
+            it[GregorianCalendar.MINUTE] = m
             it[GregorianCalendar.SECOND] = 0
         }.timeInMillis - athanGap
-        val playType = athanSettings.find { name.contains(it.athanKey) }?.playType ?: 0
-        val isDefaultMethod = if (playType == 0 && context.appPrefsLite.getInt(
-                PREF_FULL_SCREEN_METHOD, DEFAULT_FULL_SCREEN_METHOD
-            ) == DEFAULT_FULL_SCREEN_METHOD
-        ) true
-        else playType != 0 && context.appPrefsLite.getInt(
-            PREF_NOTIFICATION_METHOD, DEFAULT_NOTIFICATION_METHOD
-        ) == DEFAULT_NOTIFICATION_METHOD
-        if (isDefaultMethod) scheduleAlarm(context, name, time, id)
-        else scheduleAlarm2(context, name, time, id)
+        scheduleAlarm(context, prayTime, time, id)
     }
-    if (context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false)) scheduleAzkars(
-        context, prayTimeProvider
-    )
 }
 
-private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis: Long, i: Int) {
+private fun scheduleAlarm(context: Context, prayTime: String, timeInMillis: Long, i: Int) {
     val remainedMillis = timeInMillis - System.currentTimeMillis()
-    debugLog("Alarms: $alarmTimeName in ${remainedMillis / 60000} minutes")
-    if (remainedMillis < 0 || i == -1) return // Don't set alarm in past
+    debugLog("Alarms: $prayTime in ${remainedMillis / 60000} minutes")
+    if (remainedMillis < 0) return // Don't set alarm in past
 
     run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
         val workerInputData = Data.Builder().putLong(KEY_EXTRA_PRAYER_TIME, timeInMillis)
-            .putString(KEY_EXTRA_PRAYER, alarmTimeName).build()
+            .putString(KEY_EXTRA_PRAYER, prayTime).build()
         val alarmWorker = OneTimeWorkRequest.Builder(AlarmWorker::class.java)
             .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS)
             .setInputData(workerInputData)
@@ -356,7 +370,7 @@ private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis:
     val pendingIntent = PendingIntent.getBroadcast(
         context, ALARMS_BASE_ID + i,
         Intent(context, BroadcastReceivers::class.java)
-            .putExtra(KEY_EXTRA_PRAYER, alarmTimeName)
+            .putExtra(KEY_EXTRA_PRAYER, prayTime)
             .putExtra(KEY_EXTRA_PRAYER_TIME, timeInMillis)
             .setAction(BROADCAST_ALARM),
         PendingIntent.FLAG_UPDATE_CURRENT or
@@ -366,82 +380,4 @@ private fun scheduleAlarm(context: Context, alarmTimeName: String, timeInMillis:
         AlarmManagerCompat.setExactAndAllowWhileIdle(
             am, AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent
         )
-}
-
-private fun scheduleAlarm2(context: Context, alarmTimeName: String, timeInMillis: Long, i: Int) {
-    val remainedMillis = timeInMillis - System.currentTimeMillis()
-    debugLog("Alarms: $alarmTimeName in ${remainedMillis / 60000} minutes")
-    if (remainedMillis < 0 || i == -1) return // Don't set alarm in past
-
-    run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
-        val workerInputData = Data.Builder().putLong(KEY_EXTRA_PRAYER_TIME, timeInMillis)
-            .putString(KEY_EXTRA_PRAYER, alarmTimeName).build()
-        val alarmWorker = OneTimeWorkRequest.Builder(AlarmWorker::class.java)
-            .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS).setInputData(workerInputData)
-            .build()
-        WorkManager.getInstance(context)
-            .beginUniqueWork(ALARM_TAG + i, ExistingWorkPolicy.REPLACE, alarmWorker).enqueue()
-    }
-
-    val am = context.getSystemService<AlarmManager>() ?: return
-    val pendingIntent = PendingIntent.getBroadcast(
-        context,
-        ALARMS_BASE_ID + i,
-        Intent(context, BroadcastReceivers::class.java).putExtra(KEY_EXTRA_PRAYER, alarmTimeName)
-            .putExtra(KEY_EXTRA_PRAYER_TIME, timeInMillis).setAction(BROADCAST_ALARM),
-        PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-    )
-    when {
-        Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1 -> am.setAlarmClock(
-            AlarmManager.AlarmClockInfo(timeInMillis, pendingIntent), pendingIntent
-        )
-
-        else -> am.setExact(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
-    }
-}
-
-private val prayTimesNames = mapOf(
-    "B$FAJR_KEY" to R.string.bfajr,
-    "A$FAJR_KEY" to R.string.afajr,
-    FAJR_KEY to R.string.fajr,
-    SUNRISE_KEY to R.string.sunrise,
-    "B$DHUHR_KEY" to R.string.bdhuhr,
-    "A$DHUHR_KEY" to R.string.adhuhr,
-    DHUHR_KEY to R.string.dhuhr,
-    "B$ASR_KEY" to R.string.basr,
-    "A$ASR_KEY" to R.string.aasr,
-    ASR_KEY to R.string.asr,
-    "B$MAGHRIB_KEY" to R.string.bmaghrib,
-    "A$MAGHRIB_KEY" to R.string.amaghrib,
-    MAGHRIB_KEY to R.string.maghrib,
-    "B$ISHA_KEY" to R.string.bisha,
-    "A$ISHA_KEY" to R.string.aisha,
-    ISHA_KEY to R.string.isha
-)
-
-@StringRes
-fun getPrayTimeName(athanKey: String?): Int = prayTimesNames[athanKey] ?: R.string.fajr
-
-fun PrayTimes.getFromStringId(@StringRes stringId: Int) = Clock.fromHoursFraction(
-    when (stringId) {
-        R.string.imsak -> imsak
-        R.string.fajr -> fajr
-        R.string.sunrise -> sunrise
-        R.string.dhuhr -> dhuhr
-        R.string.asr -> asr
-        R.string.sunset -> sunset
-        R.string.maghrib -> maghrib
-        R.string.isha -> isha
-        R.string.midnight -> midnight
-        else -> .0
-    }
-)
-
-private val TIME_NAMES = listOf(
-    R.string.imsak, R.string.fajr, R.string.sunrise, R.string.dhuhr, R.string.asr,
-    R.string.sunset, R.string.maghrib, R.string.isha, R.string.midnight
-)
-
-fun getTimeNames(): List<Int> {
-    return if (calculationMethod.value.isJafari) TIME_NAMES else TIME_NAMES - R.string.sunset
 }

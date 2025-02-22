@@ -1,11 +1,12 @@
 package ir.namoo.religiousprayers.ui.downloadtimes
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-
-class CityItemState {
-    var isDownloading by mutableStateOf(false)
-    var isDownloaded by mutableStateOf(false)
-    var isSelected by mutableStateOf(false)
-}
+data class CityItemState(
+    val id: Int = 0,
+    val name: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val lastUpdate: String = "",
+    val isDownloading: Boolean = false,
+    val isDownloaded: Boolean = false,
+    val isSelected: Boolean = false
+)

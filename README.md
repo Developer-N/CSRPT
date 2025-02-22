@@ -5,8 +5,8 @@
 
 <img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/ic_launcher-web.png" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
 <br>
-<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/1.jpg" width="200" />
-<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/2.jpg" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/1.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/2.png" width="200" />
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز و ارائه ی امکانات مانند اذکار و قرآن صوتی. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>

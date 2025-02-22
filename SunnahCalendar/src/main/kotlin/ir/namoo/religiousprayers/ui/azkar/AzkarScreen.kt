@@ -2,10 +2,15 @@ package ir.namoo.religiousprayers.ui.azkar
 
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -55,31 +62,61 @@ import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import ir.namoo.religiousprayers.ui.shared.SearchAppBar
 import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AzkarScreen(openDrawer: () -> Unit, viewModel: AzkarViewModel = koinViewModel()) {
+fun SharedTransitionScope.AzkarScreen(
+    openDrawer: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+    viewModel: AzkarViewModel = koinViewModel()
+) {
     viewModel.loadData()
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
-    val chapters by viewModel.chapters.collectAsState()
-    val query by viewModel.query.collectAsState()
+    val chapters = viewModel.chapters
     val azkarLang by viewModel.azkarLang.collectAsState()
     val isFavoriteShown by viewModel.isFavShowing.collectAsState()
     val isSearchBoxIsOpen by viewModel.isSearchBoxIsOpen.collectAsState()
+
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredChapters by remember {
+        derivedStateOf {
+            when {
+                searchQuery.isBlank() -> chapters
+                searchQuery.startsWith("fav") -> chapters.filter { it.fav == 1 }
+                else -> chapters.filter {
+                    when (azkarLang) {
+                        Language.FA.code -> it.persian?.contains(searchQuery) == true
+                        Language.CKB.code -> it.kurdish?.contains(searchQuery) == true
+                        else -> it.arabic?.contains(searchQuery) == true
+                    }
+                }
+            }
+        }
+    }
 
     Scaffold(topBar = {
         BackHandler(enabled = isSearchBoxIsOpen) { viewModel.closeSearch() }
         AnimatedVisibility(
             visible = isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = query,
-                updateQuery = { viewModel.search(it) },
+            SearchAppBar(query = searchQuery,
+                updateQuery = { searchQuery = it },
                 closeSearchBar = { viewModel.closeSearch() })
         }
         AnimatedVisibility(
             !isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            DefaultAppBar(openDrawer, isFavoriteShown, viewModel)
+            DefaultAppBar(
+                openDrawer,
+                isFavoriteShown,
+                openSearchBar = { viewModel.openSearch() },
+                onShowBookmarkClick = { show ->
+                    searchQuery = if (show) "fav" else ""
+                    viewModel.showBookmarks(show)
+                },
+                setLang = { viewModel.setLang(it) },
+                animatedContentScope = animatedContentScope
+            )
         }
     }) { paddingValues ->
         Surface(
@@ -97,12 +134,19 @@ fun AzkarScreen(openDrawer: () -> Unit, viewModel: AzkarViewModel = koinViewMode
                     LoadingUIElement()
                 }
                 val listState = rememberLazyListState()
-                if (chapters.isNotEmpty()) {
+                if (filteredChapters.isNotEmpty()) {
                     LazyColumn(state = listState) {
-                        items(items = chapters, key = { chapter -> chapter.id }) { zikr ->
-                            Box(modifier = Modifier.animateItemPlacement()) {
-                                ZikrChapterUI(zikr,
-                                    searchText = query,
+                        items(items = filteredChapters, key = { chapter -> chapter.id }) { zikr ->
+                            Box(
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
+                                    )
+                                )
+                            ) {
+                                AzkarChapterUI(zikr,
+                                    searchText = searchQuery,
                                     lang = azkarLang,
                                     onFavClick = { zkr -> viewModel.updateAzkarChapter(zkr) },
                                     onCardClick = { id ->
@@ -115,7 +159,7 @@ fun AzkarScreen(openDrawer: () -> Unit, viewModel: AzkarViewModel = koinViewMode
                             }
                         }
                     }
-                } else if (!isLoading && query.isNotEmpty()) {
+                } else if (!isLoading && searchQuery.isNotEmpty()) {
                     NothingFoundUIElement()
                 }
             }
@@ -123,10 +167,15 @@ fun AzkarScreen(openDrawer: () -> Unit, viewModel: AzkarViewModel = koinViewMode
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun DefaultAppBar(
-    openDrawer: () -> Unit, isFavoriteShown: Boolean, viewModel: AzkarViewModel
+private fun SharedTransitionScope.DefaultAppBar(
+    openDrawer: () -> Unit,
+    isFavoriteShown: Boolean,
+    openSearchBar: () -> Unit,
+    onShowBookmarkClick: (Boolean) -> Unit,
+    setLang: (String) -> Unit,
+    animatedContentScope: AnimatedContentScope
 ) {
     val context = LocalContext.current
 
@@ -141,19 +190,21 @@ private fun DefaultAppBar(
         }
     },
         colors = appTopAppBarColors(),
-        navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+        navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
         actions = {
             AppIconButton(
                 icon = Icons.Default.Search, title = stringResource(id = R.string.search)
             ) {
-                viewModel.openSearch()
+                openSearchBar()
             }
-            AppIconButton(
-                icon = if (isFavoriteShown) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                title = stringResource(id = R.string.favorite)
-            ) { viewModel.showBookmarks() }
+            AnimatedContent(targetState = isFavoriteShown, label = "bookmark") {
+                AppIconButton(
+                    icon = if (it) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    title = stringResource(id = R.string.favorite)
+                ) { onShowBookmarkClick(!isFavoriteShown) }
+            }
 
-            ThreeDotsDropdownMenu { closeMenu ->
+            ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
                 AppDropdownMenuCheckableItem(text = stringResource(id = R.string.azkar_reminder),
                     isChecked = context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false),
                     setChecked = {
@@ -181,7 +232,7 @@ private fun DefaultAppBar(
                                 context.appPrefsLite.edit {
                                     putString(PREF_AZKAR_LANG, lang.code)
                                 }
-                                viewModel.setLang(lang.code)
+                                setLang(lang.code)
                                 closeMenu()
                             })
                     }

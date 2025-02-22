@@ -1,21 +1,23 @@
 package ir.namoo.quran.sura
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AddComment
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.BookmarkAdded
@@ -27,18 +29,18 @@ import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.StopCircle
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -79,7 +83,7 @@ import ir.namoo.quran.utils.uthmanTahaFont
 
 @Composable
 fun AyaItem(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     quran: QuranEntity,
     translates: List<TranslateItem>? = null,
     isPlaying: Boolean,
@@ -114,81 +118,67 @@ fun AyaItem(
             append("﴾")
         }
     }
-    val noteText = remember { mutableStateOf(quran.note) }
-    val showNotePanel = remember { mutableStateOf(false) }
-    val btnPlayScale = remember { Animatable(1f) }
+    var noteText by remember { mutableStateOf(quran.note) }
+    var showNotePanel by remember { mutableStateOf(false) }
+    val btnPlayScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1.5f else 1f, label = "scale"
+    )
+    val background by animateColorAsState(
+        targetValue = if (isPlaying) MaterialTheme.colorScheme.surfaceContainer
+        else MaterialTheme.colorScheme.surfaceContainerLow
+    )
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = isPlaying) {
-        btnPlayScale.animateTo(if (isPlaying) 1.5f else 1f)
-    }
-    ElevatedCard(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .animateContentSize(animationSpec = spring())
-            .padding(2.dp)
+            .padding(vertical = 1.dp, horizontal = 4.dp)
+            .background(
+                color = background, shape = MaterialTheme.shapes.small
+            )
+            .padding(vertical = 2.dp, horizontal = 4.dp)
     ) {
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            shape = MaterialTheme.shapes.extraSmall
-        ) {
-            if (quran.verseID == 1 && quran.surahID != 1 && quran.surahID != 9)
-                CompositionLocalProvider(
-                    LocalTextSelectionColors provides TextSelectionColors(
-                        handleColor = MaterialTheme.colorScheme.secondaryContainer,
-                        backgroundColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    SelectionContainer {
-                        Text(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp, 2.dp),
-                            text = stringResource(id = R.string.str_bismillah),
-                            fontFamily = FontFamily(quranFont),
-                            fontSize = quranFontSize.sp,
-                            lineHeight = (quranFontSize * 1.7).sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            CompositionLocalProvider(
-                LocalTextSelectionColors provides TextSelectionColors(
-                    handleColor = MaterialTheme.colorScheme.secondaryContainer,
-                    backgroundColor = MaterialTheme.colorScheme.secondary
-                )
-            ) {
-                SelectionContainer {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp, 2.dp),
-                        text = quranText,
-                        fontFamily = FontFamily(quranFont),
-                        fontSize = quranFontSize.sp,
-                        lineHeight = (quranFontSize * 1.7).sp,
-                        softWrap = true
-                    )
-                }
-            }
-            content += quranText
-            content += "\n\n"
+        if (quran.verseID == 1 && quran.surahID != 1 && quran.surahID != 9) SelectionContainer {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp, 2.dp),
+                text = stringResource(id = R.string.str_bismillah),
+                fontFamily = FontFamily(quranFont),
+                fontSize = quranFontSize.sp,
+                lineHeight = (quranFontSize * 1.7).sp,
+                textAlign = TextAlign.Center
+            )
         }
+        SelectionContainer {
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp, 2.dp),
+                text = quranText,
+                fontFamily = FontFamily(quranFont),
+                fontSize = quranFontSize.sp,
+                lineHeight = (quranFontSize * 1.7).sp,
+                softWrap = true,
+                overflow = TextOverflow.Visible,
+
+                )
+        }
+        content += quranText
+        content += "\n\n"
+        if (!translates.isNullOrEmpty()) HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
         translates?.forEach { t ->
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp, 0.dp),
+                    .padding(4.dp, 0.dp),
                 text = t.name,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline
+                textDecoration = TextDecoration.Underline,
             )
             content += t.name
             content += ": "
@@ -197,7 +187,7 @@ fun AyaItem(
                     Text(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp, 0.dp),
+                            .padding(4.dp, 0.dp),
                         text = t.text.trim(),
                         fontFamily = FontFamily(
                             when (t.translateType) {
@@ -215,7 +205,10 @@ fun AyaItem(
                             TranslateType.KURDISH -> kurdishFontSize
                             TranslateType.FARSI -> farsiFontSize
                             TranslateType.ENGLISH -> englishFontSize
-                        } * 1.7).sp
+                        } * 1.7).sp,
+                        softWrap = true,
+                        textAlign = TextAlign.Justify,
+                        overflow = TextOverflow.Visible
                     )
                 }
                 content += t.text.trim()
@@ -230,115 +223,154 @@ fun AyaItem(
                 .fillMaxWidth()
                 .drawBehind {
                     if (isPlaying) {
-                        for ((index, i) in (30..size.width.toInt() - 20 step 20).withIndex()) {
+                        for ((index, i) in (8..size.width.toInt() - 8 step 10).withIndex()) {
                             val currentSize = animations[index % animations.size].value
                             drawLine(
                                 color = barColor,
-                                start = Offset(i.toFloat(), size.height),
-                                end = Offset(i.toFloat(), size.height - currentSize),
-                                strokeWidth = 15f,
+                                start = Offset(i.toFloat(), size.height - 5),
+                                end = Offset(i.toFloat(), size.height - currentSize - 5),
+                                strokeWidth = 8f,
                                 cap = StrokeCap.Round
                             )
                         }
                     }
                 },
-            horizontalArrangement = Arrangement.SpaceAround,
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { onCopyClick(content) }) {
+            IconButton(
+                onClick = { onCopyClick(content) },
+                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
                 Icon(
                     imageVector = Icons.Filled.ContentCopy,
-                    contentDescription = stringResource(id = R.string.copy),
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = stringResource(id = R.string.copy)
                 )
             }
-            IconButton(onClick = { onShareClick(content) }) {
+            IconButton(
+                onClick = { onShareClick(content) },
+                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
-                    contentDescription = stringResource(id = R.string.share),
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = stringResource(id = R.string.share)
                 )
             }
-            IconButton(onClick = { showNotePanel.value = !showNotePanel.value }) {
-                Icon(
-                    imageVector = if (showNotePanel.value) Icons.Rounded.Close else if (quran.note.isNullOrBlank()) Icons.Rounded.AddComment else Icons.Rounded.EditNote,
-                    contentDescription = stringResource(id = R.string.notes),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            AnimatedContent(targetState = showNotePanel, label = "note") {
+                IconButton(
+                    onClick = { showNotePanel = !showNotePanel },
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(
+                        imageVector = if (it) Icons.Rounded.Close else if (quran.note.isNullOrBlank()) Icons.Rounded.AddComment else Icons.Rounded.EditNote,
+                        contentDescription = stringResource(id = R.string.notes)
+                    )
+                }
             }
-            IconButton(onClick = { onBookmarkClick(quran) }) {
-                Icon(
-                    imageVector = if (quran.fav == 1) Icons.Rounded.BookmarkAdded else Icons.Rounded.BookmarkAdd,
-                    contentDescription = stringResource(id = R.string.bookmarks),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            AnimatedContent(targetState = quran.fav, label = "fav") {
+                IconButton(
+                    onClick = { onBookmarkClick(quran) },
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(
+                        imageVector = if (it == 1) Icons.Rounded.BookmarkAdded else Icons.Rounded.BookmarkAdd,
+                        contentDescription = stringResource(id = R.string.bookmarks)
+                    )
+                }
             }
-            IconButton(modifier = Modifier
-                .scale(btnPlayScale.value),
-                onClick = { onBtnPlayClick(quran) }) {
+            IconButton(
+                modifier = Modifier.scale(btnPlayScale),
+                onClick = { onBtnPlayClick(quran) },
+                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
                 Icon(
                     imageVector = if (isPlaying) Icons.Rounded.StopCircle else Icons.Rounded.PlayCircle,
-                    contentDescription = stringResource(id = R.string.play),
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = stringResource(id = R.string.play)
                 )
             }
         }
         AnimatedVisibility(
-            visible = showNotePanel.value, enter = expandVertically(), exit = shrinkVertically()
+            visible = showNotePanel, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            TextField(modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp, 2.dp),
-                value = noteText.value ?: "",
-                onValueChange = { noteText.value = it },
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp, 2.dp),
+                value = noteText ?: "",
+                onValueChange = { noteText = it },
                 label = { Text(text = stringResource(id = R.string.your_note)) },
                 leadingIcon = {
                     IconButton(
                         onClick = { showDeleteDialog = true },
-                        enabled = !noteText.value.isNullOrBlank()
+                        enabled = !noteText.isNullOrBlank(),
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.error)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Delete,
-                            contentDescription = stringResource(id = R.string.delete),
-                            tint = if (noteText.value.isNullOrBlank()) MaterialTheme.colorScheme.scrim else MaterialTheme.colorScheme.error
+                            contentDescription = stringResource(id = R.string.delete)
                         )
                     }
 
                 },
                 trailingIcon = {
-                    IconButton(onClick = {
-                        onNoteUpdate(noteText.value ?: "")
-                        showNotePanel.value = false
-                    }) {
+                    IconButton(
+                        onClick = {
+                            onNoteUpdate(noteText ?: "")
+                            showNotePanel = false
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        enabled = noteText?.isNotEmpty() == true && quran.note != noteText
+                    ) {
                         Icon(
                             imageVector = Icons.Rounded.Save,
-                            contentDescription = stringResource(id = R.string.delete),
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = stringResource(id = R.string.delete)
                         )
                     }
-                })
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                )
+            )
         }
         if (showDeleteDialog) {
-            AlertDialog(
-                onDismissRequest = { showDeleteDialog = false },
-                confirmButton = {
-                    TextButton(onClick = {
+            AlertDialog(onDismissRequest = { showDeleteDialog = false }, confirmButton = {
+                TextButton(
+                    onClick = {
                         showDeleteDialog = false
-                        noteText.value = ""
-                        onNoteUpdate(noteText.value ?: "")
-                        showNotePanel.value = false
-                    }) {
-                        Text(text = stringResource(id = R.string.yes))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
-                        Text(text = stringResource(id = R.string.no))
-                    }
-                },
-                title = { Text(text = stringResource(id = R.string.alert)) },
-                text = { Text(text = stringResource(id = R.string.delete_note_alert_message)) },
-                icon = { Icon(imageVector = Icons.Default.Warning, contentDescription = "") })
+                        noteText = ""
+                        onNoteUpdate(noteText ?: "")
+                        showNotePanel = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.yes),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }, dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(
+                        text = stringResource(id = R.string.no),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }, title = { Text(text = stringResource(id = R.string.alert)) }, text = {
+                Text(
+                    text = stringResource(id = R.string.delete_note_alert_message),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }, icon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            })
         }
     }
 }

@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -42,18 +45,19 @@ import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.APP_LINK
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun NAboutScreen(
+fun SharedTransitionScope.NAboutScreen(
     navigateToPersianCalendar: () -> Unit,
-    openDrawer: () -> Unit
+    openDrawer: () -> Unit,
+    animatedContentScope: AnimatedContentScope
 ) {
     val context = LocalContext.current
     val version = programVersion(context.packageManager, context.packageName)
     val versionDescription = formatNumber(
         "${context.getString(R.string.app_name)}: ${
-            String.format(context.getString(R.string.version, version))
-        }\nنسخه مناسب سال 1403-1402"
+            context.getString(R.string.version, version)
+        }\nنسخه سال 1403-1404"
     )
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
@@ -61,7 +65,7 @@ fun NAboutScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.about)) },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(openDrawer) },
+                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
                 actions = {
                     IconButton(onClick = { navigateToPersianCalendar() }) {
                         Icon(
@@ -110,14 +114,10 @@ fun NAboutScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 InfoUIElement(versionDescription)
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(8.dp)
-                )
+                HorizontalDivider(modifier = Modifier.padding(8.dp))
                 ContactUIElement(
                     namooClick = { openTG(context) },
-                    developerNClick = { openTGDeveloper(context) },
-                    mailTo = { mailTo(context) }
+                    developerNClick = { openTGDeveloper(context) }
                 )
             }
 
@@ -150,7 +150,7 @@ fun NAboutScreen(
     }
 }
 
-private fun programVersion(packageManager: PackageManager, packageName: String): String =
+private fun programVersion(packageManager: PackageManager, packageName: String): String? =
     runCatching {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getPackageInfo(
@@ -160,17 +160,6 @@ private fun programVersion(packageManager: PackageManager, packageName: String):
             packageManager.getPackageInfo(packageName, 0)
         }.versionName
     }.onFailure(logException).getOrDefault("")
-
-private fun mailTo(context: Context) {
-    val intent = Intent(
-        Intent.ACTION_SENDTO, Uri.fromParts(
-            "mailto", "namoodev@gmail.com", null
-        )
-    )
-    intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.mail_subject))
-    intent.putExtra(Intent.EXTRA_TEXT, context.getString(R.string.mail_contect))
-    context.startActivity(Intent.createChooser(intent, context.getString(R.string.send_mail)))
-}
 
 private fun openTG(context: Context) {
     runCatching {

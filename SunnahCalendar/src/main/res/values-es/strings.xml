@@ -29,8 +29,6 @@
     <string name="device_does_not_support">El calendario del dispositivo no admite está acción</string>
     <string name="today">Hoy</string>
     <string name="return_to_today">Volver a Hoy</string>
-    <string name="goto_date">Ir a fecha</string>
-    <string name="go">Ir</string>
     <string name="search_in_events">Buscar en los eventos</string>
     <string name="days_distance">Distancia</string>
     <string name="start_of_year_diff">%1$s días (~%2$s semanas o %3$s meses) desde el inicio del año</string>
@@ -48,7 +46,7 @@
     <string name="animal_year_name_dragon">Dragón</string>
     <string name="animal_year_name_snake">Serpiente</string>
     <string name="animal_year_name_horse">Caballo</string>
-    <string name="animal_year_name_goat">Oveja</string>
+    <string name="animal_year_name_goat">Cabra</string>
     <string name="zodiac">Zodiaco</string>
     <string name="capricorn">Capricornio</string>
     <string name="aquarius">Acuario</string>
@@ -62,13 +60,13 @@
     <string name="libra">Libra</string>
     <string name="scorpio">Escorpio</string>
     <string name="sagittarius">Sagitario</string>
-    <string name="moonInScorpio">Luna en Escorpio</string>
+    <string name="moon_in_scorpio">Luna en Escorpio</string>
     <string name="events">Eventos</string>
     <string name="no_event">No hay evento ni cita para este día</string>
     <string name="warn_if_events_not_set">Para seleccionar y mostrar los días festivos y eventos preferidos, visite los ajustes</string>
-    <string name="sunriseSunView">Amanecer</string>
-    <string name="middaySunView">Mediodía</string>
-    <string name="sunsetSunView">Atardecer</string>
+    <string name="sunrise_sun_view">Amanecer</string>
+    <string name="midday_sun_view">Mediodía</string>
+    <string name="sunset_sun_view">Atardecer</string>
     <string name="length_of_day">Duración del día</string>
     <string name="remaining_daylight">Restante</string>
     <string name="n_hours_minutes">%1$sh %2$sm</string>
@@ -152,7 +150,7 @@
     <string name="gps_internet_desc">Habilite el GPS del dispositivo y la conexión a Internet para encontrar su ubicación, por favor.
 \n
 \n La aplicación necesita esto solo una vez, sin embargo, si se va a una nueva ubicación, se necesita acceder nuevamente al GPS e Internet.</string>
-    <string name="pleasewaitgps">Espere … Si no aparece nada después de un minuto, quizá debería probar otras opciones</string>
+    <string name="wait_for_gps">Espere … Si no aparece nada después de un minuto, quizá debería probar otras opciones</string>
     <string name="location">Ubicación</string>
     <string name="location_help">Si ninguno de ellos, especifíquelo abajo</string>
     <string name="latitude">Latitud</string>
@@ -195,9 +193,9 @@
     <string name="about_support_developers">Soporte para desarrolladores</string>
     <string name="about_report_bug">Informar error en Github</string>
     <string name="about_report_bug_sum">Para informe de errores preferencia o solicitud de una nueva característica, necesita una cuenta de GitHub</string>
-    <string name="about_sendMail">Correo electrónico</string>
+    <string name="about_send_mail">Correo electrónico</string>
     <string name="about_email_sum">Enviar un correo electrónico personal a los autores de la aplicación</string>
-    <string name="about_noClient">No hay ningún cliente de correo electrónico instalado</string>
+    <string name="about_no_client">No hay ningún cliente de correo electrónico instalado</string>
     <string name="about_developers">Desarrolladores (aleatoriamente)</string>
     <string name="previous_x">%1$s anterior</string>
     <string name="next_x">Siguiente %1$s</string>
@@ -207,15 +205,17 @@
     <string name="nth_week_of_year">%1$s semana del año</string>
     <string name="shift_work_settings">Ajustes del turno de trabajo</string>
     <string name="remove">Eliminar</string>
-    <string name="shift_work_starting_date">%1$s, selected on the calendar, is shift work starting day.</string>
-    <string name="shift_work_starting_date_edit">%1$s, previously selected, is the chosen shift work starting day.</string>
+    <string name="shift_work_starting_date">La fecha seleccionada en el calendario %1$s se utilizará como día de inicio del turno.</string>
+    <string name="shift_work_starting_date_edit">%1$s, previamente seleccionado, es el día de inicio del turno de trabajo elegido.</string>
     <string name="shift_work_reset_button">Deshabilitar o reprogramar</string>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="one">%1$s minuto</item>
+        <item quantity="many">%1$s minutos</item>
         <item quantity="other">%1$s minutos</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s hora</item>
+        <item quantity="many">%1$s horas</item>
         <item quantity="other">%1$s horas</item>
     </plurals>
     <string name="spaced_and">" y "</string>
@@ -223,12 +223,13 @@
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
     <string name="device_information">Información del dispositivo</string>
-    <string name="center_align_widgets_summary">Center aligning 4x1 and 2x2 widgets</string>
-    <string name="center_align_widgets">Center align the widgets</string>
-    <string name="n_till">%1$s till to %2$s</string>
+    <string name="center_align_widgets_summary">Alineación central de widgets 4x1 y 2x2</string>
+    <string name="center_align_widgets">Centrar los widgets</string>
+    <string name="n_till">Faltan %1$s para %2$s</string>
     <plurals name="shift_work_record_title">
-        <item quantity="one">%1$s día %2$s</item>
-        <item quantity="other">%1$s días %2$s</item>
+        <item quantity="one">%1$s %2$s día</item>
+        <item quantity="many">%1$s %2$s días</item>
+        <item quantity="other">%1$s %2$s días</item>
     </plurals>
     <string name="recurs">Recurre</string>
     <string name="am">AM</string>
@@ -245,22 +246,25 @@
     <string name="enable_location_services">servicios de ubicación están deshabilitados, por favor actívelos para usar la función en el futuro.</string>
     <string name="select_date">Elegir fecha</string>
     <string name="age_widget_title">Título del widget</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s día</item>
+        <item quantity="many">%1$s días</item>
         <item quantity="other">%1$s días</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s mes</item>
+        <item quantity="many">%1$s meses</item>
         <item quantity="other">%1$s meses</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s año</item>
+        <item quantity="many">%1$s años</item>
         <item quantity="other">%1$s años</item>
     </plurals>
     <string name="preview">Previsualización</string>
     <string name="ignore">Ignorar</string>
     <string name="theme_default">Predeterminado del sistema</string>
-    <string name="theme_light">Light</string>
+    <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_modern">Moderno</string>
     <string name="theme_aqua">Blue</string>
@@ -272,7 +276,7 @@
     <string name="islamic_calendar_short">Islámico</string>
     <string name="gregorian_calendar_short">Gregoriano</string>
     <string name="method_jafari">Shia Ithna-Ashari, Leva Institute, Qum</string>
-    <string name="method_mwl">Muslim World League</string>
+    <string name="method_mwl">Liga del Mundo Islámico</string>
     <string name="method_isna">Sociedad islámica Norteamericana</string>
     <string name="method_egypt">Egyptian General Authority of Survey</string>
     <string name="method_makkah">Umm Al-Qura University, Makkah</string>
@@ -383,7 +387,7 @@
     <string name="mars">Marte</string>
     <string name="jupiter">Júpiter</string>
     <string name="saturn">Saturno</string>
-    <string name="uranus">Uranus</string>
+    <string name="uranus">Urano</string>
     <string name="neptune">Neptuno</string>
     <string name="live_wallpaper_settings">Ajustes de fondo de pantalla en vivo</string>
     <string name="screensaver_settings">Ajustes del salvapantallas</string>
@@ -394,19 +398,19 @@
     <string name="exit_full_screen">Salir de la pantalla completa</string>
     <string name="full_screen">Pantalla completa</string>
     <string name="color_gradient">Gradiente del color</string>
-    <plurals name="n_seconds">
+    <plurals name="seconds">
         <item quantity="one">%1$s segundo</item>
         <item quantity="many">%1$s segundos</item>
         <item quantity="other">%1$s segundos</item>
     </plurals>
-    <plurals name="n_weeks">
+    <plurals name="weeks">
         <item quantity="one">%1$s semana</item>
         <item quantity="many">%1$s semanas</item>
         <item quantity="other">%1$s semanas</item>
     </plurals>
     <string name="time_zones">Husos horarios</string>
     <string name="qr_code">Código QR</string>
-    <plurals name="n_work_days">
+    <plurals name="work_days">
         <item quantity="one">%1$s día laborable</item>
         <item quantity="many">%1$s días laborables</item>
         <item quantity="other">%1$s días laborables</item>
@@ -421,4 +425,11 @@
     <string name="exempt_app_battery_optimization">¿Te gustaría añadir la aplicación a la excepción de optimización de la batería para el correcto funcionamiento de la notificación?</string>
     <string name="widget_background_transparency">Transparencia de fondo del widget</string>
     <string name="save">Guardar</string>
+    <string name="holidays_in_red">Vacaciones en rojo</string>
+    <string name="add_widget">Añadir un widget</string>
+    <string name="vibration">Vibración</string>
+    <string name="schedule">Horario</string>
+    <string name="print">Imprimir</string>
+    <string name="week_view">Vista semanal</string>
+    <string name="daily_schedule">Horario diario</string>
 </resources>

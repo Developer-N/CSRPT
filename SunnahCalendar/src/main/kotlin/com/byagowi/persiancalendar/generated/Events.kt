@@ -10,9 +10,9 @@ public enum class EventType(
     public val source: String,
 ) {
     Afghanistan("https://w.mudl.gov.af/sites/default/files/2020-03/Calendar%202020%20Website.pdf"),
-    Iran("https://calendar.ut.ac.ir/Fa/News/Data/Doc/Calendar%201403.pdf"),
+    Iran("https://calendar.ut.ac.ir/documents/2139738/7092644/Calendar-1404.pdf"),
     AncientIran("~https://raw.githubusercontent.com/ilius/starcal/master/plugins/iran-ancient-data.txt"),
-    International("~http://www.un.org/en/sections/observances/international-days/"),
+    International("~https://www.un.org/en/sections/observances/international-days/"),
     Nepal(""),
     ;
 }
@@ -27,7 +27,7 @@ public class CalendarRecord(
 
 public val persianEvents: List<CalendarRecord> = listOf(
     CalendarRecord(
-        title = "جشن نوروز",
+        title = "نوروز",
         type = EventType.Afghanistan, isHoliday = true, month = 1, day = 1
     ),
     CalendarRecord(
@@ -95,7 +95,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Afghanistan, isHoliday = false, month = 10, day = 6
     ),
     CalendarRecord(
-        title = "هفتهٔ قانون اساسی افغانستان",
+        title = "هفتهٔ قانون اساسی افغانستان (۱۴-۲۰ جدی)",
         type = EventType.Afghanistan, isHoliday = false, month = 10, day = 14
     ),
     CalendarRecord(
@@ -179,16 +179,19 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 1, day = 18
     ),
     CalendarRecord(
-        title =
-        "شهادت آیت‌اللّه سید محمدباقر صدر و خواهر ایشان بنت‌الهدی به دست حکومت بعث عراق (۱۳۵۹ ه‍.ش)",
+        title = "شهادت آیت‌اللّه سیدمحمدباقر صدر و خواهر ایشان بنت‌الهدی به دست حکومت بعث عراق (۱۳۵۹ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 1, day = 19
     ),
     CalendarRecord(
-        title = "روز ملّی فنّاوری هسته‌ای",
+        title = "روز ملی فناوری هسته‌ای",
         type = EventType.Iran, isHoliday = false, month = 1, day = 20
     ),
     CalendarRecord(
-        title = "روز هنر انقلاب اسلامی (سالروز شهادت سید مرتضی آوینی) (۱۳۷۲ ه‍.ش)",
+        title = "شهادت سید مرتضی آوینی",
+        type = EventType.Iran, isHoliday = false, month = 1, day = 20
+    ),
+    CalendarRecord(
+        title = "روز هنر انقلاب اسلامی",
         type = EventType.Iran, isHoliday = false, month = 1, day = 20
     ),
     CalendarRecord(
@@ -196,12 +199,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 1, day = 21
     ),
     CalendarRecord(
-        title =
-        "سالروز افتتاح حساب شمارهٔ ۱۰۰ به فرمان حضرت امام خمینی (ره) و تأسیس بنیاد مسکن انقلاب اسلامی (۱۳۵۸ ه‍.ش)",
+        title = "سالروز افتتاح حساب شمارهٔ ۱۰۰ به فرمان حضرت امام خمینی (ره) و تأسیس بنیاد مسکن انقلاب اسلامی (۱۳۵۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 1, day = 21
     ),
     CalendarRecord(
-        title = "روز بزرگداشت عطّار نیشابوری",
+        title = "روز بزرگداشت عطار نیشابوری",
         type = EventType.Iran, isHoliday = false, month = 1, day = 25
     ),
     CalendarRecord(
@@ -209,11 +211,19 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 1, day = 29
     ),
     CalendarRecord(
+        title = "روز گندم و نان",
+        type = EventType.Iran, isHoliday = false, month = 1, day = 31
+    ),
+    CalendarRecord(
         title = "روز بزرگداشت سعدی",
         type = EventType.Iran, isHoliday = false, month = 2, day = 1
     ),
     CalendarRecord(
         title = "روز نثر فارسی",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 1
+    ),
+    CalendarRecord(
+        title = "روز شهدای ورزشکار",
         type = EventType.Iran, isHoliday = false, month = 2, day = 1
     ),
     CalendarRecord(
@@ -241,7 +251,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 2, day = 3
     ),
     CalendarRecord(
-        title = "شکست حمله نظامی آمریکا به ایران در طبس (۱۳۵۹ ه‍.ش)",
+        title = "شکست حملهٔ نظامی آمریکا به ایران در طبس (۱۳۵۹ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 2, day = 5
     ),
     CalendarRecord(
@@ -257,7 +267,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 2, day = 10
     ),
     CalendarRecord(
-        title = "آغاز عملیات بیت المقدس (۱۳۶۱ ه‍.ش)",
+        title = "آغاز عملیات بیت‌المقدس (۱۳۶۱ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 2, day = 10
     ),
     CalendarRecord(
@@ -285,7 +295,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 2, day = 19
     ),
     CalendarRecord(
-        title = "لغو امتیاز تنباکو به فتوای آیت‌اللّه میرزا حسن شیرازی (۱۲۷۰ ه‍.ش)",
+        title = "روز گل محمدی و گلاب",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 20
+    ),
+    CalendarRecord(
+        title = "لغو امتیاز تنباکو به فتوای آیت‌الله میرزا حسن شیرازی (۱۲۷۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 2, day = 24
     ),
     CalendarRecord(
@@ -313,7 +327,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 1
     ),
     CalendarRecord(
-        title = "روز بزرگداشت ملّاصدرا (صدرالمتألهین)",
+        title = "روز بزرگداشت ملاصدرا (صدرالمتألهین)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 1
     ),
     CalendarRecord(
@@ -321,11 +335,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 3
     ),
     CalendarRecord(
-        title = "روز دزفول",
+        title = "روز مقاومت و پایداری",
         type = EventType.Iran, isHoliday = false, month = 3, day = 4
     ),
     CalendarRecord(
-        title = "روز مقاومت و پایداری",
+        title = "روز دزفول",
         type = EventType.Iran, isHoliday = false, month = 3, day = 4
     ),
     CalendarRecord(
@@ -337,12 +351,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 7
     ),
     CalendarRecord(
-        title =
-        "رحلت حضرت امام خمینی (ره) رهبر کبیر انقلاب و بنیان‌گذار جمهوری اسلامی ایران (۱۳۶۸ ه‍.ش)",
+        title = "رحلت حضرت امام خمینی (ره) رهبر کبیر انقلاب و بنیان‌گذار جمهوری اسلامی ایران (۱۳۶۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = true, month = 3, day = 14
     ),
     CalendarRecord(
-        title = "انتخاب حضرت آیت‌اللّه امام خامنه‌ای به رهبری (۱۳۶۸ ه‍.ش)",
+        title = "انتخاب حضرت آیت‌الله امام خامنه‌ای به رهبری (۱۳۶۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 14
     ),
     CalendarRecord(
@@ -350,7 +363,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = true, month = 3, day = 15
     ),
     CalendarRecord(
-        title = "زندانی‌شدن حضرت امام خمینی (ره) به دست مأموران ستم‌شاهی پهلوی (۱۳۴۲ ه‍.ش)",
+        title = "زندانی شدن حضرت امام خمینی (ره) به دست مأموران ستم شاهی پهلوی (۱۳۴۲ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 15
     ),
     CalendarRecord(
@@ -362,7 +375,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 20
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه سعیدی به دست مأموران ستم‌شاهی پهلوی (۱۳۴۹ ه‍.ش)",
+        title = "شهادت آیت‌الله سعیدی به دست مأموران ستم‌شاهی پهلوی (۱۳۴۹ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 20
     ),
     CalendarRecord(
@@ -378,7 +391,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 29
     ),
     CalendarRecord(
-        title = "شهادت زائران حرم رضوی (ع) به دست ایادی آمریکا در روز عاشورا (۱۳۷۳ ه‍.ش)",
+        title = "شهادت زائران حرم رضوی (ع) به دست ایادی آمریکا (عاشورای ۱۳۷۳ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 30
     ),
     CalendarRecord(
@@ -390,8 +403,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 31
     ),
     CalendarRecord(
-        title =
-        "روز تبلیغ و اطلاع‌رسانی دینی (سالروز صدور فرمان حضرت امام خمینی رحمة‌اللّه علیه مبنی بر تأسیس سازمان تبلیغات اسلامی) (۱۳۶۰ ه‍.ش)",
+        title = "سالروز صدور فرمان حضرت امام خمینی رحمة‌الله علیه مبنی بر تأسیس سازمان تبلیغات اسلامی (۱۳۶۰ ه‍.ش)",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 1
+    ),
+    CalendarRecord(
+        title = "روز تبلیغ و اطلاع‌رسانی دینی",
         type = EventType.Iran, isHoliday = false, month = 4, day = 1
     ),
     CalendarRecord(
@@ -399,8 +415,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 4, day = 1
     ),
     CalendarRecord(
-        title =
-        "شهادت مظلومانهٔ آیت‌اللّه دکتر بهشتی و ۷۲ تن از یاران حضرت امام خمینی (ره) با انفجار بمب به دست منافقان در دفتر مرکزی حزب جمهوری اسلامی (۱۳۶۰ ه‍.ش)",
+        title = "شهادت مظلومانهٔ آیت‌الله دکتر بهشتی و ۷۲ تن از یاران حضرت امام خمینی (ره) با انفجار بمب به دست منافقان در دفتر مرکزی حزب جمهوری اسلامی (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 4, day = 7
     ),
     CalendarRecord(
@@ -408,7 +423,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 4, day = 7
     ),
     CalendarRecord(
-        title = "سالروز بمباران شیمیایی شهر سردشت (۱۳۶۶ ه‍.ش)",
+        title = "بمباران شیمیایی شهر سردشت (۱۳۶۶ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 4, day = 7
     ),
     CalendarRecord(
@@ -420,6 +435,10 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 4, day = 10
     ),
     CalendarRecord(
+        title = "روز دیپلماسی فرهنگی و تعامل با جهان",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 10
+    ),
+    CalendarRecord(
         title = "روز آزادسازی شهر مهران",
         type = EventType.Iran, isHoliday = false, month = 4, day = 10
     ),
@@ -428,20 +447,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 4, day = 10
     ),
     CalendarRecord(
-        title = "روز دیپلماسی فرهنگی و تعامل با جهان",
-        type = EventType.Iran, isHoliday = false, month = 4, day = 10
-    ),
-    CalendarRecord(
         title = "یاد روز ورود حضرت امام رضا (ع) به نیشابور و نقل حدیث سلسلةالذهب",
         type = EventType.Iran, isHoliday = false, month = 4, day = 10
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه صدوقی چهارمین شهید محراب به دست منافقان (۱۳۶۱ ه‍.ش)",
+        title = "شهادت آیت‌الله صدوقی چهارمین شهید محراب به دست منافقان (۱۳۶۱ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 4, day = 11
     ),
     CalendarRecord(
-        title =
-        "حملهٔ ددمنشانهٔ ناوگان آمریکای جنایتکار به هواپیمای مسافربری جمهوری اسلامی ایران (۱۳۶۷ ه‍.ش)",
+        title = "حملهٔ ددمنشانهٔ ناوگان آمریکای جنایتکار به هواپیمای مسافربری جمهوری اسلامی ایران (۱۳۶۷ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 4, day = 12
     ),
     CalendarRecord(
@@ -509,7 +523,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 4, day = 27
     ),
     CalendarRecord(
-        title = "روز بزرگداشت آیت‌اللّه سید ابوالقاسم کاشانی",
+        title = "روز بزرگداشت آیت‌الله سید ابوالقاسم کاشانی",
         type = EventType.Iran, isHoliday = false, month = 4, day = 30
     ),
     CalendarRecord(
@@ -525,7 +539,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 5, day = 5
     ),
     CalendarRecord(
-        title = "روز کارآفرینی و آموزش‌های فنّی‌و‌حرفه‌ای",
+        title = "روز کارآفرینی و آموزش‌های فنی‌و‌حرفه‌ای",
         type = EventType.Iran, isHoliday = false, month = 5, day = 6
     ),
     CalendarRecord(
@@ -541,11 +555,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 5, day = 8
     ),
     CalendarRecord(
+        title = "روز زنجان",
+        type = EventType.Iran, isHoliday = false, month = 5, day = 8
+    ),
+    CalendarRecord(
         title = "روز اهدای خون",
         type = EventType.Iran, isHoliday = false, month = 5, day = 9
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه شیخ فضل‌اللّه نوری (۱۲۸۸ ه‍.ش)",
+        title = "شهادت آیت‌الله شیخ فضل‌الله نوری (۱۲۸۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 5, day = 11
     ),
     CalendarRecord(
@@ -565,6 +583,10 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 5, day = 16
     ),
     CalendarRecord(
+        title = "سالروز شهادت محمد صارمی",
+        type = EventType.Iran, isHoliday = false, month = 5, day = 17
+    ),
+    CalendarRecord(
         title = "روز خبرنگار",
         type = EventType.Iran, isHoliday = false, month = 5, day = 17
     ),
@@ -577,7 +599,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 5, day = 21
     ),
     CalendarRecord(
-        title = "روز تشکّل‌ها و مشارکت‌های اجتماعی",
+        title = "روز تشکل‌ها و مشارکت‌های اجتماعی",
         type = EventType.Iran, isHoliday = false, month = 5, day = 22
     ),
     CalendarRecord(
@@ -597,11 +619,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 5, day = 28
     ),
     CalendarRecord(
-        title = "روز بزرگداشت علامه مجلسی",
+        title = "روز بزرگداشت علامهٔ مجلسی",
         type = EventType.Iran, isHoliday = false, month = 5, day = 30
     ),
     CalendarRecord(
         title = "روز صنعت دفاعی",
+        type = EventType.Iran, isHoliday = false, month = 5, day = 31
+    ),
+    CalendarRecord(
+        title = "روز عسل",
         type = EventType.Iran, isHoliday = false, month = 5, day = 31
     ),
     CalendarRecord(
@@ -625,7 +651,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 2
     ),
     CalendarRecord(
-        title = "اِشغال ایران توسّط متّفقین و فرار رضاخان (۱۳۲۰ ه‍.ش)",
+        title = "اِشغال ایران توسط متفقین و فرار رضاخان (۱۳۲۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 3
     ),
     CalendarRecord(
@@ -633,7 +659,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 4
     ),
     CalendarRecord(
-        title = "روز بزرگداشت محمّدبن زکریای رازی",
+        title = "روز بزرگداشت محمدبن زکریای رازی",
         type = EventType.Iran, isHoliday = false, month = 6, day = 5
     ),
     CalendarRecord(
@@ -641,20 +667,27 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 5
     ),
     CalendarRecord(
-        title = "روز کشتی",
+        title = "روز کُشتی",
         type = EventType.Iran, isHoliday = false, month = 6, day = 5
     ),
     CalendarRecord(
-        title =
-        "روز مبارزه با تروریسم (انفجار دفتر نخست‌وزیری به دست منافقان و شهادت مظلومانهٔ شهیدان رجایی و باهنر) (۱۳۶۰ ه‍.ش)",
+        title = "انفجار دفتر نخست‌وزیری به دست منافقان و شهادت مظلومانهٔ شهیدان رجایی و باهنر (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 8
     ),
     CalendarRecord(
-        title = "روز بانکداری اسلامی (سالروز تصویب قانون عملیات بانکی بدون ربا) (۱۳۶۲ ه‍.ش)",
+        title = "روز مبارزه با تروریسم",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 8
+    ),
+    CalendarRecord(
+        title = "سالروز تصویب قانون عملیات بانکی بدون ربا (۱۳۶۲ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 10
     ),
     CalendarRecord(
-        title = "روز تشکیل قرارگاه پدافند هوایی حضرت خاتم‌الانبیا صلی اللّه علیه و آله (۱۳۷۱ ه‍.ش)",
+        title = "روز بانکداری اسلامی",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 10
+    ),
+    CalendarRecord(
+        title = "روز تشکیل قرارگاه پدافند هوایی حضرت خاتم‌الانبیا (ص) (۱۳۷۱ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 10
     ),
     CalendarRecord(
@@ -662,7 +695,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 11
     ),
     CalendarRecord(
-        title = "روز مبارزه با استعمار انگلیس (سالروز شهادت رئیسعلی دلواری - ۱۲۹۴ ه‍.ش)",
+        title = "سالروز شهادت رئیسعلی دلواری (۱۲۹۴ ه‍.ش)",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 12
+    ),
+    CalendarRecord(
+        title = "روز مبارزه با استعمار انگلیس",
         type = EventType.Iran, isHoliday = false, month = 6, day = 12
     ),
     CalendarRecord(
@@ -678,11 +715,23 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 13
     ),
     CalendarRecord(
+        title = "روز علوم پایه",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 13
+    ),
+    CalendarRecord(
         title = "روز مردم‌شناسی",
         type = EventType.Iran, isHoliday = false, month = 6, day = 13
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه قدّوسی و سرتیپ وحید دستجردی (۱۳۶۰ ه‍.ش)",
+        title = "سالروز زلزله فردوس در سال ۱۳۴۷",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 13
+    ),
+    CalendarRecord(
+        title = "روز حرکت‌های جهادی و امداد مردمی",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 13
+    ),
+    CalendarRecord(
+        title = "شهادت آیت‌الله قدوسی و سرتیپ وحید دستجردی (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 14
     ),
     CalendarRecord(
@@ -690,11 +739,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 17
     ),
     CalendarRecord(
-        title = "وفات آیت‌اللّه سید محمود طالقانی اوّلین حضرت امام جمعهٔ تهران (۱۳۵۸ ه‍.ش)",
+        title = "وفات آیت‌الله سید محمود طالقانی اولین حضرت امام جمعهٔ تهران (۱۳۵۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 19
     ),
     CalendarRecord(
-        title = "شهادت دومین شهید محراب آیت‌اللّه مدنی به دست منافقان (۱۳۶۰ ه‍.ش)",
+        title = "شهادت دومین شهید محراب آیت‌الله مدنی به دست منافقان (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 6, day = 20
     ),
     CalendarRecord(
@@ -702,11 +751,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 21
     ),
     CalendarRecord(
+        title = "روز خرما",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 25
+    ),
+    CalendarRecord(
         title = "روز شعر و ادب فارسی",
         type = EventType.Iran, isHoliday = false, month = 6, day = 27
     ),
     CalendarRecord(
-        title = "روز بزرگداشت استاد سید‌ محمّد‌حسین شهریار",
+        title = "روز بزرگداشت استاد سید‌ محمد‌حسین شهریار",
         type = EventType.Iran, isHoliday = false, month = 6, day = 27
     ),
     CalendarRecord(
@@ -714,7 +767,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 6, day = 31
     ),
     CalendarRecord(
-        title = "آغاز هفتهٔ دفاع مقدّس",
+        title = "آغاز هفتهٔ دفاع مقدس",
         type = EventType.Iran, isHoliday = false, month = 6, day = 31
     ),
     CalendarRecord(
@@ -734,11 +787,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 7, day = 5
     ),
     CalendarRecord(
-        title = "روز بزرگداشت فرماندهان شهید دفاع مقدّس",
+        title = "شهادت سرداران اسلام: فلاحی، فکوری، نامجو، کلاهدوز و جهان‌آرا (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 7, day = 7
     ),
     CalendarRecord(
-        title = "شهادت سرداران اسلام: فلاحی، فکوری، نامجو، کلاهدوز و جهان‌آرا (۱۳۶۰ ه‍.ش)",
+        title = "روز بزرگداشت فرماندهان شهید دفاع مقدس",
         type = EventType.Iran, isHoliday = false, month = 7, day = 7
     ),
     CalendarRecord(
@@ -782,7 +835,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 7, day = 20
     ),
     CalendarRecord(
-        title = "شهادت پنجمین شهید محراب آیت‌اللّه اشرفی اصفهانی به دست منافقان (۱۳۶۱ ه‍.ش)",
+        title = "شهادت پنجمین شهید محراب آیت‌الله اشرفی اصفهانی به دست منافقان (۱۳۶۱ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 7, day = 23
     ),
     CalendarRecord(
@@ -798,6 +851,10 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 7, day = 24
     ),
     CalendarRecord(
+        title = "روز نسل‌کشی کودکان و زنان فلسطینی",
+        type = EventType.Iran, isHoliday = false, month = 7, day = 25
+    ),
+    CalendarRecord(
         title = "روز تربیت‌بدنی و ورزش",
         type = EventType.Iran, isHoliday = false, month = 7, day = 26
     ),
@@ -806,7 +863,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 7, day = 29
     ),
     CalendarRecord(
-        title = "شهادت مظلومانهٔ آیت‌اللّه حاج سید مصطفی خمینی (۱۳۵۶ ه‍.ش)",
+        title = "شهادت مظلومانهٔ آیت‌الله حاج سید مصطفی خمینی (۱۳۵۶ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 8, day = 1
     ),
     CalendarRecord(
@@ -814,11 +871,23 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 1
     ),
     CalendarRecord(
+        title = "روز بزرگداشت ابوالفضل بیهقی",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 1
+    ),
+    CalendarRecord(
         title = "اعتراض و افشاگری حضرت امام خمینی (ره) علیه پذیرش کاپیتولاسیون (۱۳۴۳ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 8, day = 4
     ),
     CalendarRecord(
-        title = "شهادت محمّدحسین فهمیده (بسیجی ۱۳ ساله) (۱۳۵۹ ه‍.ش)",
+        title = "روز زعفران",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 5
+    ),
+    CalendarRecord(
+        title = "روز انار",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 7
+    ),
+    CalendarRecord(
+        title = "شهادت محمدحسین فهمیده (بسیجی ۱۳ ساله) (۱۳۵۹ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 8, day = 8
     ),
     CalendarRecord(
@@ -830,7 +899,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 8
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه قاضی طباطبایی، اوّلین شهید محراب به دست منافقان (۱۳۵۸ ه‍.ش)",
+        title = "شهادت آیت‌الله قاضی طباطبایی، اولین شهید محراب به دست منافقان (۱۳۵۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 8, day = 10
     ),
     CalendarRecord(
@@ -854,6 +923,10 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 14
     ),
     CalendarRecord(
+        title = "روز مازندران",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 14
+    ),
+    CalendarRecord(
         title = "روز کیفیت",
         type = EventType.Iran, isHoliday = false, month = 8, day = 18
     ),
@@ -862,15 +935,19 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 24
     ),
     CalendarRecord(
-        title = "روز بزرگداشت آیت‌اللّه علامه سید محمّدحسین طباطبایی (۱۳۶۰ ه‍.ش)",
+        title = "روز بزرگداشت آیت‌الله علامه سید محمّدحسین طباطبایی (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 8, day = 24
+    ),
+    CalendarRecord(
+        title = "روز اصفهان",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 25
     ),
     CalendarRecord(
         title = "سالروز آزادسازی سوسنگرد",
         type = EventType.Iran, isHoliday = false, month = 8, day = 26
     ),
     CalendarRecord(
-        title = "روز حکمت و فلسفه",
+        title = "روز قهرمان ملی",
         type = EventType.Iran, isHoliday = false, month = 8, day = 30
     ),
     CalendarRecord(
@@ -878,11 +955,19 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 30
     ),
     CalendarRecord(
-        title = "روز قهرمان ملی",
+        title = "روز حکمت و فلسفه",
         type = EventType.Iran, isHoliday = false, month = 8, day = 30
     ),
     CalendarRecord(
-        title = "روز بسیج مستضعفان (تشکیل بسیج مستضعفان به فرمان حضرت امام خمینی (ره)) (۱۳۵۸ ه‍.ش)",
+        title = "روز زیتون",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 4
+    ),
+    CalendarRecord(
+        title = "تشکیل بسیج مستضعفان به فرمان حضرت امام خمینی (ره) (۱۳۵۸ ه‍.ش)",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 5
+    ),
+    CalendarRecord(
+        title = "روز بسیج مستضعفان",
         type = EventType.Iran, isHoliday = false, month = 9, day = 5
     ),
     CalendarRecord(
@@ -894,20 +979,27 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 7
     ),
     CalendarRecord(
+        title = "روز نوآوری و فناوری ساخت ایران",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 7
+    ),
+    CalendarRecord(
         title = "روز بزرگداشت شیخ مفید",
         type = EventType.Iran, isHoliday = false, month = 9, day = 9
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه سید ‌حسن مدرّس (۱۳۱۶ ه‍.ش) و روز مجلس ",
+        title = "شهادت آیت‌الله سید حسن مدرس (۱۳۱۶ ه‍.ش) و روز مجلس",
         type = EventType.Iran, isHoliday = false, month = 9, day = 10
     ),
     CalendarRecord(
-        title = "شهادت میرزا‌کوچک‌خان جنگلی (۱۳۰۰ ه‍.ش)",
+        title = "شهادت میرزا‌ کوچک‌خان جنگلی (۱۳۰۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 9, day = 11
     ),
     CalendarRecord(
-        title =
-        "روز قانون اساسی جمهوری اسلامی ایران (تصویب قانون اساسی جمهوری اسلامی ایران) (۱۳۵۸ ه‍.ش)",
+        title = "تصویب قانون اساسی جمهوری اسلامی ایران (۱۳۵۸ ه‍.ش)",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 12
+    ),
+    CalendarRecord(
+        title = "روز قانون اساسی جمهوری اسلامی ایران",
         type = EventType.Iran, isHoliday = false, month = 9, day = 12
     ),
     CalendarRecord(
@@ -919,7 +1011,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 16
     ),
     CalendarRecord(
-        title = "معرّفی عراق به عنوان مسئول و آغازگر جنگ از سوی سازمان ملل (۱۳۷۰ ه‍.ش)",
+        title = "معرفی عراق به عنوان مسئول و آغازگر جنگ از سوی سازمان ملل (۱۳۷۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 9, day = 18
     ),
     CalendarRecord(
@@ -927,7 +1019,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 19
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه دستغیب، سومین شهید محراب به دست منافقان (۱۳۶۰ ه‍.ش)",
+        title = "شهادت آیت‌الله دستغیب، سومین شهید محراب به دست منافقان (۱۳۶۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 9, day = 20
     ),
     CalendarRecord(
@@ -939,7 +1031,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 26
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه دکتر محمّد مفتّح (۱۳۵۸ ه‍.ش)",
+        title = "شهادت آیت‌الله دکتر محمد مفتح (۱۳۵۸ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 9, day = 27
     ),
     CalendarRecord(
@@ -959,11 +1051,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 30
     ),
     CalendarRecord(
-        title = "روز ترویج فرهنگ میهمانی و پیوند با خویشان",
+        title = "ترویج فرهنگ میهمانی و پیوند با خویشان",
         type = EventType.Iran, isHoliday = false, month = 9, day = 30
     ),
     CalendarRecord(
-        title = "روز ثبت‌احوال",
+        title = "روز ثبت احوال",
         type = EventType.Iran, isHoliday = false, month = 10, day = 3
     ),
     CalendarRecord(
@@ -979,7 +1071,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 7
     ),
     CalendarRecord(
-        title = "شهادت آیت‌اللّه حسین غفّاری به دست مأموران ستم‌شاهی پهلوی (۱۳۵۳ ه‍.ش)",
+        title = "شهادت آیت‌الله حسین غفاری به دست مأموران ستم‌شاهی پهلوی (۱۳۵۳ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 10, day = 7
     ),
     CalendarRecord(
@@ -987,8 +1079,16 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 8
     ),
     CalendarRecord(
-        title = "روز بصیرت و میثاق امّت با ولایت",
+        title = "روز بصیرت و میثاق امت با ولایت",
         type = EventType.Iran, isHoliday = false, month = 10, day = 9
+    ),
+    CalendarRecord(
+        title = "روز بزرگداشت علامه مصباح یزدی",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 12
+    ),
+    CalendarRecord(
+        title = "روز علوم انسانی اسلامی",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 12
     ),
     CalendarRecord(
         title = "روز جهانی مقاومت",
@@ -1003,7 +1103,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 13
     ),
     CalendarRecord(
-        title = "روز شهدای دانشجو (شهادت سیدحسین علم‌الهدی و همرزمان وی در هویزه)",
+        title = "شهادت سیدحسین علم‌الهدی و همرزمان وی در هویزه",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 16
+    ),
+    CalendarRecord(
+        title = "روز شهدای دانشجو",
         type = EventType.Iran, isHoliday = false, month = 10, day = 16
     ),
     CalendarRecord(
@@ -1015,11 +1119,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 17
     ),
     CalendarRecord(
+        title = "روز کرمان",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 17
+    ),
+    CalendarRecord(
         title = "قیام خونین مردم قم (۱۳۵۶ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 10, day = 19
     ),
     CalendarRecord(
-        title = "شهادت میرزا تقی خان امیرکبیر (۱۲۳۰ ه‍.ش)",
+        title = "شهادت میرزا تقی‌خان امیرکبیر (۱۲۳۰ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 10, day = 20
     ),
     CalendarRecord(
@@ -1027,12 +1135,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 22
     ),
     CalendarRecord(
+        title = "روز تاریخ‌نگاری انقلاب اسلامی",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 25
+    ),
+    CalendarRecord(
         title = "فرار شاه معدوم (۱۳۵۷ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 10, day = 26
     ),
     CalendarRecord(
-        title =
-        "شهادت شهیدان: نواب صفوی، طهماسبی، برادران واحدی و ذوالقدر از فدائیان اسلام (۱۳۳۴ ه‍.ش)",
+        title = "شهادت نواب صفوی، طهماسبی، برادران واحدی و ذوالقدر از فدائیان اسلام (۱۳۳۴ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 10, day = 27
     ),
     CalendarRecord(
@@ -1040,11 +1151,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 29
     ),
     CalendarRecord(
-        title = "سالروز حماسهٔ مردم آمل",
-        type = EventType.Iran, isHoliday = false, month = 11, day = 6
+        title = "روز بزرگداشت خاقانی شروانی",
+        type = EventType.Iran, isHoliday = false, month = 11, day = 1
     ),
     CalendarRecord(
-        title = "روز آواها و نواهای ایرانی",
+        title = "سالروز حماسهٔ مردم آمل",
         type = EventType.Iran, isHoliday = false, month = 11, day = 6
     ),
     CalendarRecord(
@@ -1052,11 +1163,15 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 11, day = 6
     ),
     CalendarRecord(
+        title = "روز آواها و نواهای ایرانی",
+        type = EventType.Iran, isHoliday = false, month = 11, day = 6
+    ),
+    CalendarRecord(
         title = "سالروز بازگشت حضرت امام خمینی (ره) به ایران و آغاز دههٔ مبارک فجر انقلاب اسلامی",
         type = EventType.Iran, isHoliday = false, month = 11, day = 12
     ),
     CalendarRecord(
-        title = "روز فنّاوری فضایی",
+        title = "روز فناوری فضایی",
         type = EventType.Iran, isHoliday = false, month = 11, day = 14
     ),
     CalendarRecord(
@@ -1064,7 +1179,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 11, day = 19
     ),
     CalendarRecord(
-        title = "شکسته‌شدن حکومت‌نظامی به فرمان حضرت امام خمینی (ره) (۱۳۵۷ ه‍.ش)",
+        title = "روز چهارمحال و بختیاری",
+        type = EventType.Iran, isHoliday = false, month = 11, day = 1
+    ),
+    CalendarRecord(
+        title = "شکسته شدن حکومت‌نظامی به فرمان حضرت امام خمینی (ره) (۱۳۵۷ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 11, day = 21
     ),
     CalendarRecord(
@@ -1072,8 +1191,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = true, month = 11, day = 22
     ),
     CalendarRecord(
-        title =
-        "صدور حکم تاریخی حضرت امام خمینی (ره) مبنی بر ارتداد سلمان‌رشدی نویسندهٔ خائن کتاب آیات شیطانی (۱۳۶۷ ه‍.ش)",
+        title = "صدور حکم تاریخی حضرت امام خمینی (ره) مبنی بر ارتداد سلمان‌رشدی نویسندهٔ خائن کتاب آیات شیطانی (۱۳۶۷ ه‍.ش)",
         type = EventType.Iran, isHoliday = false, month = 11, day = 25
     ),
     CalendarRecord(
@@ -1089,7 +1207,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 12, day = 3
     ),
     CalendarRecord(
-        title = "روز بزرگداشت خواجه‌نصیرالدّین طوسی",
+        title = "روز بزرگداشت خواجه‌نصیرالدین طوسی",
         type = EventType.Iran, isHoliday = false, month = 12, day = 5
     ),
     CalendarRecord(
@@ -1129,7 +1247,7 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 12, day = 15
     ),
     CalendarRecord(
-        title = "روز بزرگداشت سید ‌جمال‌الدّین اسدآبادی",
+        title = "روز بزرگداشت سید ‌جمال‌الدین اسدآبادی",
         type = EventType.Iran, isHoliday = false, month = 12, day = 18
     ),
     CalendarRecord(
@@ -1149,8 +1267,11 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 12, day = 21
     ),
     CalendarRecord(
-        title =
-        "روز بزرگداشت شهدا (سالروز صدور فرمان حضرت امام خمینی (ره)، مبنی بر تأسیس بنیاد شهید انقلاب اسلامی) (۱۳۵۸ ه‍.ش)",
+        title = "سالروز صدور فرمان حضرت امام خمینی (ره)، مبنی بر تأسیس بنیاد شهید انقلاب اسلامی (۱۳۵۸ ه‍.ش)",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 22
+    ),
+    CalendarRecord(
+        title = "روز بزرگداشت شهدا",
         type = EventType.Iran, isHoliday = false, month = 12, day = 22
     ),
     CalendarRecord(
@@ -1162,11 +1283,143 @@ public val persianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 12, day = 25
     ),
     CalendarRecord(
-        title = "روز ملّی‌شدن صنعت نفت ایران (۱۳۲۹ ه‍.ش)",
+        title = "روز ملی شدن صنعت نفت ایران (۱۳۲۹ ه‍.ش)",
         type = EventType.Iran, isHoliday = true, month = 12, day = 29
     ),
     CalendarRecord(
-        title = "جشن نوروز، نوروز جمشیدی (جمشید پیشدادی) - ابتدای بهار",
+        title = "روز آزمایشگاهیان",
+        type = EventType.Iran, isHoliday = false, month = 1, day = 30
+    ),
+    CalendarRecord(
+        title = "روز روان‌شناس و مشاور",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 9
+    ),
+    CalendarRecord(
+        title = "روز صنعت بتن آماده",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 15
+    ),
+    CalendarRecord(
+        title = "روز صنعت تهویه مطبوع",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 15
+    ),
+    CalendarRecord(
+        title = "روز مشاغل خانگی و تولید خانواده‌محور",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 22
+    ),
+    CalendarRecord(
+        title = "روز بوم‌گردی",
+        type = EventType.Iran, isHoliday = false, month = 2, day = 31
+    ),
+    CalendarRecord(
+        title = "روز نقشه‌برداری",
+        type = EventType.Iran, isHoliday = false, month = 3, day = 7
+    ),
+    CalendarRecord(
+        title = "روز مشاور املاک",
+        type = EventType.Iran, isHoliday = false, month = 3, day = 8
+    ),
+    CalendarRecord(
+        title = "روز صنعت موتورسیکلت",
+        type = EventType.Iran, isHoliday = false, month = 3, day = 30
+    ),
+    CalendarRecord(
+        title = "روز صنعت ابزارآلات",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 5
+    ),
+    CalendarRecord(
+        title = "روز عینک‌سازی و بینایی‌سنجی",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 6
+    ),
+    CalendarRecord(
+        title = "روز حمایت از تولید ملی و مبارزه با قاچاق کالا",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 12
+    ),
+    CalendarRecord(
+        title = "روز خیاط، صنعت نساجی و پوشاک",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 12
+    ),
+    CalendarRecord(
+        title = "روز صنعت قیر و آسفالت",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 18
+    ),
+    CalendarRecord(
+        title = "روز خلبان",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 30
+    ),
+    CalendarRecord(
+        title = "روز کفاش، صنعت کفش و چرم",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 25
+    ),
+    CalendarRecord(
+        title = "روز صنعت آسانسور و پله‌برقی",
+        type = EventType.Iran, isHoliday = false, month = 7, day = 24
+    ),
+    CalendarRecord(
+        title = "روز محیط‌بان",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 8
+    ),
+    CalendarRecord(
+        title = "روز صنعت نوشت‌افزار",
+        type = EventType.Iran, isHoliday = false, month = 8, day = 25
+    ),
+    CalendarRecord(
+        title = "روز صنعت سرب و روی",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 1
+    ),
+    CalendarRecord(
+        title = "روز حسابدار",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 15
+    ),
+    CalendarRecord(
+        title = "روز سد و نیروگاه برق‌آبی",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 18
+    ),
+    CalendarRecord(
+        title = "روز صنعت مس",
+        type = EventType.Iran, isHoliday = false, month = 9, day = 22
+    ),
+    CalendarRecord(
+        title = "روز آرایشگر",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 1
+    ),
+    CalendarRecord(
+        title = "روز دفاتر اسناد رسمی",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 6
+    ),
+    CalendarRecord(
+        title = "روز صنعت سیمان",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 8
+    ),
+    CalendarRecord(
+        title = "روز قناد، صنعت شیرینی و شکلات",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 20
+    ),
+    CalendarRecord(
+        title = "روز معاینه فنی خودرو",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 29
+    ),
+    CalendarRecord(
+        title = "روز ویراستار",
+        type = EventType.Iran, isHoliday = false, month = 11, day = 11
+    ),
+    CalendarRecord(
+        title = "روز بازاریاب و مدیر فروش",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 10
+    ),
+    CalendarRecord(
+        title = "روز کارشناس و متخصص تغذیه",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 16
+    ),
+    CalendarRecord(
+        title = "روز خادمان آرامستان",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 21
+    ),
+    CalendarRecord(
+        title = "روز صنعت طلا، جواهر، نقره و گوهرسنگ‌ها",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 23
+    ),
+    CalendarRecord(
+        title = "نوروز، نوروز جمشیدی (جمشید پیشدادی) - ابتدای بهار",
         type = EventType.AncientIran, isHoliday = false, month = 1, day = 1
     ),
     CalendarRecord(
@@ -1413,7 +1666,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 2, day = 3
     ),
     CalendarRecord(
-        title = "شهادت حضرت امام حسن مجتبی (ع) (۵۰ ه‍.ق) (به روایتی)",
+        title = "شهادت حضرت امام حسن مجتبی (ع) (۵۰ ه‍.ق) به روایتی",
         type = EventType.Iran, isHoliday = false, month = 2, day = 7
     ),
     CalendarRecord(
@@ -1437,8 +1690,16 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = true, month = 3, day = 8
     ),
     CalendarRecord(
-        title = "ولادت حضرت رسول اکرم (ص) به روایت اهل سنت (۵۳ سال قبل از هجرت) - آغاز هفتهٔ وحدت",
+        title = "ولادت حضرت رسول اکرم (ص) به روایت اهل سنت (۵۳ سال قبل از هجرت)",
         type = EventType.Iran, isHoliday = false, month = 3, day = 12
+    ),
+    CalendarRecord(
+        title = "آغاز هفتهٔ وحدت",
+        type = EventType.Iran, isHoliday = false, month = 3, day = 12
+    ),
+    CalendarRecord(
+        title = "روز سیستان و بلوچستان",
+        type = EventType.Iran, isHoliday = false, month = 3, day = 14
     ),
     CalendarRecord(
         title = "روز وقف",
@@ -1453,7 +1714,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = true, month = 3, day = 17
     ),
     CalendarRecord(
-        title = "ولادت شاه عبدالعظیم حسنی (ع)",
+        title = "ولادت حضرت عبدالعظیم حسنی (ع)",
         type = EventType.Iran, isHoliday = false, month = 4, day = 4
     ),
     CalendarRecord(
@@ -1477,7 +1738,11 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = true, month = 6, day = 3
     ),
     CalendarRecord(
-        title = "سالروز وفات حضرت ام‌البنین (س) - روز تکریم مادران و همسران شهدا",
+        title = "سالروز وفات حضرت ام‌البنین (س)",
+        type = EventType.Iran, isHoliday = false, month = 6, day = 13
+    ),
+    CalendarRecord(
+        title = "روز تکریم مادران و همسران شهدا",
         type = EventType.Iran, isHoliday = false, month = 6, day = 13
     ),
     CalendarRecord(
@@ -1513,7 +1778,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 7, day = 13
     ),
     CalendarRecord(
-        title = "وفات حضرت زینب (س) (۶۲ ه‍.ق)",
+        title = "ارتحال حضرت زینب (س) (۶۲ ه‍.ق)",
         type = EventType.Iran, isHoliday = false, month = 7, day = 15
     ),
     CalendarRecord(
@@ -1545,11 +1810,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 8, day = 5
     ),
     CalendarRecord(
-        title = "ولادت حضرت علی اکبر (ع) (۳۳ ه‍.ق)",
-        type = EventType.Iran, isHoliday = false, month = 8, day = 11
-    ),
-    CalendarRecord(
-        title = "روز جوان",
+        title = "ولادت حضرت علی اکبر (ع) (۳۳ ه‍.ق) و روز جوان",
         type = EventType.Iran, isHoliday = false, month = 8, day = 11
     ),
     CalendarRecord(
@@ -1565,11 +1826,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 9, day = 10
     ),
     CalendarRecord(
-        title = "ولادت حضرت امام حسن مجتبی (ع) (۳ ه‍.ق)",
-        type = EventType.Iran, isHoliday = false, month = 9, day = 15
-    ),
-    CalendarRecord(
-        title = "روز اکرام و تکریم خیّرین",
+        title = "ولادت حضرت امام حسن مجتبی (ع) (۳ ه‍.ق) و روز اکرام و تکریم خیرین",
         type = EventType.Iran, isHoliday = false, month = 9, day = 15
     ),
     CalendarRecord(
@@ -1625,7 +1882,7 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 11, day = 1
     ),
     CalendarRecord(
-        title = "روز تجلیل از امام‌زادگان و بقاع متبرکه",
+        title = "روز تجلیل از امامزادگان و بقاع متبرکه",
         type = EventType.Iran, isHoliday = false, month = 11, day = 5
     ),
     CalendarRecord(
@@ -1641,12 +1898,15 @@ public val islamicEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 11, day = 11
     ),
     CalendarRecord(
-        title = "سالروز ازدواج حضرت امام علی (ع) و حضرت فاطمه (س) (۲ ه‍.ق) – روز ازدواج",
+        title = "سالروز ازدواج حضرت امام علی (ع) و حضرت فاطمه (س) (۲ ه‍.ق)",
         type = EventType.Iran, isHoliday = false, month = 12, day = 1
     ),
     CalendarRecord(
-        title =
-        "شهادت زائران خانهٔ خدا به دست مأموران آل سعود (۱۳۶۶ ه‍.ش برابر با ۶ ذی‌الحجه ۱۴۰۷ ه‍.ق)",
+        title = "روز ازدواج",
+        type = EventType.Iran, isHoliday = false, month = 12, day = 1
+    ),
+    CalendarRecord(
+        title = "شهادت مظلومانهٔ زائران خانهٔ خدا به دست مأموران آل سعود (۱۳۶۶ ه‍.ش برابر با ۶ ذی‌الحجه ۱۴۰۷ ه‍.ق)",
         type = EventType.Iran, isHoliday = false, month = 12, day = 6
     ),
     CalendarRecord(
@@ -1729,7 +1989,7 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.Afghanistan, isHoliday = false, month = 6, day = 1
     ),
     CalendarRecord(
-        title = "هفته محیط زیست",
+        title = "هفتهٔ محیط زیست (۵-۱۱ جون)",
         type = EventType.Afghanistan, isHoliday = false, month = 6, day = 5
     ),
     CalendarRecord(
@@ -1741,7 +2001,7 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.Afghanistan, isHoliday = false, month = 6, day = 23
     ),
     CalendarRecord(
-        title = "هفته مبارزه علیه مواد مخدر، روز جهانی مبارزه علیه مواد مخدر",
+        title = "هفتهٔ مبارزه علیه مواد مخدر، روز جهانی مبارزه علیه مواد مخدر",
         type = EventType.Afghanistan, isHoliday = false, month = 6, day = 26
     ),
     CalendarRecord(
@@ -1749,7 +2009,7 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.Afghanistan, isHoliday = false, month = 7, day = 11
     ),
     CalendarRecord(
-        title = "هفته تغذیه از شیر مادر",
+        title = "هفتهٔ تغذیه از شیر مادر (۱-۷ آگست)",
         type = EventType.Afghanistan, isHoliday = false, month = 8, day = 1
     ),
     CalendarRecord(
@@ -1821,6 +2081,10 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 3, day = 23
     ),
     CalendarRecord(
+        title = "روز جهانی کودک فلسطینی",
+        type = EventType.Iran, isHoliday = false, month = 4, day = 5
+    ),
+    CalendarRecord(
         title = "روز جهانی کار و کارگر",
         type = EventType.Iran, isHoliday = false, month = 5, day = 1
     ),
@@ -1885,6 +2149,14 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.Iran, isHoliday = false, month = 10, day = 1
     ),
     CalendarRecord(
+        title = "روز جهانی حماسهٔ فلسطین",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 7
+    ),
+    CalendarRecord(
+        title = "طوفان الاقصی",
+        type = EventType.Iran, isHoliday = false, month = 10, day = 7
+    ),
+    CalendarRecord(
         title = "روز جهانی کودک",
         type = EventType.Iran, isHoliday = false, month = 10, day = 8
     ),
@@ -1933,6 +2205,10 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 1, day = 24
     ),
     CalendarRecord(
+        title = "روز جهانی تالاب‌ها",
+        type = EventType.International, isHoliday = false, month = 2, day = 2
+    ),
+    CalendarRecord(
         title = "روز جهانی سرطان",
         type = EventType.International, isHoliday = false, month = 2, day = 4
     ),
@@ -1969,7 +2245,7 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 3, day = 3
     ),
     CalendarRecord(
-        title = "روز جهانی زنان",
+        title = "روز جهانی زن",
         type = EventType.International, isHoliday = false, month = 3, day = 8
     ),
     CalendarRecord(
@@ -2001,8 +2277,28 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 3, day = 25
     ),
     CalendarRecord(
+        title = "روز جهانی تئاتر",
+        type = EventType.International, isHoliday = false, month = 3, day = 27
+    ),
+    CalendarRecord(
+        title = "روز جهانی کتاب کودک",
+        type = EventType.International, isHoliday = false, month = 4, day = 2
+    ),
+    CalendarRecord(
+        title = "روز جهانی کارتونیست‌ها",
+        type = EventType.International, isHoliday = false, month = 4, day = 7
+    ),
+    CalendarRecord(
         title = "روز جهانی سلامت",
         type = EventType.International, isHoliday = false, month = 4, day = 7
+    ),
+    CalendarRecord(
+        title = "روز جهانی هنر (سالروز تولد داوینچی)",
+        type = EventType.International, isHoliday = false, month = 4, day = 15
+    ),
+    CalendarRecord(
+        title = "روز جهانی کبد",
+        type = EventType.International, isHoliday = false, month = 4, day = 19
     ),
     CalendarRecord(
         title = "روز جهانی زمین پاک",
@@ -2033,8 +2329,16 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 5, day = 12
     ),
     CalendarRecord(
+        title = "روز جهانی زنان در ریاضیات",
+        type = EventType.International, isHoliday = false, month = 5, day = 12
+    ),
+    CalendarRecord(
         title = "روز جهانی خانواده",
         type = EventType.International, isHoliday = false, month = 5, day = 15
+    ),
+    CalendarRecord(
+        title = "روز جهانی پسران",
+        type = EventType.International, isHoliday = false, month = 5, day = 16
     ),
     CalendarRecord(
         title = "روز جهانی زنبور",
@@ -2043,6 +2347,10 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
     CalendarRecord(
         title = "روز جهانی حافظان صلح ملل متحد",
         type = EventType.International, isHoliday = false, month = 5, day = 29
+    ),
+    CalendarRecord(
+        title = "روز جهانی حمایت از کودکان قربانی خشونت",
+        type = EventType.International, isHoliday = false, month = 6, day = 4
     ),
     CalendarRecord(
         title = "روز جهانی صنایع دستی",
@@ -2070,14 +2378,14 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
     ),
     CalendarRecord(
         title = "روز جهانی جمعیت",
-        type = EventType.International, isHoliday = false, month = 6, day = 26
+        type = EventType.International, isHoliday = false, month = 7, day = 11
     ),
     CalendarRecord(
         title = "روز جهانی جوانان",
         type = EventType.International, isHoliday = false, month = 8, day = 12
     ),
     CalendarRecord(
-        title = "روز جهانی چپ دستان",
+        title = "روز جهانی چپ‌دستان",
         type = EventType.International, isHoliday = false, month = 8, day = 13
     ),
     CalendarRecord(
@@ -2089,12 +2397,24 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 8, day = 19
     ),
     CalendarRecord(
+        title = "روز جهانی مبارزه با آزمایش‌های هسته‌ای",
+        type = EventType.International, isHoliday = false, month = 8, day = 29
+    ),
+    CalendarRecord(
         title = "روز جهانی باسوادی",
         type = EventType.International, isHoliday = false, month = 9, day = 8
     ),
     CalendarRecord(
         title = "روز جهانی جلوگیری از خودکشی",
         type = EventType.International, isHoliday = false, month = 9, day = 10
+    ),
+    CalendarRecord(
+        title = "روز جهانی مردم‌سالاری",
+        type = EventType.International, isHoliday = false, month = 9, day = 15
+    ),
+    CalendarRecord(
+        title = "روز جهانی حفاظت از لایهٔ اُزن",
+        type = EventType.International, isHoliday = false, month = 9, day = 16
     ),
     CalendarRecord(
         title = "روز جهانی آلزایمر",
@@ -2123,10 +2443,6 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
     CalendarRecord(
         title = "روز جهانی دختران",
         type = EventType.International, isHoliday = false, month = 10, day = 11
-    ),
-    CalendarRecord(
-        title = "روز جهانی هنر",
-        type = EventType.International, isHoliday = false, month = 10, day = 15
     ),
     CalendarRecord(
         title = "روز ملل متحد و روز جهانی توسعه اطلاعات",
@@ -2165,6 +2481,10 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
         type = EventType.International, isHoliday = false, month = 11, day = 14
     ),
     CalendarRecord(
+        title = "روز جهانی مرد",
+        type = EventType.International, isHoliday = false, month = 11, day = 19
+    ),
+    CalendarRecord(
         title = "روز جهانی تلویزیون",
         type = EventType.International, isHoliday = false, month = 11, day = 21
     ),
@@ -2179,6 +2499,14 @@ public val gregorianEvents: List<CalendarRecord> = listOf(
     CalendarRecord(
         title = "روز جهانی لغو برده‌داری",
         type = EventType.International, isHoliday = false, month = 12, day = 2
+    ),
+    CalendarRecord(
+        title = "روز جهانی داوطلبان پیشرفت اجتماعی",
+        type = EventType.International, isHoliday = false, month = 12, day = 5
+    ),
+    CalendarRecord(
+        title = "روز جهانی مبارزه با فساد",
+        type = EventType.International, isHoliday = false, month = 12, day = 9
     ),
     CalendarRecord(
         title = "روز جهانی حقوق بشر",
@@ -2196,17 +2524,9 @@ public val nepaliEvents: List<CalendarRecord> = listOf(
 public val irregularRecurringEvents: List<Map<String, String>> = listOf(
     mapOf(
         "calendar" to "Persian",
-        "rule" to "single event",
-        "year" to "1401",
-        "month" to "8",
-        "day" to "3",
-        "type" to "Iran",
-        "title" to "خورشیدگرفتگی جزئی قابل مشاهده در ایران",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Persian",
-        "rule" to "second week of month",
+        "rule" to "nth weekday of month",
+        "nth" to "2",
+        "weekday" to "7",
         "month" to "1",
         "type" to "Afghanistan",
         "title" to "هفتهٔ جیولوجست‌های افغانستان (هفتهٔ دوم حمل)",
@@ -2214,92 +2534,31 @@ public val irregularRecurringEvents: List<Map<String, String>> = listOf(
     ),
     mapOf(
         "calendar" to "Persian",
-        "rule" to "last week of month",
+        "rule" to "last weekday of month",
+        "weekday" to "7",
         "month" to "2",
         "type" to "Afghanistan",
         "title" to "هفتهٔ کتاب‌خوانی (هفتهٔ اخیر ثور)",
         "holiday" to "false",
     ),
     mapOf(
-        "calendar" to "Gregorian",
-        "rule" to "week from day",
-        "day" to "5",
-        "month" to "6",
-        "type" to "Afghanistan",
-        "title" to "هفتهٔ محیط زیست (۵-۱۱ جون)",
+        "calendar" to "Persian",
+        "rule" to "nth weekday of month",
+        "nth" to "2",
+        "weekday" to "6",
+        "month" to "7",
+        "type" to "Iran",
+        "title" to "آیین مذهبی قالیشویان اردهال - بزرگداشت امامزاده علی بن محمدباقر (ع) (دومین جمعهٔ مهر)",
         "holiday" to "false",
     ),
     mapOf(
-        "calendar" to "Gregorian",
-        "rule" to "week from day",
-        "day" to "26",
-        "month" to "6",
-        "type" to "Afghanistan",
-        "title" to "هفته مبارزه علیه مواد مخدر، آغاز از تاریخ ۲۶ جون (روز جهانی مبارزه علیه مواد مخدر)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Gregorian",
-        "rule" to "week from day",
-        "day" to "1",
+        "calendar" to "Persian",
+        "rule" to "single event",
+        "year" to "1401",
         "month" to "8",
-        "type" to "Afghanistan",
-        "title" to "هفتهٔ تغذیه از شیر مادر (۱-۷ آگست)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Persian",
-        "rule" to "week from day",
-        "day" to "14",
-        "month" to "10",
-        "type" to "Afghanistan",
-        "title" to "هفتهٔ قانون اساسی افغانستان (۱۴-۲۰ جدی)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Hijri",
-        "rule" to "last weekday of month",
-        "weekday" to "7",
-        "month" to "9",
+        "day" to "3",
         "type" to "Iran",
-        "title" to "روز جهانی قدس (آخرین جمعهٔ ماه رمضان)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Persian",
-        "rule" to "last weekday of month",
-        "weekday" to "4",
-        "month" to "12",
-        "type" to "Iran",
-        "title" to "روز تکریم همسایگان (آخرین سه‌شنبهٔ سال)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Persian",
-        "rule" to "last weekday of month",
-        "weekday" to "4",
-        "month" to "12",
-        "type" to "AncientIran",
-        "title" to "چهارشنبه‌سوری (آخرین سه‌شنبهٔ سال)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Gregorian",
-        "rule" to "last weekday of month",
-        "weekday" to "7",
-        "month" to "11",
-        "type" to "International",
-        "title" to "جمعهٔ سیاه یا بلک فرایدی (آخرین جمعهٔ ماه نوامبر)",
-        "holiday" to "false",
-    ),
-    mapOf(
-        "calendar" to "Gregorian",
-        "rule" to "nth day from",
-        "nth" to "256",
-        "month" to "1",
-        "day" to "1",
-        "type" to "International",
-        "title" to "روز جهانی برنامه‌نویس (روز ۲۵۶م سال میلادی)",
+        "title" to "خورشیدگرفتگی جزئی قابل مشاهده در ایران",
         "holiday" to "false",
     ),
     mapOf(
@@ -2316,6 +2575,72 @@ public val irregularRecurringEvents: List<Map<String, String>> = listOf(
         "month" to "11",
         "type" to "Iran",
         "title" to "شهادت حضرت امام محمد تقی (ع) (۲۲۰ ه‍.ق) (۳۰ ذی‌القعده یا انتهای ماه)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Hijri",
+        "rule" to "last weekday of month",
+        "weekday" to "6",
+        "month" to "9",
+        "type" to "Iran",
+        "title" to "روز جهانی قدس (آخرین جمعهٔ رمضان)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Persian",
+        "rule" to "last weekday of month",
+        "weekday" to "4",
+        "offset" to "-1",
+        "month" to "12",
+        "type" to "Iran",
+        "title" to "روز تکریم همسایگان (شب آخرین چهارشنبهٔ سال)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Persian",
+        "rule" to "last weekday of month",
+        "weekday" to "3",
+        "month" to "12",
+        "type" to "AncientIran",
+        "title" to "چهارشنبه‌سوری (آخرین سه‌شنبهٔ سال)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Gregorian",
+        "rule" to "nth weekday of month",
+        "nth" to "3",
+        "weekday" to "5",
+        "month" to "11",
+        "type" to "International",
+        "title" to "روز جهانی فلسفه (سومین پنجشنبهٔ نوامبر)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Gregorian",
+        "rule" to "last weekday of month",
+        "weekday" to "1",
+        "month" to "1",
+        "type" to "International",
+        "title" to "روز جهانی کمک به جذامیان (آخرین یکشنبهٔ ژانویه)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Gregorian",
+        "rule" to "last weekday of month",
+        "weekday" to "6",
+        "month" to "11",
+        "type" to "International",
+        "title" to "جمعهٔ سیاه یا بلک فرایدی (آخرین جمعهٔ نوامبر)",
+        "holiday" to "false",
+    ),
+    mapOf(
+        "calendar" to "Gregorian",
+        "rule" to "nth day from",
+        "nth" to "256",
+        "month" to "1",
+        "day" to "1",
+        "type" to "International",
+        "title" to "روز جهانی برنامه‌نویس (روز ۲۵۶م سال میلادی)",
         "holiday" to "false",
     ),
 )

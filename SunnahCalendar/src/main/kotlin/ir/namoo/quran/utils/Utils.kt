@@ -5,6 +5,8 @@ import android.graphics.Typeface
 import android.os.Environment
 import androidx.core.content.edit
 import ir.namoo.commons.utils.appPrefsLite
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
 var quranFont: Typeface = Typeface.SANS_SERIF
@@ -32,8 +34,13 @@ var uthmanTahaFont: Typeface = Typeface.SANS_SERIF
 
 var chapterException: Throwable? = null
 
+private val playerSpeed_ = MutableStateFlow(DEFAULT_PLAYER_SPEED)
+val playerSpeed = playerSpeed_.asStateFlow()
+
 fun initQuranUtils(context: Context) {
     val prefs = context.appPrefsLite
+
+    playerSpeed_.value = prefs.getFloat(PREF_PLAYER_SPEED, DEFAULT_PLAYER_SPEED)
 
     uthmanTahaFont = Typeface.createFromAsset(
         context.assets, "fonts/Quran_UthmanTahaN1B.ttf"
@@ -67,6 +74,10 @@ fun initQuranUtils(context: Context) {
         context.assets, prefs.getString(PREF_FARSI_FONT, DEFAULT_FARSI_FONT)
     )
     farsiFontSize = prefs.getFloat(PREF_FARSI_FONT_SIZE, DEFAULT_FARSI_FONT_SIZE)
+}
+
+fun updatePlayerSpeedGlobal(speed: Float) {
+    playerSpeed_.value = speed
 }
 
 fun getSelectedQuranDirectoryPath(context: Context): String {

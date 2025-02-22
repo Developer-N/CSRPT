@@ -11,6 +11,7 @@ import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.NEPAL_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.listOf12Items
 import com.byagowi.persiancalendar.utils.listOf7Items
 import com.byagowi.persiancalendar.utils.logException
@@ -38,10 +39,13 @@ enum class Language(val code: String, val nativeName: String) {
     ES("es", "Español"),
     FR("fr", "Français"),
     GLK("glk", "گيلکي"),
+    IT("it", "Italiano"),
     JA("ja", "日本語"),
     KMR("kmr", "Kurdî"),
     NE("ne", "नेपाली"),
+    PT("pt", "Português"),
     RU("ru", "Русский"),
+    TA("ta", "தமிழ்"),
     TG("tg", "Тоҷикӣ"),
     TR("tr", "Türkçe"),
     UR("ur", "اردو"),
@@ -103,25 +107,25 @@ enum class Language(val code: String, val nativeName: String) {
 
     val betterToUseShortCalendarName: Boolean
         get() = when (this) {
-            EN_US, EN_IR, JA, ZH_CN, FR, ES, AR, TR, TG, RU, CKB -> true
+            EN_US, EN_IR, JA, ZH_CN, FR, ES, PT, IT, AR, TR, TG, RU, CKB -> true
             else -> false
         }
 
     val mightPreferUmmAlquraIslamicCalendar: Boolean
         get() = when (this) {
-            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, TR, KMR, TG, NE, RU -> true
+            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, PT, IT, TR, KMR, TA, TG, NE, RU -> true
             else -> false
         }
 
     val preferredCalculationMethod: CalculationMethod
         get() = when (this) {
-            FA_AF, PS, UR, AR, CKB, TR, KMR, TG, NE -> CalculationMethod.MWL
+            FA_AF, PS, UR, AR, CKB, TR, KMR, TG, NE, TA -> CalculationMethod.MWL
             else -> CalculationMethod.Tehran
         }
 
     val isHanafiMajority: Boolean
         get() = when (this) {
-            TR, FA_AF, PS, TG, NE -> true
+            TR, FA_AF, PS, TG, NE, TA -> true
             else -> false
         }
 
@@ -134,21 +138,21 @@ enum class Language(val code: String, val nativeName: String) {
 
     val showIranTimeOption
         get() = when (this) {
-            FA, AZB, CKB, EN_IR, EN_US, ES, FR, GLK, JA, ZH_CN, KMR -> true
+            FA, AZB, CKB, EN_IR, EN_US, GLK -> true
             else -> false
         }
 
     // Whether locale uses الفبا or not
     val isArabicScript: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, RU, TR, KMR, EN_IR, TG, NE -> false
+            EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, TR, KMR, EN_IR, TG, NE, TA -> false
             else -> true
         }
 
     // Whether locale would prefer local digits like ۱۲۳ over the global ones, 123, initially at least
     val prefersLocalDigits: Boolean
         get() = when (this) {
-            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, RU, TR, KMR, TG -> false
+            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, TR, KMR, TG -> false
             else -> true
         }
 
@@ -187,7 +191,7 @@ enum class Language(val code: String, val nativeName: String) {
     // We can presume user would prefer Gregorian calendar at least initially
     private val prefersGregorianCalendar: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, RU, UR, TR, KMR, TG -> true
+            EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, UR, TR, KMR, TG, TA -> true
             else -> false
         }
 
@@ -210,22 +214,22 @@ enum class Language(val code: String, val nativeName: String) {
 
     val defaultMainCalendar
         get() = when {
-            this == FA -> CalendarType.SHAMSI.name
-            prefersGregorianCalendar -> CalendarType.GREGORIAN.name
-            prefersIslamicCalendar -> CalendarType.ISLAMIC.name
-            prefersPersianCalendar -> CalendarType.SHAMSI.name
-            prefersNepaliCalendar -> CalendarType.NEPALI.name
-            else -> CalendarType.SHAMSI.name
+            this == FA -> Calendar.SHAMSI.name
+            prefersGregorianCalendar -> Calendar.GREGORIAN.name
+            prefersIslamicCalendar -> Calendar.ISLAMIC.name
+            prefersPersianCalendar -> Calendar.SHAMSI.name
+            prefersNepaliCalendar -> Calendar.NEPALI.name
+            else -> Calendar.SHAMSI.name
         }
 
     val defaultOtherCalendars
         get() = when {
-            this == FA -> "${CalendarType.GREGORIAN.name},${CalendarType.ISLAMIC.name}"
-            prefersGregorianCalendar -> "${CalendarType.ISLAMIC.name},${CalendarType.SHAMSI.name}"
-            prefersIslamicCalendar -> "${CalendarType.GREGORIAN.name},${CalendarType.SHAMSI.name}"
-            prefersPersianCalendar -> "${CalendarType.GREGORIAN.name},${CalendarType.ISLAMIC.name}"
-            prefersNepaliCalendar -> CalendarType.GREGORIAN.name
-            else -> "${CalendarType.GREGORIAN.name},${CalendarType.ISLAMIC.name}"
+            this == FA -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
+            prefersGregorianCalendar -> "${Calendar.ISLAMIC.name},${Calendar.SHAMSI.name}"
+            prefersIslamicCalendar -> "${Calendar.GREGORIAN.name},${Calendar.SHAMSI.name}"
+            prefersPersianCalendar -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
+            prefersNepaliCalendar -> Calendar.GREGORIAN.name
+            else -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
         }
 
     val defaultWeekStart
@@ -237,7 +241,8 @@ enum class Language(val code: String, val nativeName: String) {
 
     val defaultWeekEnds
         get() = when {
-            this == FA -> setOf("6")
+            this == FA || isIranExclusive -> setOf("6")
+            isAfghanistanExclusive -> setOf("6")
             isNepali -> setOf("0")
             prefersGregorianCalendar -> setOf("0", "1") // Saturday and Sunday
             else -> setOf("6") // 6 means Friday
@@ -328,8 +333,8 @@ enum class Language(val code: String, val nativeName: String) {
         else -> text
     }
 
-    // Too hard to translate and don't want to disappoint translators thus
-    // not moved yet to our common i18n system
+    // Too hard to translate and don't want to disappoint translators thus not in the common
+    // i18n system yet
     fun tryTranslateEclipseType(isSolar: Boolean, type: EclipseKind) = when (this) {
         EN_US, EN_IR -> {
             when {
@@ -356,6 +361,45 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
         else -> null
+    }
+
+    fun tryTranslateAthanVibrationSummary() = when (this) {
+        EN_US, EN_IR -> "Enable vibrator in the beginning of athan"
+        FA, FA_AF -> "فعال‌سازی لرزش در ابتدای پخش اذان"
+        else -> null
+    }
+
+    // https://en.wikipedia.org/wiki/List_of_date_formats_by_country
+    fun allNumericsDateFormat(year: Int, month: Int, dayOfMonth: Int, digits: CharArray): String {
+        val sep = when (this) {
+            PS, NE -> '-'
+            KMR, RU, TR -> '.'
+            else -> '/'
+        }
+        val needsZeroPad = when (this) {
+            FR, IT, NE, PT, RU, TR, KMR -> true
+            else -> false
+        }
+        val format = when (this) {
+            // Year major
+            FA, AZB, GLK, FA_AF, EN_IR, PS, JA, NE, ZH_CN -> "%1\$s$sep%2\$s$sep%3\$s"
+            // Month major
+            EN_US -> "%2\$s$sep%3\$s$sep%1\$s"
+            // Day major, most likely everything else goes here but check via JS'
+            // new Date().toLocaleDateString('XX')
+            AR, CKB, ES, FR, IT, KMR, PT, RU, TG, TR, UR, TA -> "%3\$s$sep%2\$s$sep%1\$s"
+        }
+        return format.format(
+            formatNumber(year, digits),
+            formatNumber(
+                "$month".let { if (needsZeroPad) it.padStart(2, '0') else it },
+                digits
+            ),
+            formatNumber(
+                "$dayOfMonth".let { if (needsZeroPad) it.padStart(2, '0') else it },
+                digits
+            )
+        )
     }
 
     companion object {
@@ -496,6 +540,7 @@ enum class Language(val code: String, val nativeName: String) {
         )
         private val weekDaysInPersian = listOf7Items(
             // https://apll.ir/wp-content/uploads/2018/10/D-1394.pdf
+            // https://www.ekhtebar.ir/wp-content/uploads/2023/07/Dastour-e-Khat-17.04.1402-3.pdf
             // advices to use یکشنبه and پنجشنبه on "مرکبهایی که بسیطگونه است"
             "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"
         )

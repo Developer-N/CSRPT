@@ -1,6 +1,7 @@
 package ir.namoo.quran.db
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -12,11 +13,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 @Entity
 data class FileDownloadEntity(
-    @PrimaryKey val id: Int=0,
+    @PrimaryKey val id: Int = 0,
     val downloadRequest: Long,
     val downloadFile: String,
     val folderPath: String,
@@ -47,7 +47,7 @@ abstract class FileDownloadDB : RoomDatabase() {
             return instance ?: synchronized(FileDownloadDB::class) {
                 val db = Room.databaseBuilder(
                     context.applicationContext, FileDownloadDB::class.java, "fileDownload.db"
-                ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true).build()
                 instance = db
                 db
             }
@@ -55,7 +55,7 @@ abstract class FileDownloadDB : RoomDatabase() {
     }
 }
 
-class FileDownloadRepository constructor(private val fileDownloadDAO: FileDownloadDAO) {
+class FileDownloadRepository(private val fileDownloadDAO: FileDownloadDAO) {
     suspend fun findDownloadByFileId(): List<FileDownloadEntity> {
         runCatching {
             return fileDownloadDAO.findAllDownloads()
@@ -72,7 +72,7 @@ class FileDownloadRepository constructor(private val fileDownloadDAO: FileDownlo
         runCatching {
             fileDownloadDAO.insert(fileDownloadEntity)
         }.onFailure { ex ->
-            Timber.tag("NAMOO").e(ex, "insert error -> %s", ex.message)
+            Log.e("FileDownloadRepository", "insert: ${ex.message}", ex)
         }
     }
 }

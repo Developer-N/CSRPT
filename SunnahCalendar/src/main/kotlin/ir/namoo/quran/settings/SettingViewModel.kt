@@ -2,9 +2,12 @@ package ir.namoo.quran.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ir.namoo.commons.repository.DataState
 import ir.namoo.quran.qari.QariEntity
 import ir.namoo.quran.qari.QariRepository
 import ir.namoo.quran.settings.data.QuranSettingRepository
@@ -15,6 +18,7 @@ import ir.namoo.quran.utils.DEFAULT_FARSI_FONT
 import ir.namoo.quran.utils.DEFAULT_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.DEFAULT_PLAYER_SPEED
 import ir.namoo.quran.utils.DEFAULT_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.DEFAULT_PLAY_TYPE
 import ir.namoo.quran.utils.DEFAULT_QURAN_FONT
@@ -28,6 +32,7 @@ import ir.namoo.quran.utils.PREF_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
 import ir.namoo.quran.utils.PREF_KURDISH_FONT
 import ir.namoo.quran.utils.PREF_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.PREF_PLAYER_SPEED
 import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.PREF_PLAY_TYPE
 import ir.namoo.quran.utils.PREF_QURAN_FONT
@@ -36,11 +41,11 @@ import ir.namoo.quran.utils.PREF_SELECTED_QARI
 import ir.namoo.quran.utils.PREF_STORAGE_PATH
 import ir.namoo.quran.utils.PREF_TRANSLATE_TO_PLAY
 import ir.namoo.quran.utils.getRootDirs
-import kotlinx.coroutines.Dispatchers
+import ir.namoo.quran.utils.updatePlayerSpeedGlobal
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class SettingViewModel(
     private val quranSettingRepository: QuranSettingRepository,
@@ -49,11 +54,11 @@ class SettingViewModel(
 ) : ViewModel() {
 
     // ------------------------------------------------------------- Qari
-    private val _qariList = MutableStateFlow(listOf<QariEntity>())
-    val qariList = _qariList.asStateFlow()
+    private val _qariList = mutableStateListOf<QariEntity>()
+    val qariList = _qariList
 
-    private val _translatePlayList = MutableStateFlow(listOf<QariEntity>())
-    val translatePlayList = _translatePlayList.asStateFlow()
+    private val _translatePlayList = mutableStateListOf<QariEntity>()
+    val translatePlayList = _translatePlayList
 
     private val _selectedQari = MutableStateFlow("")
     val selectedQari = _selectedQari.asStateFlow()
@@ -65,8 +70,8 @@ class SettingViewModel(
     val isQariLoading = _isQariLoading.asStateFlow()
 
     // ------------------------------------------------------------- Translates
-    private val _translates = MutableStateFlow(listOf<TranslateSetting>())
-    val translates = _translates.asStateFlow()
+    private val _translates = mutableStateListOf<TranslateSetting>()
+    val translates = _translates
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
@@ -82,8 +87,8 @@ class SettingViewModel(
     private val _playType = MutableStateFlow(1)
     val playType = _playType.asStateFlow()
 
-    private val _rootPaths = MutableStateFlow(mutableListOf<String>())
-    val rootPaths = _rootPaths.asStateFlow()
+    private val _rootPaths = mutableStateListOf<String>()
+    val rootPaths = _rootPaths
 
     private val _selectedPath = MutableStateFlow("")
     val selectedPath = _selectedPath.asStateFlow()
@@ -116,13 +121,16 @@ class SettingViewModel(
     private val _playNextSura = MutableStateFlow(DEFAULT_PLAY_NEXT_SURA)
     val playNextSura = _playNextSura.asStateFlow()
 
+    private val _playerSpeed = MutableStateFlow(DEFAULT_PLAYER_SPEED)
+    val playerSpeed = _playerSpeed.asStateFlow()
+
     // ---------------------------------------------------------------
     fun loadPaths(context: Context) {
         viewModelScope.launch {
-            _rootPaths.value.clear()
-            getRootDirs(context).toList().forEach { _rootPaths.value.add(it?.absolutePath ?: "-") }
+            _rootPaths.clear()
+            getRootDirs(context).toList().forEach { _rootPaths.add(it?.absolutePath ?: "-") }
             _selectedPath.value = prefs.getString(
-                PREF_STORAGE_PATH, _rootPaths.value[0]
+                PREF_STORAGE_PATH, _rootPaths[0]
             ) ?: ""
         }
     }
@@ -131,10 +139,24 @@ class SettingViewModel(
         viewModelScope.launch {
             _isQariLoading.value = true
             _isLoading.value = true
+            _playerSpeed.value = prefs.getFloat(PREF_PLAYER_SPEED, DEFAULT_PLAYER_SPEED)
             _playNextSura.value = prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)
             _isFullFarsiEnabled.value = prefs.getBoolean(PREF_FARSI_FULL_TRANSLATE, false)
-            _translates.value = quranSettingRepository.getTranslatesSettings()
-            for (t in translates.value.filter { it.id > 2 }) {
+            quranSettingRepository.getTranslatesSettings().collectLatest { state ->
+                when (state) {
+                    is DataState.Error -> {
+                        Log.e("SettingViewModel", "loadTranslatesSettings: ${state.message}")
+                        _isLoading.value = false
+                    }
+
+                    DataState.Loading -> _isLoading.value = true
+                    is DataState.Success -> {
+                        _translates.clear()
+                        _translates.addAll(state.data)
+                    }
+                }
+            }
+            for (t in translates.filter { it.id > 2 }) {
                 if (t.isActive) {
                     _isKurdishEnabled.value = true
                     break
@@ -162,11 +184,11 @@ class SettingViewModel(
             _englishFontSize.value =
                 prefs.getFloat(PREF_ENGLISH_FONT_SIZE, DEFAULT_ENGLISH_FONT_SIZE)
 
-            withContext(Dispatchers.IO) {
-                val qList = qariRepository.getQariList()
-                _qariList.value = qList.filterNot { it.name.startsWith("تفسیر") }
-                _translatePlayList.value = qList.filter { it.name.startsWith("تفسیر") }
-            }
+            val qList = qariRepository.getQariList()
+            _qariList.clear()
+            _qariList.addAll(qList.filterNot { it.name.startsWith("تفسیر") })
+            _translatePlayList.clear()
+            _translatePlayList.addAll(qList.filter { it.name.startsWith("تفسیر") })
 
             _selectedQari.value =
                 prefs.getString(PREF_SELECTED_QARI, DEFAULT_SELECTED_QARI) ?: DEFAULT_SELECTED_QARI
@@ -179,11 +201,12 @@ class SettingViewModel(
         }
     }
 
-    fun updateSetting(translateSetting: TranslateSetting) {
+    fun updateSetting(translateSetting: TranslateSetting, isActive: Boolean) {
         viewModelScope.launch {
             _isLoading.value = true
-            quranSettingRepository.updateTranslateSetting(translateSetting)
-            _translates.value = quranSettingRepository.getTranslatesSettings()
+            quranSettingRepository.updateTranslateSetting(translateSetting.copy(isActive = isActive))
+            val index = _translates.indexOf(translateSetting)
+            _translates[index] = _translates[index].copy(isActive = isActive)
             _isLoading.value = false
         }
     }
@@ -200,11 +223,9 @@ class SettingViewModel(
             _isLoading.value = true
             _isKurdishEnabled.value = enable
             if (!enable) {
-                _translates.value.filter { it.id > 2 }.forEach {
-                    it.isActive = false
-                    quranSettingRepository.updateTranslateSetting(it)
+                _translates.filter { it.id > 2 }.forEach {
+                    quranSettingRepository.updateTranslateSetting(it.copy(isActive = false))
                 }
-                _translates.value = quranSettingRepository.getTranslatesSettings()
             }
             _isLoading.value = false
         }
@@ -324,6 +345,14 @@ class SettingViewModel(
             _playNextSura.value = play
             prefs.edit { putBoolean(PREF_PLAY_NEXT_SURA, play) }
             _isLoading.value = false
+        }
+    }
+
+    fun updatePlayerSpeed(speed: Float) {
+        viewModelScope.launch {
+            prefs.edit { putFloat(PREF_PLAYER_SPEED, speed) }
+            _playerSpeed.value = speed
+            updatePlayerSpeedGlobal(speed)
         }
     }
 

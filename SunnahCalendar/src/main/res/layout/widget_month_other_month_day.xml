@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/day_root"
+    android:layout_width="match_parent"
+    android:layout_height="14dp"
+    android:gravity="center"
+    android:layoutDirection="ltr"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/day"
+        android:layout_width="wrap_content"
+        android:layout_height="14dp"
+        android:alpha=".6"
+        android:elegantTextHeight="false"
+        android:textColor="@color/widget_modern_text"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/secondary_day"
+        android:layout_width="wrap_content"
+        android:layout_height="14dp"
+        android:layout_marginStart="4dp"
+        android:alpha=".6"
+        android:elegantTextHeight="false"
+        android:textColor="@color/widget_modern_text" />
+
+</LinearLayout>

@@ -2,7 +2,10 @@ package com.byagowi.persiancalendar.ui.about
 
 import android.os.Build
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -10,8 +13,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -32,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -48,44 +51,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.ExpandArrow
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.getActivity
-import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 
-@Preview
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun LicensesScreenPreview() = LicensesScreen {}
-
-@Composable
-fun LicensesScreen(navigateUp: () -> Unit) {
+fun SharedTransitionScope.LicensesScreen(
+    animatedContentScope: AnimatedContentScope,
+    navigateUp: () -> Unit,
+) {
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
             @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
-                title = { Text(stringResource(R.string.licenses)) },
+                title = { Text(stringResource(R.string.about_license_title)) },
                 colors = appTopAppBarColors(),
                 navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
             )
         }
     ) { paddingValues ->
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Surface(
-                shape = materialCornerExtraLargeTop(),
-                modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
-            ) {
-                Licenses(paddingValues.calculateBottomPadding())
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd,
-                ) { Sidebar(modifier = Modifier.padding(end = 8.dp, top = 12.dp)) }
+            Box(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+                ScreenSurface(animatedContentScope) {
+                    Box { Licenses(paddingValues.calculateBottomPadding()) }
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) { Sidebar(modifier = Modifier.padding(end = 8.dp, top = 12.dp)) }
+                }
             }
         }
     }
@@ -145,12 +147,12 @@ private fun Sidebar(modifier: Modifier = Modifier) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Licenses(bottomPadding: Dp) {
+private fun BoxScope.Licenses(bottomPadding: Dp) {
     val sections = remember { getCreditsSections() }
     var expandedItem by rememberSaveable { mutableIntStateOf(-1) }
-    LazyColumn {
+    val listState = rememberLazyListState()
+    LazyColumn(state = listState) {
         itemsIndexed(sections) { i, (title, license, text) ->
             if (i > 0) HorizontalDivider(
                 modifier = Modifier.padding(start = 16.dp, end = 88.dp),
@@ -205,4 +207,6 @@ private fun Licenses(bottomPadding: Dp) {
         }
         item { Spacer(Modifier.height(bottomPadding)) }
     }
+    ScrollShadow(listState = listState, top = true)
+    ScrollShadow(listState = listState, top = false)
 }

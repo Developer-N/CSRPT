@@ -1,7 +1,6 @@
 package ir.namoo.religiousprayers.ui.about
 
 import android.os.Build
-import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -23,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
@@ -31,7 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,7 +70,6 @@ fun InfoTitle() {
     )
 }
 
-@OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun InfoVersion(versionDescription: String) {
     var logoAnimationAtEnd by remember { mutableStateOf(false) }
@@ -85,7 +82,7 @@ fun InfoVersion(versionDescription: String) {
 
     Row(modifier = Modifier
         .fillMaxWidth()
-        .semantics { this.invisibleToUser() }
+        .semantics { this.hideFromAccessibility() }
         .clickable {
             logoAnimationAtEnd = false
             logoAnimationAtEnd = true

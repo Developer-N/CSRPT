@@ -30,20 +30,23 @@ import ir.namoo.quran.utils.PREF_TRANSLATE_TO_PLAY
 import ir.namoo.quran.utils.getAyaFileName
 import ir.namoo.quran.utils.getQuranDirectoryInInternal
 import ir.namoo.quran.utils.getQuranDirectoryInSD
+import ir.namoo.quran.utils.playerSpeed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.io.File
 
 class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.Listener {
-    //end of class PlayerService
     private var session: MediaSession? = null
     private var currentSura = -1
     private var currentAya = -1
 
     private val qariRepository: QariRepository by inject()
     private val quranRepository: QuranRepository by inject()
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate() {
         applyAppLanguage(this)
@@ -54,6 +57,11 @@ class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.
         player.addListener(this)
 
         session = MediaSession.Builder(this, player).setId("QuranPlayer").build()
+        serviceScope.launch {
+            playerSpeed.collectLatest { speed ->
+                session?.player?.setPlaybackSpeed(speed)
+            }
+        }
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -81,10 +89,7 @@ class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.
         if (isSuraViewOpen) return
         super.onPlaybackStateChanged(playbackState)
         if (playbackState == Player.STATE_ENDED) {
-            if (appPrefsLite.getBoolean(
-                    PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA
-                )
-            ) {//PlayNext Sura
+            if (appPrefsLite.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)) {
                 val sura = if (currentSura == 114) 1 else currentSura + 1
                 if (!isQuranDownloaded(this, sura)) {
                     Toast.makeText(this, R.string.audio_files_error, Toast.LENGTH_SHORT).show()
@@ -146,8 +151,8 @@ class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.
         session?.run {
             player.release()
             release()
-            session = null
         }
+        session = null
         super.onDestroy()
     }
 }

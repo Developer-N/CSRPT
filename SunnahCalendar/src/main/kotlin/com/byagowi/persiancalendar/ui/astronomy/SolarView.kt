@@ -12,7 +12,6 @@ import android.view.MotionEvent
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.annotation.ColorInt
 import androidx.compose.ui.util.lerp
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withRotation
@@ -20,12 +19,10 @@ import androidx.core.graphics.withTranslation
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
 import com.byagowi.persiancalendar.AU_IN_KM
-import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
-import com.byagowi.persiancalendar.variants.debugLog
 import java.util.GregorianCalendar
 import java.util.Locale
 import kotlin.math.PI
@@ -82,12 +79,12 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         onDraw = { canvas, matrix ->
             canvas.withMatrix(matrix) {
                 when (mode) {
-                    AstronomyMode.Moon -> drawMoonOnlyView(this)
-                    AstronomyMode.Earth -> drawEarthCentricView(this)
-                    AstronomyMode.Sun -> drawSolarSystemPlanetsView(this)
+                    AstronomyMode.MOON -> drawMoonOnlyView(this)
+                    AstronomyMode.EARTH -> drawEarthCentricView(this)
+                    AstronomyMode.SUN -> drawSolarSystemPlanetsView(this)
                 }
             }
-            if (mode == AstronomyMode.Moon) {
+            if (mode == AstronomyMode.MOON) {
                 val radius = min(width, height) / 2f
                 canvas.drawText(
                     "%,d km".format(Locale.ENGLISH, (state.moon.dist * AU_IN_KM).roundToLong()),
@@ -115,7 +112,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         parent?.requestDisallowInterceptTouchEvent(true)
         super.dispatchTouchEvent(event)
-        if (mode != AstronomyMode.Earth || currentScale != 1f) return true
+        if (mode != AstronomyMode.EARTH || currentScale != 1f) return true
         val r = width / 2
         flingDetector.onTouchEvent(event)
         when (event.action) {
@@ -134,7 +131,6 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                     if (rawAngleChange > PI) 2 * PI.toFloat() - rawAngleChange
                     else if (rawAngleChange < -PI) 2 * PI.toFloat() + rawAngleChange
                     else rawAngleChange
-                debugLog(angleChange.toString())
                 val minutesChange = -(angleChange * rotationSpeed / PI.toFloat() / 2).toInt()
                 rotationDirection = minutesChange.sign
                 rotationalMinutesChange(minutesChange)
@@ -192,7 +188,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         it.style = Paint.Style.FILL
         it.textAlign = Paint.Align.CENTER
         it.textSize = 14 * dp
-        it.color = ContextCompat.getColor(context, R.color.compass_marker_color)
+        it.color = Color.GRAY
     }
 
     private fun drawEarthCentricView(canvas: Canvas) {

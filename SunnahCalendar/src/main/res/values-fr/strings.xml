@@ -8,9 +8,9 @@
     <string name="licenses">Licence</string>
     <string name="about_report_bug_sum">Préférable pour signaler les erreurs ou demander une nouvelle fonctionnalité, ce qui nécessite un compte GitHub</string>
     <string name="about_report_bug">Signaler un erreur sur GitHub</string>
-    <string name="about_noClient">Aucun client de messagerie n’est installé</string>
+    <string name="about_no_client">Aucun client de messagerie n’est installé</string>
     <string name="about_email_sum">Envoyer un courriel personnel aux auteurs de l’application</string>
-    <string name="about_sendMail">Courriel</string>
+    <string name="about_send_mail">Courriel</string>
     <string name="about_developers">Développeurs (ordonnés au hasard)</string>
     <string name="equivalent_to">Équivalent à</string>
     <string name="previous_x">%1$s précédent</string>
@@ -18,7 +18,7 @@
     <string name="nth_week_of_year">%1$s semaine de l’année</string>
     <string name="holiday_reason">Férié à cause de %1$s</string>
     <string name="remove">Retirer</string>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="one">%1$s minute</item>
         <item quantity="many">%1$s minutes</item>
         <item quantity="other">%1$s minutes</item>
@@ -28,7 +28,7 @@
     <string name="spaced_or">" ou "</string>
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s heure</item>
         <item quantity="many">%1$s heures</item>
         <item quantity="other">%1$s heures</item>
@@ -46,17 +46,17 @@
     <string name="map">Carte</string>
     <string name="month_overview">Évènements du mois</string>
     <string name="prefer_linear_date">Préférer la forme numérique des dates</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s jour</item>
         <item quantity="many">%1$s jours</item>
         <item quantity="other">%1$s jours</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s moi</item>
         <item quantity="many">%1$s mois</item>
         <item quantity="other">%1$s mois</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s année</item>
         <item quantity="many">%1$s années</item>
         <item quantity="other">%1$s années</item>
@@ -74,7 +74,7 @@
     <string name="latitude">Latitude</string>
     <string name="location_help">Si aucun d’entre eux, précisez-le ci-dessous</string>
     <string name="location">Localisation</string>
-    <string name="pleasewaitgps">Veuillez patienter… Si rien n’apparaît après une minute, vous devriez probablement essayer d’autres options</string>
+    <string name="wait_for_gps">Veuillez patienter… Si rien n’apparaît après une minute, vous devriez probablement essayer d’autres options</string>
     <string name="gps_internet_desc">Veuillez activer le GPS de l’appareil et la connexion Internet pour trouver votre position.
 \n
 \nL’application n’en a besoin qu’une seule fois, mais si vous changez de lieu, l’accès au GPS et à Internet est à nouveau nécessaire.</string>
@@ -148,13 +148,13 @@
     <string name="remaining_daylight">Restant</string>
     <string name="length_of_day">En journée</string>
     <string name="n_hours_minutes">%1$s h %2$s min</string>
-    <string name="sunsetSunView">Coucher du soleil</string>
-    <string name="middaySunView">Midi</string>
-    <string name="sunriseSunView">Lever du soleil</string>
+    <string name="sunset_sun_view">Coucher du soleil</string>
+    <string name="midday_sun_view">Midi</string>
+    <string name="sunrise_sun_view">Lever du soleil</string>
     <string name="warn_if_events_not_set">Pour sélectionner et afficher les jours fériés et les évènements préférés, rendez-vous dans les Paramètres</string>
     <string name="no_event">Aucun évènement ou rendez-vous pour ce jour</string>
     <string name="events">Évènements</string>
-    <string name="moonInScorpio">La Lune est en Scorpion</string>
+    <string name="moon_in_scorpio">La Lune est en Scorpion</string>
     <string name="sagittarius">Sagittaire</string>
     <string name="scorpio">Scorpion</string>
     <string name="libra">Balance</string>
@@ -168,7 +168,7 @@
     <string name="aquarius">Verseau</string>
     <string name="capricorn">Capricorne</string>
     <string name="zodiac">Zodiaque</string>
-    <string name="animal_year_name_goat">Mouton</string>
+    <string name="animal_year_name_goat">Chèvre</string>
     <string name="animal_year_name_horse">Cheval</string>
     <string name="animal_year_name_snake">Serpent</string>
     <string name="animal_year_name_dragon">Dragon</string>
@@ -186,8 +186,6 @@
     <string name="start_of_year_diff">%1$s jours (~%2$s semaines ou %3$s mois) depuis le début de l’année</string>
     <string name="days_distance">Distance</string>
     <string name="search_in_events">Chercher dans les évènements</string>
-    <string name="go">Aller</string>
-    <string name="goto_date">Aller à la date</string>
     <string name="return_to_today">Retour à aujourd’hui</string>
     <string name="today">Aujourd’hui</string>
     <string name="device_does_not_support">Le calendrier du périphérique ne prend pas en charge l’action</string>
@@ -390,15 +388,32 @@
     <string name="exit_full_screen">Quitter le plein écran</string>
     <string name="color_gradient">Dégradé de couleurs</string>
     <string name="qr_code">Code QR</string>
-    <plurals name="n_seconds">
+    <plurals name="seconds">
         <item quantity="one">%1$s seconde</item>
         <item quantity="many">%1$s secondes</item>
         <item quantity="other">%1$s secondes</item>
     </plurals>
     <string name="time_zones">Fuseaux horaires</string>
-    <plurals name="n_weeks">
+    <plurals name="weeks">
         <item quantity="one">%1$s semaine</item>
         <item quantity="many">%1$s semaines</item>
         <item quantity="other">%1$s semaines</item>
     </plurals>
+    <string name="open_drawer">Ouvrir le panneau de navigation</string>
+    <string name="more_options">Plus d\'options</string>
+    <string name="yes">Oui</string>
+    <string name="sample_inputs">Exemples d\'entrées</string>
+    <string name="ask_for_calendar_permission">Souhaitez-vous transmettre vos événements personnels à partir du calendrier de votre appareil?</string>
+    <string name="exempt_app_battery_optimization">Souhaitez-vous ajouter l\'application à l\'économiseur de la batterie pour un fonctionnement correct des notifications ?</string>
+    <string name="holidays_in_red">Vacances en rouge</string>
+    <plurals name="work_days">
+        <item quantity="one">%1$s jour de travail</item>
+        <item quantity="many">%1$s jours de travail</item>
+        <item quantity="other">%1$s jours de travail</item>
+    </plurals>
+    <string name="add_widget">Ajouté un module</string>
+    <string name="widget_background_transparency">Transparence de l’arrière-plan du module</string>
+    <string name="save">Enregistrer</string>
+    <string name="navigate_up">Remonter</string>
+    <string name="year_view">Vue annuelle</string>
 </resources>

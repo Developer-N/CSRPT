@@ -37,18 +37,26 @@ class AthanDownloadDialogViewModel(
             _athansList.value =
                 if (type == 1) prayTimeRepository.getAthans() else prayTimeRepository.getAlarms()
             val tmpStateList = mutableListOf<AthanState>()
-            for (athan in athansList.value) {
+            for (athan in _athansList.value) {
                 tmpStateList.add(AthanState())
                 val athanInDB = athanDB.athanDAO().getAthan(athan.name)
                 if (athanInDB == null) athanDB.athanDAO().insert(
-                    Athan(athan.name, "online/${athan.fileTitle}", type, athan.fileTitle)
+                    Athan(
+                        name = athan.name,
+                        link = "online/${athan.fileTitle}",
+                        type = type,
+                        fileName = athan.fileTitle
+                    )
                 )
                 else {
-                    athanInDB.name = athan.name
-                    athanInDB.link = "online/${athan.fileTitle}"
-                    athanInDB.type = type
-                    athanInDB.fileName = athan.fileTitle
-                    athanDB.athanDAO().update(athanInDB)
+                    athanDB.athanDAO().update(
+                        athanInDB.copy(
+                            name = athan.name,
+                            link = "online/${athan.fileTitle}",
+                            type = type,
+                            fileName = athan.fileTitle
+                        )
+                    )
                 }
             }
             _athansState.value = tmpStateList
@@ -76,7 +84,7 @@ class AthanDownloadDialogViewModel(
     fun download(context: Context, pair: Pair<ServerAthanModel, AthanState>) {
         viewModelScope.launch {
             val file = File("${getAthansDirectoryPath(context)}/${pair.first.fileTitle}")
-            val url = "https://namoodev.ir/api/v1/app/downloadAthan/${pair.first.id}"
+            val url = pair.first.githubLink
             pair.second.isDownloading = true
             val ktor = HttpClient(Android)
             ktor.downloadFile(file, url).collect {

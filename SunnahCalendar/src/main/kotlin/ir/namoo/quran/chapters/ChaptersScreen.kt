@@ -2,19 +2,24 @@ package ir.namoo.quran.chapters
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -23,28 +28,29 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Shortcut
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +58,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -63,56 +69,116 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
+import com.byagowi.persiancalendar.ui.common.AppIconButton
+import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.utils.chapterException
+import ir.namoo.quran.utils.getWordsForSearch
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import ir.namoo.religiousprayers.ui.shared.SearchAppBar
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 
 @SuppressLint("SdCardPath")
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun ChaptersScreen(
-    drawerState: DrawerState,
+fun SharedTransitionScope.ChaptersScreen(
+    animatedContentScope: AnimatedContentScope,
+    openDrawer: () -> Unit,
     navController: NavHostController,
     checkDBFile: () -> Unit,
     viewModel: ChapterViewModel = koinViewModel()
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val chapters by viewModel.chapterList.collectAsState()
-    val query by viewModel.query.collectAsState()
-    val lastVisitedList by viewModel.lastVisitedList.collectAsState()
-    val isSearchBarOpen by viewModel.isSearchBarOpen.collectAsState()
 
-    viewModel.loadData()
+    LaunchedEffect(key1 = Unit) {
+        viewModel.loadData()
+    }
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val chapters = viewModel.chapterList
+    val lastVisitedList = viewModel.lastVisitedList
+    val isFavShowing by viewModel.isFavShowing.collectAsState()
+
+    var isSearchBarOpen by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredChapters by remember {
+        derivedStateOf {
+            when {
+                searchQuery.isEmpty() -> chapters
+                searchQuery.isDigitsOnly() -> {
+                    if (searchQuery.isNotEmpty()) scope.launch {
+                        delay(1000)
+                        listState.animateScrollToItem(searchQuery.toInt() - 1)
+                    }
+                    chapters
+                }
+
+                searchQuery.startsWith("fav") -> chapters.filter { it.fav == 1 }
+                searchQuery == "default" -> chapters.sortedBy { it.sura }
+                searchQuery == "alphabet" -> chapters.sortedBy { it.nameArabic }
+                searchQuery == "ayaIncrease" -> chapters.sortedBy { it.ayaCount }
+                searchQuery == "ayaDecrease" -> chapters.sortedByDescending { it.ayaCount }
+                searchQuery == "revelation" -> chapters.sortedBy { it.revelationOrder }
+                else -> chapters.filter { isContains(it.nameArabic, searchQuery) }
+            }
+        }
+    }
+
     Scaffold(topBar = {
         AnimatedVisibility(
-            visible = !isSearchBarOpen,
-            enter = expandVertically(),
-            exit = shrinkVertically()
+            visible = !isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            DefaultAppBar(scope, drawerState, viewModel, listState, navController)
+            DefaultAppBar(animatedContentScope = animatedContentScope,
+                openDrawer = openDrawer,
+                isFavShowing = isFavShowing,
+                onShowBookmarkClick = { show ->
+                    searchQuery = if (show) "fav" else ""
+                    viewModel.showFav(show)
+                },
+                query = searchQuery,
+                onQuery = { searchQuery = it },
+                scrollToTop = {
+                    scope.launch {
+                        delay(1000)
+                        listState.animateScrollToItem(0)
+                    }
+                },
+                openSearchBar = {
+                    if (isFavShowing) viewModel.showFav(false)
+                    if (searchQuery.isNotEmpty()) searchQuery = ""
+                    if (listState.firstVisibleItemIndex > 1) scope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                    isSearchBarOpen = true
+                },
+                navigateToPage = {
+                    viewModel.navigateToPage(it, navController)
+                },
+                navigateToJuz = {
+                    viewModel.navigateToJuz(it, navController)
+                },
+                navigateToHizb = {
+                    viewModel.navigateToHizb(it, navController)
+                })
         }
         AnimatedVisibility(
-            visible = isSearchBarOpen,
-            enter = expandVertically(),
-            exit = shrinkVertically()
+            visible = isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = query,
-                updateQuery = { viewModel.onQuery(it) },
-                closeSearchBar = { viewModel.closeSearchBar() })
+            SearchAppBar(query = searchQuery,
+                updateQuery = { searchQuery = it },
+                closeSearchBar = { isSearchBarOpen = false })
         }
     }) { paddingValues ->
         Surface(
@@ -130,35 +196,43 @@ fun ChaptersScreen(
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(4.dp)
-                            .height(2.dp),
+                            .padding(vertical = 4.dp, horizontal = 16.dp),
                         strokeCap = StrokeCap.Round
                     )
                 }
-                if (lastVisitedList.isNotEmpty() && query.isEmpty()) {
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
+                AnimatedVisibility(visible = lastVisitedList.isNotEmpty() && chapters.isNotEmpty() && !isFavShowing && !isSearchBarOpen) {
+                    LazyRow(modifier = Modifier.fillMaxWidth(),
                         state = rememberLazyListState().apply {
                             scope.launch {
                                 animateScrollToItem(0)
                             }
                         }) {
                         items(items = lastVisitedList, key = { it.id }) { last ->
-                            ElevatedAssistChip(modifier = Modifier.padding(2.dp, 0.dp),
-                                onClick = { navController.navigate("sura/${last.suraID}/${last.ayaID}") },
-                                label = {
-                                    Text(
-                                        text = chapters.find { it.sura == last.suraID }?.nameArabic + (" " + stringResource(
-                                            id = R.string.aya
-                                        ) + " " + formatNumber(
-                                            last.ayaID
-                                        ))
+                            ElevatedButton(modifier = Modifier
+                                .padding(horizontal = 2.dp)
+                                .animateItem(
+                                    fadeInSpec = null,
+                                    fadeOutSpec = null,
+                                    placementSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
                                     )
-                                })
+                                ),
+                                onClick = { navController.navigate("sura/${last.suraID}/${last.ayaID}") }) {
+                                Text(
+                                    text = chapters.find { it.sura == last.suraID }?.nameArabic + (" " + stringResource(
+                                        id = R.string.aya
+                                    ) + " " + formatNumber(
+                                        last.ayaID
+                                    )),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                            }
                         }
                     }
                 }
-                if (!isLoading && query.isEmpty() && chapters.isEmpty()) {
+                AnimatedVisibility(visible = !isLoading && searchQuery.isEmpty() && chapters.isEmpty()) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -169,6 +243,12 @@ fun ChaptersScreen(
                         val context = LocalContext.current
                         Button(onClick = {
                             File("/data/data/${context.packageName}/databases/quran_v3.db").let {
+                                if (it.exists()) it.delete()
+                            }
+                            File("/data/data/${context.packageName}/databases/quran_v3.db-shm").let {
+                                if (it.exists()) it.delete()
+                            }
+                            File("/data/data/${context.packageName}/databases/quran_v3.db-wal").let {
                                 if (it.exists()) it.delete()
                             }
                             checkDBFile()
@@ -193,97 +273,78 @@ fun ChaptersScreen(
                     }
                 }
                 LazyColumn(state = listState) {
-                    if (chapters.isNotEmpty()) itemsIndexed(chapters,
+                    if (filteredChapters.isNotEmpty()) itemsIndexed(
+                        filteredChapters,
                         key = { _, chapter -> chapter.sura }) { index, chapter ->
-                        QuranChapterItem(modifier = Modifier.animateItemPlacement(),
+                        QuranChapterItem(modifier = Modifier.animateItem(
+                            fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ),
                             chapter = chapter,
                             rowID = index + 1,
-                            query = query,
+                            query = searchQuery,
                             onFavClick = {
-                                viewModel.updateFav(chapter.sura)
+                                viewModel.updateFav(chapter)
                             },
                             cardClick = {
                                 navController.navigate("sura/${chapter.sura}/1")
                             })
                     }
-                    else if (query.isNotEmpty()) item {
+                    else if (searchQuery.isNotEmpty()) item {
                         NothingFoundUIElement()
                     }
                 }
             }
         }
     }
-    BackHandler(enabled = isSearchBarOpen || drawerState.isOpen) {
-        if (drawerState.isOpen) scope.launch {
-            drawerState.close()
-        }
-        else {
-            viewModel.closeSearchBar()
-            if (query.isNotEmpty()) viewModel.onQuery("")
-        }
+    BackHandler(enabled = isSearchBarOpen) {
+        isSearchBarOpen = false
+        if (searchQuery.isNotEmpty()) searchQuery = ""
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun DefaultAppBar(
-    scope: CoroutineScope,
-    drawerState: DrawerState,
-    viewModel: ChapterViewModel,
-    listState: LazyListState,
-    navController: NavHostController
+fun SharedTransitionScope.DefaultAppBar(
+    animatedContentScope: AnimatedContentScope,
+    openDrawer: () -> Unit,
+    isFavShowing: Boolean,
+    onShowBookmarkClick: (Boolean) -> Unit,
+    query: String,
+    onQuery: (String) -> Unit,
+    scrollToTop: () -> Unit,
+    openSearchBar: () -> Unit,
+    navigateToPage: (Int) -> Unit,
+    navigateToJuz: (Int) -> Unit,
+    navigateToHizb: (Int) -> Unit
 ) {
     val context = LocalContext.current
     var showSortDialog by remember { mutableStateOf(false) }
     var showGoToPageDialog by remember { mutableStateOf(false) }
     var showGoToJuzDialog by remember { mutableStateOf(false) }
     var showGoToHizbDialog by remember { mutableStateOf(false) }
-    val isFavShowing by viewModel.isFavShowing.collectAsState()
-    val scale = remember { Animatable(1f) }
     TopAppBar(title = {
         Text(text = stringResource(id = R.string.chapter))
     }, navigationIcon = {
-        IconButton(onClick = {
-            scope.launch {
-                drawerState.apply {
-                    if (isOpen) close() else open()
-                }
-            }
-        }) {
-            Icon(
-                imageVector = Icons.Filled.Menu, contentDescription = "Menu"
-            )
-        }
+        NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
     }, colors = appTopAppBarColors(), actions = {
         // Favorite
-        IconButton(modifier = Modifier.scale(scale.value), onClick = {
-            viewModel.showFav()
-            scope.launch {
-                scale.animateTo(0.1f)
-                scale.animateTo(1f)
-            }
-        }) {
-            Icon(
-                imageVector = if (isFavShowing) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                contentDescription = stringResource(id = R.string.favorite)
-            )
+        AppIconButton(
+            icon = if (isFavShowing) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+            title = stringResource(id = R.string.favorite)
+        ) {
+            onShowBookmarkClick(!isFavShowing)
         }
         //Search
-        IconButton(onClick = {
-            if (isFavShowing) viewModel.showFav()
-            viewModel.onQuery("")
-            scope.launch {
-                listState.animateScrollToItem(0)
-            }
-            viewModel.openSearchBar()
-        }) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = stringResource(id = R.string.search)
-            )
+        AppIconButton(
+            icon = Icons.Filled.Search, title = stringResource(id = R.string.search)
+        ) {
+            openSearchBar()
         }
         //More ...
-        ThreeDotsDropdownMenu { closeMenu ->
+        ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
             //Chapter Sort
             AppDropdownMenuItem(text = { Text(text = stringResource(id = R.string.sort_order)) },
                 onClick = {
@@ -349,28 +410,72 @@ fun DefaultAppBar(
             context.getString(R.string.aya_inc_sort),
             context.getString(R.string.aya_dec_sort)
         )
-        AlertDialog(onDismissRequest = { showSortDialog = false }, confirmButton = { }, text = {
-            LazyColumn {
-                itemsIndexed(items = sortList, key = { index, _ -> index }) { index, item ->
-                    AppDropdownMenuItem(text = {
-                        Text(text = item)
-                    }, onClick = {
-                        showSortDialog = false
-                        when (index) {
-                            0 -> viewModel.onQuery("default")
-                            1 -> viewModel.onQuery("alphabet")
-                            2 -> viewModel.onQuery("revelation")
-                            3 -> viewModel.onQuery("ayaIncrease")
-                            4 -> viewModel.onQuery("ayaDecrease")
-                        }
-                        scope.launch {
-                            delay(1000)
-                            listState.animateScrollToItem(0)
-                        }
-                    })
+        AlertDialog(onDismissRequest = { showSortDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showSortDialog = false }) {
+                    Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
                 }
-            }
-        }, title = { Text(text = stringResource(id = R.string.chapter_sort_dialog_title)) })
+            },
+            text = {
+                LazyColumn {
+                    itemsIndexed(items = sortList, key = { index, _ -> index }) { index, item ->
+                        TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
+                            showSortDialog = false
+                            when (index) {
+                                0 -> onQuery("default")
+                                1 -> onQuery("alphabet")
+                                2 -> onQuery("revelation")
+                                3 -> onQuery("ayaIncrease")
+                                4 -> onQuery("ayaDecrease")
+                            }
+                            scrollToTop()
+                        }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    modifier = Modifier,
+                                    text = item,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                when (query) {
+                                    "" -> if (index == 0) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    "default" -> if (index == 0) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    "alphabet" -> if (index == 1) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    "revelation" -> if (index == 2) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    "ayaIncrease" -> if (index == 3) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    "ayaDecrease" -> if (index == 4) Icon(
+                                        imageVector = Icons.Default.Check, contentDescription = ""
+                                    )
+
+                                    else -> Unit
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            title = { Text(text = stringResource(id = R.string.chapter_sort_dialog_title)) },
+            icon = {
+                Icon(imageVector = Icons.AutoMirrored.Default.Sort, contentDescription = "")
+            })
     }
 
     //GoToPage Dialog
@@ -383,35 +488,44 @@ fun DefaultAppBar(
         }, confirmButton = {
             TextButton(onClick = {
                 showGoToPageDialog = false
-                scope.launch {
-                    val page = viewModel.getPage(pageNumber.toInt())
-                    navController.navigate("sura/${page.sura}/${page.aya}")
-                }
+                navigateToPage(pageNumber.toInt())
             }, enabled = isCorrectPage) {
-                Text(text = stringResource(id = R.string.go_to_page))
+                Text(
+                    text = stringResource(id = R.string.go_to_page),
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }, dismissButton = {
             TextButton(onClick = { showGoToPageDialog = false }) {
-                Text(text = stringResource(id = R.string.cancel))
+                Text(text = stringResource(id = R.string.cancel), fontWeight = FontWeight.SemiBold)
             }
         }, text = {
-            OutlinedTextField(
+            TextField(
                 value = pageNumber,
                 onValueChange = {
                     pageNumber = it
                     isCorrectPage =
-                        pageNumber.isNotEmpty() && pageNumber.toInt() > 0 && pageNumber.toInt() < 604
+                        pageNumber.isNotEmpty() && pageNumber.isDigitsOnly() && pageNumber.toInt() > 0 && pageNumber.toInt() <= 604
                 },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = { Text(text = stringResource(id = R.string.page)) },
                 isError = !isCorrectPage,
                 supportingText = {
                     AnimatedVisibility(visible = !isCorrectPage) {
                         Text(text = formatNumber(stringResource(id = R.string.page_out_of_bounds)))
                     }
-                }
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
+                )
             )
+        }, icon = {
+            Icon(imageVector = Icons.AutoMirrored.Default.Shortcut, contentDescription = "")
         })
 
     }
@@ -420,41 +534,64 @@ fun DefaultAppBar(
     if (showGoToJuzDialog) {
         val juz = mutableListOf<String>()
         for (i in 1..30) juz.add(formatNumber(i))
-        AlertDialog(onDismissRequest = { showGoToJuzDialog = false }, confirmButton = { }, text = {
-            LazyColumn {
-                itemsIndexed(items = juz, key = { index, _ -> index }) { index, item ->
-                    AppDropdownMenuItem(text = {
-                        Text(text = item, fontWeight = FontWeight.SemiBold)
-                    }, onClick = {
-                        showGoToJuzDialog = false
-                        scope.launch {
-                            val j = viewModel.getJuz(index + 1)
-                            navController.navigate("sura/${j.sura}/${j.aya}")
-                        }
-                    })
-                }
+        AlertDialog(onDismissRequest = { showGoToJuzDialog = false }, confirmButton = {
+            TextButton(onClick = { showGoToJuzDialog = false }) {
+                Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
             }
-        }, title = { Text(text = stringResource(id = R.string.select_juz)) })
+        }, text = {
+            Box {
+                val state = rememberLazyListState()
+                LazyColumn(state = state) {
+                    itemsIndexed(items = juz, key = { index, _ -> index }) { index, item ->
+                        AppDropdownMenuItem(text = {
+                            Text(text = item, fontWeight = FontWeight.SemiBold)
+                        }, onClick = {
+                            showGoToJuzDialog = false
+                            navigateToJuz(index + 1)
+                        })
+                    }
+                }
+                ScrollShadow(listState = state, top = true)
+                ScrollShadow(listState = state, top = false)
+            }
+        }, title = { Text(text = stringResource(id = R.string.select_juz)) }, icon = {
+            Icon(imageVector = Icons.AutoMirrored.Default.Shortcut, contentDescription = "")
+        })
     }
 
     //GoToHizb Dialog
     if (showGoToHizbDialog) {
         val hizb = mutableListOf<String>()
         for (i in 1..120) hizb.add(formatNumber(i))
-        AlertDialog(onDismissRequest = { showGoToHizbDialog = false }, confirmButton = { }, text = {
-            LazyColumn {
-                itemsIndexed(items = hizb, key = { index, _ -> index }) { index, item ->
-                    AppDropdownMenuItem(text = {
-                        Text(text = item, fontWeight = FontWeight.SemiBold)
-                    }, onClick = {
-                        showGoToHizbDialog = false
-                        scope.launch {
-                            val h = viewModel.getHizb(index + 1)
-                            navController.navigate("sura/${h.sura}/${h.aya}")
-                        }
-                    })
-                }
+        AlertDialog(onDismissRequest = { showGoToHizbDialog = false }, confirmButton = {
+            TextButton(onClick = { showGoToHizbDialog = false }) {
+                Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
             }
-        }, title = { Text(text = stringResource(id = R.string.select_hizb)) })
+        }, text = {
+            Box {
+                val state = rememberLazyListState()
+                LazyColumn(state = state) {
+                    itemsIndexed(items = hizb, key = { index, _ -> index }) { index, item ->
+                        AppDropdownMenuItem(text = {
+                            Text(text = item, fontWeight = FontWeight.SemiBold)
+                        }, onClick = {
+                            showGoToHizbDialog = false
+                            navigateToHizb(index + 1)
+                        })
+                    }
+                }
+                ScrollShadow(listState = state, top = true)
+                ScrollShadow(listState = state, top = false)
+            }
+        }, title = { Text(text = stringResource(id = R.string.select_hizb)) }, icon = {
+            Icon(imageVector = Icons.AutoMirrored.Default.Shortcut, contentDescription = "")
+        })
     }
+}
+
+private fun isContains(name: String, text: String): Boolean {
+    text.getWordsForSearch().forEach { word ->
+        if (name.contains(word)) return true
+    }
+    return false
 }

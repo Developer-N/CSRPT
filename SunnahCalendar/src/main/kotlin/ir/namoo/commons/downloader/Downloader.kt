@@ -10,19 +10,25 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToLong
 
-suspend fun HttpClient.downloadFile(file: File, url: String): Flow<DownloadResult> {
+fun HttpClient.downloadFile(file: File, url: String): Flow<DownloadResult> {
     return callbackFlow {
         try {
             val response = request {
                 url(url)
                 method = HttpMethod.Get
                 onDownload { bytesSentTotal, contentLength ->
-                    send(DownloadResult.TotalSize(contentLength))
+                    if (contentLength == null) return@onDownload
+                    launch {
+                        send(DownloadResult.TotalSize(contentLength))
+                    }
                     val progress = (bytesSentTotal * 100f / contentLength).roundToLong()
-                    send(DownloadResult.Progress(progress))
+                    launch {
+                        send(DownloadResult.Progress(progress))
+                    }
                 }
             }
             file.writeBytes(response.body())
@@ -30,7 +36,7 @@ suspend fun HttpClient.downloadFile(file: File, url: String): Flow<DownloadResul
         } catch (e: TimeoutCancellationException) {
             send(DownloadResult.Error("Connection timed out", e))
         } catch (t: Throwable) {
-            send(DownloadResult.Error("Failed to connect"))
+            send(DownloadResult.Error("Failed to connect. message => ${t.message}"))
         }
         awaitClose { channel.close() }
     }

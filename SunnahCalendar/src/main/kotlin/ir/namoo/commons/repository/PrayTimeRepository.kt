@@ -2,20 +2,23 @@ package ir.namoo.commons.repository
 
 import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.model.CityModel
+import ir.namoo.commons.model.PrayTimesResponse
 import ir.namoo.commons.model.ProvinceModel
 import ir.namoo.commons.model.ServerAthanModel
 import ir.namoo.commons.utils.modelToDBTimes
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
 import ir.namoo.religiousprayers.praytimeprovider.EditedPrayTimesEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 class PrayTimeRepository(
     private val localRepository: LocalPrayTimeRepository,
-    private val remoteRepository: RemotePrayTimeRepository
+    private val remoteRepository: RemoteRepository
 ) {
-    suspend fun updateAndGetCityList(): List<CityModel> {
+    fun getAndUpdateCities() = flow {
         runCatching {
-
+            emit(DataState.Loading)
             val remoteCountryList = remoteRepository.getAllCountries()
             localRepository.insertCountries(remoteCountryList)
 
@@ -25,11 +28,11 @@ class PrayTimeRepository(
             val remoteCityList = remoteRepository.getAllCities()
             localRepository.insertCities(remoteCityList)
 
-            return localRepository.getAllCity()
+            emit(DataState.Success(localRepository.getAllCity()))
 
-        }.onFailure { return localRepository.getAllCity() }
-            .getOrElse { return localRepository.getAllCity() }
-    }
+        }.onFailure { emit(DataState.Error(it.message ?: "Error get cities")) }
+            .getOrElse { emit(DataState.Error(it.message ?: "Error get cities")) }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun getLocalCityList(): List<CityModel> {
         runCatching {
@@ -43,34 +46,56 @@ class PrayTimeRepository(
         }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }
 
-    suspend fun getAddedCity(): List<CityModel> {
+    fun getAddedCity() = flow {
         runCatching {
-            return remoteRepository.getAddedCities()
-        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
+            emit(DataState.Loading)
+            if (localRepository.getAllCountries().isEmpty())
+                localRepository.insertCountries(remoteRepository.getAllCountries())
+
+            if (localRepository.getAllProvinces().isEmpty())
+                localRepository.insertProvinces(remoteRepository.getAllProvinces())
+
+            if (localRepository.getAllCity().isEmpty()) {
+                localRepository.insertCities(remoteRepository.getAllCities())
+            }
+            emit(DataState.Success(remoteRepository.getAddedCities()))
+        }.onFailure { emit(DataState.Error(it.message ?: "Error get cities")) }
+            .getOrElse { emit(DataState.Error(it.message ?: "Error get cities")) }
+    }.flowOn(Dispatchers.IO)
+
+    fun getTimesForCityAndSaveToLocalDB(id: Int) = flow {
+        runCatching {
+            emit(DataState.Loading)
+            when (val result = remoteRepository.getPrayTimesFor(id)) {
+                is DataResult.Error -> emit(DataState.Error(result.message))
+                is DataResult.Success -> {
+                    result.data as PrayTimesResponse
+                    if (result.data.status == 1) {
+                        localRepository.clearDownloadFor(id)
+                        localRepository.insertToDownload(modelToDBTimes(result.data.data))
+                        emit(DataState.Success(true))
+                    } else emit(DataState.Error(result.data.msg))
+                }
+            }
+        }.onFailure { emit(DataState.Error(it.message ?: "Error get times")) }
+            .getOrElse { emit(DataState.Error(it.message ?: "Error get times")) }
     }
 
-    suspend fun getTimesForCityAndSaveToLocalDB(cityModel: CityModel): Boolean {
+    fun getLastUpdateInfo() = flow {
+        emit(DataState.Loading)
         runCatching {
-            val times = remoteRepository.getPrayTimesFor(cityModel.id)
-            localRepository.clearDownloadFor(cityModel.id)
-            localRepository.insertToDownload(modelToDBTimes(times))
-            return true
-        }.onFailure { return false }.getOrElse { return false }
-    }
-
-    suspend fun getLastUpdateInfo() = flow {
-        runCatching {
-            val list = remoteRepository.getLastUpdateInfo()
-            if (list.isEmpty()) emit(DataResult.ConnectionError())
-            else emit(DataResult.Success(list))
+            when (val result = remoteRepository.getLastUpdateInfo()) {
+                is DataResult.Error -> emit(DataState.Error(result.message))
+                is DataResult.Success -> emit(DataState.Success(result.data))
+            }
         }.onFailure {
-            emit(DataResult.Error("Error get updates! ${it.message}"))
+            emit(DataState.Error("Error get updates! ${it.message}"))
             logException
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
 
-    suspend fun getApplicationInfo() = flow {
+    fun getApplicationInfo() = flow {
         runCatching {
             val appInfo = remoteRepository.getApplicationInfo()
             if (appInfo == null) emit(DataResult.Error("Error get Application Info"))
@@ -79,7 +104,8 @@ class PrayTimeRepository(
             emit(DataResult.Error("Error get Application Info $it"))
             logException
         }
-    }
+    }.flowOn(Dispatchers.IO)
+
 
     suspend fun getAthans(): List<ServerAthanModel> = remoteRepository.getAthans()
 
@@ -102,6 +128,6 @@ class PrayTimeRepository(
 
     suspend fun clearEditTimes() = localRepository.clearEditTimes()
 
-   suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
-       localRepository.updateEditedTimes(times)
+    suspend fun updateEditedTimes(times: MutableList<EditedPrayTimesEntity>) =
+        localRepository.updateEditedTimes(times)
 }

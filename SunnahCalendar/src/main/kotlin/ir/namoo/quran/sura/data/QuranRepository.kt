@@ -22,6 +22,14 @@ class QuranRepository(private val quranDB: QuranDB) {
             .getOrElse { return emptyList() }
     }
 
+    suspend fun getTafsir(): List<TafsirEntity> {
+        runCatching { return quranDB.quranDAO().getTafsir() }.onFailure { return emptyList() }
+            .getOrElse { return emptyList() }
+    }
+
+    suspend fun updateTafsir(tafsirEntity: TafsirEntity) =
+        quranDB.quranDAO().updateTafsir(tafsirEntity)
+
     suspend fun getChapter(sura: Int): ChapterEntity? {
         runCatching { return quranDB.chapterDAO().getChapter(sura) }.onFailure { return null }
             .getOrElse { return null }

@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,17 +38,21 @@ import com.byagowi.persiancalendar.EN_DASH
 import com.byagowi.persiancalendar.PREF_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
+import com.byagowi.persiancalendar.PREF_ATHAN_VIBRATION
 import com.byagowi.persiancalendar.PREF_HIGH_LATITUDES_METHOD
 import com.byagowi.persiancalendar.PREF_MIDNIGHT_METHOD
 import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.global.ascendingAthan
 import com.byagowi.persiancalendar.global.asrMethod
 import com.byagowi.persiancalendar.global.athanSoundName
+import com.byagowi.persiancalendar.global.athanVibration
 import com.byagowi.persiancalendar.global.calculationMethod
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.global.updateStoredPreference
@@ -67,8 +72,8 @@ import com.byagowi.persiancalendar.ui.settings.locationathan.location.GPSLocatio
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.LocationDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.titleStringId
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
@@ -76,7 +81,7 @@ import io.github.persiancalendar.praytimes.HighLatitudesMethod
 import io.github.persiancalendar.praytimes.MidnightMethod
 
 @Composable
-fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
+fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
     SettingsSection(stringResource(R.string.location))
     SettingsClickable(
         title = stringResource(R.string.gps_location),
@@ -98,6 +103,7 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
     val calculationMethod by calculationMethod.collectAsState()
     val notificationAthan by notificationAthan.collectAsState()
     val ascendingAthan by ascendingAthan.collectAsState()
+    val language by language.collectAsState()
     SettingsHorizontalDivider()
     SettingsSection(
         stringResource(R.string.athan),
@@ -148,7 +154,7 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
         val athanSoundName by athanSoundName.collectAsState()
         SettingsClickable(
             stringResource(R.string.custom_athan),
-            athanSoundName,
+            athanSoundName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.default_athan),
         ) { onDismissRequest -> AthanSelectDialog(onDismissRequest) }
     }
     AnimatedVisibility(isLocationSet) {
@@ -160,7 +166,7 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
         val launcher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
-            context.appPrefs.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
+            context.preferences.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
             updateStoredPreference(context)
         }
         SettingsSwitch(
@@ -193,6 +199,14 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
         ) { onDismissRequest -> AthanVolumeDialog(onDismissRequest) }
     }
     AnimatedVisibility(isLocationSet) {
+        SettingsSwitch(
+            PREF_ATHAN_VIBRATION,
+            athanVibration.collectAsState().value,
+            stringResource(R.string.vibration),
+            language.tryTranslateAthanVibrationSummary()
+        )
+    }
+    AnimatedVisibility(isLocationSet) {
         var midnightSummary by remember {
             mutableStateOf(getMidnightMethodPreferenceSummary(context))
         }
@@ -205,7 +219,7 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
                 },
             ) {
                 val currentSelectionKey =
-                    context.appPrefs.getString(PREF_MIDNIGHT_METHOD, null) ?: "DEFAULT"
+                    context.preferences.getString(PREF_MIDNIGHT_METHOD, null) ?: "DEFAULT"
                 (listOf(midnightDefaultTitle(context.resources) to "DEFAULT") + MidnightMethod.entries.filter { !it.isJafariOnly || calculationMethod.isJafari }
                     .map {
                         midnightMethodToString(context.resources, it) to it.name
@@ -217,7 +231,7 @@ fun LocationAthanSettings(navigateToMap: () -> Unit, destination: String) {
                             .height(SettingsItemHeight.dp)
                             .clickable {
                                 onDismissRequest()
-                                context.appPrefs.edit {
+                                context.preferences.edit {
                                     if (key == "DEFAULT") remove(PREF_MIDNIGHT_METHOD)
                                     else putString(PREF_MIDNIGHT_METHOD, key)
                                 }
@@ -242,19 +256,13 @@ private fun midnightDefaultTitle(resources: Resources): String {
 }
 
 private fun getMidnightMethodPreferenceSummary(context: Context): String {
-    return context.appPrefs.getString(PREF_MIDNIGHT_METHOD, null)
+    return context.preferences.getString(PREF_MIDNIGHT_METHOD, null)
         ?.let { midnightMethodToString(context.resources, MidnightMethod.valueOf(it)) }
         ?: midnightDefaultTitle(context.resources)
 }
 
 private fun midnightMethodToString(resources: Resources, method: MidnightMethod): String {
-    return when (method) {
-        MidnightMethod.MidSunsetToSunrise -> listOf(R.string.sunset, R.string.sunrise)
-
-        MidnightMethod.MidSunsetToFajr -> listOf(R.string.sunset, R.string.fajr)
-
-        MidnightMethod.MidMaghribToSunrise -> listOf(R.string.maghrib, R.string.sunrise)
-
-        MidnightMethod.MidMaghribToFajr -> listOf(R.string.maghrib, R.string.fajr)
-    }.joinToString(EN_DASH) { resources.getString(it) }
+    return PrayTime.pairFromMidnightMethod(method).joinToString(EN_DASH) {
+        resources.getString(it.stringRes)
+    }
 }

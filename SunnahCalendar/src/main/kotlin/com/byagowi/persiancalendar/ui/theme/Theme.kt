@@ -9,27 +9,27 @@ enum class Theme(
     val key: String,
     @StringRes val title: Int,
     val hasGradient: Boolean = true,
-    private val hasDynamicColors: Boolean = false,
-    val isDark: Boolean = false,
+    private val lackDynamicColors: Boolean = false,
+    // This is null in system default, if that's needed, use effectiveTheme()
+    val isDark: Boolean? = false,
 ) {
-    SYSTEM_DEFAULT("SystemDefault", R.string.theme_default, hasDynamicColors = true),
+    SYSTEM_DEFAULT("SystemDefault", R.string.theme_default, isDark = null),
     LIGHT("LightTheme", R.string.theme_light),
-    DARK_GREEN("DarkGreenTheme", R.string.theme_dark_green),
-    PURPLE("PurpleTheme", R.string.theme_purple),
-    DEEP_PURPLE("DeepPurpleTheme", R.string.theme_deep_purple),
-    INDIGO("IndigoTheme", R.string.theme_indigo),
-    PINK("PinkTheme", R.string.theme_pink),
-    GREEN("GreenTheme", R.string.theme_green),
-    BROWN("BrownTheme", R.string.theme_brown),
-    NEW_BLUE("NewBlueTheme", R.string.theme_nblue),
-    AQUA("BlueTheme"/*legacy*/, R.string.theme_aqua),
+    CYAN("CYAN", R.string.theme_cyan, lackDynamicColors = true),
+    DARK_GREEN("DarkGreenTheme", R.string.theme_dark_green, lackDynamicColors = true),
+    PURPLE("PurpleTheme", R.string.theme_purple, lackDynamicColors = true),
+    DEEP_PURPLE("DeepPurpleTheme", R.string.theme_deep_purple, lackDynamicColors = true),
+    INDIGO("IndigoTheme", R.string.theme_indigo, lackDynamicColors = true),
+    PINK("PinkTheme", R.string.theme_pink, lackDynamicColors = true),
+    GREEN("GreenTheme", R.string.theme_green, lackDynamicColors = true),
+    BROWN("BrownTheme", R.string.theme_brown, lackDynamicColors = true),
+    NEW_BLUE("NewBlueTheme", R.string.theme_nblue, lackDynamicColors = true),
+    AQUA("BlueTheme"/*legacy*/, R.string.theme_aqua, lackDynamicColors = true),
     DARK("DarkTheme", R.string.theme_dark, isDark = true),
-    BLACK(
-        "BlackTheme", R.string.theme_black,
-        hasGradient = false, hasDynamicColors = true, isDark = true
-    ),
-    MODERN("ClassicTheme",/*legacy*/R.string.theme_modern, hasDynamicColors = true);
+    BLACK("BlackTheme", R.string.theme_black, hasGradient = false, isDark = true),
+    MODERN("ClassicTheme",/*legacy*/R.string.theme_modern);
 
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
-    fun isDynamicColors() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && hasDynamicColors
+    val isDynamicColors
+        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S) get() =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !lackDynamicColors
 }

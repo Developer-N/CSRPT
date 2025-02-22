@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="sunriseSunView">тулӯи офтоб</string>
-    <string name="middaySunView">Нимрӯз</string>
+    <string name="sunrise_sun_view">тулӯи офтоб</string>
+    <string name="midday_sun_view">Нимрӯз</string>
     <string name="length_of_day">Рӯзи равшан</string>
     <string name="remaining_daylight">Боқимонда</string>
     <string name="times">Вақтҳои</string>
@@ -11,7 +11,7 @@
     <string name="dhuhr">Зӯҳр</string>
     <string name="asr">Аср</string>
     <string name="sunset">Ғуруби офтоб</string>
-    <string name="sunsetSunView">Ғуруби офтоб</string>
+    <string name="sunset_sun_view">Ғуруби офтоб</string>
     <string name="maghrib">Мағриб</string>
     <string name="isha">Иша</string>
     <string name="select_type_date">Навъи таърихро интихоб кунед</string>
@@ -26,7 +26,7 @@
     <string name="libra">Мизон</string>
     <string name="scorpio">Ақраб</string>
     <string name="sagittarius">Қавс</string>
-    <string name="moonInScorpio">Моҳ дар aқраб аст</string>
+    <string name="moon_in_scorpio">Моҳ дар aқраб аст</string>
     <string name="code">en</string>
     <string name="app_name">Тақвими форсӣ</string>
     <string name="widget_name">Тақвими форсӣ</string>
@@ -47,8 +47,6 @@
     <string name="device_does_not_support">Тақвими дастгоҳ ин амалро дастгирӣ намекунад</string>
     <string name="today">Имрӯз</string>
     <string name="return_to_today">Бозгашт ба имрӯз</string>
-    <string name="goto_date">Ба сана равед</string>
-    <string name="go">Бирав</string>
     <string name="search_in_events">Ҷустуҷӯ дар рӯйдодҳо</string>
     <string name="add_event">Илова кардани рӯйдод</string>
     <string name="days_distance">масофа</string>
@@ -111,14 +109,14 @@
     <string name="licenses">Иҷозатнома</string>
     <string name="about_support_developers">Дастгирии таҳиягарон</string>
     <string name="about_report_bug">Гузориш дар бораи хато дар GitHub</string>
-    <string name="about_sendMail">Почтаи электронӣ</string>
+    <string name="about_send_mail">Почтаи электронӣ</string>
     <string name="about_email_sum">Ба муаллифони барнома паёми шахсӣ фиристед</string>
-    <string name="about_noClient">Ягон барнома барои фиристодани почтаи электронӣ вуҷуд надорад</string>
-    <plurals name="n_minutes">
+    <string name="about_no_client">Ягон барнома барои фиристодани почтаи электронӣ вуҷуд надорад</string>
+    <plurals name="minutes">
         <item quantity="one">%1$s дақиқа</item>
         <item quantity="other">%1$s дақиқа</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s соат</item>
         <item quantity="other">%1$s соат</item>
     </plurals>
@@ -165,7 +163,7 @@
     <string name="compass">Компас</string>
     <string name="about">Дар бораи</string>
     <string name="animal_year_name_snake">Мор</string>
-    <string name="animal_year_name_goat">Гӯсфанд</string>
+    <string name="animal_year_name_goat">Буз</string>
     <string name="animal_year_name_tiger">Бабр</string>
     <string name="animal_year_name_rabbit">Харгӯш</string>
     <string name="animal_year_name_dragon">Аждаҳо</string>
@@ -202,15 +200,15 @@
     <string name="prefer_linear_date">Шакли рақамии санаҳоро интихоб кунед</string>
     <string name="select_widgets_background_color">Барои заминаи виджетҳо ранги фармоиширо интихоб кунед</string>
     <string name="shamsi_calendar_short">форсӣ</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s pӯз</item>
         <item quantity="other">%1$s pӯз</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s моҳ</item>
         <item quantity="other">%1$s моҳ</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s сол</item>
         <item quantity="other">%1$s сол</item>
     </plurals>
@@ -303,7 +301,7 @@
     <string name="gps_internet_desc">Лутфан GPS ва интернетро фаъол кунед, то самти қибла ё самти ҷуғрофиро ёбед.
 \n
 \nИн барнома барои ҷойгиршавӣ танҳо як маротиба ба ин иҷозатҳо ниёз дорад, аммо дар сурати тағир ёфтани макони шумо бояд аз нав барқарор карда шавад.</string>
-    <string name="pleasewaitgps">Мунтазир бошед… Агар пас аз як дақиқа ягон натиҷа ба даст наояд, боварӣ ҳосил кунед, ки дастгоҳи GPS аз танзимот фаъол аст. Агар фаъолсозии он кор накунад, ба шумо лозим меояд, ки имконоти дигарро санҷед</string>
+    <string name="wait_for_gps">Мунтазир бошед… Агар пас аз як дақиқа ягон натиҷа ба даст наояд, боварӣ ҳосил кунед, ки дастгоҳи GPS аз танзимот фаъол аст. Агар фаъолсозии он кор накунад, ба шумо лозим меояд, ки имконоти дигарро санҷед</string>
     <string name="athan_gap_summary">Чанд дақиқа пеш аз азон, ҳушдор бояд садо диҳад</string>
     <string name="athan_alarm">азонҳо</string>
     <string name="athan_alarm_summary">Барои ин Намозҳо азон гуфта шавад</string>
@@ -338,4 +336,34 @@
     <string name="country_emoji">🇹🇯</string>
     <string name="nepal">Непал</string>
     <string name="calculator">Калкулятор</string>
+    <string name="lunar_eclipse">Моҳгирифтагӣ</string>
+    <string name="high_latitudes_angle_based">Бар Пояи Зовия</string>
+    <string name="none">Ҳечкудом</string>
+    <string name="season">Фасл</string>
+    <string name="summer">Тобистон</string>
+    <string name="winter">Зимистон</string>
+    <string name="spring">Баҳор</string>
+    <string name="sun">Хуршед</string>
+    <string name="moon">Моҳ</string>
+    <string name="tropical">Эътидолӣ</string>
+    <string name="high_latitudes_one_seventh">Якҳафтум</string>
+    <string name="nepali_calendar">Неполӣ</string>
+    <string name="solar_eclipse">Хуршедгирифтагӣ</string>
+    <string name="autumn">Пойиз</string>
+    <string name="mercury">Уторид</string>
+    <string name="venus">Зуҳра</string>
+    <string name="earth">Замин</string>
+    <string name="mars">Миррих</string>
+    <string name="jupiter">Муштарӣ</string>
+    <string name="saturn">Зуҳал</string>
+    <string name="uranus">Уронус</string>
+    <string name="neptune">Нептун</string>
+    <string name="pluto">Плутун</string>
+    <string name="lock">Қуфл</string>
+    <string name="ask_for_calendar_permission">Моилияд рӯйдодҳои шахситон аз тақвими дастгоҳ намоиш дода шавад?</string>
+    <string name="save">Захира</string>
+    <string name="nepali_calendar_short">Неполӣ</string>
+    <string name="chinese">Чинӣ</string>
+    <string name="yes">Бала</string>
+    <string name="high_latitudes_night_middle">Нимаи Шаб</string>
 </resources>

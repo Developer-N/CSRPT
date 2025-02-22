@@ -12,19 +12,21 @@ import com.byagowi.persiancalendar.PREF_LATITUDE
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_SELECTED_LOCATION
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.friendlyName
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.PREF_FIRST_START
 import ir.namoo.commons.locationtracker.LocationResult
 import ir.namoo.commons.locationtracker.LocationTracker
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.ProvinceModel
+import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -76,13 +78,23 @@ class IntroCustomLocationViewModel(
                     prayTimeRepository.getLocalProvinceList().sortedBy { it.name }
                 var localCityList = prayTimeRepository.getLocalCityList().sortedBy { it.name }
                 if (localCityList.isEmpty() || localProvinceList.isEmpty()) {
-                    localCityList = prayTimeRepository.updateAndGetCityList().sortedBy { it.name }
-                    localProvinceList =
-                        prayTimeRepository.getLocalProvinceList().sortedBy { it.name }
-                    _provinceList.value = localProvinceList
-                    _cityList.value = localCityList
-                    _selectedProvince.value = localProvinceList.first()
-                    _selectedCity.value = localCityList.first()
+                    prayTimeRepository.getAndUpdateCities().collectLatest { state ->
+                        when (state) {
+                            is DataState.Error -> {}
+                            DataState.Loading -> {}
+                            is DataState.Success -> {
+                                runCatching {
+                                    localCityList = state.data.sortedBy { it.name }
+                                    localProvinceList =
+                                        prayTimeRepository.getLocalProvinceList().sortedBy { it.name }
+                                    _provinceList.value = localProvinceList
+                                    _cityList.value = localCityList
+                                    _selectedProvince.value = localProvinceList.first()
+                                    _selectedCity.value = localCityList.first()
+                                }
+                            }
+                        }
+                    }
                 } else {
                     _provinceList.value = localProvinceList
                     _cityList.value = localCityList
@@ -142,7 +154,7 @@ class IntroCustomLocationViewModel(
 
     fun saveAndContinue(context: Context, startMainActivity: () -> Unit) {
         viewModelScope.launch {
-            context.appPrefs.edit {
+            context.preferences.edit {
                 putString(PREF_GEOCODED_CITYNAME, city.value)
                 putString(PREF_LATITUDE, latitude.value)
                 putString(PREF_LONGITUDE, longitude.value)

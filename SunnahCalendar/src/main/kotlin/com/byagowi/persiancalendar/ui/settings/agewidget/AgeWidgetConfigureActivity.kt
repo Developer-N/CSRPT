@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -34,28 +33,27 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.PREF_SELECTED_DATE_AGE_WIDGET
+import com.byagowi.persiancalendar.PREF_SELECTED_DATE_AGE_WIDGET_START
 import com.byagowi.persiancalendar.PREF_SELECTED_WIDGET_BACKGROUND_COLOR
 import com.byagowi.persiancalendar.PREF_SELECTED_WIDGET_TEXT_COLOR
 import com.byagowi.persiancalendar.PREF_TITLE_AGE_WIDGET
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.prefersWidgetsDynamicColorsFlow
-import com.byagowi.persiancalendar.ui.calendar.dialogs.DayPickerDialog
+import com.byagowi.persiancalendar.ui.common.DatePickerDialog
 import com.byagowi.persiancalendar.ui.settings.SettingsClickable
-import com.byagowi.persiancalendar.ui.settings.common.ColorPickerDialog
+import com.byagowi.persiancalendar.ui.settings.SettingsColor
 import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetDynamicColorsGlobalSettings
+import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetPreview
 import com.byagowi.persiancalendar.ui.theme.SystemTheme
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
-import com.byagowi.persiancalendar.ui.utils.makeWallpaperTransparency
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.applyLanguageToConfiguration
 import com.byagowi.persiancalendar.utils.createAgeRemoteViews
 import com.byagowi.persiancalendar.utils.getJdnOrNull
-import com.byagowi.persiancalendar.utils.getWidgetSize
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.putJdn
 import com.byagowi.persiancalendar.utils.update
 
@@ -64,7 +62,6 @@ class AgeWidgetConfigureActivity : ComponentActivity() {
         applyAppLanguage(this)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        window?.makeWallpaperTransparency()
 
         // Set the result to CANCELED.  This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
@@ -80,17 +77,19 @@ class AgeWidgetConfigureActivity : ComponentActivity() {
         fun confirm() {
             // Make sure we pass back the original appWidgetId
             setResult(
-                RESULT_OK,
-                Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             )
             update(this, false)
             finish()
         }
 
-        val appPrefs = appPrefs
+        val preferences = preferences
         // Put today's jdn if it wasn't set by the dialog, maybe a day counter is meant
-        if (appPrefs.getJdnOrNull(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId) == null)
-            appPrefs.edit { putJdn(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId, Jdn.today()) }
+        if (preferences.getJdnOrNull(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId) == null) {
+            preferences.edit {
+                putJdn(PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId, Jdn.today())
+            }
+        }
 
         setContent {
             SystemTheme { AgeWidgetConfigureContent(appWidgetId, ::confirm) }
@@ -105,39 +104,19 @@ class AgeWidgetConfigureActivity : ComponentActivity() {
 
 @Composable
 private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
-    Column(modifier = Modifier.safeDrawingPadding()) {
-        AndroidView(
-            factory = { context ->
-                val preview = FrameLayout(context)
-
-                val widgetManager = AppWidgetManager.getInstance(context)
-                val (width, height) = widgetManager.getWidgetSize(context.resources, appWidgetId)
-                fun updateWidget() {
-                    preview.addView(
-                        createAgeRemoteViews(context, width, height, appWidgetId)
-                            .apply(context.applicationContext, preview)
-                    )
-                }
-                updateWidget()
-
-                context.appPrefs.registerOnSharedPreferenceChangeListener { _, _ ->
-                    // TODO: Investigate why sometimes gets out of sync
-                    preview.post {
-                        preview.removeAllViews()
-                        updateWidget()
-                    }
-                }
-                preview
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 16.dp),
-        )
+    Column(
+        Modifier
+            .safeDrawingPadding()
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+    ) {
+        val today = remember { Jdn.today() }
+        WidgetPreview { context, width, height ->
+            createAgeRemoteViews(context, width, height, appWidgetId, today)
+        }
         Column(
             Modifier
                 .fillMaxSize()
                 .alpha(AppBlendAlpha)
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.extraLarge),
         ) {
             Column(
@@ -157,7 +136,7 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
 
                 val context = LocalContext.current
                 val initialTitle = remember {
-                    context.appPrefs.getString(PREF_TITLE_AGE_WIDGET + appWidgetId, null) ?: ""
+                    context.preferences.getString(PREF_TITLE_AGE_WIDGET + appWidgetId, null) ?: ""
                 }
                 var text by rememberSaveable { mutableStateOf(initialTitle) }
                 OutlinedTextField(
@@ -167,51 +146,54 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
                     value = text,
                     onValueChange = {
                         text = it
-                        context.appPrefs.edit {
-                            putString(
-                                PREF_TITLE_AGE_WIDGET + appWidgetId,
-                                text
-                            )
+                        context.preferences.edit {
+                            putString(PREF_TITLE_AGE_WIDGET + appWidgetId, text)
                         }
                     },
                     label = { Text(stringResource(R.string.age_widget_title)) },
                 )
 
-                SettingsClickable(stringResource(R.string.select_date)) { onDismissRequest ->
-                    val key = PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId
-                    val jdn = context.appPrefs.getJdnOrNull(key) ?: Jdn.today()
-                    DayPickerDialog(
-                        initialJdn = jdn,
-                        positiveButtonTitle = R.string.accept,
-                        onSuccess = { context.appPrefs.edit { putJdn(key, it) } },
-                        onDismissRequest = onDismissRequest,
-                    )
+                val primaryKey = PREF_SELECTED_DATE_AGE_WIDGET + appWidgetId
+                var primaryJdn by remember {
+                    mutableStateOf(context.preferences.getJdnOrNull(primaryKey) ?: today)
                 }
+                SettingsClickable(stringResource(R.string.select_date)) { onDismissRequest ->
+                    DatePickerDialog(initialJdn = primaryJdn, onDismissRequest = onDismissRequest) {
+                        primaryJdn = it
+                        context.preferences.edit { putJdn(primaryKey, it) }
+                    }
+                }
+
+                AnimatedVisibility(primaryJdn > today) {
+                    val secondaryKey = PREF_SELECTED_DATE_AGE_WIDGET_START + appWidgetId
+                    var jdn by remember {
+                        mutableStateOf(context.preferences.getJdnOrNull(secondaryKey) ?: today)
+                    }
+                    SettingsClickable(stringResource(R.string.starting_date)) { onDismissRequest ->
+                        DatePickerDialog(initialJdn = jdn, onDismissRequest = onDismissRequest) {
+                            jdn = it
+                            context.preferences.edit { putJdn(secondaryKey, it) }
+                        }
+                    }
+                }
+
                 val prefersWidgetsDynamicColors by prefersWidgetsDynamicColorsFlow.collectAsState()
                 WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors)
                 AnimatedVisibility(!prefersWidgetsDynamicColors) {
-                    SettingsClickable(
-                        stringResource(R.string.widget_text_color),
-                        stringResource(R.string.select_widgets_text_color)
-                    ) { onDismissRequest ->
-                        ColorPickerDialog(
-                            1,
-                            PREF_SELECTED_WIDGET_TEXT_COLOR + appWidgetId,
-                            onDismissRequest = onDismissRequest,
-                        )
-                    }
+                    SettingsColor(
+                        title = stringResource(R.string.widget_text_color),
+                        summary = stringResource(R.string.select_widgets_text_color),
+                        isBackgroundPick = false,
+                        key = PREF_SELECTED_WIDGET_TEXT_COLOR + appWidgetId,
+                    )
                 }
                 AnimatedVisibility(!prefersWidgetsDynamicColors) {
-                    SettingsClickable(
-                        stringResource(R.string.widget_background_color),
-                        stringResource(R.string.select_widgets_background_color)
-                    ) { onDismissRequest ->
-                        ColorPickerDialog(
-                            3,
-                            PREF_SELECTED_WIDGET_BACKGROUND_COLOR + appWidgetId,
-                            onDismissRequest = onDismissRequest,
-                        )
-                    }
+                    SettingsColor(
+                        title = stringResource(R.string.widget_background_color),
+                        summary = stringResource(R.string.select_widgets_background_color),
+                        isBackgroundPick = true,
+                        key = PREF_SELECTED_WIDGET_BACKGROUND_COLOR + appWidgetId,
+                    )
                 }
             }
         }

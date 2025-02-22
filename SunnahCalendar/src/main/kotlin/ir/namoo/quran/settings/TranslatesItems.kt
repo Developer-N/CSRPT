@@ -34,7 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
-    val translates by viewModel.translates.collectAsState()
+    val translates = viewModel.translates
     val fullFarsi by viewModel.isFullFarsiEnabled.collectAsState()
     val isKurdishEnabled by viewModel.isKurdishEnabled.collectAsState()
     var showReorderDialog by remember { mutableStateOf(false) }
@@ -64,10 +64,12 @@ fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
             //Farsi Translate
             translates.find { it.id == 1 }?.let {
                 Row {
-                    MySwitchBox(checked = it.isActive, label = it.name, onCheckChanged = { active ->
-                        it.isActive = active
-                        viewModel.updateSetting(it)
-                    })
+                    MySwitchBox(
+                        checked = it.isActive,
+                        label = it.name,
+                        onCheckChanged = { isActive ->
+                            viewModel.updateSetting(it, isActive)
+                        })
                     AnimatedVisibility(
                         visible = it.isActive,
                         enter = expandHorizontally(),
@@ -81,9 +83,8 @@ fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
             }
             //English translate
             translates.find { it.id == 2 }?.let {
-                MySwitchBox(checked = it.isActive, label = it.name, onCheckChanged = { active ->
-                    it.isActive = active
-                    viewModel.updateSetting(it)
+                MySwitchBox(checked = it.isActive, label = it.name, onCheckChanged = { isActive ->
+                    viewModel.updateSetting(it, isActive)
                 })
             }
             //Kurdish translate
@@ -96,15 +97,16 @@ fun TranslateItems(viewModel: SettingViewModel = koinViewModel()) {
                     modifier = Modifier
                         .padding(16.dp, 2.dp)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalArrangement = Arrangement.Center
                 ) {
                     translates.filter { it.id > 2 }.forEach { item ->
-                        MySwitchBox(checked = item.isActive, label = item.name, onCheckChanged = {
-                            viewModel.updateSetting(item.apply {
-                                isActive = it
+                        MySwitchBox(
+                            checked = item.isActive,
+                            label = item.name,
+                            onCheckChanged = { isActive ->
+                                viewModel.updateSetting(item, isActive)
                             })
-                        })
                     }
                 }
             }

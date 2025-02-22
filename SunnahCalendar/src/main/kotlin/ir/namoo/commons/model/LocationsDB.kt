@@ -36,7 +36,8 @@ abstract class LocationsDB : RoomDatabase() {
                 val ins = Room.databaseBuilder(
                     context.applicationContext,
                     LocationsDB::class.java, "city.db"
-                ).fallbackToDestructiveMigration().allowMainThreadQueries().build()
+                ).fallbackToDestructiveMigration(dropAllTables = true).allowMainThreadQueries()
+                    .build()
                 instance = ins
                 ins
             }

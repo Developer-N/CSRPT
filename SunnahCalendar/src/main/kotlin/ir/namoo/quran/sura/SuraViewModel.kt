@@ -1,8 +1,14 @@
 package ir.namoo.quran.sura
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.edit
 import androidx.core.text.HtmlCompat
 import androidx.core.text.isDigitsOnly
@@ -12,18 +18,28 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import androidx.navigation.NavController
+import com.byagowi.persiancalendar.R
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.android.Android
+import ir.namoo.commons.PREF_AUTO_SCROLL
+import ir.namoo.commons.downloader.DownloadResult
+import ir.namoo.commons.downloader.downloadFile
+import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.digitsOf
+import ir.namoo.quran.TawhidDB
 import ir.namoo.quran.chapters.data.ChapterEntity
+import ir.namoo.quran.chapters.data.ChapterRepository
 import ir.namoo.quran.db.FileDownloadEntity
 import ir.namoo.quran.db.FileDownloadRepository
 import ir.namoo.quran.db.LastVisitedRepository
 import ir.namoo.quran.download.QuranDownloader
 import ir.namoo.quran.player.QuranPlayerService
 import ir.namoo.quran.player.getPlayList
+import ir.namoo.quran.player.isQuranDownloaded
+import ir.namoo.quran.player.isTranslateDownloaded
 import ir.namoo.quran.qari.QariEntity
 import ir.namoo.quran.qari.QariRepository
 import ir.namoo.quran.settings.data.QuranSettingRepository
@@ -47,95 +63,119 @@ import ir.namoo.quran.utils.getSelectedQuranDirectoryPath
 import ir.namoo.quran.utils.getSuraFileName
 import ir.namoo.quran.utils.getWordsForSearch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.lang.Thread.sleep
 
 class SuraViewModel(
+    private val chapterRepository: ChapterRepository,
     private val quranRepository: QuranRepository,
     private val quranSettingRepository: QuranSettingRepository,
     private val qariRepository: QariRepository,
     private val prefs: SharedPreferences,
     private val quranDownloader: QuranDownloader,
     private val downloadRepository: FileDownloadRepository,
-    private val lastVisitedRepository: LastVisitedRepository
+    private val lastVisitedRepository: LastVisitedRepository,
+    private val tawhidDB: TawhidDB
 ) : ViewModel() {
+
     private val _isSearchBarOpen = MutableStateFlow(false)
     val isSearchBarOpen = _isSearchBarOpen.asStateFlow()
 
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
-    private val _resultIDs = MutableStateFlow(emptyList<Int>())
+
+    private val _resultIDs = mutableStateListOf<Int>()
+    val resultIDs = _resultIDs
 
     private val _chapter = MutableStateFlow<ChapterEntity?>(null)
     val chapter = _chapter.asStateFlow()
 
-    private val _quranList = MutableStateFlow(listOf<QuranEntity>())
-    val quranList = _resultIDs.combine(_quranList) { idList, quranList ->
-        quranList.filter { idList.contains(it.id) }
-    }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), _quranList.value
-    )
+    private val _quranList = mutableStateListOf<QuranEntity>()
+    val quranList = _quranList
 
-    private val _enabledTranslates = MutableStateFlow(listOf<List<TranslateItem>>())
-    val enabledTranslates = _enabledTranslates.asStateFlow()
+    private val _enabledTranslates = mutableStateListOf<TranslateItem>()
+    val enabledTranslates = _enabledTranslates
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
-    private val _tafsirs = MutableStateFlow(listOf<TafsirEntity>())
+
+    private val _tafsirs = mutableStateListOf<TafsirEntity>()
 
     private val _lastVisitedAya = MutableStateFlow(0)
     private val lastVisitedAya = _lastVisitedAya.asStateFlow()
 
-    private val _sura = MutableStateFlow(1)
-    val sura = _sura.asStateFlow()
+    private val _currentSura = MutableStateFlow(1)
+    val currentSura = _currentSura.asStateFlow()
 
-    private var _navController: NavController? = null
-    fun loadDate(sura: Int, navController: NavController) {
+    private val _scrollToTop = MutableStateFlow(0)
+    val scrollToTop = _scrollToTop.asStateFlow()
+
+    private val _autoScroll = MutableStateFlow(true)
+    val autoScroll = _autoScroll.asStateFlow()
+
+    private val chapters = mutableStateListOf<ChapterEntity>()
+
+    init {
+        viewModelScope.launch {
+            chapters.clear()
+            chapters.addAll(chapterRepository.getAllChapters())
+            updateTawheed()
+        }
+    }
+
+    fun loadDate(sura: Int, scrollToTop: Boolean = true) {
         viewModelScope.launch {
             _isLoading.value = true
-            _navController = navController
-            _sura.value = sura
-            _chapter.value = quranRepository.getChapter(sura)
-            _quranList.value = quranRepository.getQuran(sura)
-            _tafsirs.value = quranRepository.getTafsir(sura)
+            _currentSura.value = sura
+            _autoScroll.value = prefs.getBoolean(PREF_AUTO_SCROLL, true)
+            quranSettingRepository.getTranslatesSettings().collectLatest { state ->
+                when (state) {
+                    is DataState.Error -> {
+                        _isLoading.value = false
+                        Log.e("SettingViewModel", "loadTranslatesSettings: ${state.message}")
+                    }
 
-            val enabledTranslates =
-                quranSettingRepository.getTranslatesSettings().filter { it.isActive }
+                    DataState.Loading -> _isLoading.value = true
+                    is DataState.Success -> {
+                        _chapter.value = chapters.first { it.sura == sura }
+                        _quranList.clear()
+                        _quranList.addAll(quranRepository.getQuran(sura))
+                        _tafsirs.clear()
+                        _tafsirs.addAll(quranRepository.getTafsir(sura))
 
-            val translates = mutableListOf<List<TranslateItem>>()
-            for (i in 0..<quranList.value.size) {
-                val tmpList = mutableListOf<TranslateItem>()
-                for (e in enabledTranslates) tmpList.add(
-                    TranslateItem(
-                        _tafsirs.value[i].verseID,
-                        e.name,
-                        getTranslate(_tafsirs.value[i], e.name),
-                        when (e.name) {
-                            "فارسی نور(خرم دل)" -> TranslateType.FARSI
-                            "صحیح - انگلیسی" -> TranslateType.ENGLISH
-                            else -> TranslateType.KURDISH
+                        _resultIDs.clear()
+                        _quranList.forEach {
+                            if (!_resultIDs.contains(it.id)) _resultIDs.add(it.id)
                         }
-                    )
-                )
-
-                translates.add(tmpList)
+                        val enabledTranslates = state.data.filter { it.isActive }
+                        _enabledTranslates.clear()
+                        _quranList.forEachIndexed { index, quran ->
+                            for (translate in enabledTranslates) {
+                                _enabledTranslates.add(
+                                    TranslateItem(
+                                        quran.verseID,
+                                        translate.name,
+                                        getTranslate(_tafsirs[index], translate.name),
+                                        when (translate.name) {
+                                            "فارسی نور(خرم دل)" -> TranslateType.FARSI
+                                            "صحیح - انگلیسی" -> TranslateType.ENGLISH
+                                            else -> TranslateType.KURDISH
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                        if (scrollToTop) _scrollToTop.value++
+                        _isLoading.value = false
+                    }
+                }
             }
-
-            val tmp = mutableListOf<Int>()
-            _quranList.value.forEach {
-                if (!tmp.contains(it.id)) tmp.add(it.id)
-            }
-            _resultIDs.value = tmp
-
-            _enabledTranslates.value = translates
-            _isLoading.value = false
         }
     }
 
@@ -177,9 +217,9 @@ class SuraViewModel(
     fun updateBookMark(quran: QuranEntity) {
         viewModelScope.launch {
             _isLoading.value = true
-            quran.fav = if (quran.fav == 1) 0 else 1
-            quranRepository.updateQuran(quran)
-            _quranList.value.find { it.id == quran.id }?.apply { fav = quran.fav }
+            val index = _quranList.indexOf(quran)
+            quranRepository.updateQuran(quran.copy(fav = if (quran.fav == 1) 0 else 1))
+            _quranList[index] = _quranList[index].copy(fav = if (quran.fav == 1) 0 else 1)
             _isLoading.value = false
         }
     }
@@ -187,74 +227,130 @@ class SuraViewModel(
     fun updateNote(quran: QuranEntity, newNote: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            quran.note = newNote
-            quranRepository.updateQuran(quran)
-            _quranList.value.find { it.id == quran.id }?.apply { note = newNote }
+            val index = _quranList.indexOf(quran)
+            quranRepository.updateQuran(quran.copy(note = newNote))
+            _quranList[index] = _quranList[index].copy(note = newNote)
             _isLoading.value = false
         }
+    }
+
+    fun updateAutoScroll() {
+        _autoScroll.value = !_autoScroll.value
+        prefs.edit().putBoolean(PREF_AUTO_SCROLL, _autoScroll.value).apply()
     }
 
     fun onQuery(query: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            _query.update { query }
+            _query.value = query
             if (query.isNotEmpty() && query.isDigitsOnly()) {
                 _isLoading.value = false
                 return@launch
             }
             withContext(Dispatchers.IO) {
-                val tmp = mutableListOf<Int>()
-                if (query.getWordsForSearch().isEmpty()) _quranList.value.forEach {
-                    if (!tmp.contains(it.id)) tmp.add(it.id)
+                _resultIDs.clear()
+                if (query.getWordsForSearch().isEmpty()) _quranList.forEach {
+                    if (!_resultIDs.contains(it.id)) _resultIDs.add(it.id)
                 }
                 else query.getWordsForSearch().forEach { word ->
-                    _quranList.value.forEach {
-                        if (!tmp.contains(it.id) && it.quranClean.contains(word)) tmp.add(it.id)
+                    _quranList.forEach {
+                        if (!_resultIDs.contains(it.id) && it.quranClean.contains(word)) _resultIDs.add(
+                            it.id
+                        )
                     }
-                    _enabledTranslates.value.forEach { tList ->
-                        tList.forEach { translate ->
-                            if (translate.text.contains(word)) {
-                                val id =
-                                    quranList.value.find { it.verseID == translate.ayaID }?.id ?: -1
-                                if (id > 0 && !tmp.contains(id)) tmp.add(id)
-                            }
+                    _enabledTranslates.forEach { translate ->
+                        if (translate.text.contains(word)) {
+                            val id = quranList.find { it.verseID == translate.verseID }?.id ?: -1
+                            if (id > 0 && !_resultIDs.contains(id)) _resultIDs.add(id)
                         }
                     }
                 }
-                _resultIDs.value = tmp
             }
             _isLoading.value = false
         }
     }
 
+    fun goToNextSura() {
+        _currentSura.value++
+        if (_currentSura.value > 114) _currentSura.value = 1
+        loadDate(_currentSura.value)
+    }
+
+    fun goToPrevSura() {
+        _currentSura.value--
+        if (_currentSura.value < 1) _currentSura.value = 114
+        loadDate(_currentSura.value)
+    }
+
     // ====================================== Player
     private lateinit var mediaController: ListenableFuture<MediaController>
-    private lateinit var controller: MediaController
+    lateinit var controller: MediaController
     private lateinit var folderName: String
     private lateinit var translateFolderName: String
-    private val _qariList = MutableStateFlow(emptyList<QariEntity>())
-
+    private val qariList = mutableStateListOf<QariEntity>()
 
     private val _playingAya = MutableStateFlow(0)
     val playingAya = _playingAya.asStateFlow()
 
     private val _playingSura = MutableStateFlow(0)
+    val playingSura = _playingSura.asStateFlow()
 
+    private val _playingSuraName = MutableStateFlow("")
+    val playingSuraName = _playingSuraName.asStateFlow()
+
+    // ================= for PlayerUI
+    private val _isPlayerStoped = MutableStateFlow(true)
+    val isPlayerStoped = _isPlayerStoped.asStateFlow()
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying = _isPlaying.asStateFlow()
+
+    private val _currentMediaItem = MutableStateFlow<MediaItem?>(null)
+    val currentMediaItem = _currentMediaItem.asStateFlow()
+
+    private val _currentPosition = MutableStateFlow(0L)
+    val currentPosition = _currentPosition.asStateFlow()
+
+    private val _duration = MutableStateFlow(0L)
+    val duration = _duration.asStateFlow()
+
+    private var handler = Handler(Looper.getMainLooper())
 
     fun setupPlayer(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
             runCatching {
-                val sessionToken =
-                    SessionToken(context, ComponentName(context, QuranPlayerService::class.java))
+                val sessionToken = SessionToken(
+                    context, ComponentName(context, QuranPlayerService::class.java)
+                )
                 mediaController = MediaController.Builder(context, sessionToken).buildAsync()
                 mediaController.addListener({
                     controller = mediaController.get()
                     initController(context)
+                    if (controller.isPlaying) {
+                        controller.currentMediaItem.let { mediaItem ->
+                            _currentMediaItem.value = mediaItem
+                            mediaItem?.let {
+                                val sura =
+                                    it.mediaMetadata.title.toString().split("|")[0].digitsOf()
+                                        .toInt()
+                                val aya = it.mediaMetadata.title.toString().split("|")[1].digitsOf()
+                                    .toInt()
+                                _playingAya.value = aya
+                                _playingSura.value = sura
+                                _isPlaying.value = true
+                                _playingSuraName.value =
+                                    chapters.find { chapter -> chapter.sura == sura }?.nameArabic
+                                        ?: ""
+                                _isPlayerStoped.value = false
+                            }
+                        }
+                    }
                 }, MoreExecutors.directExecutor())
 
                 loadFolders(context, getAyaFileName(1, 1))
-                _qariList.value = qariRepository.getQariList()
+                qariList.clear()
+                qariList.addAll(qariRepository.getQariList())
             }.onFailure { }
             _isLoading.value = false
         }
@@ -287,95 +383,150 @@ class SuraViewModel(
             )
         }
 
-    fun updatePlayingAya(aya: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            if (!isSearchBarOpen.value) _playingAya.value = aya
-            else _playingAya.value = 0
-            _isLoading.value = false
-        }
-    }
-
     fun onPlay(context: Context, sura: Int, aya: Int) {
         viewModelScope.launch {
-            loadFolders(context, getAyaFileName(sura, aya))
-            if (playingAya.value == aya && _playingSura.value == sura) {
-                controller.stop()
-                updatePlayingAya(0)
+            loadFolders(context, getAyaFileName(sura, 2))
+            if (playingAya.value == aya && playingSura.value == sura) {
+                stop()
                 return@launch
             }
+            _isPlaying.value = true
+            _isPlayerStoped.value = false
             if (controller.isPlaying) controller.stop()
             if (controller.mediaItemCount > 0) controller.clearMediaItems()
             controller.addMediaItems(
-                getPlayList(
-                    context,
+                getPlayList(context,
                     sura,
                     aya,
                     folderName,
                     translateFolderName,
-                    _qariList.value,
-                    chapter.value
-                )
+                    qariList,
+                    chapters.find { it.sura == sura })
             )
             controller.prepare()
             controller.play()
+            startTimer()
             _playingSura.value = sura
+            _playingSuraName.value = chapters.find { it.sura == sura }?.nameArabic ?: ""
         }
+    }
+
+    private fun startTimer() {
+        viewModelScope.launch {
+            while (true) {
+                handler.post {
+                    _currentPosition.value = controller.currentPosition
+                }
+                delay(100)
+            }
+        }
+    }
+
+    fun pause() {
+        controller.pause()
+        _isPlaying.value = false
+    }
+
+    fun resume() {
+        controller.play()
+        startTimer()
+        _isPlaying.value = true
+    }
+
+    fun stop() {
+        controller.stop()
+        _playingAya.value = 0
+        _isPlayerStoped.value = true
+    }
+
+    fun seekTo(position: Long) {
+        _currentPosition.value = position
+        controller.seekTo(position)
+    }
+
+    fun next() {
+        controller.seekToNext()
+    }
+
+    fun previous() {
+        controller.seekToPrevious()
     }
 
     private fun initController(context: Context) {
         controller.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
+                _currentMediaItem.value = mediaItem
                 mediaItem?.let {
                     val sura = it.mediaMetadata.title.toString().split("|")[0].digitsOf().toInt()
                     val aya = it.mediaMetadata.title.toString().split("|")[1].digitsOf().toInt()
-                    if (chapter.value?.sura != sura && _playingAya.value > 0) updatePlayingAya(0)
-                    else if (chapter.value?.sura == sura && _playingAya.value != aya) updatePlayingAya(
-                        aya
-                    )
+                    _playingAya.value = aya
                     _playingSura.value = sura
+                    _isPlaying.value = true
+                    _playingSuraName.value =
+                        chapters.find { chapter -> chapter.sura == sura }?.nameArabic ?: ""
+                    _isPlayerStoped.value = false
                 }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
-                if (playbackState == Player.STATE_ENDED) {
-                    updatePlayingAya(0)
-                    if (prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)) {
-                        if (_playingSura.value == sura.value)
-                            _navController?.navigate("sura/${if (_playingSura.value == 114) 1 else (_playingSura.value + 1)}/1?play=true") {
-                                popUpTo("chapters")
+                viewModelScope.launch {
+                    if (playbackState == Player.STATE_ENDED) {
+                        _playingAya.value = 0
+                        if (prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)) {
+                            if (_playingSura.value == currentSura.value && !_isSearchBarOpen.value) {
+                                goToNextSura()
                             }
-                        else
-                            onPlay(
+                            val nextSura =
+                                if (_playingSura.value == 114) 1 else (_playingSura.value + 1)
+                            if (!isQuranDownloaded(context, nextSura)) Toast.makeText(
                                 context,
-                                if (_playingSura.value == 114) 1 else (_playingSura.value + 1),
-                                1
-                            )
-                    } else controller.stop()
+                                context.getString(R.string.audio_files_error),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            else if (!isTranslateDownloaded(context, nextSura)) Toast.makeText(
+                                context,
+                                context.getString(R.string.audio_translate_files_error),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            else withContext(Dispatchers.IO) {
+                                sleep(3000)
+                                onPlay(context, nextSura, 1)
+                            }
+                        } else {
+                            controller.stop()
+                            _isPlaying.value = false
+                            _isPlayerStoped.value = true
+                        }
+                    }
                 }
+            }
+
+            override fun onEvents(player: Player, events: Player.Events) {
+                super.onEvents(player, events)
+                _duration.value = player.duration
             }
         })
     }
 
     fun downloadQuranFiles(context: Context) {
         viewModelScope.launch {
-            val qari = _qariList.value.find { folderName.contains(it.folderName) } ?: return@launch
+            val qari = qariList.find { folderName.contains(it.folderName) } ?: return@launch
             downloadAudioFiles(context, qari)
         }
     }
 
     fun downloadTranslateFiles(context: Context) {
         viewModelScope.launch {
-            val qari = _qariList.value.find { translateFolderName.contains(it.folderName) }
-                ?: return@launch
+            val qari =
+                qariList.find { translateFolderName.contains(it.folderName) } ?: return@launch
             downloadAudioFiles(context, qari)
         }
     }
 
     private fun downloadAudioFiles(context: Context, qari: QariEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val sura = chapter.value?.sura ?: return@launch
             val oldRequest = downloadRepository.findDownloadByFileId()
                 .filter { (it.sura == sura && it.folderPath.contains(qari.folderName)) }
@@ -404,8 +555,8 @@ class SuraViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         MediaController.releaseFuture(mediaController)
+        super.onCleared()
     }
 
     fun updateLastVisited(aya: Int) {
@@ -429,10 +580,8 @@ class SuraViewModel(
     }
 
     fun updateSureViewSate(isOpen: Boolean) {
-        viewModelScope.launch {
-            prefs.edit {
-                putBoolean(PREF_IS_SURA_VIEW_IS_OPEN, isOpen)
-            }
+        prefs.edit {
+            putBoolean(PREF_IS_SURA_VIEW_IS_OPEN, isOpen)
         }
     }
 
@@ -442,5 +591,43 @@ class SuraViewModel(
 
     fun closeSearchBar() {
         _isSearchBarOpen.value = false
+    }
+
+    @SuppressLint("SdCardPath")
+    private fun updateTawheed() {
+        //Update Tawhid tafseer if need, can remove in future.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val tawhidList = quranRepository.getTafsir(112)
+                //if is fresh return
+                if (tawhidList[2].tawhid == "(٣) نە كەسى لێ بووە و نە لە كەسیش بووە.") return@launch
+                val packageName = "ir.namoo.religiousprayers"
+                val dbFile = File("/data/data/$packageName/databases/tafseeri_tawhid.db")
+                if (dbFile.exists()) dbFile.delete()
+                val ktor = HttpClient(Android)
+                ktor.downloadFile(
+                    dbFile,
+                    "https://github.com/Developer-N/QuranProject/raw/refs/heads/main/AndroidDB/tafseeri_tawhid.db"
+                ).collectLatest { status ->
+                    when (status) {
+                        is DownloadResult.Error -> {}
+                        is DownloadResult.Progress -> {}
+                        DownloadResult.Success -> {
+                            val newTawhid = tawhidDB.tawhidDAO().getAll()
+                            quranRepository.getTafsir().forEachIndexed { index, oldItem ->
+                                quranRepository.updateTafsir(
+                                    oldItem.copy(
+                                        tawhid = newTawhid[index].text
+                                    )
+                                )
+                            }
+                            dbFile.deleteOnExit()
+                        }
+
+                        is DownloadResult.TotalSize -> {}
+                    }
+                }
+            }.onFailure {}
+        }
     }
 }//end of class SuraViewModel

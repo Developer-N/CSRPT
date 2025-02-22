@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.entities
 
 import com.byagowi.persiancalendar.global.weekDays
+import com.byagowi.persiancalendar.global.weekDaysInitials
 import com.byagowi.persiancalendar.global.weekEnds
 import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
 import com.byagowi.persiancalendar.utils.toCivilDate
@@ -19,19 +20,21 @@ import kotlin.math.ceil
 @JvmInline
 value class Jdn(val value: Long) {
     constructor(value: AbstractDate) : this(value.toJdn())
-    constructor(calendar: CalendarType, year: Int, month: Int, day: Int) :
+    constructor(calendar: Calendar, year: Int, month: Int, day: Int) :
             this(calendar.createDate(year, month, day))
 
     // 0 means Saturday in it, see #`test day of week from jdn`() in the testsuite
-    val dayOfWeek: Int get() = ((value + 2L) % 7L).toInt()
+    val weekDay: Int get() = ((value + 2L) % 7L).toInt()
+    val weekDayName: String get() = weekDays[this.weekDay]
+    val weekDayNameInitials: String get() = weekDaysInitials[this.weekDay]
 
-    fun isWeekEnd() = weekEnds[this.dayOfWeek]
+    val isWeekEnd: Boolean get() = weekEnds[this.weekDay]
 
-    fun toCalendar(calendar: CalendarType): AbstractDate = when (calendar) {
-        CalendarType.ISLAMIC -> toIslamicDate()
-        CalendarType.GREGORIAN -> toCivilDate()
-        CalendarType.SHAMSI -> toPersianDate()
-        CalendarType.NEPALI -> toNepaliDate()
+    infix fun on(calendar: Calendar): AbstractDate = when (calendar) {
+        Calendar.ISLAMIC -> toIslamicDate()
+        Calendar.GREGORIAN -> toCivilDate()
+        Calendar.SHAMSI -> toPersianDate()
+        Calendar.NEPALI -> toNepaliDate()
     }
 
     fun toIslamicDate() = IslamicDate(value)
@@ -53,22 +56,24 @@ value class Jdn(val value: Long) {
 
     fun getWeekOfYear(startOfYear: Jdn): Int {
         val dayOfYear = this - startOfYear
-        return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(this.dayOfWeek)) / 7.0).toInt()
+        return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(this.weekDay)) / 7.0).toInt()
     }
 
-    val dayOfWeekName: String get() = weekDays[this.dayOfWeek]
-
-    fun calculatePersianSeasonPassedDaysAndCount(): Pair<Int, Int> {
+    // Days passed in a season and total days available in the season
+    // The result is a (passedDaysInSeason, totalSeasonDays)
+    fun getPositionInSeason(): Pair<Int, Int> {
         val persianDate = this.toPersianDate()
         val season = (persianDate.month - 1) / 3
         val seasonBeginning = PersianDate(persianDate.year, season * 3 + 1, 1)
         val seasonBeginningJdn = Jdn(seasonBeginning)
-        return this - seasonBeginningJdn + 1 to
-                Jdn(seasonBeginning.monthStartOfMonthsDistance(3)) - seasonBeginningJdn
+        return this - seasonBeginningJdn + 1 to Jdn(seasonBeginning.monthStartOfMonthsDistance(3)) - seasonBeginningJdn
     }
 
-    operator fun rangeTo(toJdn: Jdn): Sequence<Jdn> =
-        (this.value..toJdn.value).asSequence().map(::Jdn)
+    operator fun rangeTo(that: Jdn): Sequence<Jdn> =
+        (this.value..that.value).asSequence().map(::Jdn)
+
+    operator fun rangeUntil(that: Jdn): Sequence<Jdn> =
+        (this.value..<that.value).asSequence().map(::Jdn)
 
     companion object {
         fun today() = Jdn(Date().toGregorianCalendar().toCivilDate())

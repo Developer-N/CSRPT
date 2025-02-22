@@ -75,9 +75,7 @@
     <string name="in_city_time">بە ئاسۆی %1$s</string>
     <string name="date_copied_clipboard">«%1$s» لە کلیپبۆرددا کۆپی کرا.</string>
     <string name="stop">ڕاگرتن</string>
-    <string name="goto_date">بڕۆ بۆ ڕێککەوت</string>
-    <string name="go">بڕۆ</string>
-    <string name="pleasewaitgps">کەمێک ڕاوەستن… ئەگەر پاش خولەکێک ئاکامێک نەبوو دڵنیا بن GPSی ئامرازەکە چالاکە. ئەگەر بەمەش دەرجی نەھات، لەوانەیە پێویست بێ ڕێگەیەکی تر تاقی بکەنەوە</string>
+    <string name="wait_for_gps">کەمێک ڕاوەستن… ئەگەر پاش خولەکێک ئاکامێک نەبوو دڵنیا بن GPSی ئامرازەکە چالاکە. ئەگەر بەمەش دەرجی نەھات، لەوانەیە پێویست بێ ڕێگەیەکی تر تاقی بکەنەوە</string>
     <string name="notify_date_lock_screen">نیشاندانی ئاگاداری لە قفڵی شاشەدا</string>
     <string name="notify_date_lock_screen_summary">تەنیا کاتێک کە شێوازێکی قفڵی شاشە ڕێک‌خرابێ کار دەکا.</string>
     <string name="warn_if_events_not_set">بۆ چالاککردن و ھەروەھا ھەڵبژاردنی بۆنە دڵخوازەکانتان بچنە سەر بەشی ڕێکخستن</string>
@@ -114,8 +112,8 @@
     <string name="about_license_sum">تاوتوێکردنی مۆڵەتی GPLv3 و مەرجەکانی تری بەکارھێنراو لە ڕۆژژمێری فارسیدا.</string>
     <string name="help">یارمەتی</string>
     <string name="about_report_bug">ڕاپۆرتی ھەڵە</string>
-    <string name="about_sendMail">ئیمەیل</string>
-    <string name="about_noClient">بەرنامەیەک بۆ ناردنی ئیمەیل نەدۆزرایەوە</string>
+    <string name="about_send_mail">ئیمەیل</string>
+    <string name="about_no_client">بەرنامەیەک بۆ ناردنی ئیمەیل نەدۆزرایەوە</string>
     <string name="about_developers">پەرەپێدەران (بە شێوەیەکی هەڕەمەکی ریزکراون)</string>
     <string name="about_support_developers">پشتیوانی لە پەرەپێدەر</string>
     <string name="about_email_sum">ناردنی ئیمەیلی کەسی بۆ دانەرانی بەرنامە</string>
@@ -126,9 +124,9 @@
     <string name="start_of_year_diff">%1$s ڕۆژ (~%2$s حەفتە یان %3$s مانگ) لە سەرەتای ساڵەوە</string>
     <string name="end_of_year_diff">%1$s ڕۆژ (~%2$s حەفتە یان %3$s مانگ) بۆ کۆتای ساڵ</string>
     <!-- Sun Info -->
-    <string name="sunriseSunView">ڕۆژھەڵات</string>
-    <string name="middaySunView">نیوەڕۆ</string>
-    <string name="sunsetSunView">ڕۆژاوا</string>
+    <string name="sunrise_sun_view">ڕۆژھەڵات</string>
+    <string name="midday_sun_view">نیوەڕۆ</string>
+    <string name="sunset_sun_view">ڕۆژاوا</string>
     <string name="no_event">بۆنە یان ڕووداوێک بۆ ئەم ڕۆژە نەدۆزرایەوە</string>
     <string name="length_of_day">ڕۆژگار</string>
     <string name="remaining_daylight">ماوەوە</string>
@@ -159,11 +157,11 @@
     <string name="animal_year_name_dragon">ئەژدەھا</string>
     <string name="animal_year_name_snake">مار</string>
     <string name="animal_year_name_horse">ئەسپ</string>
-    <string name="animal_year_name_goat">پەز</string>
+    <string name="animal_year_name_goat">بزن</string>
     <string name="level">تەراز</string>
     <string name="calibrate_compass_summary">بۆ باشترکردنی دیقەتی ڕووگەنوێن، لە شتی موگناتیسی دوور بنەوە، سەر و خوار بە ئامرازکە بکەن و لە گشت تەوەرەکاندا بیھێنن و بیبەن.</string>
     <string name="set_location">بۆ نیشاندانی شوێنی خۆر، مانگ و ئاراستەی ڕووگە لە بەشی ڕێکخستندا شوێنەکەتان ڕێک بخەن.</string>
-    <string name="moonInScorpio">ڕۆژانی مانگ لە دووپشکدا</string>
+    <string name="moon_in_scorpio">ڕۆژانی مانگ لە دووپشکدا</string>
     <string name="astronomy">ئەستێرەناسی</string>
     <string name="astronomical_info_summary">نیشاندانی زانیاریگەلێک وەک کەلوو، ناوی ساڵ و مانگ لە دووپشکدا</string>
     <string name="islamic_offset">چاکسازیی ڕێککەوتی کۆچیی مانگی</string>
@@ -198,11 +196,11 @@
     <string name="shift_work_starting_date">ڕۆژی ھەڵبژێردراو لە ڕۆژژمێردا (%1$s) سەرەتای نۆرەکارە.</string>
     <string name="shift_work_starting_date_edit">ڕۆژی دیاریکراوی پێشوو (%1$s) سەرەتای نۆرەکارە.</string>
     <string name="shift_work_reset_button">ناچالاککردن یان ڕێکخستنەوە</string>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="one">%1$s خولەک</item>
         <item quantity="other">%1$s خولەک</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s کاتژمێر</item>
         <item quantity="other">%1$s کاتژمێر</item>
     </plurals>
@@ -236,23 +234,23 @@
     <string name="widget_age_name">ڕۆژژمێری فارسی (تەمەن)</string>
     <string name="age_widget_title">سەردێڕی ویجیت</string>
     <string name="select_date">ھەڵبژاردنی ڕێککەوت</string>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s ڕۆژ</item>
         <item quantity="other">%1$s ڕۆژ</item>
     </plurals>
-    <plurals name="n_work_days">
+    <plurals name="work_days">
         <item quantity="one">تەنها یەک ڕۆژی کاری</item>
         <item quantity="other">%1$s ڕۆژی کاری</item>
     </plurals>
-    <plurals name="n_weeks">
+    <plurals name="weeks">
         <item quantity="one">تەنها یەک حەفتە</item>
         <item quantity="other">%1$s حەفتە</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s مانگ</item>
         <item quantity="other">%1$s مانگ</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s ساڵ</item>
         <item quantity="other">%1$s ساڵ</item>
     </plurals>
@@ -391,7 +389,7 @@
     <string name="true_north">باکووری ڕاستی</string>
     <string name="lock">قوفڵ</string>
     <string name="yes">بەڵێ</string>
-    <plurals name="n_seconds">
+    <plurals name="seconds">
         <item quantity="one">تەنها یەک چرکە</item>
         <item quantity="other">%1$s چرکە</item>
     </plurals>
@@ -404,4 +402,17 @@
     <string name="full_screen">پڕ بە شاشە</string>
     <string name="open_drawer">کردنەوەی لیستی ڕێنیشاندەر</string>
     <string name="more_options">هەڵبژاردەی زیاتر</string>
+    <string name="ask_for_calendar_permission">ئایا دەتەوێت ڕووداوە کەسییەکانت لە ساڵنامەی ئامێرەکەتەوە چالاک بکەیت؟</string>
+    <string name="year_view">دیمەنی ساڵ</string>
+    <string name="holidays_in_red">جەژنەکان بە ڕەنگی سوور</string>
+    <string name="add_widget">ویجت زیاد بکە</string>
+    <string name="widget_background_transparency">شەفافیەتی پاشبنەمای ویجت</string>
+    <string name="save">هەڵگرتن</string>
+    <string name="exempt_app_battery_optimization">ئایا دەتەوێت ئەپەکە زیاد بکەیت بۆ ئیستسنای باشکردنی باتری بۆ کارایی دروستی ئاگادارکردنەوەکە؟</string>
+    <string name="week_view">پێشاندانی حەفتانە</string>
+    <string name="schedule">بەرنامە</string>
+    <string name="print">چاپکردن</string>
+    <string name="daily_schedule">بەرنامەی ڕۆژانە</string>
+    <string name="day_view">پێشاندانی ڕۆژانە</string>
+    <string name="vibration">لەرزین</string>
 </resources>

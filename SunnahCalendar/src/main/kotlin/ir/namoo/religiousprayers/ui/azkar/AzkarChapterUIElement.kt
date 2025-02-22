@@ -1,8 +1,8 @@
 package ir.namoo.religiousprayers.ui.azkar
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,11 +16,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -31,11 +28,10 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarChapter
-import kotlinx.coroutines.launch
 
 @Composable
-fun ZikrChapterUI(
-    zikr: AzkarChapter,
+fun AzkarChapterUI(
+    azkar: AzkarChapter,
     lang: String,
     searchText: String = "",
     onFavClick: (zkr: AzkarChapter) -> Unit,
@@ -44,25 +40,27 @@ fun ZikrChapterUI(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .clickable { onCardClick(zikr.id) }
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .clickable { onCardClick(azkar.id) },
+        shape = MaterialTheme.shapes.extraLarge
     ) {
         Row(
-            modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val coroutineScope = rememberCoroutineScope()
-            val scale = remember { Animatable(1f) }
-            val zikrText = when (lang) {
-                Language.FA.code -> zikr.persian
-                Language.CKB.code -> zikr.kurdish
-                else -> zikr.arabic
+            val chapterText = when (lang) {
+                Language.FA.code -> azkar.persian
+                Language.CKB.code -> azkar.kurdish
+                else -> azkar.arabic
             }
             val txt = buildAnnotatedString {
-                append(formatNumber(zikr.id))
+                withStyle(style = SpanStyle(fontSize = MaterialTheme.typography.titleLarge.fontSize)) {
+                    append(formatNumber(azkar.id))
+                }
                 append(" : ")
-                if (searchText.isNotEmpty() && zikrText?.contains(searchText) == true) {
-                    val index = zikrText.indexOf(searchText)
-                    for (i in 0..<index) append("${zikrText[i]}")
+                if (searchText.isNotEmpty() && chapterText?.contains(searchText) == true) {
+                    val index = chapterText.indexOf(searchText)
+                    for (i in 0..<index) append("${chapterText[i]}")
                     withStyle(
                         style = SpanStyle(
                             fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error
@@ -70,31 +68,42 @@ fun ZikrChapterUI(
                     ) {
                         append(searchText)
                     }
-                    for (i in (index + searchText.length)..<zikrText.length) append("${zikrText[i]}")
-                } else append(zikrText)
+                    for (i in (index + searchText.length)..<chapterText.length) append("${chapterText[i]}")
+                } else append(chapterText)
             }
-            Text(
-                modifier = Modifier
-                    .weight(8f)
-                    .padding(4.dp), text = txt
-            )
-
-            IconButton(onClick = {
-                onFavClick(zikr)
-                coroutineScope.launch {
-                    scale.animateTo(0.5f, animationSpec = tween(50))
-                    scale.animateTo(1f, animationSpec = tween(100))
-                }
-            }) {
-                Icon(
+            if (searchText.isEmpty())
+                AnimatedContent(
                     modifier = Modifier
-                        .scale(scale = scale.value)
-                        .size(32.dp)
-                        .weight(2f),
-                    imageVector = if (zikr.fav == 1) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = stringResource(id = R.string.favorite),
-                    tint = MaterialTheme.colorScheme.primary
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                        .weight(1f),
+                    targetState = txt,
+                    label = "title"
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = it,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            else
+                Text(
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                        .weight(1f),
+                    text = txt,
+                    fontWeight = FontWeight.SemiBold
                 )
+            AnimatedContent(targetState = azkar.fav, label = "fav") {
+                IconButton(onClick = {
+                    onFavClick(azkar)
+                }) {
+                    Icon(
+                        modifier = Modifier.size(32.dp),
+                        imageVector = if (it == 1) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = stringResource(id = R.string.favorite),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

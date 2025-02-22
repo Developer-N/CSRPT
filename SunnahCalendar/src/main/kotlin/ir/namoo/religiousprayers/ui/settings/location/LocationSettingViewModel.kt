@@ -11,9 +11,9 @@ import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_LATITUDE
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.friendlyName
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.locationtracker.LocationResult
 import ir.namoo.commons.locationtracker.LocationTracker
 import ir.namoo.commons.model.CityModel
@@ -64,9 +64,9 @@ class LocationSettingViewModel(
     fun loadData(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
-            _cityName.value = context.appPrefs.getString(PREF_GEOCODED_CITYNAME, "") ?: ""
-            _latitude.value = context.appPrefs.getString(PREF_LATITUDE, "0.0") ?: "0.0"
-            _longitude.value = context.appPrefs.getString(PREF_LONGITUDE, "0.0") ?: "0.0"
+            _cityName.value = context.preferences.getString(PREF_GEOCODED_CITYNAME, "") ?: ""
+            _latitude.value = context.preferences.getString(PREF_LATITUDE, "0.0") ?: "0.0"
+            _longitude.value = context.preferences.getString(PREF_LONGITUDE, "0.0") ?: "0.0"
             val allCities = locationRepository.cityDAO().getAllCity()
             _provinceList.value = locationRepository.provinceDAO().getAllProvinces()
             _selectedProvince.value =
@@ -91,7 +91,7 @@ class LocationSettingViewModel(
     fun saveCityInfo(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
-            context.appPrefs.edit {
+            context.preferences.edit {
                 putString(PREF_GEOCODED_CITYNAME, cityName.value)
                 putString(PREF_LATITUDE, latitude.value)
                 putString(PREF_LONGITUDE, longitude.value)

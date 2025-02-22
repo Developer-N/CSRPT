@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.athan
 
 import android.app.KeyguardManager
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -13,15 +14,16 @@ import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
-import com.byagowi.persiancalendar.FAJR_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.global.ascendingAthan
+import com.byagowi.persiancalendar.service.AthanNotification
 import com.byagowi.persiancalendar.ui.theme.SystemTheme
 import com.byagowi.persiancalendar.ui.utils.isSystemInDarkTheme
 import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
@@ -31,6 +33,7 @@ import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.athanVolume
 import com.byagowi.persiancalendar.utils.getAthanUri
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import java.util.concurrent.TimeUnit
 
@@ -71,10 +74,6 @@ class AthanActivity : ComponentActivity() {
             ?.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
     }
 
-    private val onBackPressedCloseCallback = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() = stop()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
             SystemBarStyle.dark(Color.TRANSPARENT),
@@ -84,23 +83,32 @@ class AthanActivity : ComponentActivity() {
         )
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
+
+        if (intent?.action == CANCEL_ATHAN_NOTIFICATION) {
+            runCatching {
+                stopService(Intent(this, AthanNotification::class.java))
+            }.onFailure(logException)
+            finish()
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         }
 
-        onBackPressedDispatcher.addCallback(this, onBackPressedCloseCallback)
-
-        val prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
-        val isFajr = prayerKey == FAJR_KEY
+        val prayTime = PrayTime.fromName(
+            intent?.getStringExtra(KEY_EXTRA_PRAYER)
+        ).debugAssertNotNull ?: PrayTime.FAJR
         var goMute = false
 
         getSystemService<AudioManager>()?.let { audioManager ->
             originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+            val athanVolume = preferences.athanVolume
             if (athanVolume != DEFAULT_ATHAN_VOLUME) // Don't change alarm volume if isn't set in-app
                 audioManager.setStreamVolume(AudioManager.STREAM_ALARM, athanVolume, 0)
             // Mute if system alarm is set to lowest, ringer mode is silent/vibration and it isn't Fajr
-            if (originalVolume == 1 && !isFajr &&
+            if (originalVolume == 1 && !prayTime.isBypassDnd &&
                 audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL
             ) goMute = true
         }
@@ -114,7 +122,7 @@ class AthanActivity : ComponentActivity() {
                 // so stop on half a minute regardless
                 if (it < THIRTY_SECONDS_IN_MILLIS) stopAtHalfMinute = true
             }
-            ringtone = RingtoneManager.getRingtone(this, getAthanUri(this)).also {
+            ringtone = RingtoneManager.getRingtone(this, athanUri).also {
                 it.audioAttributes = AudioAttributes.Builder()
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .setUsage(AudioAttributes.USAGE_ALARM)
@@ -141,7 +149,10 @@ class AthanActivity : ComponentActivity() {
             )
         }
 
-        setContent { SystemTheme { AthanActivityContent(prayerKey, ::stop) } }
+        setContent {
+            BackHandler { stop() }
+            SystemTheme { AthanActivityContent(prayTime, ::stop) }
+        }
 
         handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
 
@@ -160,10 +171,15 @@ class AthanActivity : ComponentActivity() {
         alreadyStopped = true
         preventPhoneCallIntervention.stopListener()
 
-        runCatching { ringtone?.stop() }.onFailure(logException).getOrNull().debugAssertNotNull
+        runCatching { ringtone?.stop() }.onFailure(logException)
 
         handler.removeCallbacks(stopTask)
         if (ascendingAthan.value) handler.removeCallbacks(ascendVolume)
+
         finish()
+    }
+
+    companion object {
+        const val CANCEL_ATHAN_NOTIFICATION = "CANCEL_ATHAN_NOTIFICATION"
     }
 }

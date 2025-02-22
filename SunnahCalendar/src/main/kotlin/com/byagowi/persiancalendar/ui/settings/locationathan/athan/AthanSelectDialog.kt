@@ -1,12 +1,12 @@
 package com.byagowi.persiancalendar.ui.settings.locationathan.athan
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Parcelable
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.foundation.clickable
@@ -31,9 +31,9 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
-import com.byagowi.persiancalendar.utils.appPrefs
 import com.byagowi.persiancalendar.utils.getRawUri
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 
 @Composable
 fun AthanSelectDialog(onDismissRequest: () -> Unit) {
@@ -41,11 +41,10 @@ fun AthanSelectDialog(onDismissRequest: () -> Unit) {
     val launcher = rememberLauncherForActivityResult(PickRingtoneContract()) callback@{ uri ->
         onDismissRequest()
         uri ?: return@callback
-        val ringtone = RingtoneManager.getRingtone(context, uri.toUri())
         // If no ringtone has been found better to skip touching preferences store
-        ringtone ?: return@callback
+        val ringtone = RingtoneManager.getRingtone(context, uri.toUri()) ?: return@callback
         val ringtoneTitle = ringtone.getTitle(context) ?: ""
-        context.appPrefs.edit {
+        context.preferences.edit {
             putString(PREF_ATHAN_NAME, ringtoneTitle)
             putString(PREF_ATHAN_URI, uri)
         }
@@ -67,7 +66,7 @@ fun AthanSelectDialog(onDismissRequest: () -> Unit) {
                 R.string.entezar to R.raw.entezar
             ).map { (stringId, rawId) ->
                 stringId to {
-                    context.appPrefs.edit {
+                    context.preferences.edit {
                         putString(PREF_ATHAN_URI, context.resources.getRawUri(rawId))
                         putString(PREF_ATHAN_NAME, context.getString(stringId))
                     }
@@ -101,7 +100,7 @@ private class PickRingtoneContract : ActivityResultContract<Unit, String?>() {
             )
 
     override fun parseResult(resultCode: Int, intent: Intent?): String? =
-        if (resultCode == ComponentActivity.RESULT_OK) intent?.getParcelableExtra<Parcelable?>(
+        if (resultCode == Activity.RESULT_OK) intent?.getParcelableExtra<Parcelable?>(
             RingtoneManager.EXTRA_RINGTONE_PICKED_URI
         )?.toString()
         else null

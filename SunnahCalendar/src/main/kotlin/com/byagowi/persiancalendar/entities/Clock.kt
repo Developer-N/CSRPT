@@ -2,34 +2,49 @@ package com.byagowi.persiancalendar.entities
 
 import android.content.res.Resources
 import androidx.annotation.PluralsRes
+import androidx.collection.IntIntPair
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.amString
 import com.byagowi.persiancalendar.global.clockIn24
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.pmString
 import com.byagowi.persiancalendar.global.spacedAndInDates
+import com.byagowi.persiancalendar.utils.ONE_HOUR_IN_MILLIS
+import com.byagowi.persiancalendar.utils.ONE_MINUTE_IN_MILLIS
+import com.byagowi.persiancalendar.utils.ONE_SECOND_IN_MILLIS
 import com.byagowi.persiancalendar.utils.formatNumber
 import java.util.GregorianCalendar
 import java.util.Locale
-import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
-data class Clock(var hours: Int, var minutes: Int) {
-    constructor(date: GregorianCalendar) :
-            this(date[GregorianCalendar.HOUR_OF_DAY], date[GregorianCalendar.MINUTE])
+@JvmInline
+value class Clock(val value: Double/*A real number, usually [0-24), portion of a day*/) {
+    constructor(date: GregorianCalendar) : this(
+        (date[GregorianCalendar.HOUR_OF_DAY] * ONE_HOUR_IN_MILLIS +
+                date[GregorianCalendar.MINUTE] * ONE_MINUTE_IN_MILLIS +
+                date[GregorianCalendar.SECOND] * ONE_SECOND_IN_MILLIS +
+                date[GregorianCalendar.MILLISECOND]) / ONE_HOUR_IN_MILLIS.toDouble()
+    )
 
-    fun toMinutes() = hours * 60 + minutes
+    fun toMillis() = if (value.isNaN()) 0L else (value * ONE_HOUR_IN_MILLIS).roundToLong()
 
-    fun toBasicFormatString(hours: Int = this.hours): String =
-        formatNumber("%02d:%02d".format(Locale.ENGLISH, hours, minutes))
+    fun toHoursAndMinutesPair(): IntIntPair {
+        if (value.isNaN()) return IntIntPair(0, 0)
+        val rounded = (value * 60).roundToInt()
+        return IntIntPair(floor(rounded / 60.0).toInt(), floor(rounded % 60.0).toInt())
+    }
 
-    fun toTimeZoneOffsetFormat(): String {
-        val sign = if (hours < 0) "-" else "+"
-        return "%s%02d:%02d".format(Locale.ENGLISH, sign, abs(hours), minutes)
+    fun toBasicFormatString(): String {
+        val (hours, minutes) = toHoursAndMinutesPair()
+        return linearFormat(hours, minutes)
     }
 
     fun toFormattedString(forcedIn12: Boolean = false, printAmPm: Boolean = true): String {
         if (clockIn24 && !forcedIn12) return toBasicFormatString()
-        val clockString = toBasicFormatString((hours % 12).takeIf { it != 0 } ?: 12)
+        val (hours, minutes) = toHoursAndMinutesPair()
+        val clockString = linearFormat((hours % 12).takeIf { it != 0 } ?: 12, minutes)
         if (!printAmPm) return clockString
         return language.value.clockAmPmOrder.format(
             clockString,
@@ -38,7 +53,8 @@ data class Clock(var hours: Int, var minutes: Int) {
     }
 
     fun asRemainingTime(resources: Resources, short: Boolean = false): String {
-        val pairs = listOf(R.plurals.n_hours to hours, R.plurals.n_minutes to minutes)
+        val (hours, minutes) = toHoursAndMinutesPair()
+        val pairs = listOf(R.plurals.hours to hours, R.plurals.minutes to minutes)
             .filter { (_, n) -> n != 0 }
         // if both present special casing the short form makes sense
         return if (pairs.size == 2 && short) resources.getString(
@@ -48,16 +64,12 @@ data class Clock(var hours: Int, var minutes: Int) {
         }
     }
 
-    fun toHoursFraction() = toMinutes() / 60.0
+    operator fun compareTo(clock: Clock) = value.compareTo(clock.value)
+    operator fun minus(clock: Clock) = Clock(value - clock.value)
+    operator fun plus(clock: Clock) = Clock(value + clock.value)
 
     companion object {
-        fun fromHoursFraction(input: Double): Clock {
-            val value = (input + 0.5 / 60) % 24 // add 0.5 minutes to round
-            val hours = value.toInt()
-            val minutes = ((value - hours) * 60.0).toInt()
-            return Clock(hours, minutes)
-        }
-
-        fun fromMinutesCount(minutes: Int) = Clock(minutes / 60, minutes % 60)
+        private fun linearFormat(hours: Int, minutes: Int) =
+            formatNumber("%02d:%02d".format(Locale.ENGLISH, hours, minutes))
     }
 }

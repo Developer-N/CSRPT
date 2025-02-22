@@ -33,7 +33,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
@@ -77,7 +76,6 @@ fun IntroCustomLocationScreen(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
-            .alpha(0.95f)
             .animateContentSize(animationSpec = spring())
     ) {
         AnimatedContent(
@@ -156,13 +154,15 @@ fun GetPermissionSection(locationPermissions: MultiplePermissionsState) {
         Text(
             modifier = Modifier.padding(8.dp),
             text = stringResource(id = R.string.first_setup_location_message),
-            fontSize = MaterialTheme.typography.bodyMedium.fontSize
+            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+            fontWeight = FontWeight.SemiBold
         )
         Button(modifier = Modifier.padding(8.dp),
             onClick = { locationPermissions.launchMultiplePermissionRequest() }) {
             Text(
                 text = stringResource(id = R.string.ok),
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -243,7 +243,7 @@ fun ShowLocationSection(
             )
 
         }
-        AnimatedVisibility(visible = !isLoading && (message.isNotEmpty() || city.isEmpty())) {
+        AnimatedVisibility(visible = !isLoading && (message.isNotEmpty() || city.isEmpty()) && provinceList.isNotEmpty() && cityList.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 HorizontalDivider(modifier = Modifier.padding(8.dp))
 
@@ -253,7 +253,8 @@ fun ShowLocationSection(
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     text = stringResource(id = R.string.select_location_if_not_detect),
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Row(

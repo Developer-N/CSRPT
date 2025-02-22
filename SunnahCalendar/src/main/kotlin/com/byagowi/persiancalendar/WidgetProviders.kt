@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.content.edit
-import com.byagowi.persiancalendar.utils.appPrefs
+import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.startWorker
 import com.byagowi.persiancalendar.utils.update
 
@@ -38,17 +38,20 @@ class Widget4x2 : WidgetProvider()
 class WidgetMap : WidgetProvider()
 class WidgetMoon : WidgetProvider()
 class WidgetSunView : WidgetProvider()
+class WidgetMonth : WidgetProvider()
 class WidgetMonthView : WidgetProvider()
+class WidgetSchedule : WidgetProvider()
 class NWidget : WidgetProvider()
 
 class AgeWidget : WidgetProvider() {
     override fun onDeleted(context: Context?, appWidgetIds: IntArray?) {
         if (context == null || appWidgetIds == null || appWidgetIds.isEmpty()) return
-        context.appPrefs.edit {
+        context.preferences.edit {
             appWidgetIds.forEach {
                 remove(PREF_SELECTED_WIDGET_BACKGROUND_COLOR + it)
                 remove(PREF_SELECTED_WIDGET_TEXT_COLOR + it)
                 remove(PREF_SELECTED_DATE_AGE_WIDGET + it)
+                remove(PREF_SELECTED_DATE_AGE_WIDGET_START + it)
                 remove(PREF_TITLE_AGE_WIDGET + it)
             }
         }

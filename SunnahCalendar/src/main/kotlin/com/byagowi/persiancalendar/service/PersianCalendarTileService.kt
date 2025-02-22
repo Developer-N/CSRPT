@@ -38,9 +38,9 @@ class PersianCalendarTileService : TileService() {
         runCatching {
             val tile = qsTile ?: return@runCatching
             val jdn = Jdn.today()
-            val today = jdn.toCalendar(mainCalendar)
+            val today = jdn on mainCalendar
             tile.icon = Icon.createWithResource(this, getDayIconResource(today.dayOfMonth))
-            tile.label = jdn.dayOfWeekName
+            tile.label = jdn.weekDayName
             tile.contentDescription = today.monthName
             // explicitly set Tile state to Active, fixes tile not being lit on some Samsung devices
             tile.state = Tile.STATE_ACTIVE

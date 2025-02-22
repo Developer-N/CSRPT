@@ -15,7 +15,11 @@ import android.view.InputDevice
 import android.view.RoundedCorner
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +31,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
@@ -34,7 +39,6 @@ import androidx.compose.material.icons.filled.Motorcycle
 import androidx.compose.material.icons.filled.PermDeviceInformation
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,7 +46,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior
 import androidx.compose.runtime.Composable
@@ -54,23 +57,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.ScreenSurface
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
+import com.byagowi.persiancalendar.ui.common.ShareActionButton
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.getActivity
-import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
 import com.byagowi.persiancalendar.ui.utils.shareTextFile
 import com.byagowi.persiancalendar.utils.logException
@@ -90,18 +101,18 @@ import kotlinx.html.tr
 import kotlinx.html.unsafe
 import java.util.Locale
 
-@Preview
 @Composable
-private fun DeviceInformationScreenPreview() = DeviceInformationScreen {}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun DeviceInformationScreen(navigateUp: () -> Unit) {
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+fun SharedTransitionScope.DeviceInformationScreen(
+    navigateUp: () -> Unit,
+    animatedContentScope: AnimatedContentScope,
+) {
     val scrollBehavior = exitUntilCollapsedScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)) {
         val context = LocalContext.current
-        val items = remember {
-            createItemsList(context.getActivity() ?: return@remember emptyList())
+        val primaryColor = MaterialTheme.colorScheme.primary
+        val items = remember(primaryColor) {
+            createItemsList(context.getActivity() ?: return@remember emptyList(), primaryColor)
         }
         LargeTopAppBar(
             scrollBehavior = scrollBehavior,
@@ -109,13 +120,12 @@ fun DeviceInformationScreen(navigateUp: () -> Unit) {
             colors = appTopAppBarColors(),
             navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
             actions = {
-                AppIconButton(
-                    icon = Icons.Default.Share,
-                    title = stringResource(R.string.share),
-                ) { context.shareTextFile(generateHtmlReport(items), "device.html", "text/html") }
+                ShareActionButton(animatedContentScope) {
+                    context.shareTextFile(generateHtmlReport(items), "device.html", "text/html")
+                }
                 AppIconButton(
                     icon = Icons.Default.Print,
-                    title = "Print",
+                    title = stringResource(R.string.print),
                 ) { context.openHtmlInBrowser(generateHtmlReport(items)) }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AppIconButton(
                     icon = Icons.Default.SportsEsports,
@@ -136,30 +146,40 @@ fun DeviceInformationScreen(navigateUp: () -> Unit) {
                 }
             },
         )
-        Surface(shape = materialCornerExtraLargeTop()) {
+        ScreenSurface(animatedContentScope) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                LazyColumn {
-                    item { Spacer(Modifier.height(16.dp)) }
-                    item { OverviewTopBar(Modifier.padding(horizontal = 16.dp)) }
-                    itemsIndexed(items) { i, item ->
-                        if (i > 0) HorizontalDivider(
-                            Modifier.padding(horizontal = 20.dp),
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = .5f)
-                        )
-                        Column(Modifier.padding(vertical = 4.dp, horizontal = 24.dp)) {
-                            Text(item.title, fontWeight = FontWeight.Bold)
-                            Row {
-                                SelectionContainer { Text(item.content.toString()) }
-                                Spacer(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth(),
-                                )
-                                Text(item.version)
+                Box {
+                    val listState = rememberLazyListState()
+                    LazyColumn(state = listState) {
+                        item { Spacer(Modifier.height(16.dp)) }
+                        item { OverviewTopBar(Modifier.padding(horizontal = 16.dp)) }
+                        itemsIndexed(items) { i, item ->
+                            if (i > 0) HorizontalDivider(
+                                Modifier.padding(horizontal = 20.dp),
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = .5f)
+                            )
+                            Column(Modifier.padding(vertical = 4.dp, horizontal = 24.dp)) {
+                                Text(item.title, fontWeight = FontWeight.Bold)
+                                Row {
+                                    SelectionContainer {
+                                        when (val content = item.content) {
+                                            is AnnotatedString -> Text(content)
+                                            else -> Text(content.toString())
+                                        }
+                                    }
+                                    Spacer(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth(),
+                                    )
+                                    Text(item.version)
+                                }
                             }
                         }
+                        item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
                     }
-                    item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
+                    ScrollShadow(listState = listState, top = true)
+                    ScrollShadow(listState = listState, top = false)
                 }
             }
         }
@@ -311,7 +331,7 @@ private fun humanReadableByteCountBin(bytes: Long): String = when {
 
 private data class Item(val title: String, val content: CharSequence?, val version: String = "")
 
-private fun createItemsList(activity: Activity) = listOf(
+private fun createItemsList(activity: Activity, primaryColor: Color) = listOf(
     Item("CPU Instructions Sets", Build.SUPPORTED_ABIS.joinToString(", ")),
     Item(
         "Android Version", Build.VERSION.CODENAME + " " + Build.VERSION.RELEASE,
@@ -399,6 +419,22 @@ private fun createItemsList(activity: Activity) = listOf(
         } else "None"
     ),
     Item(
+        "Display Features", run {
+            val configuration = activity.resources.configuration
+            listOfNotNull(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    "Is Screen Round" to configuration.isScreenRound else null,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    "Is Screen HDR" to configuration.isScreenHdr else null,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    "Is Screen Wide Color Gamut" to configuration.isScreenWideColorGamut else null,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+                    "Is Night Mode Active" to configuration.isNightModeActive else null,
+            ).joinToString("\n") { (title, value) -> "$title: $value" }
+        }
+    ),
+    Item("Resources Configuration", activity.resources.configuration.toString()),
+    Item(
         "Install Source of ${activity.packageName}", runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 activity.packageManager?.getInstallSourceInfo(activity.packageName)?.run {
@@ -427,8 +463,14 @@ private fun createItemsList(activity: Activity) = listOf(
         "System Features",
         activity.packageManager?.systemAvailableFeatures?.joinToString("\n")
     )
-) + (runCatching {
-    // Quick Kung-fu to create gl context, https://stackoverflow.com/a/27092070
+) + (
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) listOf(
+            Item(
+                "Is Cross Window Blur Enabled",
+                activity.window?.windowManager?.isCrossWindowBlurEnabled.toString()
+            )
+        ) else emptyList()) + (runCatching {
+    // Quick Kung-fu to create a gl context, https://stackoverflow.com/a/27092070
     val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
     val versions = IntArray(2)
     EGL14.eglInitialize(display, versions, 0, versions, 1)
@@ -482,15 +524,20 @@ private fun createItemsList(activity: Activity) = listOf(
                 extensions.forEachIndexed { i, it ->
                     if (i != 0) appendLine()
 
-                    if (!regex.matches(it)) append(it)
-                    else append(it) // TODO: Make this clickable
-                    // runCatching {
-                    //     val pattern =
-                    //         "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
-                    //     CustomTabsIntent.Builder().build().launchUrl(
-                    //         activity, it.replace(regex, pattern).toUri()
-                    //     )
-                    // }.onFailure(logException)
+                    if (!regex.matches(it)) append(it) else withLink(
+                        LinkAnnotation.Url(
+                            url = it.replace(
+                                regex,
+                                "https://www.khronos.org/registry/OpenGL/extensions/$1/$1_$2.txt"
+                            ),
+                            styles = TextLinkStyles(
+                                SpanStyle(
+                                    color = primaryColor,
+                                    textDecoration = TextDecoration.Underline,
+                                )
+                            ),
+                        )
+                    ) { append(it) }
                 }
             }
         )

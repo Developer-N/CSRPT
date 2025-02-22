@@ -20,8 +20,6 @@
     <string name="exit">Выйти</string>
     <string name="add_event">Добавить событие</string>
     <string name="return_to_today">Вернуться к сегодняшнему</string>
-    <string name="goto_date">Перейти на дату</string>
-    <string name="go">Идти</string>
     <string name="search_in_events">Поиск в событиях</string>
     <string name="app_name">Персидский календарь</string>
     <string name="widget_name">Персидский календарь</string>
@@ -45,7 +43,7 @@
     <string name="animal_year_name_dragon">Дракон</string>
     <string name="animal_year_name_snake">Змея</string>
     <string name="animal_year_name_horse">Лошадь</string>
-    <string name="animal_year_name_goat">Овца</string>
+    <string name="animal_year_name_goat">Коза</string>
     <string name="zodiac">Зодиак</string>
     <string name="capricorn">Козерог</string>
     <string name="aquarius">Водолей</string>
@@ -59,13 +57,13 @@
     <string name="libra">Весы</string>
     <string name="scorpio">Скорпион</string>
     <string name="sagittarius">Стрелец</string>
-    <string name="moonInScorpio">Луна в Скорпионе</string>
+    <string name="moon_in_scorpio">Луна в Скорпионе</string>
     <string name="events">События</string>
     <string name="no_event">Нет событий или встреч на этот день</string>
     <string name="warn_if_events_not_set">Чтобы выбрать и отобразить предпочтительные праздники и события, посетите Настройки</string>
-    <string name="sunriseSunView">Восход</string>
-    <string name="middaySunView">Полдень</string>
-    <string name="sunsetSunView">Закат</string>
+    <string name="sunrise_sun_view">Восход</string>
+    <string name="midday_sun_view">Полдень</string>
+    <string name="sunset_sun_view">Закат</string>
     <string name="length_of_day">Дневное время</string>
     <string name="remaining_daylight">оставшиеся</string>
     <string name="imsak">Имсак</string>
@@ -143,7 +141,7 @@
     <string name="gps_internet_desc">Пожалуйста, включите GPS устройства и подключение к Интернету, чтобы определить ваше местоположение.
 \n
 \nПриложению это нужно только один раз, однако, если вы переедете в новое место, доступ к GPS и Интернету потребуется снова.</string>
-    <string name="pleasewaitgps">Пожалуйста, подождите… Если через минуту ничего не появилось, вам, вероятно, следует попробовать другие варианты</string>
+    <string name="wait_for_gps">Пожалуйста, подождите… Если через минуту ничего не появилось, вам, вероятно, следует попробовать другие варианты</string>
     <string name="spaced_comma">", "</string>
     <string name="spaced_colon">": "</string>
     <string name="center_align_widgets_summary">Выравнивание по центру виджетов 4x1 и 2x2</string>
@@ -273,9 +271,9 @@
     <string name="about_support_developers">Поддержка разработчиков</string>
     <string name="about_report_bug">Сообщить об ошибке на GitHub</string>
     <string name="about_report_bug_sum">Для предпочтительного сообщения об ошибках или запроса новой функции требуется учетная запись GitHub</string>
-    <string name="about_sendMail">Электронная почта</string>
+    <string name="about_send_mail">Электронная почта</string>
     <string name="about_email_sum">Отправить личную электронную почту авторам приложения</string>
-    <string name="about_noClient">Почтовый клиент не установлен</string>
+    <string name="about_no_client">Почтовый клиент не установлен</string>
     <string name="about_developers">Разработчики (в случайном порядке)</string>
     <string name="previous_x">Прежняя %1$s</string>
     <string name="next_x">Следующий %1$s</string>
@@ -350,43 +348,43 @@
         <item quantity="many">%1$s %2$s дней</item>
         <item quantity="other">%1$s %2$s дней</item>
     </plurals>
-    <plurals name="n_seconds">
+    <plurals name="seconds">
         <item quantity="one">%1$s секунда</item>
         <item quantity="few">%1$s секунды</item>
         <item quantity="many">%1$s секунд</item>
         <item quantity="other">%1$s секунд</item>
     </plurals>
-    <plurals name="n_minutes">
+    <plurals name="minutes">
         <item quantity="one">%1$s минута</item>
         <item quantity="few">%1$s минуты</item>
         <item quantity="many">%1$s минут</item>
         <item quantity="other">%1$s минут</item>
     </plurals>
-    <plurals name="n_hours">
+    <plurals name="hours">
         <item quantity="one">%1$s час</item>
         <item quantity="few">%1$s часа</item>
         <item quantity="many">%1$s часов</item>
         <item quantity="other">%1$s часов</item>
     </plurals>
-    <plurals name="n_days">
+    <plurals name="days">
         <item quantity="one">%1$s день</item>
         <item quantity="few">%1$s дня</item>
         <item quantity="many">%1$s дней</item>
         <item quantity="other">%1$s дней</item>
     </plurals>
-    <plurals name="n_weeks">
+    <plurals name="weeks">
         <item quantity="one">%1$s неделя</item>
         <item quantity="few">%1$s недели</item>
         <item quantity="many">%1$s недель</item>
         <item quantity="other">%1$s недели</item>
     </plurals>
-    <plurals name="n_months">
+    <plurals name="months">
         <item quantity="one">%1$s месяц</item>
         <item quantity="few">%1$s месяца</item>
         <item quantity="many">%1$s месяцев</item>
         <item quantity="other">%1$s месяцев</item>
     </plurals>
-    <plurals name="n_years">
+    <plurals name="years">
         <item quantity="one">%1$s год</item>
         <item quantity="few">%1$s года</item>
         <item quantity="many">%1$s лет</item>
@@ -412,7 +410,7 @@
     <string name="exit_full_screen">Выйти из полноэкранного режима</string>
     <string name="full_screen">Полноэкранный режим</string>
     <string name="open_drawer">Открыть панель навигации</string>
-    <plurals name="n_work_days">
+    <plurals name="work_days">
         <item quantity="one">%1$s рабочий день</item>
         <item quantity="few">%1$s рабочих дня</item>
         <item quantity="many">%1$s рабочих дней</item>
@@ -425,4 +423,6 @@
     <string name="exempt_app_battery_optimization">Хотите исключить приложение из оптимизации батареи для нормального функционирования уведомлений?</string>
     <string name="widget_background_transparency">Прозрачность фона виджета</string>
     <string name="save">Сохранить</string>
+    <string name="holidays_in_red">Отмечать праздники красным</string>
+    <string name="add_widget">Добавить виджет</string>
 </resources>

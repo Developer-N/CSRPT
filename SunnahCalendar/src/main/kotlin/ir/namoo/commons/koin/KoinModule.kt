@@ -6,9 +6,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import ir.namoo.commons.locationtracker.LocationTracker
 import ir.namoo.commons.model.AthanDB
@@ -16,9 +13,16 @@ import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.repository.LocalPrayTimeRepository
 import ir.namoo.commons.repository.PrayTimeRepository
-import ir.namoo.commons.repository.RemotePrayTimeRepository
+import ir.namoo.commons.repository.RemoteRepository
 import ir.namoo.commons.utils.appPrefsLite
+import ir.namoo.hadeeth.repository.HadeethDB
+import ir.namoo.hadeeth.repository.HadeethLocalRepository
+import ir.namoo.hadeeth.repository.HadeethOnlineRepository
+import ir.namoo.hadeeth.repository.HadeethRepository
+import ir.namoo.hadeeth.ui.chapter.HadeethChapterViewModel
+import ir.namoo.hadeeth.ui.hadeeth.HadeethViewModel
 import ir.namoo.quran.QuranActivityViewModel
+import ir.namoo.quran.TawhidDB
 import ir.namoo.quran.bookmarks.BookmarkViewModel
 import ir.namoo.quran.chapters.ChapterViewModel
 import ir.namoo.quran.chapters.data.ChapterRepository
@@ -26,7 +30,6 @@ import ir.namoo.quran.db.FileDownloadDB
 import ir.namoo.quran.db.FileDownloadRepository
 import ir.namoo.quran.db.LastVisitedDB
 import ir.namoo.quran.db.LastVisitedRepository
-import ir.namoo.quran.db.OldQuranDB
 import ir.namoo.quran.db.QuranDB
 import ir.namoo.quran.download.DownloadQuranAudioViewModel
 import ir.namoo.quran.download.QuranDownloader
@@ -49,6 +52,7 @@ import ir.namoo.religiousprayers.ui.azkar.AzkarActivityViewModel
 import ir.namoo.religiousprayers.ui.azkar.AzkarViewModel
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarDB
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarRepository
+import ir.namoo.religiousprayers.ui.calendar.NTimesViewModel
 import ir.namoo.religiousprayers.ui.downloadtimes.DownloadPrayTimesViewModel
 import ir.namoo.religiousprayers.ui.edit.EditPrayTimeViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroCustomLocationViewModel
@@ -59,9 +63,8 @@ import ir.namoo.religiousprayers.ui.settings.athan.AthanSettingsViewModel
 import ir.namoo.religiousprayers.ui.settings.location.LocationSettingViewModel
 import kotlinx.serialization.json.Json
 import okhttp3.Cache
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import timber.log.Timber
 
 val koinModule = module {
     // Quran
@@ -74,10 +77,11 @@ val koinModule = module {
     single { RemoteQariRepository(get()) }
     single { QariRepository(get(), get(), get()) }
     single { QuranDownloader(get()) }
-    single { OldQuranDB.getInstance(get()) }
     single { FileDownloadDB.getInstance(get()) }
     single { LastVisitedDB.getInstance(get()) }
     single { LastVisitedRepository(get()) }
+
+    single { TawhidDB.getInstance(get()) }
 
     factory { get<Context>().appPrefsLite }
 
@@ -92,7 +96,7 @@ val koinModule = module {
     single { PrayTimeRepository(get(), get()) }
     single { AthanDB.getInstance(get()) }
     single { AthanSettingsDB.getInstance(get()) }
-    single { RemotePrayTimeRepository(get()) }
+    single { RemoteRepository(get()) }
     single { LocalPrayTimeRepository(get(), get(), get()) }
 
     single { PrayTimeProvider(get(), get(), get()) }
@@ -108,9 +112,6 @@ val koinModule = module {
                 }
                 addNetworkInterceptor(get<CacheInterceptor>())
             }
-            defaultRequest {
-//                header("APIKEY", API_KEY)
-            }
             install(HttpTimeout) {
                 requestTimeoutMillis = 30 * 1000
                 connectTimeoutMillis = 30 * 1000
@@ -120,13 +121,6 @@ val koinModule = module {
                 json(Json {
                     ignoreUnknownKeys = true
                 })
-            }
-            install(Logging) {
-                logger = object : Logger {
-                    override fun log(message: String) {
-                        Timber.d(message)
-                    }
-                }
             }
         }
     }
@@ -139,8 +133,8 @@ val koinModule = module {
     //quran
     viewModel { QuranActivityViewModel(get()) }
     viewModel { QuranDownloadViewModel(get()) }
-    viewModel { ChapterViewModel(get(), get(), get(), get()) }
-    viewModel { SuraViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { ChapterViewModel(get(), get()) }
+    viewModel { SuraViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SettingViewModel(get(), get(), get()) }
     viewModel { BookmarkViewModel(get(), get()) }
     viewModel { NotesViewModel(get(), get()) }
@@ -163,4 +157,16 @@ val koinModule = module {
 
     viewModel { AthanDownloadDialogViewModel(get(), get()) }
     viewModel { AthanSettingsViewModel(get(), get()) }
+
+    viewModel { NTimesViewModel(get(), get()) }
+
+
+    // Hadeeth
+    single { HadeethDB.getInstance(get()) }
+    single { HadeethLocalRepository(get()) }
+    single { HadeethOnlineRepository(get()) }
+    single { HadeethRepository(get(), get()) }
+    viewModel { HadeethChapterViewModel(get()) }
+    viewModel { HadeethViewModel(get()) }
+
 }//end of module

@@ -1,13 +1,14 @@
 package ir.namoo.religiousprayers.ui.settings.location
 
 import android.Manifest
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.shrinkOut
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -18,14 +19,13 @@ import androidx.compose.material.icons.filled.EditLocation
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,81 +85,75 @@ fun ShowLocationDialog(
             )
         }
     }, dismissButton = {
-        ElevatedAssistChip(
+        TextButton(
             modifier = Modifier.padding(horizontal = 5.dp),
             onClick = { closeDialog() },
-            shape = MaterialTheme.shapes.large,
-            label = { Text(text = stringResource(id = R.string.cancel)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(id = R.string.cancel)
-                )
-            },
-            elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp)
-        )
+        ) {
+            Text(text = stringResource(id = R.string.cancel))
+            Spacer(modifier = Modifier.padding(2.dp))
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(id = R.string.cancel)
+            )
+        }
     }, confirmButton = {
-        ElevatedAssistChip(modifier = Modifier.padding(horizontal = 5.dp), onClick = {
-            if (cityName.isNotEmpty()) {
-                viewModel.saveCityInfo(context)
-                closeDialog()
-            }
-        }, shape = MaterialTheme.shapes.large, label = {
+        TextButton(
+            modifier = Modifier.padding(horizontal = 5.dp), onClick = {
+                if (cityName.isNotEmpty()) {
+                    viewModel.saveCityInfo(context)
+                    closeDialog()
+                }
+            }, enabled = cityName.isNotEmpty() && !isLoading
+        ) {
             Text(text = stringResource(id = R.string.save_location))
-        }, trailingIcon = {
+            Spacer(modifier = Modifier.padding(2.dp))
             Icon(
                 imageVector = Icons.Default.Save,
                 contentDescription = stringResource(id = R.string.save_location)
             )
-        }, elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp),
-            enabled = cityName.isNotEmpty() && !isLoading
-        )
+        }
     }, text = {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             SettingsSection(title = stringResource(id = R.string.select_city))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                val pList = mutableListOf<String>()
-                pList.clear()
-                provinceList.forEach { pList.add(it.name) }
+            val pList = mutableListOf<String>()
+            pList.clear()
+            provinceList.forEach { pList.add(it.name) }
 
-                MyLocationSelector(locationList = pList,
-                    selectedLocation = selectedProvince?.name ?: "",
-                    onSelectedLocationChange = { name ->
-                        viewModel.updateSelectedProvince(provinceList.find { it.name == name })
-                    })
+            MyLocationSelector(locationList = pList,
+                selectedLocation = selectedProvince?.name ?: "",
+                onSelectedLocationChange = { name ->
+                    viewModel.updateSelectedProvince(provinceList.find { it.name == name })
+                })
 
-                val cList = mutableListOf<String>()
-                cList.clear()
-                cityList.forEach { cList.add(it.name) }
+            val cList = mutableListOf<String>()
+            cList.clear()
+            cityList.forEach { cList.add(it.name) }
 
-                MyLocationSelector(locationList = cList,
-                    selectedLocation = selectedCity?.name ?: "",
-                    onSelectedLocationChange = { name ->
-                        viewModel.updateSelectedCity(cityList.find { it.name == name })
-                    })
-            }
+            MyLocationSelector(locationList = cList,
+                selectedLocation = selectedCity?.name ?: "",
+                onSelectedLocationChange = { name ->
+                    viewModel.updateSelectedCity(cityList.find { it.name == name })
+                })
             HorizontalDivider(modifier = Modifier.padding(2.dp))
             SettingsSection(title = stringResource(id = R.string.gps_location))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                ElevatedAssistChip(onClick = {
+                ElevatedButton(onClick = {
                     if (locationPermissions.allPermissionsGranted) {
                         viewModel.getCurrentLocation(context)
                     } else {
                         locationPermissions.launchMultiplePermissionRequest()
                     }
-                }, label = {
+                }) {
                     Text(text = stringResource(id = R.string.gps_location))
-                }, trailingIcon = {
+                    Spacer(modifier = Modifier.padding(4.dp))
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = stringResource(id = R.string.location)
                     )
-                }, elevation = AssistChipDefaults.elevatedAssistChipElevation(elevation = 2.dp))
+                }
             }
 
             HorizontalDivider(modifier = Modifier.padding(2.dp))
@@ -172,13 +166,22 @@ fun ShowLocationDialog(
                 onValueChange = { viewModel.updateCityInfo(it, latitude, longitude) },
                 singleLine = true,
                 supportingText = {
-                    Text(
-                        text = formatNumber(
-                            " ${stringResource(id = R.string.longitude)}: $longitude \n${
-                                stringResource(id = R.string.latitude)
-                            }: $latitude"
-                        )
-                    )
+                    Column {
+                        Row {
+                            Text(text = "${stringResource(id = R.string.longitude)}: ")
+                            AnimatedContent(targetState = longitude, label = "longitude") {
+                                Text(
+                                    text = formatNumber(it)
+                                )
+                            }
+                        }
+                        Row {
+                            Text(text = "${stringResource(id = R.string.latitude)}: ")
+                            AnimatedContent(targetState = latitude, label = "latitude") {
+                                Text(text = formatNumber(it))
+                            }
+                        }
+                    }
                 },
                 enabled = !isLoading,
                 isError = cityName.isEmpty()

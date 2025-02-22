@@ -19,7 +19,7 @@ import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.StopCircle
-import androidx.compose.material3.ElevatedAssistChip
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -63,6 +63,8 @@ fun AthanSettingsScreen(
     val afterMinutes by viewModel.afterMinute.collectAsState()
     val silentState by viewModel.enableSilent.collectAsState()
     val silentMinutes by viewModel.silentMinute.collectAsState()
+    val jummaSilent by viewModel.enableJummaSilent.collectAsState()
+    val jummaMinutes by viewModel.silentJummaMinute.collectAsState()
     val isAscending by viewModel.ascendingVolume.collectAsState()
     val volume by viewModel.volume.collectAsState()
     val athanNames by viewModel.athanNames.collectAsState()
@@ -71,6 +73,7 @@ fun AthanSettingsScreen(
     val selectedAlarm by viewModel.selectedAlarm.collectAsState()
     val isAthanPlaying by viewModel.isAthanPlaying.collectAsState()
     val isAlarmPlaying by viewModel.isAlarmPlaying.collectAsState()
+    val selectedBackground by viewModel.selectedBackground.collectAsState()
 
     Scaffold(topBar = {
         TopAppBar(
@@ -158,6 +161,19 @@ fun AthanSettingsScreen(
                         range = 10..60,
                         minute = silentMinutes,
                         onMinute = { viewModel.updateSilentMinutes(context, it) })
+                    if (athanId == 3) {
+                        HorizontalDivider(modifier = Modifier.padding(8.dp))
+                        AlertComponent(
+                            title = stringResource(id = R.string.jumma_silent),
+                            togleTitle = stringResource(id = R.string.enable_silent),
+                            isChecked = jummaSilent,
+                            onCheck = { viewModel.updateJummaSilentState(context) },
+                            range = 20..120,
+                            minute = jummaMinutes,
+                            onMinute = { viewModel.updateJummaSilentMinute(context, it) }
+                        )
+                    }
+
                 }
                 HorizontalDivider(modifier = Modifier.padding(8.dp))
                 SettingSwitch(
@@ -204,29 +220,44 @@ fun AthanSettingsScreen(
                             targetState = isAthanPlaying,
                             label = "isAthanPlaying"
                         ) { isPlay ->
-                            ElevatedAssistChip(onClick = { viewModel.playAthan(context) }, label = {
-                                Text(text = stringResource(id = if (isPlay) R.string.stop else R.string.play_athan))
-                            }, leadingIcon = {
+                            ElevatedButton(onClick = { viewModel.playAthan(context) }) {
+                                Text(
+                                    text = stringResource(id = if (isPlay) R.string.stop else R.string.play_athan),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.padding(4.dp))
                                 Icon(
                                     imageVector = if (isPlay) Icons.Default.StopCircle else Icons.Default.PlayCircle,
                                     contentDescription = ""
                                 )
-                            })
+                            }
                         }
                     AnimatedContent(
                         targetState = isAlarmPlaying,
                         label = "isAlarmPlaying"
                     ) { isPlay ->
-                        ElevatedAssistChip(onClick = { viewModel.playAlarm(context) }, label = {
-                            Text(text = stringResource(id = if (isPlay) R.string.stop else R.string.play_alert))
-                        }, leadingIcon = {
+                        ElevatedButton(onClick = { viewModel.playAlarm(context) }) {
+                            Text(
+                                text = stringResource(id = if (isPlay) R.string.stop else R.string.play_alert),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(modifier = Modifier.padding(4.dp))
                             Icon(
                                 imageVector = if (isPlay) Icons.Default.StopCircle else Icons.Default.PlayCircle,
                                 contentDescription = ""
                             )
-                        })
+                        }
                     }
                 }
+                HorizontalDivider(modifier = Modifier.padding(8.dp))
+                AthanBackgroundSection(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    backgroundUri = selectedBackground,
+                    id = athanId,
+                    onSelectBackground = { viewModel.updateSelectedBackground(it) }
+                )
                 Spacer(modifier = Modifier.height(50.dp))
             }
         }

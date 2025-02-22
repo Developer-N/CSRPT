@@ -96,7 +96,6 @@
     <string name="mail_contect">Sent From Calendar + sunnah pray times</string>
     <string name="send_mail">send mail</string>
     <string name="str_changes_title">Changes</string>
-    <string name="changes">"App Changes "</string>
 
     <string name="update_available">New update is a available!</string>
     <string name="download">Download</string>
@@ -118,9 +117,6 @@
     <string name="play_alert">Play Alert</string>
     <string name="add_normal_athans">Add normal athan</string>
     <string name="add_alarm">Add Alarm</string>
-    <string name="play_athan_problem">If you have problem with play athan change below methods</string>
-    <string name="first_method">First Method</string>
-    <string name="second_method">Second Method</string>
     <string name="bfajr">Alert before fajr</string>
     <string name="bdhuhr">Alert before dhuhr</string>
     <string name="basr">Alert before asr</string>
@@ -142,6 +138,7 @@
     <string name="enable_alarm_before">Enable or Disable</string>
     <string name="alarm_after">Alarm after</string>
     <string name="silent_after">Silent phone after athan for selected minute</string>
+    <string name="jumma_silent">Silent phone after jumma athan for selected minute</string>
     <string name="enable_silent">Enable Silent</string>
     <string name="enable_alarm_after">Enable or Disable</string>
     <string name="select_athan_name">Select athan</string>
@@ -177,6 +174,7 @@
     <string name="just_translate">Just translate</string>
     <string name="play_type">Play type</string>
     <string name="play_next_sura">Play next sura at end</string>
+    <string name="quran_player_speed">Quran player speed</string>
     <string name="str_bismillah" translatable="false">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
     <string name="quran_font_setting">Quran font setting</string>
     <string name="english_font_setting">English font setting</string>
@@ -241,6 +239,7 @@
     <string name="calculated_asr">Calculated asr</string>
 
 
+    <string name="theme_cyan">Cyan</string>
     <string name="theme_dark_green">Dark Green</string>
     <string name="theme_purple">Purple</string>
     <string name="theme_deep_purple">Deep Purple</string>
@@ -259,9 +258,11 @@
     <string name="reference">Reference</string>
     <string name="play">Play</string>
     <string name="azkar_reminder">Azkar Reminder</string>
+    <string name="read_azkar">Read Azkar</string>
     <string name="morning_azkar">Remembrance In the morning</string>
     <string name="evening_azkar">Remembrance In the evening</string>
-    <string name="for_read_azkar_tap">It\'s time to read %s For read azkar tap</string>
+    <string name="azkar_notification_title" translatable="false">وَلَذِكْرُ ٱللَّهِ أَكْبَرُ</string>
+    <string name="azkar_notification_message">It\'s time for read azkar %s!</string>
 
     <string name="post_notification_permission_message">For show notification application need you to allow permission.</string>
 
@@ -279,4 +280,43 @@
     <string name="selected_location">Selected Location</string>
 
     <string name="owghat">Pray Times</string>
+    <string name="athan_background">Athan Background</string>
+    <string name="default_background">Default Background</string>
+    <string name="select_from_gallery">Select from gallery</string>
+
+    <string name="help_fix_athan_problems">Help fix athan problems</string>
+    <string name="help_fix_athan_problems_msg">Below items must be Checked</string>
+
+    <string name="show_overly_permission_title">Show overly permission</string>
+    <string name="show_overly_permission_msg">Show overly permission msg</string>
+
+    <string name="phone_state_permission_title">Phone state permission</string>
+    <string name="phone_state_permission_msg">Phone state permission msg</string>
+
+    <string name="post_notification_permission_title">Post Notification permission</string>
+    <string name="post_notification_permission_msg">Post Notification permission msg</string>
+
+    <string name="battery_optimization_title">Battery optimization</string>
+    <string name="battery_optimization_msg">Battery Optimization</string>
+
+    <string name="other_checks">Other Checks</string>
+
+    <string name="show_system_ringtones">Show system ringtones</string>
+    <string name="show_system_ringtones_msg">if is active you can select system ringtones for athan and alert.</string>
+    <string name="added_file">Added file %s</string>
+
+    <string name="open_site">Open Site</string>
+
+    <string name="app_channel">App chanel</string>
+
+    <string name="hadeeth">Hadeeth</string>
+    <string name="about_hadeeth">Source of Hadeeth</string>
+    <string name="categories">Categories</string>
+    <string name="hadeeth_chapters">Hadeeth Chapters</string>
+    <string name="hadeeth_number">Hadeeth number %s</string>
+    <string name="sharh">Sharh</string>
+    <string name="benefits">Benefits</string>
+    <string name="words_meaning">Words Meaning</string>
+    <string name="clear_cached_data">Clear Cached Data</string>
+    <string name="hadeeth_not_exist">Internet problem or hadeeth not exist!</string>
 </resources>

@@ -21,16 +21,13 @@ import android.view.View
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
-import com.byagowi.persiancalendar.ASR_KEY
 import com.byagowi.persiancalendar.BuildConfig
-import com.byagowi.persiancalendar.DEFAULT_ATHAN_VOLUME
-import com.byagowi.persiancalendar.DHUHR_KEY
-import com.byagowi.persiancalendar.FAJR_KEY
-import com.byagowi.persiancalendar.ISHA_KEY
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
-import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.PrayTime
+import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.spacedComma
@@ -40,8 +37,6 @@ import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.getFromStringId
-import com.byagowi.persiancalendar.utils.getPrayTimeName
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.setDirection
 import ir.namoo.commons.model.AthanSetting
@@ -49,6 +44,7 @@ import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
 import ir.namoo.commons.utils.getDefaultDOAUri
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
@@ -57,6 +53,7 @@ private const val ACTION_STOP = "ir.namoo.religiousprayers.ACTION_STOP"
 
 class NAthanNotification : Service() {
     private val prayTimeProvider: PrayTimeProvider = get()
+    val athanSettingsDB: AthanSettingsDB = get()
     private val notificationId = if (BuildConfig.DEVELOPMENT) Random.nextInt(2000, 4000) else 3000
     private var notificationManager: NotificationManager? = null
     private var setting: AthanSetting? = null
@@ -134,24 +131,23 @@ class NAthanNotification : Service() {
 
             val notificationChannelId = notificationId.toString()
 
-            prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: return super.onStartCommand(
-                intent, flags, startId
-            )
+            prayerKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
 
             notificationManager = getSystemService()
-            setting = AthanSettingsDB.getInstance(applicationContext).athanSettingsDAO()
-                .getAllAthanSettings().find { prayerKey?.contains(it.athanKey) == true }
-                ?: return super.onStartCommand(intent, flags, startId)
-            val soundUri = getAthanUri(setting, prayerKey, applicationContext)
-            if (prayerKey?.startsWith("B") == true || (prayerKey?.startsWith("A") == true && prayerKey != ASR_KEY) || setting?.playDoa == false) isDoaPlayed =
-                true
-            runCatching {
-                // ensure custom reminder sounds play well
-                grantUriPermission(
-                    "com.android.systemui", soundUri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }.onFailure(logException)
-
+            runBlocking {
+                setting = athanSettingsDB.athanSettingsDAO().getAllAthanSettings()
+                    .find { prayerKey?.contains(it.athanKey) == true }
+                    ?: return@runBlocking super.onStartCommand(intent, flags, startId)
+                val soundUri = getAthanUri(setting, prayerKey, applicationContext)
+                if (prayerKey?.startsWith("B") == true || (prayerKey?.startsWith("A") == true && prayerKey != PrayTime.ASR.name) || setting?.playDoa == false) isDoaPlayed =
+                    true
+                runCatching {
+                    // ensure custom reminder sounds play well
+                    grantUriPermission(
+                        "com.android.systemui", soundUri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }.onFailure(logException)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val notificationChannel = NotificationChannel(
                     notificationChannelId,
@@ -163,28 +159,31 @@ class NAthanNotification : Service() {
                     it.lightColor = Color.GREEN
                     it.vibrationPattern = LongArray(2) { 500 }
                     it.enableVibration(true)
-                    it.setBypassDnd(prayerKey == FAJR_KEY || prayerKey == "B$FAJR_KEY")
+                    it.setBypassDnd(prayerKey == PrayTime.FAJR.name || prayerKey == "B${PrayTime.FAJR.name}")
                 }
                 notificationManager?.createNotificationChannel(notificationChannel)
             }
 
 
             val cityName = cityName.value
-            val prayTimeName = getString(getPrayTimeName(prayerKey))
+            val prayTimeName = prayerKey?.let { getStringForKey(it) } ?: "-"
             val title = if (cityName == null) prayTimeName
             else "$prayTimeName$spacedComma${getString(R.string.in_city_time, cityName)}"
 
-            var prayTimes = coordinates.value?.calculatePrayTimes()
+            var prayTimes = coordinates.value?.calculatePrayTimes() ?: return super.onStartCommand(
+                intent, flags, startId
+            )
             prayTimes = prayTimeProvider.replace(prayTimes, Jdn.today())
             val subtitle = when (prayerKey) {
-                FAJR_KEY -> listOf(R.string.sunrise, R.string.dhuhr)
-                DHUHR_KEY -> listOf(R.string.asr, R.string.maghrib)
-                ASR_KEY -> listOf(R.string.maghrib, R.string.isha)
-                MAGHRIB_KEY -> listOf(R.string.isha)
-                ISHA_KEY -> listOf()
+                PrayTime.FAJR.name -> listOf(PrayTime.SUNRISE, PrayTime.DHUHR)
+                PrayTime.DHUHR.name -> listOf(PrayTime.ASR, PrayTime.MAGHRIB)
+                PrayTime.ASR.name -> listOf(PrayTime.MAGHRIB, PrayTime.ISHA)
+                PrayTime.MAGHRIB.name -> listOf(PrayTime.ISHA)
+                PrayTime.ISHA.name -> listOf()
                 else -> listOf()
             }.joinToString(" - ") {
-                "${getString(it)}: ${prayTimes?.getFromStringId(it)?.toFormattedString() ?: ""}"
+                getString(it.stringRes)
+                "${getString(it.stringRes)}: ${Clock(prayTimes[it].value).toFormattedString()}"
             }
 
             val stopIntent = Intent(this, NAthanNotification::class.java).apply {
@@ -219,20 +218,19 @@ class NAthanNotification : Service() {
                     .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             }
 
-            startForeground(notificationId, notificationBuilder.build())
+            notificationManager?.notify(notificationId, notificationBuilder.build())
 
             preventPhoneCallIntervention.startListener(this)
             //########################################################## Play Athan
             if (setting?.playType == 1) {
-                val isFajr = prayerKey == FAJR_KEY
+                val isFajr = prayerKey == PrayTime.FAJR.name
                 var goMute = false
 
                 getSystemService<AudioManager>()?.let { audioManager ->
                     originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-                    if (setting?.athanVolume != DEFAULT_ATHAN_VOLUME) // Don't change alarm volume if isn't set in-app
-                        audioManager.setStreamVolume(
-                            AudioManager.STREAM_ALARM, setting?.athanVolume ?: 1, 0
-                        )
+                    audioManager.setStreamVolume(
+                        AudioManager.STREAM_ALARM, setting?.athanVolume ?: 1, 0
+                    )
                     // Mute if system alarm is set to lowest, ringer mode is silent/vibration and it isn't Fajr
                     if (originalVolume == 1 && !isFajr && audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) goMute =
                         true

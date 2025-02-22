@@ -6,19 +6,19 @@ import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,9 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
@@ -41,24 +43,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.R
 import ir.namoo.commons.utils.isNetworkConnected
 import org.koin.androidx.compose.koinViewModel
@@ -91,25 +90,17 @@ fun IntroHomeScreen(
         }
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(
-                        if (isSystemInDarkTheme()) 0.3f
-                        else 1f
-                    ),
-                alignment = Alignment.BottomCenter,
-                contentScale = ContentScale.FillBounds,
-                painter = painterResource(id = R.drawable.islamic_background),
-                contentDescription = "Islamic Photo"
-            )
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+
         }
+    ) { contentPadding ->
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             IntroHomeTabs(
                 titles = listOf(
@@ -122,33 +113,38 @@ fun IntroHomeScreen(
                         Icons.Filled.LocationCity,
                         Icons.Filled.LocationOn,
                     )
-                ), tabSelected = selected
-            ) {
-                isNetworkConnected = isNetworkConnected(context)
-                viewModel.selectScreen(it)
-            }
+                ), tabSelected = selected,
+                onTabSelected = {
+                    isNetworkConnected = isNetworkConnected(context)
+                    viewModel.selectScreen(it)
+                }
+            )
             AnimatedVisibility(
                 visible = !isNetworkConnected,
                 enter = slideInVertically(),
                 exit = shrinkVertically()
             ) {
-                Text(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.errorContainer)
-                        .padding(8.dp)
-                        .clickable {
-                            isNetworkConnected = isNetworkConnected(context)
-                        },
-                    text = stringResource(id = R.string.network_error_message) + "\n" + stringResource(
-                        id = R.string.recheck
+                ElevatedCard(modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
                     ),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                )
+                    shape = MaterialTheme.shapes.extraLarge,
+                    onClick = { isNetworkConnected = isNetworkConnected(context) }) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        text = stringResource(id = R.string.network_error_message) + "\n" + stringResource(
+                            id = R.string.recheck
+                        ),
+                        textAlign = TextAlign.Center,
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             IntroHomeContent(screen = selected,
@@ -163,7 +159,6 @@ fun IntroHomeScreen(
                 })
         }
     }
-
 }
 
 @Composable
@@ -182,7 +177,7 @@ fun IntroHomeTabs(
                 Modifier
                     .tabIndicatorOffset(tabPositions[tabSelected.ordinal])
                     .fillMaxSize()
-                    .padding(top = 30.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
+                    .padding(4.dp)
                     .clip(MaterialTheme.shapes.extraLarge)
                     .drawBehind {
                         val startX = size.width / 2 - size.width / 2
@@ -203,7 +198,7 @@ fun IntroHomeTabs(
         titles.forEachIndexed { index, title ->
             val selected = index == tabSelected.ordinal
             Tab(modifier = Modifier
-                .padding(top = 35.dp, start = 4.dp, end = 4.dp, bottom = 4.dp)
+                .padding(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge), selected = selected, onClick = {
                 onTabSelected(IntroScreen.entries[index])
             }) {
@@ -214,16 +209,28 @@ fun IntroHomeTabs(
                 ) {
                     AnimatedVisibility(
                         visible = selected,
-                        enter = slideInHorizontally(),
-                        exit = shrinkHorizontally()
+                        enter = slideInHorizontally(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ),
+                        exit = shrinkHorizontally(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ),
                     ) {
                         Text(
                             modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
                             text = title.first,
                             fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold,
                             color = colorOnAppBar
                         )
                     }
+                    Spacer(modifier = Modifier.padding(4.dp))
                     Icon(
                         imageVector = title.second,
                         contentDescription = title.first,

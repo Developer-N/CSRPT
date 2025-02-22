@@ -1,10 +1,8 @@
 package com.byagowi.persiancalendar.ui.settings.interfacecalendar
 
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -32,12 +29,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.EventsRepository
@@ -46,8 +46,7 @@ import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
-import com.byagowi.persiancalendar.utils.appPrefs
-import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.preferences
 import org.jetbrains.annotations.VisibleForTesting
 
 @Composable
@@ -56,7 +55,7 @@ fun HolidaysTypesDialog(onDismissRequest: () -> Unit) {
     val language by language.collectAsState()
     val enabledTypes = rememberSaveable(
         saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })
-    ) { EventsRepository.getEnabledTypes(context.appPrefs, language).toMutableStateList() }
+    ) { EventsRepository.getEnabledTypes(context.preferences, language).toMutableStateList() }
     AppDialog(title = { Text(stringResource(R.string.events)) }, dismissButton = {
         TextButton(onClick = onDismissRequest) {
             Text(stringResource(R.string.cancel))
@@ -64,7 +63,7 @@ fun HolidaysTypesDialog(onDismissRequest: () -> Unit) {
     }, confirmButton = {
         TextButton(onClick = {
             onDismissRequest()
-            context.appPrefs.edit { putStringSet(PREF_HOLIDAY_TYPES, enabledTypes.toSet()) }
+            context.preferences.edit { putStringSet(PREF_HOLIDAY_TYPES, enabledTypes.toSet()) }
         }) { Text(stringResource(R.string.accept)) }
     }, onDismissRequest = onDismissRequest
     ) {
@@ -143,7 +142,6 @@ fun HolidaysTypesDialog(onDismissRequest: () -> Unit) {
 @Composable
 private fun HolidaysTypesDialogPreview() = HolidaysTypesDialog {}
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 @VisibleForTesting
 fun CountryEvents(
@@ -186,21 +184,24 @@ fun CountryEvents(
         Spacer(modifier = Modifier.width(HolidaysHorizontalPaddingItem.dp))
         FlowRow(verticalArrangement = Arrangement.Center) {
             Text(calendarCenterName, modifier = Modifier.align(Alignment.CenterVertically))
-            val context = LocalContext.current
             if (sourceLink.isNotEmpty()) {
                 Text(spacedComma)
-                ClickableText(
-                    AnnotatedString(stringResource(R.string.view_source)),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline
-                    ),
+                Text(
+                    buildAnnotatedString {
+                        withLink(
+                            link = LinkAnnotation.Url(
+                                url = sourceLink,
+                                styles = TextLinkStyles(
+                                    SpanStyle(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                )
+                            ),
+                        ) { append(stringResource(R.string.view_source)) }
+                    },
                     modifier = Modifier.align(Alignment.CenterVertically),
-                ) {
-                    runCatching {
-                        CustomTabsIntent.Builder().build().launchUrl(context, sourceLink.toUri())
-                    }.onFailure(logException)
-                }
+                )
             }
         }
     }

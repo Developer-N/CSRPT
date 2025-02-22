@@ -1,10 +1,14 @@
 package ir.namoo.quran.settings.data
 
+import ir.namoo.commons.repository.DataState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+
 class QuranSettingRepository(private val quranSettingDB: QuranSettingDB) {
 
-
-    suspend fun getTranslatesSettings(): List<TranslateSetting> {
-
+    fun getTranslatesSettings() = flow {
+        emit(DataState.Loading)
         runCatching {
             var res = quranSettingDB.quranSettingDAO().getTranslatesSettings()
             if (res.isEmpty()) res = addDefaultTranslateSettings()
@@ -17,10 +21,23 @@ class QuranSettingRepository(private val quranSettingDB: QuranSettingDB) {
                 }
             }
             if (deleted) res = quranSettingDB.quranSettingDAO().getTranslatesSettings()
-            return res.sortedBy { it.priority }
-        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
-
-    }
+            // fix another issue in Xiaomi :|
+            var haveDuplicates = false
+            for (r in res)
+                if (res.filter { it.priority == r.priority }.size > 1) {
+                    haveDuplicates = true
+                    break
+                }
+            if (haveDuplicates) {
+                for (r in res) {
+                    quranSettingDB.quranSettingDAO().updateTranslateSetting(r.copy(priority = r.id))
+                }
+                res = quranSettingDB.quranSettingDAO().getTranslatesSettings()
+            }
+            emit(DataState.Success(res.sortedBy { it.priority }))
+        }.onFailure { emit(DataState.Error(it.message ?: "Error")) }
+            .getOrElse { emit(DataState.Error(it.message ?: "Error")) }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun updateTranslateSetting(translateSetting: TranslateSetting) {
         runCatching {

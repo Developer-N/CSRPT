@@ -16,15 +16,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
-import com.byagowi.persiancalendar.ASR_KEY
-import com.byagowi.persiancalendar.DHUHR_KEY
-import com.byagowi.persiancalendar.FAJR_KEY
-import com.byagowi.persiancalendar.ISHA_KEY
-import com.byagowi.persiancalendar.MAGHRIB_KEY
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SUNRISE_KEY
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.utils.formatDate
@@ -38,7 +33,7 @@ import ir.namoo.commons.model.PrayTimesModel
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 
 fun String.digitsOf(): String {
@@ -195,39 +190,63 @@ fun fixSummerTimes(prayTimes: PrayTimes?, add: Boolean = true): PrayTimes? {
     val sunset = prayTimes.javaClass.getDeclaredField("sunset").apply { isAccessible = true }
     val maghrib = prayTimes.javaClass.getDeclaredField("maghrib").apply { isAccessible = true }
     val isha = prayTimes.javaClass.getDeclaredField("isha").apply { isAccessible = true }
-    val min = if (add) 60 else -60
+
     imsak.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.imsak).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.imsak).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.imsak).minus(Clock(1.0)).value
     )
     fajr.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.fajr).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.fajr).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.fajr).minus(Clock(1.0)).value
     )
 
     sunrise.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.sunrise).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.sunrise).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.sunrise).minus(Clock(1.0)).value
     )
     dhuhr.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.dhuhr).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.dhuhr).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.dhuhr).minus(Clock(1.0)).value
     )
     asr.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.asr).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.asr).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.asr).minus(Clock(1.0)).value
     )
     sunset.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.sunset).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.sunset).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.sunset).minus(Clock(1.0)).value
     )
     maghrib.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.maghrib).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.maghrib).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.maghrib).minus(Clock(1.0)).value
     )
     isha.set(
         prayTimes,
-        timeToDouble(fixTime(Clock.fromHoursFraction(prayTimes.isha).toFormattedString(), min))
+        if (add)
+            Clock(prayTimes.isha).plus(Clock(1.0)).value
+        else
+            Clock(prayTimes.isha).minus(Clock(1.0)).value
     )
 
     return prayTimes
@@ -297,7 +316,7 @@ fun formatServerDate(serverDate: String): String {
     ).parse(serverDate)
     if (date == null) date = Date()
     return formatDate(
-        Jdn(date.toGregorianCalendar().toCivilDate().toJdn()).toCalendar(mainCalendar)
+        Jdn(date.toGregorianCalendar().toCivilDate().toJdn()) on mainCalendar
     )
 }
 
@@ -309,7 +328,7 @@ fun createAthansSettingDB(context: Context) {
     if (athanSettingDB.getAllAthanSettings().isEmpty()) {
         athanSettingDB.insert(
             AthanSetting(
-                FAJR_KEY,
+                athanKey = PrayTime.FAJR.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -320,14 +339,15 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
         athanSettingDB.insert(
             AthanSetting(
-                SUNRISE_KEY,
+                athanKey = PrayTime.SUNRISE.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -338,14 +358,15 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
         athanSettingDB.insert(
             AthanSetting(
-                DHUHR_KEY,
+                athanKey = PrayTime.DHUHR.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -356,14 +377,15 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
         athanSettingDB.insert(
             AthanSetting(
-                ASR_KEY,
+                athanKey = PrayTime.ASR.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -374,14 +396,15 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
         athanSettingDB.insert(
             AthanSetting(
-                MAGHRIB_KEY,
+                athanKey = PrayTime.MAGHRIB.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -392,14 +415,15 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
         athanSettingDB.insert(
             AthanSetting(
-                ISHA_KEY,
+                athanKey = PrayTime.ISHA.name,
                 state = false,
                 playDoa = false,
                 playType = 0,
@@ -410,9 +434,10 @@ fun createAthansSettingDB(context: Context) {
                 isSilentEnabled = false,
                 silentMinute = 20,
                 isAscending = false,
-                athanVolume = 1,
+                athanVolume = 3,
                 athanURI = "",
-                alertURI = ""
+                alertURI = "",
+                backgroundUri = ""
             )
         )
     }
@@ -448,10 +473,9 @@ fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
 
 fun getAthanUri(setting: AthanSetting?, key: String?, context: Context): Uri {
     return if (setting == null || key == null) getDefaultAthanUri(context)
-    else if (key.startsWith("B") || (key.startsWith("A") && key != ASR_KEY) || key == "SUNRISE") if (setting.alertURI == "") getDefaultAlertUri(
-        context
-    )
-    else setting.alertURI.toUri()
+    else if (key.startsWith("B") || (key.startsWith("A") && key != PrayTime.ASR.name) || key == "SUNRISE")
+        if (setting.alertURI == "") getDefaultAlertUri(context)
+        else setting.alertURI.toUri()
     else if (setting.athanURI == "") when (setting.athanKey) {
         "FAJR" -> getDefaultFajrAthanUri(context)
         "SUNRISE" -> getDefaultAlertUri(context)
