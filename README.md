@@ -3,10 +3,16 @@
 
 ## تقویم + اوقات شرعی اهل سنت
 
-<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/ic_launcher-web.png" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/ic_launcher-web.webp" width="250" style=" display: block;margin-left: auto;margin-right: auto;" />
 <br>
 <img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/1.png" width="200" />
 <img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/2.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/3.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/4.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/5.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/6.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/7.png" width="200" />
+<img src="https://github.com/Developer-N/CSRPT/blob/master/SunnahCalendar/src/main/pics/8.png" width="200" />
 
 یک توسعه از برنامه متن باز تقویم فارسی با تمرکز روی اوقات دقیق نماز و ارائه ی امکانات مانند اذکار و قرآن صوتی. اطلاعات بیشتر را در آدرس زیر ببینید.
 <br>
@@ -21,6 +27,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 ## Download
 
 - [Github](https://github.com/Developer-N/CSRPT)
+- [Google Play](https://play.google.com/store/apps/details?id=ir.namoo.religiousprayers)
 - [Bazaar](https://cafebazaar.ir/app/ir.namoo.religiousprayers)
 - [Myket](https://myket.ir/app/ir.namoo.religiousprayers)
 - [Charkhoneh](https://www.charkhoneh.com/content/930720320)
@@ -28,7 +35,7 @@ https://github.com/persian-calendar/DroidPersianCalendar
 
 ## License
 
-Copyright (C) 2018-2023  Namoo Developer Group 
+Copyright (C) 2018-2025  Namoo Developer Group 
 
 This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by 
