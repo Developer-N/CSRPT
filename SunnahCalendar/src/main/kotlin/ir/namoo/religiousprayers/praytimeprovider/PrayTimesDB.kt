@@ -31,7 +31,7 @@ abstract class PrayTimesDB : RoomDatabase() {
             return instance ?: synchronized(PrayTimesDB::class) {
                 val db = Room.databaseBuilder(
                     context.applicationContext, PrayTimesDB::class.java, "sunnah_db"
-                ).build()
+                ).setJournalMode(JournalMode.TRUNCATE).build()
                 instance = db
                 db
             }

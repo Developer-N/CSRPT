@@ -24,8 +24,10 @@ import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -36,14 +38,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.initGlobal
-import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.theme.AppTheme
-import com.byagowi.persiancalendar.ui.utils.isSystemInDarkTheme
+import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.toastMessage
@@ -65,11 +64,7 @@ class QuranActivity : ComponentActivity() {
 
     @SuppressLint("SdCardPath")
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            SystemBarStyle.dark(Color.TRANSPARENT),
-            if (isSystemInDarkTheme(resources.configuration)) SystemBarStyle.dark(Color.TRANSPARENT)
-            else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        )
+        applyEdgeToEdge(isBackgroundColorLight = false, isSurfaceColorLight = true)
         setTheme(R.style.BaseTheme)
         applyAppLanguage(this)
 
@@ -77,11 +72,16 @@ class QuranActivity : ComponentActivity() {
 
         initGlobal(this)
         initQuranUtils(this)
-
+        viewModel.checkDBAndQari(packageName)
         val startSura = intent.getIntExtra(EXTRA_SURA, -1)
         val startAya = intent.getIntExtra(EXTRA_AYA, -1)
         setContent {
             AppTheme {
+                val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
+                val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
+                LaunchedEffect(isBackgroundColorLight, isSurfaceColorLight) {
+                    applyEdgeToEdge(isBackgroundColorLight, isSurfaceColorLight)
+                }
                 val isDBExist by viewModel.isDBExist.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 val qariList by viewModel.qariList.collectAsState()
@@ -200,9 +200,17 @@ class QuranActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        applyAppLanguage(this)
-        viewModel.checkDBAndQari(packageName)
+    private fun applyEdgeToEdge(isBackgroundColorLight: Boolean, isSurfaceColorLight: Boolean) {
+        val statusBarStyle =
+            if (isBackgroundColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) enableEdgeToEdge(
+            statusBarStyle,
+            if (isSurfaceColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT),
+        ) else enableEdgeToEdge(
+            statusBarStyle,
+            // Just don't tweak navigation bar in older Android versions, leave it to default
+        )
     }
 }//end of QuranActivity

@@ -15,6 +15,10 @@ import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.putJdn
 import com.byagowi.persiancalendar.utils.startWorker
 import com.byagowi.persiancalendar.utils.update
+import ir.namoo.commons.LAST_PLAYED_AFTER_ATHAN_KEY
+import ir.namoo.commons.LAST_PLAYED_BEFORE_ATHAN_KEY
+import ir.namoo.commons.LAST_SILENT_ATHAN_KEY
+import ir.namoo.commons.LAST_STOP_SILENT_ATHAN_KEY
 import ir.namoo.commons.koin.koinModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -38,6 +42,8 @@ class MainApplication : MultiDexApplication(), SharedPreferences.OnSharedPrefere
         when (key) {
             PREF_LAST_APP_VISIT_VERSION -> return // nothing needs to be updated
             EXPANDED_TIME_STATE_KEY -> return // nothing needs to be updated
+            LAST_PLAYED_ATHAN_JDN, LAST_PLAYED_ATHAN_KEY, LAST_PLAYED_BEFORE_ATHAN_KEY,
+            LAST_PLAYED_AFTER_ATHAN_KEY, LAST_SILENT_ATHAN_KEY, LAST_STOP_SILENT_ATHAN_KEY -> return // nothing needs to be updated
             LAST_CHOSEN_TAB_KEY -> return // don't run the expensive update and etc on tab changes
             PREF_ISLAMIC_OFFSET -> {
                 this.preferences.edit { putJdn(PREF_ISLAMIC_OFFSET_SET_DATE, Jdn.today()) }

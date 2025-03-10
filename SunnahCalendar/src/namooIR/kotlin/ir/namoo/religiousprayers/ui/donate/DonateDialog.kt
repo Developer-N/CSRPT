@@ -3,7 +3,6 @@ package ir.namoo.religiousprayers.ui.donate
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.commons.utils.isPackageInstalled
@@ -56,7 +56,8 @@ fun DonateDialog(onDismiss: () -> Unit) {
         scrollState.animateScrollTo(0)
     }
 
-    AlertDialog(onDismissRequest = onDismiss,
+    AlertDialog(
+        onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(id = R.string.close), fontWeight = FontWeight.SemiBold)
@@ -78,9 +79,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     textAlign = TextAlign.Justify
                 )
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -132,8 +131,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                         ElevatedButton(
                             onClick = { openDonateUrl(pair.first, context) }) {
                             Text(
-                                text = formatNumber(pair.second),
-                                fontWeight = FontWeight.SemiBold
+                                text = formatNumber(pair.second), fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -144,9 +142,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     }
                 }
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -168,11 +164,13 @@ fun DonateDialog(onDismiss: () -> Unit) {
 }
 
 private fun openDonateUrl(url: String?, context: Context) {
-    CustomTabsIntent.Builder().build().apply {
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (isPackageInstalled(
-                "com.android.chrome", context.packageManager
-            )
-        ) intent.setPackage("com.android.chrome")
-    }.launchUrl(context, Uri.parse(url))
+    url?.let { url ->
+        CustomTabsIntent.Builder().build().apply {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (isPackageInstalled(
+                    "com.android.chrome", context.packageManager
+                )
+            ) intent.setPackage("com.android.chrome")
+        }.launchUrl(context, url.toUri())
+    }
 }

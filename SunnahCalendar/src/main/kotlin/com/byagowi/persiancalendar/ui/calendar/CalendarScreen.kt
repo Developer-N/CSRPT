@@ -12,6 +12,7 @@ import android.provider.CalendarContract
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -60,6 +63,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.SwipeDown
 import androidx.compose.material.icons.twotone.SwipeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -157,19 +161,14 @@ import com.byagowi.persiancalendar.ui.common.DatePickerDialog
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
-import com.byagowi.persiancalendar.ui.common.ShrinkingFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
-import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeNoBottomEnd
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
-import com.byagowi.persiancalendar.utils.HALF_HOUR_IN_MILLIS
-import com.byagowi.persiancalendar.utils.ONE_HOUR_IN_MILLIS
-import com.byagowi.persiancalendar.utils.TWO_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.calendar
 import com.byagowi.persiancalendar.utils.dayTitleSummary
 import com.byagowi.persiancalendar.utils.formatNumber
@@ -191,6 +190,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.koinInject
 import java.util.Date
 import java.util.GregorianCalendar
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -243,17 +244,20 @@ fun SharedTransitionScope.CalendarScreen(
         },
         floatingActionButton = {
             val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
-            ShrinkingFloatingActionButton(
+            AnimatedVisibility(
+                visible = selectedTabIndex == EVENTS_TAB && !isYearView && isCurrentDestination,
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .renderInSharedTransitionScopeOverlay(
                         renderInOverlay = { isCurrentDestination && isTransitionActive },
                     ),
-                isVisible = selectedTabIndex == EVENTS_TAB && !isYearView && isCurrentDestination,
-                action = { addEvent(AddEventData.fromJdn(viewModel.selectedDay.value)) },
-                icon = Icons.Default.Add,
-                title = stringResource(R.string.add_event),
-            )
+                enter = scaleIn(),
+                exit = scaleOut(),
+            ) {
+                FloatingActionButton(
+                    onClick = { addEvent(AddEventData.fromJdn(viewModel.selectedDay.value)) },
+                ) { Icon(Icons.Default.Add, stringResource(R.string.add_event)) }
+            }
         },
     ) { paddingValues ->
         // Refresh the calendar on resume
@@ -682,7 +686,7 @@ private fun Search(viewModel: CalendarViewModel) {
     LaunchedEffect(Unit) {
         launch {
             // 2s timeout, give up if took too much time
-            withTimeoutOrNull(TWO_SECONDS_IN_MILLIS) { viewModel.initializeEventsRepository() }
+            withTimeoutOrNull(2.seconds) { viewModel.initializeEventsRepository() }
         }
     }
     var query by rememberSaveable { mutableStateOf("") }
@@ -773,6 +777,7 @@ private fun SharedTransitionScope.Toolbar(
     today: Jdn,
 ) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
 
     val selectedMonthOffset by viewModel.selectedMonthOffset.collectAsState()
     val todayDate = remember(today, mainCalendar) { today on mainCalendar }
@@ -902,7 +907,7 @@ private fun SharedTransitionScope.Toolbar(
                 AppIconButton(
                     icon = Icons.AutoMirrored.Default.ContactSupport,
                     title = stringResource(id = R.string.support)
-                ) { context.getActivity()?.openUrlInCustomTab("https://namoodev.ir/faq") }
+                ) { activity?.openUrlInCustomTab("https://namoodev.ir/faq") }
             }
             AnimatedVisibility(!isYearView) {
                 Menu(
@@ -1122,9 +1127,9 @@ data class AddEventData(
             begin[GregorianCalendar.MINUTE] = 0
             begin[GregorianCalendar.SECOND] = 0
             begin[GregorianCalendar.MILLISECOND] = 0
-            begin.timeInMillis += if (wasAtFirstHalf) HALF_HOUR_IN_MILLIS else ONE_HOUR_IN_MILLIS
+            begin.timeInMillis += (if (wasAtFirstHalf) .5 else 1.0).hours.inWholeMilliseconds
             val end = Date(begin.time.time)
-            end.time += ONE_HOUR_IN_MILLIS
+            end.time += 1.hours.inWholeMilliseconds
             return AddEventData(
                 beginTime = begin.time,
                 endTime = end,

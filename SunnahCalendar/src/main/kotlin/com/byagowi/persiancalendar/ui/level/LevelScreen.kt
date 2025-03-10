@@ -3,6 +3,7 @@ package com.byagowi.persiancalendar.ui.level
 import android.content.pm.ActivityInfo
 import android.os.PowerManager
 import android.view.Surface
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -14,8 +15,11 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,18 +35,23 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -63,14 +72,15 @@ import com.byagowi.persiancalendar.ui.common.AppBottomAppBar
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
-import com.byagowi.persiancalendar.ui.common.ShrinkingFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.StopButton
+import com.byagowi.persiancalendar.ui.theme.appFabElevation
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.ExtraLargeShapeCornerSize
 import com.byagowi.persiancalendar.ui.utils.SensorEventAnnouncer
-import com.byagowi.persiancalendar.ui.utils.getActivity
-import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
 import com.byagowi.persiancalendar.variants.debugLog
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -85,10 +95,11 @@ fun SharedTransitionScope.LevelScreen(
     var cmInchFlip by remember { mutableStateOf(false) }
     var isFullscreen by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val activity = LocalActivity.current
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val activity = context.getActivity() ?: return@DisposableEffect onDispose {}
+        activity ?: return@DisposableEffect onDispose {}
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 debugLog("level: ON_RESUME")
@@ -118,9 +129,9 @@ fun SharedTransitionScope.LevelScreen(
     if (isFullscreen) DisposableEffect(Unit) {
         val lock = context.getSystemService<PowerManager>()
             ?.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "persiancalendar:level")
-        lock?.acquire(FIFTEEN_MINUTES_IN_MILLIS)
+        lock?.acquire(15.minutes.inWholeMilliseconds)
 
-        val activity = context.getActivity() ?: return@DisposableEffect onDispose {}
+        activity ?: return@DisposableEffect onDispose {}
         val windowInsetsController =
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         windowInsetsController.systemBarsBehavior =
@@ -197,7 +208,7 @@ fun SharedTransitionScope.LevelScreen(
                             ),
                         factory = {
                             val levelView = LevelView(it)
-                            context.getActivity()?.let { activity ->
+                            activity?.let { activity ->
                                 orientationProvider = OrientationProvider(activity, levelView)
                             }
                             levelView
@@ -257,6 +268,38 @@ fun SharedTransitionScope.LevelScreen(
                     icon = Icons.Default.FullscreenExit,
                     title = stringResource(R.string.exit_full_screen),
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShrinkingFloatingActionButton(
+    modifier: Modifier,
+    isVisible: Boolean,
+    action: () -> Unit,
+    icon: ImageVector,
+    title: String,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        modifier = modifier,
+        enter = scaleIn(),
+        exit = scaleOut(),
+    ) {
+        FloatingActionButton(onClick = action, elevation = appFabElevation()) {
+            var showLabel by rememberSaveable { mutableStateOf(true) }
+            Row(
+                Modifier.padding(horizontal = if (showLabel) 16.dp else 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(icon, contentDescription = title)
+                LaunchedEffect(Unit) {
+                    // Matches https://github.com/aosp-mirror/platform_frameworks_base/blob/1dcde70/services/core/java/com/android/server/notification/NotificationManagerService.java#L382
+                    delay(3.5.seconds)
+                    showLabel = false
+                }
+                AnimatedVisibility(showLabel) { Text(title) }
             }
         }
     }

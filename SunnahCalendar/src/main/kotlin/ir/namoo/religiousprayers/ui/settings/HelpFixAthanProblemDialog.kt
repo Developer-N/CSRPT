@@ -2,9 +2,9 @@ package ir.namoo.religiousprayers.ui.settings
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -16,10 +16,12 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,11 +29,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LiveHelp
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.BatteryStd
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -46,21 +51,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.Hyphens
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.theme.AppTheme
+import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.utils.logException
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -80,6 +86,7 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
     var isShowOverlayGranted by remember { mutableStateOf(false) }
     var isPostNotificationGranted by remember { mutableStateOf(false) }
     var isIgnoringBatteryOptimizations by remember { mutableStateOf(false) }
+    var showAlarmManagerDialog by remember { mutableStateOf(false) }
 
     val postNotificationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -95,15 +102,16 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                 Lifecycle.Event.ON_RESUME -> {
                     isPhoneStateGranted = phoneStatePermission.status.isGranted
 
-                    isShowOverlayGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        Settings.canDrawOverlays(context)
-                    else true
+                    isShowOverlayGranted =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(
+                            context
+                        )
+                        else true
 
                     isPostNotificationGranted =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                            ActivityCompat.checkSelfPermission(
-                                context, Manifest.permission.POST_NOTIFICATIONS
-                            ) == PackageManager.PERMISSION_GRANTED
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ActivityCompat.checkSelfPermission(
+                            context, Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
                         else true
 
                     isIgnoringBatteryOptimizations = runCatching {
@@ -114,6 +122,13 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                                 )
                         } else true
                     }.onFailure(logException).getOrNull() == true
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val alarmManager = context.getSystemService<AlarmManager>()
+                        alarmManager?.let {
+                            showAlarmManagerDialog = !it.canScheduleExactAlarms()
+                        }
+                    } else showAlarmManagerDialog = false
                 }
 
                 Lifecycle.Event.ON_PAUSE -> {}
@@ -129,162 +144,174 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
         }
     }
 
-    AlertDialog(onDismissRequest = { onDismiss() }, confirmButton = {
-        TextButton(onClick = { onDismiss() }) {
-            Text(text = stringResource(id = R.string.close))
+    AlertDialog(onDismissRequest = onDismiss, confirmButton = {
+        TextButton(onClick = onDismiss) {
+            Text(
+                text = stringResource(id = R.string.close),
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }, icon = {
         Icon(
             imageVector = Icons.AutoMirrored.Default.LiveHelp, contentDescription = "Help"
         )
     }, text = {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(state = rememberScrollState())
-        ) {
-            Text(
+        val scrollState = rememberScrollState()
+        Box {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(4.dp),
-                text = stringResource(id = R.string.help_fix_athan_problems_msg),
-                style = TextStyle.Default.copy(hyphens = Hyphens.Auto),
-                fontWeight = FontWeight.SemiBold
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                FixAthanItem(
-                    title = stringResource(id = R.string.battery_optimization_title),
-                    subtitle = stringResource(id = R.string.battery_optimization_msg),
-                    isOk = isIgnoringBatteryOptimizations,
-                    onClick = {
-                        context.startActivity(
-                            Intent().apply {
-                                action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                data = Uri.parse("package:${context.packageName}")
-                            }
-                        )
-                    }
+                    .verticalScroll(state = scrollState)
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    text = stringResource(id = R.string.help_fix_athan_problems_msg),
+                    style = TextStyle.Default.copy(hyphens = Hyphens.Auto),
+                    fontWeight = FontWeight.SemiBold
                 )
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                FixAthanItem(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    FixAthanItem(
+                        icon = Icons.Default.BatteryStd,
+                        title = stringResource(id = R.string.battery_optimization_title),
+                        subtitle = stringResource(id = R.string.battery_optimization_msg),
+                        isOk = isIgnoringBatteryOptimizations,
+                        onClick = {
+                            context.startActivity(
+                                Intent().apply {
+                                    action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    data = "package:${context.packageName}".toUri()
+                                })
+                        })
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) FixAthanItem(
+                    icon = Icons.Default.Notifications,
                     title = stringResource(id = R.string.post_notification_permission_title),
                     subtitle = stringResource(id = R.string.post_notification_permission_msg),
                     isOk = isPostNotificationGranted,
                     onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            postNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        postNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    })
+                FixAthanItem(
+                    icon = Icons.Default.Layers,
+                    title = stringResource(id = R.string.show_overly_permission_title),
+                    subtitle = stringResource(id = R.string.show_overly_permission_msg),
+                    isOk = isShowOverlayGranted,
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            context.startActivity(
+                                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                })
                         }
-                    }
-                )
-            FixAthanItem(
-                title = stringResource(id = R.string.show_overly_permission_title),
-                subtitle = stringResource(id = R.string.show_overly_permission_msg),
-                isOk = isShowOverlayGranted,
-                onClick = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        context.startActivity(
-                            Intent(
-                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:" + context.applicationContext.packageName)
-                            )
+                    })
+                FixAthanItem(
+                    icon = Icons.Default.Phone,
+                    title = stringResource(id = R.string.phone_state_permission_title),
+                    subtitle = stringResource(id = R.string.phone_state_permission_msg),
+                    isOk = isPhoneStateGranted,
+                    onClick = { phoneStatePermission.launchPermissionRequest() })
+                FixAthanItem(
+                    icon = Icons.Default.Alarm,
+                    title = stringResource(id = R.string.alarm_reminders),
+                    subtitle = stringResource(id = R.string.schedule_permission_message),
+                    isOk = !showAlarmManagerDialog,
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) context.startActivity(
+                            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            })
+                    })
+
+                OutlinedCard(modifier = Modifier.padding(4.dp), onClick = {
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            ("package:" + context.applicationContext.packageName).toUri()
                         )
-                    }
-                }
-            )
-            FixAthanItem(
-                title = stringResource(id = R.string.phone_state_permission_title),
-                subtitle = stringResource(id = R.string.phone_state_permission_msg),
-                isOk = isPhoneStateGranted,
-                onClick = { phoneStatePermission.launchPermissionRequest() }
-            )
-            OutlinedCard(modifier = Modifier.padding(4.dp), onClick = {
-                context.startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:" + context.applicationContext.packageName)
                     )
-                )
-            }) {
-                Text(
-                    modifier = Modifier.padding(4.dp),
-                    text = stringResource(id = R.string.other_checks),
-                    style = TextStyle.Default.copy(hyphens = Hyphens.Auto)
-                )
-            }
-        }//end of column
+                }) {
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = stringResource(id = R.string.other_checks),
+                        style = TextStyle.Default.copy(hyphens = Hyphens.Auto)
+                    )
+                }
+
+            }//end of column
+            ScrollShadow(scrollState = scrollState, top = true)
+            ScrollShadow(scrollState = scrollState, top = false)
+        }
     })//end of AlertDialog
 }
 
 @Composable
-fun FixAthanItem(title: String, subtitle: String, isOk: Boolean, onClick: () -> Unit) {
+fun FixAthanItem(
+    icon: ImageVector, title: String, subtitle: String, isOk: Boolean, onClick: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     val rotate = animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f, label = "Rotation",
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+        targetValue = if (expanded) 180f else 0f, label = "Rotation", animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium
         )
     )
-    OutlinedCard(modifier = Modifier
-        .padding(4.dp)
-        .fillMaxWidth()
-        .animateContentSize(animationSpec = spring()),
-        onClick = { onClick() }) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(modifier = Modifier.padding(4.dp), text = title, fontWeight = FontWeight.SemiBold)
-            Icon(
-                imageVector = if (isOk) Icons.Default.CheckCircle else Icons.Default.Warning,
-                contentDescription = "isOk",
-                tint = if (isOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-            )
-        }
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            ElevatedButton(
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
-                onClick = { expanded = !expanded }) {
-                Text(text = stringResource(id = R.string.more))
-                Spacer(modifier = Modifier.padding(4.dp))
-                Icon(
-                    modifier = Modifier.rotate(rotate.value),
-                    imageVector = Icons.Default.ExpandMore,
-                    contentDescription = "Expand"
+    Column(
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxWidth()
+            .animateContentSize(animationSpec = spring())
+            .clickable(onClick = onClick)
+            .border(
+                border = if (isOk) BorderStroke(
+                    width = 1.dp, color = MaterialTheme.colorScheme.primary
                 )
-            }
+                else BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.error),
+                shape = MaterialTheme.shapes.large
+            )
+            .background(
+                color = if (isOk) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                else MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                shape = MaterialTheme.shapes.large
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            modifier = Modifier.padding(4.dp),
+            imageVector = icon,
+            contentDescription = title,
+            tint = if (isOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+        )
+
+        Text(
+            modifier = Modifier
+                .padding(vertical = 4.dp, horizontal = 8.dp)
+                .fillMaxWidth(),
+            text = title,
+            fontWeight = FontWeight.SemiBold
+        )
+        TextButton(
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+            onClick = { expanded = !expanded },
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text(text = stringResource(id = R.string.more), fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.padding(4.dp))
+            Icon(
+                modifier = Modifier.rotate(rotate.value),
+                imageVector = Icons.Default.ExpandMore,
+                contentDescription = "Expand"
+            )
         }
         AnimatedVisibility(visible = expanded) {
             Text(
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
                 text = subtitle,
-                style = TextStyle.Default.copy(hyphens = Hyphens.Auto)
+                textAlign = TextAlign.Justify
             )
-        }
-    }
-}
-
-@Preview(name = "light", locale = "fa", wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE)
-@Preview(
-    name = "night",
-    locale = "fa",
-    uiMode = Configuration.UI_MODE_NIGHT_YES,
-    wallpaper = Wallpapers.GREEN_DOMINATED_EXAMPLE
-)
-@Composable
-private fun PreviewFixAthanItem() {
-    AppTheme {
-        FixAthanItem(
-            title = stringResource(id = R.string.show_overly_permission_title),
-            subtitle = stringResource(id = R.string.show_overly_permission_msg),
-            isOk = true
-        ) {
-
         }
     }
 }

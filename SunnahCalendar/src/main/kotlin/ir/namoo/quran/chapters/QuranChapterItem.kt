@@ -2,6 +2,7 @@ package ir.namoo.quran.chapters
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -69,19 +70,18 @@ fun QuranChapterItem(
         ) {
             Text(
                 modifier = Modifier
-                    .weight(2f)
+                    .weight(3f)
                     .padding(12.dp, 2.dp),
                 text = suraName,
                 fontSize = 20.sp,
                 textAlign = TextAlign.Start,
                 fontWeight = FontWeight.SemiBold
             )
-            Row(
+            FlowRow(
                 modifier = Modifier
-                    .weight(3f)
+                    .weight(4f)
                     .padding(2.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Text(
                     modifier = Modifier.padding(0.dp),

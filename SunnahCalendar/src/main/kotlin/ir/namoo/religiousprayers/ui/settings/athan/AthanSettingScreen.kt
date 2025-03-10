@@ -1,5 +1,6 @@
 package ir.namoo.religiousprayers.ui.settings.athan
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,7 @@ fun AthanSettingsScreen(
     athanId: Int, navigateUp: () -> Unit, viewModel: AthanSettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     viewModel.loadData(context, athanId)
     val isLoading by viewModel.isLoading.collectAsState()
     val athanState by viewModel.athanState.collectAsState()
@@ -220,7 +222,7 @@ fun AthanSettingsScreen(
                             targetState = isAthanPlaying,
                             label = "isAthanPlaying"
                         ) { isPlay ->
-                            ElevatedButton(onClick = { viewModel.playAthan(context) }) {
+                            ElevatedButton(onClick = { viewModel.playAthan(context, activity) }) {
                                 Text(
                                     text = stringResource(id = if (isPlay) R.string.stop else R.string.play_athan),
                                     fontWeight = FontWeight.SemiBold
@@ -236,7 +238,7 @@ fun AthanSettingsScreen(
                         targetState = isAlarmPlaying,
                         label = "isAlarmPlaying"
                     ) { isPlay ->
-                        ElevatedButton(onClick = { viewModel.playAlarm(context) }) {
+                        ElevatedButton(onClick = { viewModel.playAlarm(context, activity) }) {
                             Text(
                                 text = stringResource(id = if (isPlay) R.string.stop else R.string.play_alert),
                                 fontWeight = FontWeight.SemiBold

@@ -29,7 +29,6 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <uses-feature
@@ -88,7 +87,6 @@
         <activity
             android:name="ir.namoo.religiousprayers.ui.intro.IntroActivity"
             android:exported="true"
-            android:screenOrientation="portrait"
             android:theme="@style/SplashScreenTheme">
 
             <intent-filter>
@@ -108,7 +106,17 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:resizeableActivity="true"
-            tools:ignore="UnusedAttribute" />
+            tools:ignore="UnusedAttribute" >
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="time/epoch" />
+                <data android:host="com.android.calendar" />
+                <data android:scheme="content" />
+            </intent-filter>
+
+        </activity>
 
         <activity
             android:name=".ui.athan.AthanActivity"

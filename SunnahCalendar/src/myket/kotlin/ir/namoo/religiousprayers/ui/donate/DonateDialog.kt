@@ -1,6 +1,8 @@
 package ir.namoo.religiousprayers.ui.donate
 
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -32,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.myket.billingclient.IabHelper
 import kotlinx.coroutines.delay
@@ -40,6 +41,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun DonateDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val activity = LocalActivity.current as ComponentActivity
     val scrollState = rememberScrollState()
     var isBtnsEnabled by remember { mutableStateOf(false) }
     val mHelper = IabHelper(context, BuildConfig.IAB_PUBLIC_KEY)
@@ -79,7 +81,8 @@ fun DonateDialog(onDismiss: () -> Unit) {
         scrollState.animateScrollTo(0)
     }
 
-    AlertDialog(onDismissRequest = onDismiss,
+    AlertDialog(
+        onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(id = R.string.close), fontWeight = FontWeight.SemiBold)
@@ -101,9 +104,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     textAlign = TextAlign.Justify
                 )
                 FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -119,7 +120,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     ).forEach { pair ->
                         ElevatedButton(onClick = {
                             mHelper.launchPurchaseFlow(
-                                context.getActivity(), pair.first, mPurchaseFinishedListener
+                                activity, pair.first, mPurchaseFinishedListener
                             )
                         }) {
                             Text(

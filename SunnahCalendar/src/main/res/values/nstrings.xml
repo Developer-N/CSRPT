@@ -319,4 +319,5 @@
     <string name="words_meaning">Words Meaning</string>
     <string name="clear_cached_data">Clear Cached Data</string>
     <string name="hadeeth_not_exist">Internet problem or hadeeth not exist!</string>
+    <string name="alarm_reminders">Alarms and Reminders</string>
 </resources>

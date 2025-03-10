@@ -14,12 +14,14 @@ import com.byagowi.persiancalendar.utils.scheduleAlarms
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.model.AthanSettingsDB
+import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.religiousprayers.praytimeprovider.prayTimesFrom
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -49,8 +51,6 @@ class NTimesViewModel(
     fun load(context: Context, prayTimes: PrayTimes, isToday: Boolean) {
         viewModelScope.launch {
             _isLoading.value = true
-            _isTimesAvailableForDownload.value =
-                isTimeAvailableForDownload(context, prayTimeRepository)
             val clock = Clock(Date().toGregorianCalendar(forceLocalTime = true))
             val next = prayTimes.getNextPrayTime(clock)
             _times.clear()
@@ -97,6 +97,9 @@ class NTimesViewModel(
                 _times.add(timeState)
             }
             _isLoading.value = false
+            withContext(Dispatchers.IO) {
+                isTimeAvailableForDownload(context)
+            }
         }
 
     }
@@ -113,15 +116,28 @@ class NTimesViewModel(
     }
 
 
-    private suspend fun isTimeAvailableForDownload(
-        context: Context, prayTimeRepository: PrayTimeRepository
-    ): Boolean {
-        return withContext(Dispatchers.IO) {
-            if (!isNetworkConnected(context) || prayTimesFrom.value != 0) return@withContext false
-            val list = prayTimeRepository.getLocalCityList()
-            val currentCity = cityName.value
-            if (currentCity.isNullOrEmpty()) return@withContext false
-            return@withContext list.find { cityModel -> cityModel.name == currentCity } != null
+    private suspend fun isTimeAvailableForDownload(context: Context) {
+        if (!isNetworkConnected(context) || prayTimesFrom.value != 0) {
+            _isTimesAvailableForDownload.value = false
+            return
+        }
+        prayTimeRepository.getAddedCity().collectLatest { state ->
+            when (state) {
+                is DataState.Error ->
+                    _isTimesAvailableForDownload.value = false
+
+                DataState.Loading -> {}
+                is DataState.Success -> {
+                    val list = state.data
+                    val currentCity = cityName.value
+                    if (currentCity.isNullOrEmpty()) {
+                        _isTimesAvailableForDownload.value = false
+                        return@collectLatest
+                    }
+                    _isTimesAvailableForDownload.value =
+                        list.find { cityModel -> cityModel.name == currentCity } != null
+                }
+            }
         }
     }
 }

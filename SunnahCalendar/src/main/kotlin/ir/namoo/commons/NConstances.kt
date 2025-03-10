@@ -40,6 +40,16 @@ const val PREF_JUMMA_SILENT = "jumma_silent"
 const val PREF_JUMMA_SILENT_MINUTE = "jumma_silent_minute"
 const val DEFAULT_JUMMA_SILENT_MINUTE = 40
 
-const val PREF_SHOW_SYSTEM_RINGTONES="show_system_ringtones"
+const val PREF_SHOW_SYSTEM_RINGTONES = "show_system_ringtones"
 
 const val PREF_AUTO_SCROLL = "auto_scroll"
+
+const val LAST_PLAYED_BEFORE_ATHAN_KEY = "last_before_athan_key"
+const val LAST_PLAYED_AFTER_ATHAN_KEY = "last_after_athan_key"
+const val LAST_SILENT_ATHAN_KEY = "last_silent_athan_key"
+const val LAST_STOP_SILENT_ATHAN_KEY = "last_stop_silent_athan_key"
+
+const val LAST_AZKAR_KEY = "last_azkar_key"
+const val LAST_AZKAR_JDN = "last_azkar_jdn"
+
+const val PREF_LAST_UPDATE_PRAY_TIMES_KEY = "last_update_pray_times_key"

@@ -286,7 +286,7 @@ fun Activity.openUrlInCustomTab(url: String) {
                 "com.android.chrome", packageManager
             )
         ) intent.setPackage("com.android.chrome")
-    }.launchUrl(this, Uri.parse(url))
+    }.launchUrl(this, url.toUri())
 }
 
 fun modelToDBTimes(models: List<PrayTimesModel>): List<DownloadedPrayTimesEntity> {

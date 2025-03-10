@@ -32,9 +32,6 @@ import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
-import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.logException
@@ -48,6 +45,8 @@ import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private const val ACTION_STOP = "ir.namoo.religiousprayers.ACTION_STOP"
 
@@ -78,13 +77,13 @@ class NAthanNotification : Service() {
                 if (prayerKey == "BFAJR" && bFajrCount < 5 && ringtone?.isPlaying == false) {
                     ringtone?.play()
                     bFajrCount++
-                    handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
+                    handler.postDelayed(this, 5.seconds.inWholeMilliseconds)
                 } else if (!isDoaPlayed) playDoa() else {
                     //Do Nothing
                 }
             } else {
                 handler.postDelayed(
-                    this, FIVE_SECONDS_IN_MILLIS
+                    this, 5.seconds.inWholeMilliseconds
                 )
             }
         }.onFailure(logException).let {}
@@ -238,9 +237,9 @@ class NAthanNotification : Service() {
                 if (!goMute) runCatching {
                     val athanUri = getAthanUri(setting, prayerKey, this)
                     runCatching {
-                        MediaPlayer.create(this, athanUri).duration
+                        MediaPlayer.create(this, athanUri).duration.milliseconds
                     }.onFailure(logException)
-                        .onSuccess { if (it < THIRTY_SECONDS_IN_MILLIS) stopAtHalfMinute = true }
+                        .onSuccess { if (it < 30.seconds) stopAtHalfMinute = true }
                     ringtone =
                         RingtoneManager.getRingtone(this, getAthanUri(setting, prayerKey, this))
                             .also {
@@ -250,7 +249,7 @@ class NAthanNotification : Service() {
                                 it.play()
                             }
                 }.onFailure(logException)
-                handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
+                handler.postDelayed(stopTask, 10.seconds.inWholeMilliseconds)
                 if (setting?.isAscending == true) handler.post(ascendVolume)
 
             }

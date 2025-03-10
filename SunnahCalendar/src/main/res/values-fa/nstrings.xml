@@ -240,7 +240,7 @@
     <string name="requset_permision">درخواست مجوز</string>
     <string name="modify_audio_settings">برای سایلنت کردن گوشی بعد از اذان باید مجوز تغییر تنظیمات را به برنامه بدهید.</string>
     <string name="need_full_screen_permision">برای نمایش اذان در حالت تمام صفحه هنگام استفاده از گوشی باید مجوز لازم را فعال کنید.(کلیک کنید!)</string>
-    <string name="schedule_permission_message">برای تنظیم اوقات اذان لازم است مجوز مربوطه را فعال کنید.</string>
+    <string name="schedule_permission_message">برای تنظیم یادآور برای اذان ها و اذکار باید این مجوز فعال باشد.</string>
 
     <string name="calculated_time">اوقات محاسبه شده</string>
     <string name="exact_time">اوقات دقیق محلی</string>
@@ -300,7 +300,7 @@
     <string name="select_from_gallery">انتخاب از گالری</string>
 
     <string name="help_fix_athan_problems">راهنمای رفع مشکل پخش اذان(کلیک کنید)</string>
-    <string name="help_fix_athan_problems_msg">موارد زیر باید تیک خورده باشند، در صورتی که علامت هشدار نشان داده شد برای رفع مشکل روی گزینه مورد نظر کلیک کنید.</string>
+    <string name="help_fix_athan_problems_msg">برای رفع مشکل پخش اذان و عملکرد صحیح برنامه موارد زیر را بررسی کنید.</string>
 
     <string name="show_overly_permission_title">مجوز قرار گرفتن روی سایر برنامه ها</string>
     <string name="show_overly_permission_msg">این مجوز باید فعال باشد تا برنامه بتواند هنگام پخش اذان در حالت تمام صفحه روی برنامه های دیگر نشان داده شود.</string>
@@ -337,5 +337,6 @@
     <string name="words_meaning">معنی کلمات</string>
     <string name="clear_cached_data">پاک کردن داده های ذخیره شده</string>
     <string name="hadeeth_not_exist">ممکن است اتصال اینترنت مشکل داشته باشد یا این حدیث برای زبانی که انتخاب کردید ترجمه نشده باشد!</string>
+    <string name="alarm_reminders">هشدارها و یادآوری ها</string>
 
 </resources>

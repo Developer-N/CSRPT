@@ -15,11 +15,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.byagowi.persiancalendar.ALARMS_BASE_ID
@@ -29,16 +30,18 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.BroadcastReceivers
-import com.byagowi.persiancalendar.utils.FIFTEEN_MINUTES_IN_MILLIS
-import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
+import com.byagowi.persiancalendar.utils.getJdnOrNull
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.putJdn
 import com.byagowi.persiancalendar.variants.debugLog
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.BROADCAST_AZKAR
 import ir.namoo.commons.KEY_AZKAR_EXTRA_NAME
 import ir.namoo.commons.KEY_AZKAR_EXTRA_TIME
+import ir.namoo.commons.LAST_AZKAR_JDN
+import ir.namoo.commons.LAST_AZKAR_KEY
 import ir.namoo.commons.PREF_AZKAR_REINDER
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
@@ -46,6 +49,9 @@ import kotlinx.coroutines.coroutineScope
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 fun scheduleAzkars(context: Context, prayTimeProvider: PrayTimeProvider) {
     var prayTimes: PrayTimes = coordinates.value?.calculatePrayTimes() ?: return
@@ -76,7 +82,7 @@ private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Lon
     run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
         val workerInputData = Data.Builder().putLong(KEY_AZKAR_EXTRA_TIME, timeInMillis)
             .putString(KEY_AZKAR_EXTRA_NAME, azkarName).build()
-        val alarmWorker = OneTimeWorkRequest.Builder(AzkarWorker::class.java)
+        val alarmWorker = OneTimeWorkRequestBuilder<AzkarWorker>()
             .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS)
             .setInputData(workerInputData)
             .build()
@@ -116,30 +122,33 @@ fun startAzkar(context: Context, name: String, intendedTime: Long?) {
     applyAppLanguage(context)
     if (intendedTime == null) return startAzkarBody(context, name)
     // if alarm is off by 15 minutes, just skip
-    if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return
+    if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) return
 
     // If at the of being is disabled by user, skip
     if (!context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false)) return
 
+    val preferences = context.appPrefsLite
+    val today = Jdn.today()
+    val lastAzkarKey = preferences.getString(LAST_AZKAR_KEY, null)
+    val lastAzkarJdn = preferences.getJdnOrNull(LAST_AZKAR_JDN)
+    if (lastAzkarJdn == today && lastAzkarKey == name) return
+    preferences.edit {
+        putString(LAST_AZKAR_KEY, name)
+        putJdn(LAST_AZKAR_JDN, today)
+    }
     startAzkarBody(context, name)
 }
 
 
-private var lastAzkarKey = ""
-private var lastAzkarJdn: Jdn? = null
-
 fun startAzkarBody(context: Context, name: String) = runCatching {
     applyAppLanguage(context)
-    val today = Jdn.today()
-    if (lastAzkarJdn == today && lastAzkarKey == name) return
-    lastAzkarJdn = today; lastAzkarKey = name
     debugLog("Azkar: startAzkarBody for $name")
     runCatching {
         @Suppress("Deprecation")
         context.getSystemService<PowerManager>()?.newWakeLock(
             PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
             "SunnahCalendar:azkar"
-        )?.acquire(THIRTY_SECONDS_IN_MILLIS)
+        )?.acquire(30.seconds.inWholeMilliseconds)
     }.onFailure(logException)
     val notificationId = if (name == "morning") 2023 else 2024
     val notificationChannelId = notificationId.toString()

@@ -3,7 +3,6 @@ package ir.namoo.religiousprayers.ui.about
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
@@ -37,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
@@ -163,7 +163,7 @@ private fun programVersion(packageManager: PackageManager, packageName: String):
 
 private fun openTG(context: Context) {
     runCatching {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=namoo_ir"))
+        val intent = Intent(Intent.ACTION_VIEW, "tg://resolve?domain=namoo_ir".toUri())
         context.startActivity(intent)
     }.onFailure(logException).getOrElse {
         Toast.makeText(
@@ -174,7 +174,7 @@ private fun openTG(context: Context) {
 
 private fun openTGDeveloper(context: Context) {
     runCatching {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("tg://resolve?domain=developer_n"))
+        val intent = Intent(Intent.ACTION_VIEW, "tg://resolve?domain=developer_n".toUri())
         context.startActivity(intent)
     }.onFailure(logException).getOrElse {
         Toast.makeText(

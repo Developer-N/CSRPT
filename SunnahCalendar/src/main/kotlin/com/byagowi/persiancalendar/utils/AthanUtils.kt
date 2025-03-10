@@ -15,17 +15,20 @@ import android.os.PowerManager
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.AlarmManagerCompat
+import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.byagowi.persiancalendar.ALARMS_BASE_ID
 import com.byagowi.persiancalendar.ALARM_TAG
 import com.byagowi.persiancalendar.BROADCAST_ALARM
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER
 import com.byagowi.persiancalendar.KEY_EXTRA_PRAYER_TIME
+import com.byagowi.persiancalendar.LAST_PLAYED_ATHAN_JDN
+import com.byagowi.persiancalendar.LAST_PLAYED_ATHAN_KEY
 import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
 import com.byagowi.persiancalendar.PREF_ATHAN_GAP
 import com.byagowi.persiancalendar.PREF_ATHAN_URI
@@ -39,6 +42,10 @@ import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.variants.debugLog
 import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
+import ir.namoo.commons.LAST_PLAYED_AFTER_ATHAN_KEY
+import ir.namoo.commons.LAST_PLAYED_BEFORE_ATHAN_KEY
+import ir.namoo.commons.LAST_SILENT_ATHAN_KEY
+import ir.namoo.commons.LAST_STOP_SILENT_ATHAN_KEY
 import ir.namoo.commons.PREF_AZKAR_REINDER
 import ir.namoo.commons.PREF_JUMMA_SILENT
 import ir.namoo.commons.PREF_JUMMA_SILENT_MINUTE
@@ -53,6 +60,9 @@ import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 // https://stackoverflow.com/a/69505596
 fun Resources.getRawUri(@RawRes rawRes: Int) = "%s://%s/%s/%s".format(
@@ -64,38 +74,42 @@ fun getAthanUri(context: Context): Uri =
     (context.preferences.getString(PREF_ATHAN_URI, null)?.takeIf { it.isNotEmpty() }
         ?: context.resources.getRawUri(R.raw.special)).toUri()
 
-private var lastAthanKey = ""
-private var lastBAthanKey = ""
-private var lastAAthanKey = ""
-private var lastSAthanKey = ""
-private var lastSSAthanKey = ""
-private var lastAthanJdn: Jdn? = null
-
 fun startAthan(context: Context, prayTime: String, intendedTime: Long?) {
     debugLog("Alarms: startAthan for $prayTime")
     if (intendedTime == null || prayTime.startsWith("SS_"))
         return startAthanBody(context, prayTime)
     // if alarm is off by 15 minutes, just skip
-    if (abs(System.currentTimeMillis() - intendedTime) > FIFTEEN_MINUTES_IN_MILLIS) return
+    if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) return
 
     // If at the of being is disabled by user, skip
     if (prayTime !in getEnabledAlarms2(context)) return
+
+    // skips if already called through either WorkManager or AlarmManager
+    val preferences = context.preferences
+    val lastPlayedAthanKey = preferences.getString(LAST_PLAYED_ATHAN_KEY, null)
+    val lastBAthanKey = preferences.getString(LAST_PLAYED_BEFORE_ATHAN_KEY, null)
+    val lastAAthanKey = preferences.getString(LAST_PLAYED_AFTER_ATHAN_KEY, null)
+    val lastSAthanKey = preferences.getString(LAST_SILENT_ATHAN_KEY, null)
+    val lastSSAthanKey = preferences.getString(LAST_STOP_SILENT_ATHAN_KEY, null)
+    val lastPlayedAthanJdn = preferences.getJdnOrNull(LAST_PLAYED_ATHAN_JDN)
+    val today = Jdn.today()
+    if (lastPlayedAthanJdn == today && (lastPlayedAthanKey == prayTime || lastBAthanKey == prayTime || lastAAthanKey == prayTime || lastSAthanKey == prayTime || lastSSAthanKey == prayTime)) return
+    preferences.edit {
+        putString(
+            if (prayTime.startsWith("B")) LAST_PLAYED_BEFORE_ATHAN_KEY
+            else if (prayTime.startsWith("A") && prayTime != PrayTime.ASR.name) LAST_PLAYED_AFTER_ATHAN_KEY
+            else if (prayTime.startsWith("S_")) LAST_SILENT_ATHAN_KEY
+            else if (prayTime.startsWith("SS_")) LAST_STOP_SILENT_ATHAN_KEY
+            else LAST_PLAYED_ATHAN_KEY, prayTime
+        )
+        putJdn(LAST_PLAYED_ATHAN_JDN, today)
+    }
 
     startAthanBody(context, prayTime)
 }
 
 private fun startAthanBody(context: Context, prayTime: String) {
     runCatching {
-        // skips if already called through either WorkManager or AlarmManager
-        val today = Jdn.today()
-        if (lastAthanJdn == today && (lastAthanKey == prayTime || lastBAthanKey == prayTime || lastAAthanKey == prayTime || lastSAthanKey == prayTime || lastSSAthanKey == prayTime)) return
-        lastAthanJdn = today
-        if (prayTime.startsWith("B")) lastBAthanKey = prayTime
-        else if (prayTime.startsWith("A") && prayTime != PrayTime.ASR.name) lastAAthanKey = prayTime
-        else if (prayTime.startsWith("S_")) lastSAthanKey = prayTime
-        else if (prayTime.startsWith("SS_")) lastSSAthanKey = prayTime
-        else lastAthanKey = prayTime
-
         debugLog("Alarms: startAthanBody for $prayTime")
 
         runCatching {
@@ -103,7 +117,7 @@ private fun startAthanBody(context: Context, prayTime: String) {
             context.getSystemService<PowerManager>()?.newWakeLock(
                 PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_DIM_WAKE_LOCK,
                 "persiancalendar:alarm"
-            )?.acquire(THIRTY_SECONDS_IN_MILLIS)
+            )?.acquire(30.seconds.inWholeMilliseconds)
         }.onFailure(logException)
         val setting = AthanSettingsDB.getInstance(context.applicationContext)
             .athanSettingsDAO().getAllAthanSettings().find { prayTime.contains(it.athanKey) }
@@ -357,7 +371,7 @@ private fun scheduleAlarm(context: Context, prayTime: String, timeInMillis: Long
     run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
         val workerInputData = Data.Builder().putLong(KEY_EXTRA_PRAYER_TIME, timeInMillis)
             .putString(KEY_EXTRA_PRAYER, prayTime).build()
-        val alarmWorker = OneTimeWorkRequest.Builder(AlarmWorker::class.java)
+        val alarmWorker =OneTimeWorkRequestBuilder<AlarmWorker>()
             .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS)
             .setInputData(workerInputData)
             .build()

@@ -1,5 +1,6 @@
 package ir.namoo.religiousprayers.ui.settings.athan
 
+import android.app.Activity
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -11,7 +12,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.utils.getActivity
+import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.update
@@ -395,7 +396,7 @@ class AthanSettingsViewModel(
         return res
     }
 
-    fun playAthan(context: Context) {
+    fun playAthan(context: Context,activity: Activity?) {
         viewModelScope.launch {
             if (mediaPlayer.isPlaying) mediaPlayer.pause()
             if (isAthanPlaying.value) {
@@ -416,7 +417,7 @@ class AthanSettingsViewModel(
                             AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
                         )
-                        context.getActivity()?.volumeControlStream = AudioManager.STREAM_ALARM
+                        activity?.volumeControlStream = AudioManager.STREAM_ALARM
                         setOnCompletionListener { _isAthanPlaying.value = false }
                         prepare()
                         start()
@@ -426,7 +427,7 @@ class AthanSettingsViewModel(
         }
     }
 
-    fun playAlarm(context: Context) {
+    fun playAlarm(context: Context,activity: Activity?) {
         viewModelScope.launch {
             if (mediaPlayer.isPlaying) mediaPlayer.pause()
             if (isAlarmPlaying.value) {
@@ -446,7 +447,7 @@ class AthanSettingsViewModel(
                             AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM)
                                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
                         )
-                        context.getActivity()?.volumeControlStream = AudioManager.STREAM_ALARM
+                        activity?.volumeControlStream = AudioManager.STREAM_ALARM
                         setOnCompletionListener { _isAlarmPlaying.value = false }
                         prepare()
                         start()

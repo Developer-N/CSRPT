@@ -1,6 +1,7 @@
 package ir.namoo.hadeeth.ui.chapter
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
@@ -68,7 +69,6 @@ import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.getActivity
 import com.byagowi.persiancalendar.ui.utils.isOnCI
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
@@ -354,7 +354,7 @@ private fun SharedTransitionScope.HadeethTopBar(
     onLanguageSelected: (String) -> Unit,
     clearCachedData: () -> Unit
 ) {
-    val context = LocalContext.current
+    val activity = LocalActivity.current
     var showAboutDialog by remember { mutableStateOf(false) }
     var showLanguages by remember { mutableStateOf(false) }
 
@@ -422,7 +422,7 @@ private fun SharedTransitionScope.HadeethTopBar(
                     textAlign = TextAlign.Center
                 )
                 TextButton(onClick = {
-                    context.getActivity()?.openUrlInCustomTab("https://hadeethenc.com")
+                    activity?.openUrlInCustomTab("https://hadeethenc.com")
                 }) {
                     Text(
                         modifier = Modifier

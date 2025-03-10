@@ -125,8 +125,6 @@ import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.isDynamicGrayscale
 import com.byagowi.persiancalendar.ui.utils.isLight
-import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.THREE_SECONDS_AND_HALF_IN_MILLIS
 import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.hadeeth.ui.chapter.HadeethChapterScreen
 import ir.namoo.hadeeth.ui.hadeeth.HadeethScreen
@@ -142,6 +140,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Date
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -622,7 +621,7 @@ private fun DrawerSeasonsPager(drawerState: DrawerState) {
         LaunchedEffect(Unit) {
             pagerState.animateScrollToPage(pageSize / 2 + actualSeason)
             while (true) {
-                delay(THIRTY_SECONDS_IN_MILLIS)
+                delay(30.seconds)
                 val seasonIndex = Season.fromDate(Date(), coordinates.value).ordinal
                 if (seasonIndex != actualSeason) {
                     actualSeason = seasonIndex
@@ -683,7 +682,6 @@ private fun BoxScope.DrawerDarkModeToggle() {
                 indication = ripple(bounded = false),
                 interactionSource = null,
                 onClick = {
-                    coroutineScope.launch { delay(THREE_SECONDS_AND_HALF_IN_MILLIS) }
                     val systemTheme = if (isDark) systemLightTheme else systemDarkTheme
                     context.preferences.edit {
                         putString(PREF_THEME, systemTheme.value.key)

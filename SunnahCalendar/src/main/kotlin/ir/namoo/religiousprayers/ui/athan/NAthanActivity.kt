@@ -22,8 +22,12 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -40,10 +44,7 @@ import com.byagowi.persiancalendar.service.AthanNotification
 import com.byagowi.persiancalendar.ui.athan.AthanActivity.Companion.CANCEL_ATHAN_NOTIFICATION
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.ui.theme.AppTheme
-import com.byagowi.persiancalendar.ui.utils.isSystemInDarkTheme
-import com.byagowi.persiancalendar.utils.FIVE_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.TEN_SECONDS_IN_MILLIS
-import com.byagowi.persiancalendar.utils.THIRTY_SECONDS_IN_MILLIS
+import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.logException
@@ -59,6 +60,8 @@ import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import org.koin.android.ext.android.get
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class NAthanActivity : ComponentActivity() {
     private val prayTimeProvider: PrayTimeProvider = get()
@@ -84,10 +87,10 @@ class NAthanActivity : ComponentActivity() {
                 if (prayTimeKey == "BFAJR" && bFajrCount < 5 && !controller.isPlaying) {
                     controller.play()
                     bFajrCount++
-                    handler.postDelayed(this, FIVE_SECONDS_IN_MILLIS)
+                    handler.postDelayed(this, 5.seconds.inWholeMilliseconds)
                 } else finish()
             } else handler.postDelayed(
-                this, FIVE_SECONDS_IN_MILLIS
+                this, 5.seconds.inWholeMilliseconds
             )
         }.onFailure(logException).onFailure { finish() }.let {}
     }
@@ -97,40 +100,17 @@ class NAthanActivity : ComponentActivity() {
         override fun run() {
             currentVolumeSteps++
             getSystemService<AudioManager>()?.setStreamVolume(
-                AudioManager.STREAM_ALARM,
-                currentVolumeSteps,
-                0
+                AudioManager.STREAM_ALARM, currentVolumeSteps, 0
             )
             handler.postDelayed(this, TimeUnit.SECONDS.toMillis(ascendingVolumeStep.toLong()))
             if (currentVolumeSteps == 10) handler.removeCallbacks(this)
         }
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (originalVolume != -1) getSystemService<AudioManager>()?.setStreamVolume(
-            AudioManager.STREAM_ALARM,
-            originalVolume,
-            0
-        )
-        runCatching {
-            controller.stop()
-            MediaController.releaseFuture(mediaController)
-        }
-        runCatching {
-            getSystemService<NotificationManager>()?.cancel(ATHAN_NOTIFICATION_ID)
-        }.onFailure(logException)
-    }
-
     @SuppressLint("SetTextI18n")
     @Suppress("Deprecation")
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            SystemBarStyle.dark(Color.TRANSPARENT),
-            if (isSystemInDarkTheme(resources.configuration)) SystemBarStyle.dark(Color.TRANSPARENT)
-            else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        )
+        applyEdgeToEdge(isBackgroundColorLight = false, isSurfaceColorLight = true)
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -167,8 +147,8 @@ class NAthanActivity : ComponentActivity() {
         prayTimeKey = intent.getStringExtra(KEY_EXTRA_PRAYER) ?: ""
         setting = athanSettingsDB.athanSettingsDAO().getAllAthanSettings()
             .find { prayTimeKey.contains(it.athanKey) } ?: return
-        if (!prayTimeKey.startsWith("B") && !(prayTimeKey.startsWith("A") && prayTimeKey != PrayTime.ASR.name) && setting.playDoa)
-            playDua = true
+        if (!prayTimeKey.startsWith("B") && !(prayTimeKey.startsWith("A") && prayTimeKey != PrayTime.ASR.name) && setting.playDoa) playDua =
+            true
         var goMute = false
 
         getSystemService<AudioManager>()?.let { audioManager ->
@@ -199,11 +179,11 @@ class NAthanActivity : ComponentActivity() {
         if (!goMute) runCatching {
             val athanUri = getAthanUri(setting, prayTimeKey, this)
             runCatching {
-                MediaPlayer.create(this, athanUri).duration // is in milliseconds
+                MediaPlayer.create(this, athanUri).duration.milliseconds // is in milliseconds
             }.onFailure(logException).onSuccess {
                 // if the URIs duration is less than half a minute, it is probably a looping one
                 // so stop on half a minute regardless
-                if (it < THIRTY_SECONDS_IN_MILLIS) stopAtHalfMinute = true
+                if (it < 30.seconds) stopAtHalfMinute = true
             }
 //            ringtone =
 //                RingtoneManager.getRingtone(this, getAthanUri(setting, prayTimeKey, this)).also {
@@ -261,6 +241,11 @@ class NAthanActivity : ComponentActivity() {
         }.onFailure(logException)
 
         setContent {
+            val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
+            val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
+            LaunchedEffect(isBackgroundColorLight, isSurfaceColorLight) {
+                applyEdgeToEdge(isBackgroundColorLight, isSurfaceColorLight)
+            }
             BackHandler { stop() }
             AppTheme {
                 NAthanActivityContent(title = title,
@@ -270,15 +255,31 @@ class NAthanActivity : ComponentActivity() {
             }
         }
 
-        handler.postDelayed(stopTask, TEN_SECONDS_IN_MILLIS)
+        handler.postDelayed(stopTask, 10.seconds.inWholeMilliseconds)
 
         if (setting.isAscending) handler.post(ascendVolume)
         preventPhoneCallIntervention.startListener(this)
-    }
 
-    override fun onPause() {
-        super.onPause()
-        if (isLockedAndPassed2Second()) stop()
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onPause(owner: LifecycleOwner) {
+                super.onPause(owner)
+                if (isLockedAndPassed2Second()) stop()
+            }
+
+            override fun onDestroy(owner: LifecycleOwner) {
+                super.onDestroy(owner)
+                if (originalVolume != -1) getSystemService<AudioManager>()?.setStreamVolume(
+                    AudioManager.STREAM_ALARM, originalVolume, 0
+                )
+                runCatching {
+                    controller.stop()
+                    MediaController.releaseFuture(mediaController)
+                }
+                runCatching {
+                    getSystemService<NotificationManager>()?.cancel(ATHAN_NOTIFICATION_ID)
+                }.onFailure(logException)
+            }
+        })
     }
 
     private fun isLockedAndPassed2Second(): Boolean {
@@ -296,5 +297,19 @@ class NAthanActivity : ComponentActivity() {
         handler.removeCallbacks(stopTask)
         if (setting.isAscending) handler.removeCallbacks(ascendVolume)
         finish()
+    }
+
+    private fun applyEdgeToEdge(isBackgroundColorLight: Boolean, isSurfaceColorLight: Boolean) {
+        val statusBarStyle =
+            if (isBackgroundColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) enableEdgeToEdge(
+            statusBarStyle,
+            if (isSurfaceColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT),
+        ) else enableEdgeToEdge(
+            statusBarStyle,
+            // Just don't tweak navigation bar in older Android versions, leave it to default
+        )
     }
 }

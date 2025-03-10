@@ -10,11 +10,14 @@ import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_LATITUDE
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_SELECTED_LOCATION
+import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.PREF_FIRST_START
+import ir.namoo.commons.PREF_LAST_UPDATE_PRAY_TIMES_KEY
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
+import ir.namoo.commons.utils.appPrefsLite
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -71,6 +74,9 @@ class IntroDownloadViewModel(
                                     putString(PREF_LONGITUDE, cityModel.longitude.toString())
                                     putString(PREF_SELECTED_LOCATION, "")
                                     putBoolean(PREF_FIRST_START, false)
+                                }
+                                context.appPrefsLite.edit {
+                                    putLong(PREF_LAST_UPDATE_PRAY_TIMES_KEY, Jdn.today().value)
                                 }
                                 startMainActivity()
                             }

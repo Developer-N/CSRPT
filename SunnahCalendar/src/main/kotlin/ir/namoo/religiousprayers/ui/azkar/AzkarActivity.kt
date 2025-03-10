@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,10 +24,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,13 +37,15 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.theme.AppTheme
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.isSystemInDarkTheme
+import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import ir.namoo.commons.utils.isNetworkConnected
@@ -56,11 +61,7 @@ class AzkarActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            SystemBarStyle.dark(Color.TRANSPARENT),
-            if (isSystemInDarkTheme(resources.configuration)) SystemBarStyle.dark(Color.TRANSPARENT)
-            else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        )
+        applyEdgeToEdge(isBackgroundColorLight = false, isSurfaceColorLight = true)
 
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
@@ -74,6 +75,11 @@ class AzkarActivity : ComponentActivity() {
         if (!dir.exists()) dir.mkdirs()
         setContent {
             AppTheme {
+                val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
+                val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
+                LaunchedEffect(isBackgroundColorLight, isSurfaceColorLight) {
+                    applyEdgeToEdge(isBackgroundColorLight, isSurfaceColorLight)
+                }
                 val state = rememberLazyListState()
                 val isLoading by viewModel.isLoading.collectAsState()
                 val azkarLang by viewModel.azkarLang.collectAsState()
@@ -191,10 +197,26 @@ class AzkarActivity : ComponentActivity() {
 
             }
         }
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onPause(owner: LifecycleOwner) {
+                super.onPause(owner)
+                viewModel.stop()
+            }
+        })
     }//end of onCreate
 
-    override fun onPause() {
-        viewModel.stop()
-        super.onPause()
+    private fun applyEdgeToEdge(isBackgroundColorLight: Boolean, isSurfaceColorLight: Boolean) {
+        val statusBarStyle =
+            if (isBackgroundColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) enableEdgeToEdge(
+            statusBarStyle,
+            if (isSurfaceColorLight) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            else SystemBarStyle.dark(Color.TRANSPARENT),
+        ) else enableEdgeToEdge(
+            statusBarStyle,
+            // Just don't tweak navigation bar in older Android versions, leave it to default
+        )
     }
+
 }//end of class

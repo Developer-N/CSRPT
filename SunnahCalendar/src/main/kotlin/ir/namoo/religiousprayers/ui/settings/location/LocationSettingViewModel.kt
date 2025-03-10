@@ -17,18 +17,20 @@ import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.locationtracker.LocationResult
 import ir.namoo.commons.locationtracker.LocationTracker
 import ir.namoo.commons.model.CityModel
-import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.ProvinceModel
+import ir.namoo.commons.repository.DataState
+import ir.namoo.commons.repository.PrayTimeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class LocationSettingViewModel(
-    private val locationRepository: LocationsDB,
-    private val locationTracker: LocationTracker,
+    private val repository: PrayTimeRepository,
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     private val _provinceList = MutableStateFlow(emptyList<ProvinceModel>())
@@ -67,14 +69,30 @@ class LocationSettingViewModel(
             _cityName.value = context.preferences.getString(PREF_GEOCODED_CITYNAME, "") ?: ""
             _latitude.value = context.preferences.getString(PREF_LATITUDE, "0.0") ?: "0.0"
             _longitude.value = context.preferences.getString(PREF_LONGITUDE, "0.0") ?: "0.0"
-            val allCities = locationRepository.cityDAO().getAllCity()
-            _provinceList.value = locationRepository.provinceDAO().getAllProvinces()
-            _selectedProvince.value =
-                provinceList.value.find { p -> allCities.find { c -> c.name == cityName.value }?.provinceId == p.id }
-            _cityList.value = locationRepository.cityDAO().getAllCity()
-            _selectedCity.value = cityList.value.find { it.name == cityName.value }
+            _provinceList.value = repository.getLocalProvinceList()
+            repository.getAndUpdateCities().collectLatest { status ->
+                when (status) {
+                    is DataState.Error -> {
+                        val allCities = repository.getLocalCityList()
+                        _selectedProvince.value =
+                            provinceList.value.find { p -> allCities.find { c -> c.name == cityName.value }?.provinceId == p.id }
+                        _cityList.value = allCities
+                        _selectedCity.value = cityList.value.find { it.name == cityName.value }
+                        _isLoading.value = false
+                    }
 
-            _isLoading.value = false
+                    DataState.Loading -> _isLoading.value = true
+                    is DataState.Success -> {
+                        val allCities = status.data
+                        _selectedProvince.value =
+                            provinceList.value.find { p -> allCities.find { c -> c.name == cityName.value }?.provinceId == p.id }
+                        _cityList.value = allCities
+                        _selectedCity.value = cityList.value.find { it.name == cityName.value }
+                        _isLoading.value = false
+                    }
+                }
+
+            }
         }
     }
 

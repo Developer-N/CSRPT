@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -38,9 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.utils.formatNumber
 import org.koin.androidx.compose.koinViewModel
@@ -92,8 +89,8 @@ fun AthanDownloadComponent(
                                     dampingRatio = Spring.DampingRatioLowBouncy,
                                     stiffness = Spring.StiffnessMedium
                                 )
-                            )
-                            .padding(2.dp)
+                            ),
+                        shape = MaterialTheme.shapes.extraLarge
                     ) {
                         val progress by animateFloatAsState(
                             targetValue = pair.second.progress,
@@ -101,21 +98,13 @@ fun AthanDownloadComponent(
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 modifier = Modifier
-                                    .padding(vertical = 4.dp, horizontal = 4.dp)
-                                    .weight(1f),
-                                text = formatNumber(index + 1),
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                modifier = Modifier
-                                    .padding(2.dp)
-                                    .weight(5f),
-                                text = formatNumber(pair.first.name)
+                                    .padding(vertical = 4.dp, horizontal = 8.dp),
+                                text = formatNumber("${index + 1}: ${pair.first.name}")
                             )
                             AnimatedVisibility(
                                 visible = !pair.second.isDownloading,
@@ -123,7 +112,6 @@ fun AthanDownloadComponent(
                                 exit = shrinkHorizontally()
                             ) {
                                 IconButton(
-                                    modifier = Modifier.weight(2f),
                                     onClick = { viewModel.download(context, pair) },
                                     enabled = !pair.second.isDownloaded,
                                     colors = IconButtonDefaults.iconButtonColors(
@@ -141,30 +129,37 @@ fun AthanDownloadComponent(
                             LinearProgressIndicator(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp, horizontal = 8.dp)
-                                    .height(6.dp),
+                                    .padding(vertical = 4.dp, horizontal = 8.dp),
                                 strokeCap = StrokeCap.Round
                             )
                         }
                         AnimatedVisibility(visible = pair.second.isDownloading) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp, horizontal = 8.dp)
+                            ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(2.dp),
+                                        .padding(vertical = 2.dp, horizontal = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceAround
+                                    horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
                                     Text(text = formatNumber((progress * 100).toInt()) + "%")
-                                    val size = (pair.second.totalSize / 1024 / 1024).toInt()
-                                    Text(text = formatNumber(if (size == 0) "1" else "$size") + "MB")
+                                    var size = (pair.second.totalSize / 1024 / 1024).toInt()
+                                    var isKB = false
+                                    if (size == 0) {
+                                        size = (pair.second.totalSize / 1024).toInt()
+                                        isKB = true
+                                    }
+                                    Text(text = formatNumber("$size" + if (isKB) "KB" else "MB"))
                                 }
                                 LinearProgressIndicator(
                                     progress = { progress },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 4.dp, horizontal = 8.dp)
-                                        .height(6.dp),
+                                        .padding(vertical = 2.dp, horizontal = 8.dp),
                                     strokeCap = StrokeCap.Round
                                 )
                             }

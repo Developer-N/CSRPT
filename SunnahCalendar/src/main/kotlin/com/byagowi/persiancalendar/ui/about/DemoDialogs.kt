@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.about
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Canvas
@@ -72,6 +73,7 @@ import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
@@ -100,9 +102,9 @@ import kotlin.random.Random
 // These are somehow a sandbox to test things not used in the app yet and can be removed anytime.
 //
 
-fun createEasterEggClickHandler(callback: (ComponentActivity) -> Unit): (ComponentActivity?) -> Unit {
+fun createEasterEggClickHandler(callback: (Activity) -> Unit): (Activity?) -> Unit {
     var clickCount = 0
-    return { activity: ComponentActivity? ->
+    return { activity: Activity? ->
         if (activity != null) runCatching {
             when (++clickCount % 10) {
                 0 -> callback(activity)
@@ -158,7 +160,7 @@ half4 main(float2 fragCoord) {
 }
 """
 
-fun showShaderSandboxDialog(activity: ComponentActivity) {
+fun showShaderSandboxDialog(activity: Activity) {
     val frame = object : FrameLayout(activity) {
         // Just to let AlertDialog know there is an editor here so it needs to show the soft keyboard
         override fun onCheckIsTextEditor() = true
@@ -195,12 +197,12 @@ fun showShaderSandboxDialog(activity: ComponentActivity) {
         .setView(frame)
         .show()
     // Just close the dialog when activity is paused so we don't get ANR after app switch and etc.
-    activity.lifecycle.addObserver(LifecycleEventObserver { _, event ->
-        if (event == Lifecycle.Event.ON_PAUSE) dialog.cancel()
-    })
+    (activity as? ComponentActivity).debugAssertNotNull?.lifecycle?.addObserver(
+        LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_PAUSE) dialog.cancel() }
+    )
 }
 
-fun showColorPickerDialog(activity: ComponentActivity) {
+fun showColorPickerDialog(activity: Activity) {
     val view = LinearLayout(activity).apply {
         orientation = LinearLayout.VERTICAL
         val layoutParams = ViewGroup.LayoutParams(
@@ -314,7 +316,7 @@ class CircleColorPickerView(context: Context, attrs: AttributeSet? = null) : Vie
     }
 }
 
-fun showFlingDemoDialog(activity: ComponentActivity) {
+fun showFlingDemoDialog(activity: Activity) {
     val x = FloatValueHolder()
     val horizontalFling = FlingAnimation(x)
     val y = FloatValueHolder()
@@ -409,7 +411,7 @@ fun showFlingDemoDialog(activity: ComponentActivity) {
             if (isWallHit) {
                 performHapticFeedbackVirtualKey()
                 val index = ++counter % diatonicScale.size
-                lifecycle.launch { playSoundTick(diatonicScale[index].toDouble()) }
+                lifecycle?.launch { playSoundTick(diatonicScale[index].toDouble()) }
 
 //                val rippleDrawable = background
 //                if (rippleDrawable is RippleDrawable) {
@@ -425,7 +427,7 @@ fun showFlingDemoDialog(activity: ComponentActivity) {
 
         private val diatonicScale = listOf(0, 2, 4, 5, 7, 9, 11, 12, 11, 9, 7, 5, 4, 2)
 
-        private val lifecycle = activity.lifecycleScope
+        private val lifecycle = (activity as? ComponentActivity).debugAssertNotNull?.lifecycleScope
 
         private val flingDetector = createFlingDetector(context) { velocityX, velocityY ->
             horizontalFling.setStartVelocity(velocityX).start()
@@ -490,7 +492,7 @@ float4 main(float2 fragCoord) {
 }
 """
 
-fun showPeriodicTableDialog(activity: ComponentActivity) {
+fun showPeriodicTableDialog(activity: Activity) {
     val zoomableView = ZoomableView(activity)
     val cellSize = 100
     zoomableView.contentWidth = 100f * 18
@@ -558,9 +560,12 @@ fun showPeriodicTableDialog(activity: ComponentActivity) {
                 .setView(EditText(activity).also {
                     it.layoutDirection = View.LAYOUT_DIRECTION_LTR
                     it.textDirection = View.TEXT_DIRECTION_LTR
-                    it.setText(elements.reversed()
-                        .mapIndexed { index, s -> "${elements.size - index},$s" }
-                        .joinToString("\n"))
+                    it.setText(
+                        elements
+                            .reversed()
+                            .mapIndexed { index, s -> "${elements.size - index},$s" }
+                            .joinToString("\n"),
+                    )
                 })
                 .show()
         } else if (index == 144) {
@@ -933,7 +938,7 @@ fun showSignalGeneratorDialog(activity: ComponentActivity, viewLifecycle: Lifecy
     })
 }
 
-fun showSpringDemoDialog(activity: ComponentActivity) {
+fun showSpringDemoDialog(activity: Activity) {
     val x = FloatValueHolder()
     val horizontalSpring = SpringAnimation(x)
     horizontalSpring.spring = SpringForce(0f)
@@ -998,13 +1003,13 @@ fun showSpringDemoDialog(activity: ComponentActivity) {
 
                     val angle = atan2(y.value - height / 2f, x.value - width / 2f)
                     performHapticFeedbackVirtualKey()
-                    lifecycle.launch { playSoundTick(angle * 10.0) }
+                    lifecycle?.launch { playSoundTick(angle * 10.0) }
                 }
             }
             return true
         }
 
-        private val lifecycle = activity.lifecycleScope
+        private val lifecycle = (activity as? ComponentActivity).debugAssertNotNull?.lifecycleScope
     }
 
     val dialog = AlertDialog.Builder(activity)
@@ -1206,7 +1211,7 @@ suspend fun playSoundTick(offset: Double) {
     }
 }
 
-fun showSensorTestDialog(activity: ComponentActivity) {
+fun showSensorTestDialog(activity: Activity) {
     val sensorManager = activity.getSystemService<SensorManager>() ?: return
     val root = LinearLayout(activity)
     val spinner = Spinner(activity)
@@ -1319,7 +1324,7 @@ fun showSensorTestDialog(activity: ComponentActivity) {
         .show()
 }
 
-fun showInputDeviceTestDialog(activity: ComponentActivity) {
+fun showInputDeviceTestDialog(activity: Activity) {
     AlertDialog.Builder(activity)
         .setView(
             object : EditText(activity) {

@@ -30,8 +30,8 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
         targetSdk = 35
-        versionCode = 12000
-        versionName = "12.0.0"
+        versionCode = 12101
+        versionName = "12.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
@@ -148,7 +148,7 @@ dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     // Temporarily till bom reaches to it
-    implementation("androidx.compose.foundation:foundation-layout:1.8.0-beta02")
+    implementation("androidx.compose.foundation:foundation-layout:1.8.0-beta03")
     androidTestImplementation(composeBom)
     implementation(libs.compose.activity)
     implementation(libs.compose.ui)

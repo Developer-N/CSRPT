@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,7 +52,7 @@ fun AthanAlarmComponent(
     val coroutineScope = rememberCoroutineScope()
     val filePicker = rememberLauncherForActivityResult(contract = PickSound()) { intent ->
         intent ?: return@rememberLauncherForActivityResult
-        coroutineScope.launch{
+        coroutineScope.launch {
             runCatching {
                 if (intent.extras?.getInt(
                         FILE_PICKER_REQUEST_CODE, -1
@@ -90,7 +90,7 @@ fun AthanAlarmComponent(
     }
     var showNetoworkError by remember { mutableStateOf(false) }
     var showAthanDownloadDialog by remember { mutableStateOf(false) }
-    Row(
+    FlowRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(4.dp),
