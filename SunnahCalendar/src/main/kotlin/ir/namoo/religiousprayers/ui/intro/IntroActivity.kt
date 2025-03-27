@@ -32,10 +32,14 @@ import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.preferences
 import io.github.persiancalendar.praytimes.CalculationMethod
+import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.PREF_APP_FONT
 import ir.namoo.commons.PREF_FIRST_START
+import ir.namoo.commons.PREF_JUMMA_SILENT
+import ir.namoo.commons.PREF_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.SYSTEM_DEFAULT_FONT
 import ir.namoo.commons.repository.PrayTimeRepository
+import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.getAppFont
 import ir.namoo.commons.utils.getAthansDirectoryPath
 import ir.namoo.commons.utils.overrideFont
@@ -53,7 +57,19 @@ class IntroActivity : ComponentActivity() {
         setTheme(R.style.BaseTheme)
         applyAppLanguage(this)
         super.onCreate(savedInstanceState)
-
+        if (preferences.contains(PREF_JUMMA_SILENT)) {
+            appPrefsLite.edit {
+                putBoolean(PREF_JUMMA_SILENT, preferences.getBoolean(PREF_JUMMA_SILENT, false))
+            }
+        }
+        if (preferences.contains(PREF_JUMMA_SILENT_MINUTE)) {
+            appPrefsLite.edit {
+                putInt(
+                    PREF_JUMMA_SILENT_MINUTE,
+                    preferences.getInt(PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE)
+                )
+            }
+        }
         lifecycleScope.launch {
             val font = preferences.getString(PREF_APP_FONT, SYSTEM_DEFAULT_FONT)
             if (!font.isNullOrEmpty() && font != SYSTEM_DEFAULT_FONT) preferences.edit {

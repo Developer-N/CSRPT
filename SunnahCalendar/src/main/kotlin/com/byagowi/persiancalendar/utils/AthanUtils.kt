@@ -44,8 +44,6 @@ import com.byagowi.persiancalendar.variants.debugLog
 import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.LAST_PLAYED_AFTER_ATHAN_KEY
 import ir.namoo.commons.LAST_PLAYED_BEFORE_ATHAN_KEY
-import ir.namoo.commons.LAST_SILENT_ATHAN_KEY
-import ir.namoo.commons.LAST_STOP_SILENT_ATHAN_KEY
 import ir.namoo.commons.PREF_AZKAR_REINDER
 import ir.namoo.commons.PREF_JUMMA_SILENT
 import ir.namoo.commons.PREF_JUMMA_SILENT_MINUTE
@@ -76,7 +74,7 @@ fun getAthanUri(context: Context): Uri =
 
 fun startAthan(context: Context, prayTime: String, intendedTime: Long?) {
     debugLog("Alarms: startAthan for $prayTime")
-    if (intendedTime == null || prayTime.startsWith("SS_"))
+    if (intendedTime == null || prayTime.contains("S_"))
         return startAthanBody(context, prayTime)
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) return
@@ -89,17 +87,13 @@ fun startAthan(context: Context, prayTime: String, intendedTime: Long?) {
     val lastPlayedAthanKey = preferences.getString(LAST_PLAYED_ATHAN_KEY, null)
     val lastBAthanKey = preferences.getString(LAST_PLAYED_BEFORE_ATHAN_KEY, null)
     val lastAAthanKey = preferences.getString(LAST_PLAYED_AFTER_ATHAN_KEY, null)
-    val lastSAthanKey = preferences.getString(LAST_SILENT_ATHAN_KEY, null)
-    val lastSSAthanKey = preferences.getString(LAST_STOP_SILENT_ATHAN_KEY, null)
     val lastPlayedAthanJdn = preferences.getJdnOrNull(LAST_PLAYED_ATHAN_JDN)
     val today = Jdn.today()
-    if (lastPlayedAthanJdn == today && (lastPlayedAthanKey == prayTime || lastBAthanKey == prayTime || lastAAthanKey == prayTime || lastSAthanKey == prayTime || lastSSAthanKey == prayTime)) return
+    if (lastPlayedAthanJdn == today && (lastPlayedAthanKey == prayTime || lastBAthanKey == prayTime || lastAAthanKey == prayTime)) return
     preferences.edit {
         putString(
             if (prayTime.startsWith("B")) LAST_PLAYED_BEFORE_ATHAN_KEY
             else if (prayTime.startsWith("A") && prayTime != PrayTime.ASR.name) LAST_PLAYED_AFTER_ATHAN_KEY
-            else if (prayTime.startsWith("S_")) LAST_SILENT_ATHAN_KEY
-            else if (prayTime.startsWith("SS_")) LAST_STOP_SILENT_ATHAN_KEY
             else LAST_PLAYED_ATHAN_KEY, prayTime
         )
         putJdn(LAST_PLAYED_ATHAN_JDN, today)
@@ -138,11 +132,9 @@ private fun startAthanBody(context: Context, prayTime: String) {
                         val time = Calendar.getInstance().also {
                             it.add(
                                 Calendar.MINUTE,
-                                if (Jdn.today().weekDay == 6 && prayTime.contains(PrayTime.DHUHR.name) && context.preferences.getBoolean(
-                                        PREF_JUMMA_SILENT,
-                                        false
-                                    )
-                                ) context.preferences.getInt(
+                                if (Jdn.today().weekDay == 6 && prayTime.contains(PrayTime.DHUHR.name) &&
+                                    context.appPrefsLite.getBoolean(PREF_JUMMA_SILENT, false)
+                                ) context.appPrefsLite.getInt(
                                     PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE
                                 )
                                 else setting.silentMinute
@@ -219,7 +211,7 @@ fun getEnabledAlarms2(context: Context): Set<String> {
             if (athan.isSilentEnabled) result.add("S_${athan.athanKey}")
             if (
                 athan.athanKey == PrayTime.DHUHR.name && Jdn.today().weekDay == 6 &&
-                context.preferences.getBoolean(PREF_JUMMA_SILENT, false) &&
+                context.appPrefsLite.getBoolean(PREF_JUMMA_SILENT, false) &&
                 !result.contains("S_${athan.athanKey}")
             )
                 result.add("S_${athan.athanKey}")
@@ -371,7 +363,7 @@ private fun scheduleAlarm(context: Context, prayTime: String, timeInMillis: Long
     run { // Schedule in both alarmmanager and workmanager, startAthan has the logic to skip duplicated calls
         val workerInputData = Data.Builder().putLong(KEY_EXTRA_PRAYER_TIME, timeInMillis)
             .putString(KEY_EXTRA_PRAYER, prayTime).build()
-        val alarmWorker =OneTimeWorkRequestBuilder<AlarmWorker>()
+        val alarmWorker = OneTimeWorkRequestBuilder<AlarmWorker>()
             .setInitialDelay(remainedMillis, TimeUnit.MILLISECONDS)
             .setInputData(workerInputData)
             .build()

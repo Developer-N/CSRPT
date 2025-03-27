@@ -21,6 +21,6 @@ plugins {
     alias(libs.plugins.firebase.crashlytics) apply false
 }
 
-task("clean") {
+tasks.register("clean") {
     delete(rootProject.layout.buildDirectory)
 }

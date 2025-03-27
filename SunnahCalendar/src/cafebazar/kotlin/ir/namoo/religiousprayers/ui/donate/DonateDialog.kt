@@ -57,10 +57,12 @@ fun DonateDialog(onDismiss: () -> Unit) {
 
         }
         connectionFailed { throwable ->
-            Toast.makeText(context, "خطایی رخ داد. $throwable", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "خطایی رخ داد. $throwable", Toast.LENGTH_SHORT)
+                .show()
         }
         disconnected {
-            Toast.makeText(context, "اتصال به کافه بازار قطع شد.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "اتصال به کافه بازار قطع شد.", Toast.LENGTH_SHORT)
+                .show()
         }
     }
     LaunchedEffect(key1 = "Scroll") {
@@ -95,7 +97,6 @@ fun DonateDialog(onDismiss: () -> Unit) {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Text(
                     text = formatNumber(stringResource(id = R.string.donate_msg)),
-                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Justify
                 )
                 FlowRow(
@@ -106,7 +107,10 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     listOf(
-                        "donate5", "donate10", "donate20", "donate50"
+                        "donate5",
+                        "donate10",
+                        "donate20",
+                        "donate50"
                     ).zip(
                         listOf(
                             stringResource(id = R.string._5),
@@ -118,7 +122,8 @@ fun DonateDialog(onDismiss: () -> Unit) {
                         ElevatedButton(
                             onClick = { purchase(context, activity, pair.first, payment) }) {
                             Text(
-                                text = formatNumber(pair.second), fontWeight = FontWeight.SemiBold
+                                text = formatNumber(pair.second),
+                                fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -133,31 +138,40 @@ fun DonateDialog(onDismiss: () -> Unit) {
 }
 
 private fun purchase(
-    context: Context, activity: ComponentActivity, productID: String, payment: Payment
+    context: Context,
+    activity: ComponentActivity,
+    productID: String,
+    payment: Payment
 ) {
     val purchaseRequest = PurchaseRequest(
-        productId = productID, payload = "PAYLOAD"
+        productId = productID,
+        payload = "PAYLOAD"
     )
     payment.purchaseProduct(
-        registry = activity.activityResultRegistry, request = purchaseRequest
+        registry = activity.activityResultRegistry,
+        request = purchaseRequest
     ) {
         purchaseFlowBegan {
             Toast.makeText(context, "رفتیم برای کمک 😃", Toast.LENGTH_SHORT).show()
         }
         failedToBeginFlow { throwable ->
-            Toast.makeText(context, "خطایی رخ داد 😕 $throwable", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "خطایی رخ داد 😕 $throwable", Toast.LENGTH_SHORT)
+                .show()
         }
         purchaseSucceed {
             Toast.makeText(context, "جزاکم الله الخیرا ❤️", Toast.LENGTH_SHORT).show()
         }
         purchaseCanceled {
             Toast.makeText(
-                context, "ان شاءالله دفعه ی بعدی کمک کنید 🙂", Toast.LENGTH_SHORT
+                context,
+                "ان شاءالله دفعه ی بعدی کمک کنید 🙂",
+                Toast.LENGTH_SHORT
             ).show()
 
         }
         purchaseFailed { throwable ->
-            Toast.makeText(context, "خطایی رخ داد 😕 $throwable", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "خطایی رخ داد 😕 $throwable", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 }

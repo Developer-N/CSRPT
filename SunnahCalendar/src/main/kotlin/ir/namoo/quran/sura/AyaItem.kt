@@ -80,6 +80,7 @@ import ir.namoo.quran.utils.kurdishFontSize
 import ir.namoo.quran.utils.quranFont
 import ir.namoo.quran.utils.quranFontSize
 import ir.namoo.quran.utils.uthmanTahaFont
+import ir.namoo.quran.utils.vazirmatnFont
 
 @Composable
 fun AyaItem(
@@ -106,7 +107,9 @@ fun AyaItem(
             append("﴿")
         }
         withStyle(
-            style = SpanStyle()
+            style = SpanStyle(
+                fontFamily = FontFamily(vazirmatnFont)
+            )
         ) {
             append(formatNumber(quran.verseID))
         }

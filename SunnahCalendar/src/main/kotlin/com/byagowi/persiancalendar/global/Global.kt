@@ -2,6 +2,7 @@ package com.byagowi.persiancalendar.global
 
 import android.content.Context
 import android.content.res.Resources
+import android.os.Build
 import android.view.accessibility.AccessibilityManager
 import androidx.collection.LongSet
 import androidx.collection.emptyLongSet
@@ -10,6 +11,7 @@ import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.DEFAULT_AM
 import com.byagowi.persiancalendar.DEFAULT_ASCENDING_ATHAN_VOLUME
 import com.byagowi.persiancalendar.DEFAULT_ATHAN_VIBRATION
+import com.byagowi.persiancalendar.DEFAULT_AZERI_ALTERNATIVE_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.DEFAULT_CITY
 import com.byagowi.persiancalendar.DEFAULT_DREAM_NOISE
 import com.byagowi.persiancalendar.DEFAULT_EASTERN_GREGORIAN_ARABIC_MONTHS
@@ -41,6 +43,7 @@ import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ASTRONOMICAL_FEATURES
 import com.byagowi.persiancalendar.PREF_ATHAN_NAME
 import com.byagowi.persiancalendar.PREF_ATHAN_VIBRATION
+import com.byagowi.persiancalendar.PREF_AZERI_ALTERNATIVE_PERSIAN_MONTHS
 import com.byagowi.persiancalendar.PREF_CALENDARS_IDS_AS_HOLIDAY
 import com.byagowi.persiancalendar.PREF_CALENDARS_IDS_TO_EXCLUDE
 import com.byagowi.persiancalendar.PREF_CENTER_ALIGN_WIDGETS
@@ -209,6 +212,7 @@ private val isVazirEnabled_ = MutableStateFlow(DEFAULT_VAZIR_ENABLED)
 val isVazirEnabled: StateFlow<Boolean> get() = isVazirEnabled_
 
 private var alternativeGregorianMonths = false
+private var alternativePersianMonthsInAzeri = false
 
 private val coordinates_ = MutableStateFlow<Coordinates?>(null)
 val coordinates: StateFlow<Coordinates?> get() = coordinates_
@@ -345,7 +349,7 @@ fun configureCalendarsAndLoadEvents(context: Context) {
 fun loadLanguageResources(resources: Resources) {
     debugLog("Utils: loadLanguageResources is called")
     val language = language.value
-    persianMonths = language.getPersianMonths(resources)
+    persianMonths = language.getPersianMonths(resources, alternativePersianMonthsInAzeri)
     islamicMonths = language.getIslamicMonths(resources)
     gregorianMonths = language.getGregorianMonths(resources, alternativeGregorianMonths)
     nepaliMonths = language.getNepaliMonths()
@@ -418,6 +422,9 @@ fun updateStoredPreference(context: Context) {
 
         else -> false
     }
+    alternativePersianMonthsInAzeri = language == Language.AZB && preferences.getBoolean(
+        PREF_AZERI_ALTERNATIVE_PERSIAN_MONTHS, DEFAULT_AZERI_ALTERNATIVE_PERSIAN_MONTHS
+    )
 
     prefersWidgetsDynamicColors_.value =
         userSetTheme.value.isDynamicColors && preferences.getBoolean(
@@ -553,7 +560,9 @@ fun updateStoredPreference(context: Context) {
     // https://stackoverflow.com/a/61599809
     isHighTextContrastEnabled = runCatching {
         context.getSystemService<AccessibilityManager>()?.let {
-            it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean
+            if (Build.VERSION.SDK_INT >= 36) {
+                it.isHighContrastTextEnabled
+            } else it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean
         }
     }.onFailure(logException).getOrNull() == true
 }

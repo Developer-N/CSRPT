@@ -5,9 +5,6 @@
       <SelectionState runConfigName="SunnahCalendar">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="Android.CSRPT.SunnahCalendar">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
     </selectionStates>
   </component>
 </project>

@@ -320,4 +320,5 @@
     <string name="clear_cached_data">Clear Cached Data</string>
     <string name="hadeeth_not_exist">Internet problem or hadeeth not exist!</string>
     <string name="alarm_reminders">Alarms and Reminders</string>
+    <string name="are_you_sure_delete_athan">Are you sure want to delete %s?</string>
 </resources>

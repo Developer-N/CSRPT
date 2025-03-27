@@ -12,7 +12,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetConfigurationActivity
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.update
@@ -23,6 +22,7 @@ import ir.namoo.commons.PREF_SHOW_SYSTEM_RINGTONES
 import ir.namoo.commons.model.AthanDB
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
+import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.getDefaultAlertUri
 import ir.namoo.commons.utils.getDefaultAthanUri
 import ir.namoo.commons.utils.getDefaultFajrAthanUri
@@ -127,9 +127,9 @@ class AthanSettingsViewModel(
             _volume.value = athanSettings.athanVolume
             _selectedBackground.value = athanSettings.backgroundUri
 
-            _enableJummaSilent.value = context.preferences.getBoolean(PREF_JUMMA_SILENT, false)
+            _enableJummaSilent.value = context.appPrefsLite.getBoolean(PREF_JUMMA_SILENT, false)
             _silentJummaMinute.value =
-                context.preferences.getInt(PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE)
+                context.appPrefsLite.getInt(PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE)
 
             val cursor = RingtoneManager(context).cursor
             val tmpNames = mutableListOf<String>()
@@ -283,7 +283,7 @@ class AthanSettingsViewModel(
 
     fun updateJummaSilentState(context: Context) {
         viewModelScope.launch {
-            context.preferences.edit {
+            context.appPrefsLite.edit {
                 putBoolean(PREF_JUMMA_SILENT, !enableJummaSilent.value)
             }
             _enableJummaSilent.value = !enableJummaSilent.value
@@ -293,7 +293,7 @@ class AthanSettingsViewModel(
 
     fun updateJummaSilentMinute(context: Context, minutes: Int) {
         viewModelScope.launch {
-            context.preferences.edit {
+            context.appPrefsLite.edit {
                 putInt(PREF_JUMMA_SILENT_MINUTE, minutes)
             }
             _silentJummaMinute.value = minutes
@@ -396,7 +396,7 @@ class AthanSettingsViewModel(
         return res
     }
 
-    fun playAthan(context: Context,activity: Activity?) {
+    fun playAthan(context: Context, activity: Activity?) {
         viewModelScope.launch {
             if (mediaPlayer.isPlaying) mediaPlayer.pause()
             if (isAthanPlaying.value) {
@@ -427,7 +427,7 @@ class AthanSettingsViewModel(
         }
     }
 
-    fun playAlarm(context: Context,activity: Activity?) {
+    fun playAlarm(context: Context, activity: Activity?) {
         viewModelScope.launch {
             if (mediaPlayer.isPlaying) mediaPlayer.pause()
             if (isAlarmPlaying.value) {

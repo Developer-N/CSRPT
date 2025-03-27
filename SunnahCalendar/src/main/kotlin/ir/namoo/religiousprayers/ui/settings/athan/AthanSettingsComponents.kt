@@ -1,6 +1,7 @@
 package ir.namoo.religiousprayers.ui.settings.athan
 
 import android.media.AudioManager
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -87,7 +88,8 @@ fun SettingSwitch(
             text = title,
             fontWeight = FontWeight.SemiBold
         )
-        Switch(modifier = Modifier.weight(1f),
+        Switch(
+            modifier = Modifier.weight(1f),
             checked = isChecked,
             onCheckedChange = { onClick() },
             thumbContent = {
@@ -176,7 +178,8 @@ fun AlertComponent(
                 checkedIcon = Icons.Default.AlarmOn,
                 unCheckedIcon = Icons.Default.AlarmOff
             )
-            NumberPicker(modifier = Modifier.weight(1f),
+            NumberPicker(
+                modifier = Modifier.weight(1f),
                 range = range,
                 value = minute,
                 onValueChange = { onMinute(it) })
@@ -198,7 +201,8 @@ fun VolumeComponent(enable: Boolean = true, volume: Int, updateVolume: (Int) -> 
         }
     }
     var innerVolume by remember { mutableIntStateOf(volume) }
-    Slider(modifier = Modifier.padding(vertical = 4.dp, horizontal = 10.dp),
+    Slider(
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 10.dp),
         value = innerVolume.toFloat(),
         steps = maxValue,
         valueRange = 0f..maxValue.toFloat(),
@@ -212,7 +216,10 @@ fun VolumeComponent(enable: Boolean = true, volume: Int, updateVolume: (Int) -> 
 
 @Composable
 fun AthanSelector(
-    title: String, items: List<String>, selectedItem: String, onSelectChanged: (String) -> Unit
+    title: String,
+    items: List<String>,
+    selectedItem: String,
+    onSelectChanged: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val rotate = animateFloatAsState(
@@ -228,28 +235,37 @@ fun AthanSelector(
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.primary
         )
-        ElevatedButton(modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth(),
+        ElevatedButton(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
             onClick = { expanded = true }) {
             Row(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = selectedItem, fontWeight = FontWeight.SemiBold)
+                AnimatedContent(targetState = selectedItem) {
+                    Text(text = it, fontWeight = FontWeight.SemiBold)
+                }
                 Icon(
                     modifier = Modifier.rotate(rotate.value),
                     imageVector = Icons.Default.ExpandCircleDown,
                     contentDescription = ""
                 )
             }
-            DropdownMenu(shape = MaterialTheme.shapes.extraLarge,
+            DropdownMenu(
+                shape = MaterialTheme.shapes.extraLarge,
                 expanded = expanded,
                 onDismissRequest = { expanded = false }) {
-                items.forEach { item ->
+                items.forEachIndexed { index, item ->
                     val name = if (item.split(".").first()
                             .isDigitsOnly()
                     ) stringResource(R.string.added_file, item) else item
-                    DropdownMenuItem(text = { Text(text = name) }, onClick = {
+                    DropdownMenuItem(text = {
+                        Text(
+                            text = name,
+                            fontWeight = if (item == selectedItem) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }, onClick = {
                         onSelectChanged(item)
                         expanded = false
                     }, trailingIcon = {
@@ -270,7 +286,8 @@ fun AthanSelector(
 fun PrevAthanSelector() {
     AppTheme {
         Surface {
-            AthanSelector(title = stringResource(id = R.string.str_selectAthan),
+            AthanSelector(
+                title = stringResource(id = R.string.str_selectAthan),
                 items = listOf("athan1", "athan2", "athan3", "athan4", "athan5", "athan6"),
                 selectedItem = "athan3",
                 onSelectChanged = {})
@@ -315,7 +332,8 @@ fun ComponentsPrev() {
                         unCheckedIcon = Icons.AutoMirrored.Default.VolumeOff
                     )
                     HorizontalDivider()
-                    AlertComponent(title = stringResource(id = R.string.alarm_before),
+                    AlertComponent(
+                        title = stringResource(id = R.string.alarm_before),
                         togleTitle = stringResource(id = R.string.enable_alarm),
                         isChecked = true,
                         onCheck = {},
@@ -323,7 +341,8 @@ fun ComponentsPrev() {
                         minute = 15,
                         onMinute = {})
                     HorizontalDivider()
-                    AlertComponent(title = stringResource(id = R.string.alarm_after),
+                    AlertComponent(
+                        title = stringResource(id = R.string.alarm_after),
                         togleTitle = stringResource(id = R.string.enable_alarm),
                         isChecked = true,
                         onCheck = {},
@@ -331,7 +350,8 @@ fun ComponentsPrev() {
                         minute = 15,
                         onMinute = {})
                     HorizontalDivider()
-                    AlertComponent(title = stringResource(id = R.string.silent_after),
+                    AlertComponent(
+                        title = stringResource(id = R.string.silent_after),
                         togleTitle = stringResource(id = R.string.enable_silent),
                         isChecked = true,
                         onCheck = {},

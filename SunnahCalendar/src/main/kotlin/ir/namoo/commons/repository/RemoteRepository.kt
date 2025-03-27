@@ -87,19 +87,20 @@ class RemoteRepository(private val httpClient: HttpClient) {
         }.onFailure { return null }.getOrElse { return null }
     }
 
-    suspend fun getAthans(): List<ServerAthanModel> {
+    suspend fun getAthansOrAlarms(type: Int): DataResult<Any> {
         runCatching {
-            val res: ServerResponseModel<List<ServerAthanModel>> =
-                httpClient.get("$BASE_API_URL/app/athans").body()
-            return res.data
-        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
-    }
-
-    suspend fun getAlarms(): List<ServerAthanModel> {
-        runCatching {
-            val res: ServerResponseModel<List<ServerAthanModel>> =
-                httpClient.get("$BASE_API_URL/app/alarms").body()
-            return res.data
-        }.onFailure { return emptyList() }.getOrElse { return emptyList() }
+            Log.e("RemoteRepository", "getAthansOrAlarms")
+            val result =
+                httpClient.get(if (type == 1) "$BASE_API_URL/app/athans" else "$BASE_API_URL/app/alarms")
+            Log.e(
+                "RemoteRepository",
+                "getAthansOrAlarms: ${result.status} ${result.body<String>()}"
+            )
+            return when (result.status) {
+                HttpStatusCode.OK -> DataResult.Success(result.body<ServerResponseModel<List<ServerAthanModel>>>().data)
+                else -> DataResult.Error("Error getAthansOrAlarms")
+            }
+        }.onFailure { return DataResult.Error("Error getAthansOrAlarms, message: ${it.message}") }
+            .getOrElse { return DataResult.Error("Error getAthansOrAlarms, message: ${it.message}") }
     }
 }

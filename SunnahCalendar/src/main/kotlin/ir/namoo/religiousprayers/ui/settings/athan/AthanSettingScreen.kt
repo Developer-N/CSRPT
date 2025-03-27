@@ -127,7 +127,8 @@ fun AthanSettingsScreen(
                     unCheckedIcon = Icons.AutoMirrored.Default.VolumeOff
                 )
                 HorizontalDivider(modifier = Modifier.padding(8.dp))
-                PlayTypeComponent(playType = playType,
+                PlayTypeComponent(
+                    playType = playType,
                     onTypeChange = { viewModel.updatePlayType(it) })
                 if (athanId != 2) {
                     HorizontalDivider(modifier = Modifier.padding(8.dp))
@@ -140,7 +141,8 @@ fun AthanSettingsScreen(
                         unCheckedIcon = Icons.AutoMirrored.Default.VolumeOff
                     )
                     HorizontalDivider(modifier = Modifier.padding(8.dp))
-                    AlertComponent(title = stringResource(id = R.string.alarm_before),
+                    AlertComponent(
+                        title = stringResource(id = R.string.alarm_before),
                         togleTitle = stringResource(id = R.string.enable_alarm),
                         isChecked = beforeState,
                         onCheck = { viewModel.updateBeforeState(context) },
@@ -148,7 +150,8 @@ fun AthanSettingsScreen(
                         minute = beforeMinutes,
                         onMinute = { viewModel.updateBeforeMinutes(context, it) })
                     HorizontalDivider(modifier = Modifier.padding(8.dp))
-                    AlertComponent(title = stringResource(id = R.string.alarm_after),
+                    AlertComponent(
+                        title = stringResource(id = R.string.alarm_after),
                         togleTitle = stringResource(id = R.string.enable_alarm),
                         isChecked = afterState,
                         onCheck = { viewModel.updateAfterState(context) },
@@ -156,7 +159,8 @@ fun AthanSettingsScreen(
                         minute = afterMinutes,
                         onMinute = { viewModel.updateAfterMinutes(context, it) })
                     HorizontalDivider(modifier = Modifier.padding(8.dp))
-                    AlertComponent(title = stringResource(id = R.string.silent_after),
+                    AlertComponent(
+                        title = stringResource(id = R.string.silent_after),
                         togleTitle = stringResource(id = R.string.enable_silent),
                         isChecked = silentState,
                         onCheck = { viewModel.updateSilentState(context) },

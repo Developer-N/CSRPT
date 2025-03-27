@@ -100,11 +100,12 @@ fun DonateDialog(onDismiss: () -> Unit) {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Text(
                     text = formatNumber(stringResource(id = R.string.donate_msg)),
-                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Justify
                 )
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {

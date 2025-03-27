@@ -17,7 +17,7 @@ android {
         getByName("main").kotlin.srcDir(generatedAppSrcDir)
     }
 
-    compileSdk = 35
+    compileSdk = 36
 
     buildFeatures {
         buildConfig = true
@@ -29,9 +29,9 @@ android {
     defaultConfig {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
-        targetSdk = 35
-        versionCode = 12101
-        versionName = "12.1.0"
+        targetSdk = 36
+        versionCode = 12120
+        versionName = "12.1.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
@@ -97,7 +97,7 @@ android {
         language.enableSplit = false
     }
 
-    val javaVersion = JavaVersion.VERSION_21
+    val javaVersion = JavaVersion.VERSION_23
 
     compileOptions {
         sourceCompatibility = javaVersion
@@ -148,7 +148,7 @@ dependencies {
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     // Temporarily till bom reaches to it
-    implementation("androidx.compose.foundation:foundation-layout:1.8.0-beta03")
+    implementation("androidx.compose.foundation:foundation-layout:1.8.0-rc02")
     androidTestImplementation(composeBom)
     implementation(libs.compose.activity)
     implementation(libs.compose.ui)

@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        maven("https://maven.myket.ir")
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -8,6 +9,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven("https://maven.myket.ir")
         google()
         mavenCentral()
         maven("https://jitpack.io")

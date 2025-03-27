@@ -4,7 +4,6 @@ import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.model.CityModel
 import ir.namoo.commons.model.PrayTimesResponse
 import ir.namoo.commons.model.ProvinceModel
-import ir.namoo.commons.model.ServerAthanModel
 import ir.namoo.commons.utils.modelToDBTimes
 import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
 import ir.namoo.religiousprayers.praytimeprovider.EditedPrayTimesEntity
@@ -107,9 +106,18 @@ class PrayTimeRepository(
     }.flowOn(Dispatchers.IO)
 
 
-    suspend fun getAthans(): List<ServerAthanModel> = remoteRepository.getAthans()
-
-    suspend fun getAlarms(): List<ServerAthanModel> = remoteRepository.getAlarms()
+    fun getAthansOrAlarms(type: Int) = flow {
+        runCatching {
+            emit(DataState.Loading)
+            when (val result = remoteRepository.getAthansOrAlarms(type)) {
+                is DataResult.Error -> emit(DataState.Error(result.message))
+                is DataResult.Success<*> -> emit(DataState.Success(result.data))
+            }
+        }.onFailure {
+            emit(DataState.Error("Error getAthansOrAlarms: message: ${it.message}"))
+            logException
+        }
+    }.flowOn(Dispatchers.IO)
 
     suspend fun getDownloadedTimesForCity(cityId: Int): List<DownloadedPrayTimesEntity> =
         localRepository.getDownloadedTimesFor(cityId)

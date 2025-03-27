@@ -32,6 +32,9 @@ var farsiFontSize = 0.0f
 var uthmanTahaFont: Typeface = Typeface.SANS_SERIF
     private set
 
+var vazirmatnFont: Typeface = Typeface.SANS_SERIF
+    private set
+
 var chapterException: Throwable? = null
 
 private val playerSpeed_ = MutableStateFlow(DEFAULT_PLAYER_SPEED)
@@ -45,6 +48,11 @@ fun initQuranUtils(context: Context) {
     uthmanTahaFont = Typeface.createFromAsset(
         context.assets, "fonts/Quran_UthmanTahaN1B.ttf"
     )
+
+    vazirmatnFont = Typeface.createFromAsset(
+        context.assets, "fonts/Vazirmatn.ttf"
+    )
+
 
     //Set new fonts if old font selected
     if (prefs.getString(PREF_QURAN_FONT, DEFAULT_QURAN_FONT)

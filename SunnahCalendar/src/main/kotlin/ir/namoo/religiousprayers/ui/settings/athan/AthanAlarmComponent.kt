@@ -88,7 +88,7 @@ fun AthanAlarmComponent(
             }.onFailure(logException)
         }
     }
-    var showNetoworkError by remember { mutableStateOf(false) }
+    var networkErrorDialog by remember { mutableStateOf(false) }
     var showAthanDownloadDialog by remember { mutableStateOf(false) }
     FlowRow(
         modifier = modifier
@@ -98,7 +98,7 @@ fun AthanAlarmComponent(
     ) {
         ElevatedButton(
             onClick = {
-                if (!isNetworkConnected(context)) showNetoworkError = true
+                if (!isNetworkConnected(context)) networkErrorDialog = true
                 else showAthanDownloadDialog = true
             }, enabled = !showAthanDownloadDialog
         ) {
@@ -125,8 +125,8 @@ fun AthanAlarmComponent(
             )
         }
 
-        AnimatedVisibility(visible = showNetoworkError) {
-            AlertDialog(onDismissRequest = { showNetoworkError = false },
+        AnimatedVisibility(visible = networkErrorDialog) {
+            AlertDialog(onDismissRequest = { networkErrorDialog = false },
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Warning,
@@ -134,7 +134,7 @@ fun AthanAlarmComponent(
                     )
                 },
                 confirmButton = {
-                    TextButton(onClick = { showNetoworkError = false }) {
+                    TextButton(onClick = { networkErrorDialog = false }) {
                         Text(text = stringResource(id = R.string.ok))
                     }
                 },

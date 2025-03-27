@@ -114,7 +114,8 @@ class NAthanActivity : ComponentActivity() {
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                telephonyManager?.registerTelephonyCallback(mainExecutor,
+                telephonyManager?.registerTelephonyCallback(
+                    mainExecutor,
                     object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                         override fun onCallStateChanged(state: Int) {
                             when (state) {
@@ -241,14 +242,16 @@ class NAthanActivity : ComponentActivity() {
         }.onFailure(logException)
 
         setContent {
-            val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
-            val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
-            LaunchedEffect(isBackgroundColorLight, isSurfaceColorLight) {
-                applyEdgeToEdge(isBackgroundColorLight, isSurfaceColorLight)
-            }
-            BackHandler { stop() }
             AppTheme {
-                NAthanActivityContent(title = title,
+                val isBackgroundColorLight = MaterialTheme.colorScheme.background.isLight
+                val isSurfaceColorLight = MaterialTheme.colorScheme.surface.isLight
+                LaunchedEffect(isBackgroundColorLight, isSurfaceColorLight) {
+                    applyEdgeToEdge(isBackgroundColorLight, isSurfaceColorLight)
+                }
+                BackHandler { stop() }
+
+                NAthanActivityContent(
+                    title = title,
                     subtitle = subtitle,
                     background = setting.backgroundUri,
                     stop = { stop() })

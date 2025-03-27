@@ -75,11 +75,12 @@ fun DonateDialog(onDismiss: () -> Unit) {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Text(
                     text = formatNumber(stringResource(id = R.string.donate_msg)),
-                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Justify
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -131,7 +132,8 @@ fun DonateDialog(onDismiss: () -> Unit) {
                         ElevatedButton(
                             onClick = { openDonateUrl(pair.first, context) }) {
                             Text(
-                                text = formatNumber(pair.second), fontWeight = FontWeight.SemiBold
+                                text = formatNumber(pair.second),
+                                fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
@@ -142,7 +144,9 @@ fun DonateDialog(onDismiss: () -> Unit) {
                     }
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {

@@ -15,7 +15,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -32,16 +31,12 @@ import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.getJdnOrNull
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.utils.putJdn
 import com.byagowi.persiancalendar.variants.debugLog
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.BROADCAST_AZKAR
 import ir.namoo.commons.KEY_AZKAR_EXTRA_NAME
 import ir.namoo.commons.KEY_AZKAR_EXTRA_TIME
-import ir.namoo.commons.LAST_AZKAR_JDN
-import ir.namoo.commons.LAST_AZKAR_KEY
 import ir.namoo.commons.PREF_AZKAR_REINDER
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
@@ -120,28 +115,25 @@ class AzkarWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
 fun startAzkar(context: Context, name: String, intendedTime: Long?) {
     debugLog("Azkar: startAzkar for $name")
     applyAppLanguage(context)
+    val preferences = context.appPrefsLite
     if (intendedTime == null) return startAzkarBody(context, name)
     // if alarm is off by 15 minutes, just skip
     if (abs(System.currentTimeMillis() - intendedTime).milliseconds > 15.minutes) return
 
     // If at the of being is disabled by user, skip
-    if (!context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false)) return
+    if (!preferences.getBoolean(PREF_AZKAR_REINDER, false)) return
 
-    val preferences = context.appPrefsLite
-    val today = Jdn.today()
-    val lastAzkarKey = preferences.getString(LAST_AZKAR_KEY, null)
-    val lastAzkarJdn = preferences.getJdnOrNull(LAST_AZKAR_JDN)
-    if (lastAzkarJdn == today && lastAzkarKey == name) return
-    preferences.edit {
-        putString(LAST_AZKAR_KEY, name)
-        putJdn(LAST_AZKAR_JDN, today)
-    }
     startAzkarBody(context, name)
 }
 
 
+private var lastAzkarKey = ""
+private var lastAzkarJdn: Jdn? = null
 fun startAzkarBody(context: Context, name: String) = runCatching {
     applyAppLanguage(context)
+    val today = Jdn.today()
+    if (lastAzkarJdn == today && lastAzkarKey == name) return
+    lastAzkarJdn = today; lastAzkarKey = name
     debugLog("Azkar: startAzkarBody for $name")
     runCatching {
         @Suppress("Deprecation")
