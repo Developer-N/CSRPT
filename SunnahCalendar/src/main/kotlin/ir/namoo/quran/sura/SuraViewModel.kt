@@ -51,6 +51,7 @@ import ir.namoo.quran.sura.data.TranslateType
 import ir.namoo.quran.utils.DEFAULT_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.DEFAULT_SELECTED_QARI
 import ir.namoo.quran.utils.DEFAULT_TRANSLATE_TO_PLAY
+import ir.namoo.quran.utils.PREF_BOOKMARK_VERSE
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
 import ir.namoo.quran.utils.PREF_IS_SURA_VIEW_IS_OPEN
 import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
@@ -120,6 +121,10 @@ class SuraViewModel(
     val autoScroll = _autoScroll.asStateFlow()
 
     private val chapters = mutableStateListOf<ChapterEntity>()
+
+    private val _bookmarkedVerse = MutableStateFlow(prefs.getInt(PREF_BOOKMARK_VERSE, -1))
+    val bookmarkedVerse = _bookmarkedVerse.asStateFlow()
+
 
     init {
         viewModelScope.launch {
@@ -224,6 +229,12 @@ class SuraViewModel(
         }
     }
 
+    fun updateBookmarkVerse(verseID: Int) {
+        prefs.edit { putInt(PREF_BOOKMARK_VERSE, verseID) }
+        _bookmarkedVerse.value = verseID
+        Log.e("NAMOO", "updateBookmarkVerse: ====> id=$verseID ")
+    }
+
     fun updateNote(quran: QuranEntity, newNote: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -236,7 +247,7 @@ class SuraViewModel(
 
     fun updateAutoScroll() {
         _autoScroll.value = !_autoScroll.value
-        prefs.edit().putBoolean(PREF_AUTO_SCROLL, _autoScroll.value).apply()
+        prefs.edit { putBoolean(PREF_AUTO_SCROLL, _autoScroll.value) }
     }
 
     fun onQuery(query: String) {
@@ -395,7 +406,8 @@ class SuraViewModel(
             if (controller.isPlaying) controller.stop()
             if (controller.mediaItemCount > 0) controller.clearMediaItems()
             controller.addMediaItems(
-                getPlayList(context,
+                getPlayList(
+                    context,
                     sura,
                     aya,
                     folderName,
@@ -528,7 +540,7 @@ class SuraViewModel(
     private fun downloadAudioFiles(context: Context, qari: QariEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             val sura = chapter.value?.sura ?: return@launch
-            val oldRequest = downloadRepository.findDownloadByFileId()
+            val oldRequest = downloadRepository.getAllDownloads()
                 .filter { (it.sura == sura && it.folderPath.contains(qari.folderName)) }
             oldRequest.forEach {
                 quranDownloader.cancelDownload(it.downloadRequest)
@@ -548,7 +560,11 @@ class SuraViewModel(
                 qari = qari.name
             )
             val downloadEntity = FileDownloadEntity(
-                downloadRequest = id, downloadFile = url, folderPath = destFile, sura = sura
+                downloadRequest = id,
+                downloadFile = url,
+                folderPath = destFile,
+                sura = sura,
+                qariId = qari.id
             )
             downloadRepository.insert(downloadEntity)
         }

@@ -136,7 +136,8 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
 
                 val context = LocalContext.current
                 val initialTitle = remember {
-                    context.preferences.getString(PREF_TITLE_AGE_WIDGET + appWidgetId, null) ?: ""
+                    context.preferences.getString(PREF_TITLE_AGE_WIDGET + appWidgetId, null)
+                        .orEmpty()
                 }
                 var text by rememberSaveable { mutableStateOf(initialTitle) }
                 OutlinedTextField(
@@ -164,7 +165,7 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
                     }
                 }
 
-                AnimatedVisibility(primaryJdn > today) {
+                this.AnimatedVisibility(primaryJdn > today) {
                     val secondaryKey = PREF_SELECTED_DATE_AGE_WIDGET_START + appWidgetId
                     var jdn by remember {
                         mutableStateOf(context.preferences.getJdnOrNull(secondaryKey) ?: today)
@@ -179,7 +180,7 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
 
                 val prefersWidgetsDynamicColors by prefersWidgetsDynamicColorsFlow.collectAsState()
                 WidgetDynamicColorsGlobalSettings(prefersWidgetsDynamicColors)
-                AnimatedVisibility(!prefersWidgetsDynamicColors) {
+                this.AnimatedVisibility(!prefersWidgetsDynamicColors) {
                     SettingsColor(
                         title = stringResource(R.string.widget_text_color),
                         summary = stringResource(R.string.select_widgets_text_color),
@@ -187,7 +188,7 @@ private fun AgeWidgetConfigureContent(appWidgetId: Int, confirm: () -> Unit) {
                         key = PREF_SELECTED_WIDGET_TEXT_COLOR + appWidgetId,
                     )
                 }
-                AnimatedVisibility(!prefersWidgetsDynamicColors) {
+                this.AnimatedVisibility(!prefersWidgetsDynamicColors) {
                     SettingsColor(
                         title = stringResource(R.string.widget_background_color),
                         summary = stringResource(R.string.select_widgets_background_color),

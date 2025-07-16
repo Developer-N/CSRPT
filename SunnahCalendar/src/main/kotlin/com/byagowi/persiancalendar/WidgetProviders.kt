@@ -41,6 +41,7 @@ class WidgetSunView : WidgetProvider()
 class WidgetMonth : WidgetProvider()
 class WidgetMonthView : WidgetProvider()
 class WidgetSchedule : WidgetProvider()
+class WidgetWeekView : WidgetProvider()
 class NWidget : WidgetProvider()
 
 class AgeWidget : WidgetProvider() {

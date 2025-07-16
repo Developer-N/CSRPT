@@ -6,11 +6,9 @@ import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
@@ -90,7 +88,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_DEVELOPER
 import com.byagowi.persiancalendar.generated.faq
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
@@ -102,7 +99,6 @@ import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.icons.MaterialIconDimension
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
-import com.byagowi.persiancalendar.ui.utils.isOnCI
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
@@ -188,7 +184,7 @@ private fun Header() {
                 )
                 Text(
                     buildString {
-                        val version = formatNumber("9.7.0")
+                        val version = formatNumber("9.8.6")
                         // Don't formatNumber it if is multi-parted
 //                            if ("-" in BuildConfig.VERSION_NAME) BuildConfig.VERSION_NAME
 //                            else formatNumber(BuildConfig.VERSION_NAME)
@@ -348,7 +344,7 @@ private fun HelpItems() {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(title, modifier = Modifier.align(alignment = Alignment.CenterVertically))
                 }
-                AnimatedVisibility(visible = isExpanded) {
+                this.AnimatedVisibility(visible = isExpanded) {
                     SelectionContainer {
                         Text(body, Modifier.padding(horizontal = 16.dp))
                     }
@@ -435,43 +431,33 @@ private fun Developers() {
         LocalLayoutDirection provides LayoutDirection.Ltr,
         LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
     ) {
-        SharedTransitionLayout {
-            AnimatedContent(targetState = developers, label = "developers") { state ->
-                FlowRow(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    state.forEach { (username, displayName, icon) ->
-                        ElevatedFilterChip(
-                            modifier = Modifier
-                                .padding(all = 4.dp)
-                                .then(
-                                    if (LocalContext.current.isOnCI()) Modifier else Modifier.sharedElement(
-                                        rememberSharedContentState(key = SHARED_CONTENT_KEY_DEVELOPER + username),
-                                        animatedVisibilityScope = this@AnimatedContent,
-                                    )
-                                ),
-                            onClick = click@{
-                                if (username == "ImanSoltanian") return@click // The only person without GitHub account
-                                runCatching {
-                                    val uri = "https://github.com/$username".toUri()
-                                    CustomTabsIntent.Builder().build().launchUrl(context, uri)
-                                }.onFailure(logException)
-                            },
-                            label = { Text(displayName) },
-                            selected = true,
-                            colors = FilterChipDefaults.elevatedFilterChipColors(),
-                            leadingIcon = {
-                                Icon(
-                                    icon,
-                                    contentDescription = displayName,
-                                    Modifier.size(AssistChipDefaults.IconSize)
-                                )
-                            },
+        FlowRow(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        ) {
+            developers.forEach { (username, displayName, icon) ->
+                ElevatedFilterChip(
+                    modifier = Modifier
+                        .padding(all = 4.dp),
+                    onClick = click@{
+                        if (username == "ImanSoltanian") return@click // The only person without GitHub account
+                        runCatching {
+                            val uri = "https://github.com/$username".toUri()
+                            CustomTabsIntent.Builder().build().launchUrl(context, uri)
+                        }.onFailure(logException)
+                    },
+                    label = { Text(displayName) },
+                    selected = true,
+                    colors = FilterChipDefaults.elevatedFilterChipColors(),
+                    leadingIcon = {
+                        Icon(
+                            icon,
+                            contentDescription = displayName,
+                            Modifier.size(AssistChipDefaults.IconSize)
                         )
-                    }
-                }
+                    },
+                )
             }
         }
     }

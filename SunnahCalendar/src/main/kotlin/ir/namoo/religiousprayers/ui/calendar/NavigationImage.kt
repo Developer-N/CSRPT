@@ -19,9 +19,9 @@ enum class NavigationImage(
         fun fromDate(jdn: Jdn): NavigationImage {
             val c = jdn.toIslamicDate()
             return when {
+                (c.month == 10 && c.dayOfMonth in 1..3) || (c.month == 12 && c.dayOfMonth in 10..13) -> EID
                 jdn.weekDay == 6 -> FRIDAY
                 c.month == 9 -> RAMADAN
-                (c.month == 10 || c.month == 12) && c.dayOfMonth in 1..3 -> EID
                 else -> DEFAULT
             }
         }

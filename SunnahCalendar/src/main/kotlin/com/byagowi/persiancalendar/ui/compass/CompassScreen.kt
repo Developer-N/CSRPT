@@ -9,8 +9,10 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -64,6 +66,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.BuildConfig
+import com.byagowi.persiancalendar.PREF_COMPASS_SET_LOCATION_IGNORED
 import com.byagowi.persiancalendar.PREF_SHOW_QIBLA_IN_COMPASS
 import com.byagowi.persiancalendar.PREF_TRUE_NORTH_IN_COMPASS
 import com.byagowi.persiancalendar.R
@@ -72,8 +75,11 @@ import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_LEVEL
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MAP
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_STOP
 import com.byagowi.persiancalendar.entities.Clock
+import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.AppBottomAppBar
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
@@ -130,7 +136,6 @@ fun SharedTransitionScope.CompassScreen(
             isTimeShiftAnimate = false
         }
     }
-    val cityName by cityName.collectAsState()
     val coordinates by coordinates.collectAsState()
     val sliderValue = if (isTimeShiftAnimate) timeShiftAnimate else timeShift
     val isSliderShown = sliderValue != 0f
@@ -156,13 +161,17 @@ fun SharedTransitionScope.CompassScreen(
 
     fun showSetLocationMessage() {
         coroutineScope.launch {
-            if (snackbarHostState.showSnackbar(
-                    context.getString(R.string.set_location),
-                    duration = SnackbarDuration.Long,
-                    actionLabel = context.getString(R.string.settings),
-                    withDismissAction = true,
-                ) == SnackbarResult.ActionPerformed
-            ) navigateToSettingsLocationTab()
+            when (snackbarHostState.showSnackbar(
+                context.getString(R.string.set_location),
+                duration = SnackbarDuration.Long,
+                actionLabel = context.getString(R.string.settings),
+                withDismissAction = true,
+            )) {
+                SnackbarResult.ActionPerformed -> navigateToSettingsLocationTab()
+                SnackbarResult.Dismissed -> context.preferences.edit {
+                    putBoolean(PREF_COMPASS_SET_LOCATION_IGNORED, true)
+                }
+            }
         }
     }
 
@@ -177,6 +186,7 @@ fun SharedTransitionScope.CompassScreen(
                                 R.string.compass
                             )
                         )
+                        val cityName by cityName.collectAsState()
                         val subtitle = cityName ?: coordinates?.run {
                             formatCoordinateISO6709(
                                 latitude,
@@ -215,7 +225,7 @@ fun SharedTransitionScope.CompassScreen(
                             context.preferences.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true)
                         )
                     }
-                    if (cityName != null || BuildConfig.DEVELOPMENT) ThreeDotsDropdownMenu(
+                    if (coordinates != null || BuildConfig.DEVELOPMENT) ThreeDotsDropdownMenu(
                         animatedContentScope
                     ) { closeMenu ->
                         AppDropdownMenuCheckableItem(
@@ -230,6 +240,41 @@ fun SharedTransitionScope.CompassScreen(
                             closeMenu()
                             compassView?.isShowQibla = it
                             context.preferences.edit { putBoolean(PREF_SHOW_QIBLA_IN_COMPASS, it) }
+                        }
+                        val language by language.collectAsState()
+                        if (isAstronomicalExtraFeaturesEnabled && language.isPersian) {
+                            var value by remember { mutableStateOf<String?>(null) }
+                            AppDropdownMenuItem({
+                                Crossfade(
+                                    value ?: "مزبوره/مذکوره",
+                                    Modifier.animateContentSize(),
+                                ) { Text(it) }
+                            }) {
+                                val dayOfMonth = Jdn.today().toIslamicDate().dayOfMonth
+                                value = if (value == null) "مزبوره: " + when (dayOfMonth) {
+                                    1, 9, 17, 25 -> "شرق"
+                                    2, 10, 18, 26 -> "شمال شرق"
+                                    3, 11, 19, 27 -> "شمال"
+                                    4, 12, 20, 28 -> "شمال غرب"
+                                    5, 13, 21, 29 -> "غرب"
+                                    6, 14, 22, 30 -> "جنوب غرب"
+                                    7, 15, 23 -> "جنوب"
+                                    8, 16, 24 -> "جنوب شرق"
+                                    else -> ""
+                                } + "\nمذکوره: " + when (dayOfMonth) {
+                                    1, 11, 21 -> "شرق"
+                                    2, 12, 22 -> "جنوب شرق"
+                                    3, 13, 23 -> "جنوب"
+                                    4, 14, 24 -> "جنوب غرب"
+                                    5, 15, 25 -> "غرب"
+                                    6, 16, 26 -> "شمال غرب"
+                                    7, 17, 27 -> "شمال"
+                                    8, 18, 28 -> "شمال شرق"
+                                    9, 19, 29 -> "تحت الارض"
+                                    10, 20, 30 -> "فوق الارض"
+                                    else -> ""
+                                } else null
+                            }
                         }
                         if (BuildConfig.DEVELOPMENT) {
                             AppDropdownMenuItem({ Text("Do a rotation") }) {
@@ -265,7 +310,7 @@ fun SharedTransitionScope.CompassScreen(
                             },
                         )
                         Column {
-                            AnimatedVisibility(
+                            this.AnimatedVisibility(
                                 visible = isSliderShown,
                                 enter = fadeIn() + expandVertically(),
                                 exit = fadeOut() + shrinkVertically(),
@@ -375,7 +420,11 @@ fun SharedTransitionScope.CompassScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 debugLog("compass: ON_RESUME")
-                if (coordinates == null) showSetLocationMessage()
+                if (coordinates == null) {
+                    if (!context.preferences.getBoolean(PREF_COMPASS_SET_LOCATION_IGNORED, false)) {
+                        showSetLocationMessage()
+                    }
+                }
                 if (orientationSensor != null) {
                     sensorManager.registerListener(
                         orientationSensorListener,

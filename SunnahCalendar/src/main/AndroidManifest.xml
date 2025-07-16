@@ -117,13 +117,17 @@
                 <data android:scheme="content" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
-            </intent-filter>
-
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
+        </activity>
+
+        <activity
+            android:name=".service.ToggleTileActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
         </activity>
 
         <activity
@@ -362,6 +366,20 @@
                 android:resource="@xml/persiancalendar_provider_schedule" />
         </receiver>
 
+        <receiver
+            android:name=".WidgetWeekView"
+            android:exported="false"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/persiancalendar_provider_week_view" />
+        </receiver>
+
         <service
             android:name=".service.ApplicationService"
             android:enabled="true"
@@ -389,8 +407,6 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
-            <!-- Don't ever add additional meta-data such as ACTIVE_TILE=true and TOGGLEABLE_TILE=false
-                 that's how 8.2.5 became a defected release -->
         </service>
 
         <service

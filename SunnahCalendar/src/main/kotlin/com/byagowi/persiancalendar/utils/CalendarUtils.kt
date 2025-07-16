@@ -38,7 +38,7 @@ import com.byagowi.persiancalendar.global.spacedOr
 import com.byagowi.persiancalendar.global.weekDays
 import com.byagowi.persiancalendar.global.weekDaysInitials
 import com.byagowi.persiancalendar.global.weekStartOffset
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
+import com.byagowi.persiancalendar.global.yearMonthNameOfDate
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
@@ -65,7 +65,7 @@ fun dayTitleSummary(jdn: Jdn, date: AbstractDate, calendarNameInLinear: Boolean 
 
 fun getInitialOfWeekDay(position: Int) = weekDaysInitials[position % 7]
 
-val AbstractDate.monthName get() = this.calendar.monthsNames.getOrNull(month - 1) ?: ""
+val AbstractDate.monthName get() = yearMonthNameOfDate(this).getOrNull(month - 1).orEmpty()
 
 // Generating text used in TalkBack / Voice Assistant
 fun getA11yDaySummary(
@@ -126,7 +126,7 @@ fun getA11yDaySummary(
 
     if (withZodiac && isAstronomicalExtraFeaturesEnabled) {
         appendLine().appendLine()
-            .appendLine(generateZodiacInformation(resources, jdn, withEmoji = false))
+            .appendLine(generateYearName(resources, jdn, withEmoji = false))
         if (isMoonInScorpio(jdn)) append(resources.getString(R.string.moon_in_scorpio))
     }
 }
@@ -201,9 +201,9 @@ private fun readDeviceEvents(
                             else ""),
                 start = start,
                 end = end,
-                description = it.getString(2)?.replace(descriptionCleaningPattern, "") ?: "",
+                description = it.getString(2)?.replace(descriptionCleaningPattern, "").orEmpty(),
                 date = start.toCivilDate(),
-                color = it.getString(7) ?: it.getString(8) ?: "",
+                color = it.getString(7) ?: it.getString(8).orEmpty(),
                 isHoliday = it.getLong(9) in eventCalendarsIdsAsHoliday.value,
             )
         }.take(1000 /* let's put some limitation */).toList()
@@ -353,14 +353,14 @@ fun monthFormatForSecondaryCalendar(
             from.year to from.month..secondaryCalendar.getYearMonths(from.year),
             to.year to 1..to.month
         ).joinToString(separator) { (year, months) ->
-            language.value.my.format(months.joinToString(separator) {
-                from.calendar.monthsNames.getOrNull(it - 1).debugAssertNotNull ?: ""
+            language.value.my.format(months.joinToString(separator) { month ->
+                from.calendar.createDate(year, month, 1).monthName
             }, formatNumber(year))
         }
 
         else -> language.value.my.format(
-            (from.month..to.month).joinToString(separator) {
-                from.calendar.monthsNames.getOrNull(it - 1).debugAssertNotNull ?: ""
+            (from.month..to.month).joinToString(separator) { month ->
+                from.calendar.createDate(from.year, month, 1).monthName
             },
             formatNumber(from.year)
         )
@@ -384,8 +384,7 @@ fun otherCalendarFormat(mainCalendarYear: Int, calendar: Calendar): String {
 }
 
 private fun getCalendarNameAbbr(date: AbstractDate) =
-    calendarsTitlesAbbr.getOrNull(date.calendar.ordinal) ?: ""
+    calendarsTitlesAbbr.getOrNull(date.calendar.ordinal).orEmpty()
 
 fun dateStringOfOtherCalendars(jdn: Jdn, separator: String) =
     enabledCalendars.drop(1).joinToString(separator) { formatDate(jdn on it) }
-

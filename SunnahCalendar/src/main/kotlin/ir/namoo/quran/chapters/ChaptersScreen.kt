@@ -2,6 +2,7 @@ package ir.namoo.quran.chapters
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -28,6 +29,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Shortcut
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -110,6 +112,7 @@ fun SharedTransitionScope.ChaptersScreen(
     val chapters = viewModel.chapterList
     val lastVisitedList = viewModel.lastVisitedList
     val isFavShowing by viewModel.isFavShowing.collectAsState()
+    val bookmarkedVerse by viewModel.bookmarkedVerse.collectAsState()
 
     var isSearchBarOpen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -140,7 +143,8 @@ fun SharedTransitionScope.ChaptersScreen(
         AnimatedVisibility(
             visible = !isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            DefaultAppBar(animatedContentScope = animatedContentScope,
+            DefaultAppBar(
+                animatedContentScope = animatedContentScope,
                 openDrawer = openDrawer,
                 isFavShowing = isFavShowing,
                 onShowBookmarkClick = { show ->
@@ -176,7 +180,8 @@ fun SharedTransitionScope.ChaptersScreen(
         AnimatedVisibility(
             visible = isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = searchQuery,
+            SearchAppBar(
+                query = searchQuery,
                 updateQuery = { searchQuery = it },
                 closeSearchBar = { isSearchBarOpen = false })
         }
@@ -191,6 +196,7 @@ fun SharedTransitionScope.ChaptersScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 AnimatedVisibility(visible = isLoading) {
                     LinearProgressIndicator(
@@ -201,23 +207,48 @@ fun SharedTransitionScope.ChaptersScreen(
                     )
                 }
                 AnimatedVisibility(visible = lastVisitedList.isNotEmpty() && chapters.isNotEmpty() && !isFavShowing && !isSearchBarOpen) {
-                    LazyRow(modifier = Modifier.fillMaxWidth(),
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
                         state = rememberLazyListState().apply {
                             scope.launch {
                                 animateScrollToItem(0)
                             }
                         }) {
-                        items(items = lastVisitedList, key = { it.id }) { last ->
-                            ElevatedButton(modifier = Modifier
-                                .padding(horizontal = 2.dp)
-                                .animateItem(
-                                    fadeInSpec = null,
-                                    fadeOutSpec = null,
-                                    placementSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
+                        bookmarkedVerse?.let { verse ->
+                            item {
+                                ElevatedButton(
+                                    modifier = Modifier.padding(horizontal = 2.dp),
+                                    onClick = { navController.navigate("sura/${verse.surahID}/${verse.verseID}") })
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Book,
+                                        contentDescription = ""
                                     )
-                                ),
+                                    AnimatedContent(targetState = verse) { v ->
+                                        Text(
+                                            text =
+                                                chapters.find { it.sura == v.surahID }?.nameArabic + (" " + stringResource(
+                                                    id = R.string.aya
+                                                ) + " " + formatNumber(v.verseID)),
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        items(items = lastVisitedList, key = { it.id }) { last ->
+                            ElevatedButton(
+                                modifier = Modifier
+                                    .padding(horizontal = 2.dp)
+                                    .animateItem(
+                                        fadeInSpec = null,
+                                        fadeOutSpec = null,
+                                        placementSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ),
                                 onClick = { navController.navigate("sura/${last.suraID}/${last.ayaID}") }) {
                                 Text(
                                     text = chapters.find { it.sura == last.suraID }?.nameArabic + (" " + stringResource(
@@ -276,12 +307,13 @@ fun SharedTransitionScope.ChaptersScreen(
                     if (filteredChapters.isNotEmpty()) itemsIndexed(
                         filteredChapters,
                         key = { _, chapter -> chapter.sura }) { index, chapter ->
-                        QuranChapterItem(modifier = Modifier.animateItem(
-                            fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        ),
+                        QuranChapterItem(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            ),
                             chapter = chapter,
                             rowID = index + 1,
                             query = searchQuery,
@@ -346,7 +378,8 @@ fun SharedTransitionScope.DefaultAppBar(
         //More ...
         ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
             //Chapter Sort
-            AppDropdownMenuItem(text = { Text(text = stringResource(id = R.string.sort_order)) },
+            AppDropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.sort_order)) },
                 onClick = {
                     showSortDialog = true
                     closeMenu()
@@ -410,7 +443,8 @@ fun SharedTransitionScope.DefaultAppBar(
             context.getString(R.string.aya_inc_sort),
             context.getString(R.string.aya_dec_sort)
         )
-        AlertDialog(onDismissRequest = { showSortDialog = false },
+        AlertDialog(
+            onDismissRequest = { showSortDialog = false },
             confirmButton = {
                 TextButton(onClick = { showSortDialog = false }) {
                     Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)

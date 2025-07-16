@@ -2,10 +2,6 @@ package com.byagowi.persiancalendar.entities
 
 import androidx.annotation.StringRes
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.global.gregorianMonths
-import com.byagowi.persiancalendar.global.islamicMonths
-import com.byagowi.persiancalendar.global.nepaliMonths
-import com.byagowi.persiancalendar.global.persianMonths
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
@@ -13,7 +9,9 @@ import io.github.persiancalendar.calendar.NepaliDate
 import io.github.persiancalendar.calendar.PersianDate
 
 enum class Calendar(
-    @StringRes val title: Int, @StringRes val shortTitle: Int, val preferredDigits: CharArray
+    @get:StringRes val title: Int,
+    @get:StringRes val shortTitle: Int,
+    val preferredDigits: CharArray
 ) {
     // So vital, don't ever change names of these
     SHAMSI(
@@ -76,12 +74,4 @@ enum class Calendar(
         val date = baseJdn on this
         return getMonthStartFromMonthsDistance(date.year, date.month, monthsDistance)
     }
-
-    val monthsNames: List<String>
-        get() = when (this) {
-            SHAMSI -> persianMonths
-            ISLAMIC -> islamicMonths
-            GREGORIAN -> gregorianMonths
-            NEPALI -> nepaliMonths
-        }
 }

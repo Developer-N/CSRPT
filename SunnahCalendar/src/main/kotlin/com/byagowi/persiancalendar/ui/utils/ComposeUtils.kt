@@ -1,7 +1,5 @@
 package com.byagowi.persiancalendar.ui.utils
 
-import android.content.Context
-import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -14,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.entities.Jdn
 
 /**
@@ -26,13 +23,6 @@ import com.byagowi.persiancalendar.entities.Jdn
  */
 @Stable
 val Color.isLight: Boolean get() = this.luminance() > .5
-
-// https://github.com/auchenberg/volkswagen like idea…
-// Please don't use it outside shared elements context
-// For more context https://github.com/ReactiveCircus/android-emulator-runner/issues/417
-fun Context.isOnCI(): Boolean = BuildConfig.DEVELOPMENT && Settings.Global.getFloat(
-    contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1.0f
-) == 0f // Our current CI config disables animation
 
 /**
  * As Material's [androidx.compose.material3.tokens.ShapeTokens.CornerExtraLargeTop] isn't exposed and we need it frequently

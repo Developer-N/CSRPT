@@ -58,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,7 +68,6 @@ import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.isOnCI
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.commons.utils.openUrlInCustomTab
@@ -303,7 +301,8 @@ fun SharedTransitionScope.HadeethChapterScreen(
                             }
                         }
                         if (!isChapterLoading)
-                            itemsIndexed(items = chapters.data,
+                            itemsIndexed(
+                                items = chapters.data,
                                 key = { _, item -> item.id }) { index, chapter ->
                                 Box(
                                     modifier = Modifier
@@ -364,7 +363,7 @@ private fun SharedTransitionScope.HadeethTopBar(
         NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
     }, colors = appTopAppBarColors(), actions = {
         IconButton(
-            modifier = if (LocalContext.current.isOnCI()) Modifier else Modifier.sharedElement(
+            modifier = Modifier.sharedElement(
                 rememberSharedContentState(key = "key_language"),
                 animatedVisibilityScope = animatedContentScope
             ), onClick = { showLanguages = true }) {
@@ -372,7 +371,8 @@ private fun SharedTransitionScope.HadeethTopBar(
                 imageVector = Icons.Default.Language,
                 contentDescription = stringResource(R.string.language)
             )
-            AppDropdownMenu(expanded = showLanguages,
+            AppDropdownMenu(
+                expanded = showLanguages,
                 onDismissRequest = { showLanguages = false },
                 content = {
                     languages.forEach { language ->

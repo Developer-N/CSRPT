@@ -33,6 +33,20 @@
 
     <shortcut
         android:enabled="true"
+        android:icon="@drawable/sc_converter"
+        android:shortcutId="CONVERTER"
+        android:shortcutLongLabel="@string/converter"
+        android:shortcutShortLabel="@string/converter">
+
+        <intent
+            android:action="CONVERTER"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
         android:icon="@drawable/sc_compass"
         android:shortcutId="COMPASS"
         android:shortcutLongLabel="@string/compass"
@@ -54,20 +68,6 @@
 
         <intent
             android:action="LEVEL"
-            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
-            android:targetPackage="ir.namoo.religiousprayers" />
-
-    </shortcut>
-
-    <shortcut
-        android:enabled="true"
-        android:icon="@drawable/sc_converter"
-        android:shortcutId="CONVERTER"
-        android:shortcutLongLabel="@string/converter"
-        android:shortcutShortLabel="@string/converter">
-
-        <intent
-            android:action="CONVERTER"
             android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
             android:targetPackage="ir.namoo.religiousprayers" />
 

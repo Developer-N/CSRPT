@@ -3,6 +3,7 @@ package com.byagowi.persiancalendar.ui.calendar.times
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -36,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,6 +80,7 @@ import ir.namoo.commons.APP_LINK
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import ir.namoo.religiousprayers.praytimeprovider.prayTimesFrom
 import ir.namoo.religiousprayers.ui.calendar.NTimes
+import ir.namoo.religiousprayers.ui.settings.location.ShowLocationDialog
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalFoundationApi::class)
@@ -85,7 +88,7 @@ import org.koin.compose.koinInject
 fun SharedTransitionScope.TimesTab(
     navigateToSettingsLocationTab: () -> Unit,
     navigateToSettingsLocationTabSetAthanAlarm: () -> Unit,
-    navigateToAstronomy: (Int) -> Unit,
+    navigateToAstronomy: (Jdn) -> Unit,
     viewModel: CalendarViewModel,
     animatedContentScope: AnimatedContentScope,
     interactionSource: MutableInteractionSource,
@@ -98,6 +101,7 @@ fun SharedTransitionScope.TimesTab(
 ) {
     val context = LocalContext.current
     val cityName by cityName.collectAsState()
+    var showLocationDialog by remember { mutableStateOf(false) }
     val coordinates = coordinates.collectAsState().value ?: return Column(Modifier.fillMaxWidth()) {
         EncourageActionLayout(
             modifier = Modifier.padding(top = 24.dp),
@@ -157,11 +161,13 @@ fun SharedTransitionScope.TimesTab(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (cityName != null) Text(
-                modifier = Modifier.combinedClickable(onClick = {}, onLongClick = {
-                    //val alarms = listOf("BFAJR", "AFAJR", "BDHUHR", "ADHUHR", "BASR", "AASR", "BMAGHRIB", "AMAGHRIB", "BISHA", "AISHA")
-                    val alarms = PrayTime.athans
-                    startAthan(context, alarms.random().name, null)
-                }), text = "$cityName ( ${
+                modifier = Modifier.combinedClickable(
+                    onClick = { showLocationDialog = true },
+                    onLongClick = {
+                        //val alarms = listOf("BFAJR", "AFAJR", "BDHUHR", "ADHUHR", "BASR", "AASR", "BMAGHRIB", "AMAGHRIB", "BISHA", "AISHA")
+                        val alarms = PrayTime.athans
+                        startAthan(context, alarms.random().name, null)
+                    }), text = "$cityName ( ${
                     when (prayTimesFrom.value) {
                         0 -> stringResource(R.string.calculated_time)
                         1 -> stringResource(R.string.exact_time)
@@ -201,6 +207,9 @@ fun SharedTransitionScope.TimesTab(
 //            acceptAction = navigateToSettingsLocationTabSetAthanAlarm,
 //        )
         Spacer(Modifier.height(bottomPadding))
+        AnimatedVisibility(visible = showLocationDialog) {
+            ShowLocationDialog(closeDialog = { showLocationDialog = false })
+        }
     }
 }
 
@@ -220,7 +229,7 @@ private fun SharedTransitionScope.AstronomicalOverview(
     prayTimes: PrayTimes,
     now: Long,
     isToday: Boolean,
-    navigateToAstronomy: (Int) -> Unit,
+    navigateToAstronomy: (Jdn) -> Unit,
     animatedContentScope: AnimatedContentScope,
 ) {
     val jdn by viewModel.selectedDay.collectAsState()
@@ -262,7 +271,7 @@ private fun SharedTransitionScope.AstronomicalOverview(
                     .clickable(
                         indication = ripple(bounded = false),
                         interactionSource = null,
-                    ) { navigateToAstronomy(jdn - Jdn.today()) },
+                    ) { navigateToAstronomy(jdn) },
             )
         }
     }

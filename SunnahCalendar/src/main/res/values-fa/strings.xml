@@ -146,7 +146,7 @@
     <string name="virgo">سُنبُله (خوشه)</string>
     <string name="libra">میزان (ترازو)</string>
     <string name="scorpio">عقرب (کژدم)</string>
-    <string name="sagittarius">سفقَوس (کمان)</string>
+    <string name="sagittarius">قَوس (کمان)</string>
     <string name="year_name">نام سال</string>
     <string name="animal_year_name_monkey">میمون</string>
     <string name="animal_year_name_rooster">خروس</string>
@@ -238,7 +238,7 @@
     <string name="share">هم‌رسانی</string>
     <string name="enable_location_services">مکان‌یاب خاموش است، برای بهره‌وری از این ویژگی لطفاً آن را روشن سازید.</string>
     <string name="widget_age_name">تقویم + اوقات شرعی اهل سنت (سن)</string>
-    <string name="select_date">انتخاب تاریخ</string>
+    <string name="select_date">گزینش تاریخ</string>
     <string name="starting_date">تاریخ شروع</string>
     <string name="age_widget_title">عنوان ویجت</string>
     <plurals name="days">
@@ -420,4 +420,6 @@
     <string name="print">چاپ</string>
     <string name="week_view">نمای هفته</string>
     <string name="day_view">نمای روز</string>
+    <string name="horoscope">زایچه</string>
+    <string name="planetary_hours">ساعات کواکب</string>
 </resources>

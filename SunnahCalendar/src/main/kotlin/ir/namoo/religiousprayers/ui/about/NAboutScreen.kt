@@ -111,6 +111,7 @@ fun SharedTransitionScope.NAboutScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
                     .verticalScroll(rememberScrollState())
             ) {
                 InfoUIElement(versionDescription)

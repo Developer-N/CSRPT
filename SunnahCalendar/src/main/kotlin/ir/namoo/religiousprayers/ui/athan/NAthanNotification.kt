@@ -1,5 +1,6 @@
 package ir.namoo.religiousprayers.ui.athan
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -108,7 +109,8 @@ class NAthanNotification : Service() {
         runCatching {
             val telephonyManager = getSystemService<TelephonyManager>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                telephonyManager?.registerTelephonyCallback(mainExecutor,
+                telephonyManager?.registerTelephonyCallback(
+                    mainExecutor,
                     object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                         override fun onCallStateChanged(state: Int) {
                             when (state) {
@@ -203,6 +205,7 @@ class NAthanNotification : Service() {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(R.drawable.ic_stop, getString(R.string.close), stop)
 
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val cv = RemoteViews(applicationContext?.packageName, R.layout.custom_notification)
                 cv.setDirection(R.id.custom_notification_root, this.resources)
@@ -268,9 +271,9 @@ class NAthanNotification : Service() {
         ringtone?.stop()
         preventPhoneCallIntervention.stopListener()
         runCatching {
-            if (doaPlayer != null) if (doaPlayer!!.isPlaying) {
-                doaPlayer!!.release()
-                doaPlayer!!.stop()
+            doaPlayer?.let { doaPlayer ->
+                doaPlayer.stop()
+                doaPlayer.release()
             }
         }.onFailure(logException)
 

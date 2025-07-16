@@ -67,7 +67,8 @@ class MainApplication : MultiDexApplication(), SharedPreferences.OnSharedPrefere
 
         if (key == PREF_EASTERN_GREGORIAN_ARABIC_MONTHS ||
             key == PREF_ENGLISH_GREGORIAN_PERSIAN_MONTHS ||
-            key == PREF_AZERI_ALTERNATIVE_PERSIAN_MONTHS) {
+            key == PREF_AZERI_ALTERNATIVE_PERSIAN_MONTHS
+        ) {
             loadLanguageResources(this.resources)
         }
 

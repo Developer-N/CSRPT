@@ -55,8 +55,10 @@ class DownloadQuranAudioViewModel(
             runCatching {
                 while (true) {
                     delay(1000)
-                    _inProgressDownload.forEach {
-                        if (it.folderPath.contains(_selectedQari.value)) updateProgress(it.sura)
+                    _inProgressDownload.forEach { inProgress ->
+                        val selectedQariId =
+                            _qariList.find { it.folderName == _selectedQari.value }?.id ?: -1
+                        if (inProgress.qariId == selectedQariId) updateProgress(inProgress.sura)
                     }
                 }
             }
@@ -66,25 +68,25 @@ class DownloadQuranAudioViewModel(
     fun loadData(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
+            val dbChapters = chapterRepository.getAllChapters()
+            val dbQaries = qariRepository.getQariList()
             _chapters.clear()
-            _chapters.addAll(chapterRepository.getAllChapters())
+            _chapters.addAll(dbChapters)
             _qariList.clear()
-            _qariList.addAll(qariRepository.getQariList())
-            _qariList.first().let {
-                val qList = mutableListOf<QuranDownloadItemState>()
-                _chapters.forEach { chapter ->
-                    qList.add(QuranDownloadItemState(sura = chapter.sura, isChecking = true))
-                }
-                _selectedStateList.clear()
-                _selectedStateList.addAll(qList)
+            _qariList.addAll(dbQaries)
+            val firstQari = dbQaries.first().folderName
+            _selectedQari.value = firstQari
+            _selectedStateList.clear()
+            dbChapters.forEach { chapter ->
+                _selectedStateList.add(
+                    QuranDownloadItemState(
+                        sura = chapter.sura, isChecking = true
+                    )
+                )
             }
-            _selectedQari.value = _qariList.first().folderName
             _inProgressDownload.clear()
-            _inProgressDownload.addAll(
-                downloadRepository.findDownloadByFileId().toMutableList()
-            )
-            for (sura in 1..114)
-                checkFiles(context, _selectedQari.value, sura)
+            _inProgressDownload.addAll(downloadRepository.getAllDownloads())
+            for (sura in 1..114) checkFiles(context, firstQari, sura)
             _isLoading.value = false
         }
     }
@@ -93,14 +95,13 @@ class DownloadQuranAudioViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _selectedQari.value = qari
-
-            val qList = mutableListOf<QuranDownloadItemState>()
-            _chapters.forEach { chapter ->
-                qList.add(QuranDownloadItemState(sura = chapter.sura, isChecking = true))
-            }
             _selectedStateList.clear()
-            _selectedStateList.addAll(qList)
-            for (sura in 1..114) checkFiles(context, _selectedQari.value, sura)
+            _chapters.forEach { chapter ->
+                _selectedStateList.add(
+                    QuranDownloadItemState(sura = chapter.sura, isChecking = true)
+                )
+            }
+            for (sura in 1..114) checkFiles(context, qari, sura)
             _isLoading.value = false
         }
     }
@@ -108,8 +109,13 @@ class DownloadQuranAudioViewModel(
     fun downloadFiles(context: Context, sura: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            val qari =
-                _qariList.find { it.folderName == _selectedQari.value } ?: return@launch
+            val qari = _qariList.find { it.folderName == _selectedQari.value } ?: return@launch
+            downloadRepository.getAllDownloads()
+                .filter { it.sura == sura && it.qariId == qari.id }.forEach {
+                    downloadRepository.delete(it.id)
+                    quranDownloader.cancelDownload(it.downloadRequest)
+                }
+
             val destFile =
                 getSelectedQuranDirectoryPath(context) + File.separator + qari.folderName + File.separator + getSuraFileName(
                     sura
@@ -123,13 +129,18 @@ class DownloadQuranAudioViewModel(
                 chapterName = _chapters.find { it.sura == sura }?.nameArabic ?: "-",
                 qari = _qariList.find { it.folderName == _selectedQari.value }?.name ?: "-"
             )
+            val selectedQariId = _qariList.find { it.folderName == _selectedQari.value }?.id ?: -1
             val downloadEntity = FileDownloadEntity(
-                downloadRequest = id, downloadFile = url, folderPath = destFile, sura = sura
+                downloadRequest = id,
+                downloadFile = url,
+                folderPath = destFile,
+                sura = sura,
+                qariId = selectedQariId
             )
-            withContext(Dispatchers.IO) {
-                downloadRepository.insert(downloadEntity)
+            downloadRepository.insert(downloadEntity)
+            downloadRepository.getAllDownloads().lastOrNull()?.let {
+                _inProgressDownload.add(it)
             }
-            _inProgressDownload.add(downloadEntity)
             _isLoading.value = false
         }
     }
@@ -137,17 +148,17 @@ class DownloadQuranAudioViewModel(
     fun cancelDownload(sura: Int) {
         viewModelScope.launch {
             _isLoading.value = true
-            val downloadInfo = _inProgressDownload.find { it.sura == sura } ?: return@launch
+            val selectedQariId = _qariList.find { it.folderName == _selectedQari.value }?.id ?: -1
+            val downloadInfo = downloadRepository.getAllDownloads()
+                .find { it.sura == sura && it.qariId == selectedQariId } ?: return@launch
             quranDownloader.cancelDownload(downloadInfo.downloadRequest)
             withContext(Dispatchers.IO) {
                 downloadRepository.delete(downloadInfo.id)
             }
-            _inProgressDownload.remove(downloadInfo)
+            _inProgressDownload.removeAt(_inProgressDownload.indexOfFirst { it.downloadRequest == downloadInfo.downloadRequest })
             val index = _selectedStateList.indexOfFirst { it.sura == sura }
             _selectedStateList[index] = _selectedStateList[index].copy(
-                isDownloading = false,
-                progress = 0f,
-                totalSize = 0
+                isDownloading = false, progress = 0f, totalSize = 0
             )
             _isLoading.value = false
         }
@@ -179,35 +190,44 @@ class DownloadQuranAudioViewModel(
     }
 
     private fun updateProgress(sura: Int) {
-        viewModelScope.launch {
-            val downloadID =
-                _inProgressDownload.find { it.sura == sura }?.downloadRequest ?: return@launch
-            val query = DownloadManager.Query().setFilterById(downloadID)
-            quranDownloader.getDownloadManager()?.query(query)?.use { cursor ->
-                if (cursor.moveToNext()) {
-                    val totalSizeIndex =
-                        cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                    val bytesDownloadedIndex =
-                        cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-
-                    val totalBytes = cursor.getLong(totalSizeIndex)
-                    val downloadedBytes = cursor.getLong(bytesDownloadedIndex)
-                    val index = _selectedStateList.indexOfFirst { it.sura == sura }
-                    _selectedStateList[index] = if (downloadedBytes == totalBytes && totalBytes > 0)
-                        _selectedStateList[index].copy(
-                            isDownloaded = true,
-                            isDownloading = false,
-                            isChecking = false,
-                            totalSize = 0,
-                            progress = 0f
-                        )
-                    else _selectedStateList[index].copy(
-                        isDownloading = true,
-                        isChecking = false,
-                        totalSize = totalBytes,
-                        progress = downloadedBytes.toFloat() / totalBytes
-                    )
-                }
+        val selectedQariId = _qariList.find { it.folderName == _selectedQari.value }?.id ?: -1
+        val downloadInfo =
+            _inProgressDownload.find { it.sura == sura && it.qariId == selectedQariId } ?: return
+        val query = DownloadManager.Query().setFilterById(downloadInfo.downloadRequest)
+        val cursor = quranDownloader.getDownloadManager()?.query(query)
+        if (cursor == null) {
+            val index = _selectedStateList.indexOfFirst { it.sura == sura }
+            _selectedStateList[index] = _selectedStateList[index].copy(
+                isDownloaded = true,
+                isDownloading = false,
+                isChecking = false,
+                totalSize = 0,
+                progress = 0f
+            )
+            _inProgressDownload.remove(downloadInfo)
+        } else cursor.use { cursor ->
+            if (cursor.moveToNext()) {
+                val totalSizeIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                val bytesDownloadedIndex =
+                    cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                val totalBytes = cursor.getLong(totalSizeIndex)
+                val downloadedBytes = cursor.getLong(bytesDownloadedIndex)
+                val isFinished = downloadedBytes == totalBytes && totalBytes > 0
+                if (isFinished) _inProgressDownload.remove(downloadInfo)
+                val index = _selectedStateList.indexOfFirst { it.sura == sura }
+                _selectedStateList[index] = if (isFinished) _selectedStateList[index].copy(
+                    isDownloaded = true,
+                    isDownloading = false,
+                    isChecking = false,
+                    totalSize = 0,
+                    progress = 0f
+                )
+                else _selectedStateList[index].copy(
+                    isDownloading = true,
+                    isChecking = false,
+                    totalSize = totalBytes,
+                    progress = downloadedBytes.toFloat() / totalBytes
+                )
             }
         }
     }
@@ -252,8 +272,7 @@ class DownloadQuranAudioViewModel(
                             withContext(Dispatchers.Default) {
                                 val index = _selectedStateList.indexOfFirst { it.sura == sura }
                                 _selectedStateList[index] = _selectedStateList[index].copy(
-                                    isChecking = false,
-                                    isDownloaded = false
+                                    isChecking = false, isDownloaded = false
                                 )
                             }
                             return@withContext

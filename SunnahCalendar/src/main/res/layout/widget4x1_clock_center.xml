@@ -36,7 +36,9 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif"
                 android:gravity="center"
-                android:textSize="36dp" />
+                android:textFontWeight="500"
+                android:textSize="30dp"
+                tools:ignore="UnusedAttribute" />
 
             <TextView
                 android:id="@+id/textPlaceholder3_4x1"
@@ -54,8 +56,15 @@
             style="@style/WidgetTextStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeMinTextSize="9sp"
+            android:autoSizeStepGranularity="1sp"
+            android:autoSizeTextType="uniform"
+            android:ellipsize="end"
             android:gravity="center"
-            android:textSize="14dp" />
+            android:maxLines="1"
+            android:textSize="14sp"
+            tools:ignore="UnusedAttribute" />
 
     </LinearLayout>
 

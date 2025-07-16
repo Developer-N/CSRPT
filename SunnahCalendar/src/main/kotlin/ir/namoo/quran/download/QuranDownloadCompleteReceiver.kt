@@ -28,8 +28,9 @@ class QuranDownloadCompleteReceiver : BroadcastReceiver(), KoinComponent {
                 val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
                 if (id != -1L) {
                     CoroutineScope(Dispatchers.Default).launch {
-                        val fileDownload = quranDownloadRepository.findDownloadByFileId()
+                        val fileDownload = quranDownloadRepository.getAllDownloads()
                             .find { it.downloadRequest == id } ?: return@launch
+                        if (!File(fileDownload.folderPath).exists()) return@launch
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
                                 context, R.string.download_completed_unzip, Toast.LENGTH_SHORT

@@ -114,3 +114,5 @@ const val PREF_IS_SURA_VIEW_IS_OPEN = "is_sura_view_is_open"
 
 const val PREF_PLAYER_SPEED = "player_speed"
 const val DEFAULT_PLAYER_SPEED = 1f
+
+const val PREF_BOOKMARK_VERSE = "pref_bookmark_verse"

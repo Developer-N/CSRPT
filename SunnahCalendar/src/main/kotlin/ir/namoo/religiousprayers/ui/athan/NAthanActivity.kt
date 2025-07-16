@@ -3,7 +3,6 @@ package ir.namoo.religiousprayers.ui.athan
 
 import android.annotation.SuppressLint
 import android.app.KeyguardManager
-import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.Intent
@@ -40,7 +39,6 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.service.AthanNotification
 import com.byagowi.persiancalendar.ui.athan.AthanActivity.Companion.CANCEL_ATHAN_NOTIFICATION
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.ui.theme.AppTheme
@@ -50,7 +48,6 @@ import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.logException
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import ir.namoo.commons.ATHAN_NOTIFICATION_ID
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
@@ -135,7 +132,7 @@ class NAthanActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if (intent?.action == CANCEL_ATHAN_NOTIFICATION) {
             runCatching {
-                stopService(Intent(this, AthanNotification::class.java))
+                stopService(Intent(this, NAthanNotification::class.java))
             }.onFailure(logException)
             finish()
             return
@@ -270,17 +267,16 @@ class NAthanActivity : ComponentActivity() {
             }
 
             override fun onDestroy(owner: LifecycleOwner) {
-                super.onDestroy(owner)
                 if (originalVolume != -1) getSystemService<AudioManager>()?.setStreamVolume(
                     AudioManager.STREAM_ALARM, originalVolume, 0
                 )
                 runCatching {
                     controller.stop()
+                    controller.release()
                     MediaController.releaseFuture(mediaController)
-                }
-                runCatching {
-                    getSystemService<NotificationManager>()?.cancel(ATHAN_NOTIFICATION_ID)
+                    stopService(Intent(this@NAthanActivity, AthanPlayerService::class.java))
                 }.onFailure(logException)
+                super.onDestroy(owner)
             }
         })
     }

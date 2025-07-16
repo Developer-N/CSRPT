@@ -28,19 +28,19 @@ import kotlin.math.floor
  * others types also such Vedic and Sidereal if is easy to do and we can find their degrees.
  *
  * iauRangeEnd values can be found on the following places:
+ * * https://github.com/chan/vios/blob/3430b89/autoload/time/moon.vim
+ * * https://github.com/giboow/mooncalc/blob/5df85ab/mooncalc.js#L103
+ * * https://www.scribd.com/doc/83082081/Moon-Phase-Calculator
  * * https://github.com/janczer/goMoonPhase/blob/0363844/MoonPhase.go#L363
  * * https://github.com/emvakar/EKAstrologyCalc/blob/ee0cd57/Sources/EKAstrologyCalc/Calculators/EKMoonZodiacSignCalculator.swift#L70
- * * https://www.scribd.com/doc/83082081/Moon-Phase-Calculator
  * * https://www.mail-archive.com/amibroker@yahoogroups.com/msg04288.html
- * * https://github.com/giboow/mooncalc/blob/5df85ab/mooncalc.js#L103
  * * https://github.com/mfzhang/AB.Formulae/blob/bbab96c/ZakirBoss-Mubarak/Formulas/Custom/Luna%20Phase.afl
- * * https://github.com/chan/vios/blob/3430b89/autoload/time/moon.vim
  * * https://github.com/BGCX262/zweer-gdr-svn-to-git/blob/6d85903/trunk/library/Zwe/Weather/Moon.php
  *
  * See also: https://en.wikipedia.org/wiki/Lunar_station#Arabic_manzil
  */
 enum class Zodiac(
-    private val iauRangeEnd: Double, val emoji: String, @StringRes private val title: Int
+    private val iauRangeStart: Double, val emoji: String, @get:StringRes private val title: Int
 ) {
     ARIES(33.18, "♈", R.string.aries), // 0-30 (Tropical)
     TAURUS(51.16, "♉", R.string.taurus), // 30-60
@@ -55,26 +55,36 @@ enum class Zodiac(
     AQUARIUS(311.72, "♒", R.string.aquarius), // 300-330
     PISCES(348.58, "♓", R.string.pisces); // 330-360
 
-    fun format(resources: Resources, withEmoji: Boolean, short: Boolean = false) = buildString {
+    fun format(
+        resources: Resources,
+        withEmoji: Boolean,
+        short: Boolean = false
+    ) = buildString {
         if (withEmoji) append("$emoji ")
         val result = resources.getString(title)
         append(if (short) result.split(" (")[0] else result)
     }
 
-    private val iauPreviousRangeEnd: Double
-        get() = entries.getOrNull(ordinal - 1)?.iauRangeEnd ?: (PISCES.iauRangeEnd - 360)
+    private val iauNextRangeStart: Double
+        get() = entries.getOrNull(ordinal + 1)?.iauRangeStart ?: (ARIES.iauRangeStart + 360)
 
-    val iauRange get() = listOf(iauPreviousRangeEnd, iauRangeEnd)
+    val iauRange get() = listOf(iauRangeStart, iauNextRangeStart)
     val tropicalRange get() = listOf(ordinal * 30.0, (ordinal + 1) * 30.0)
 
     companion object {
         fun fromPersianCalendar(persianDate: PersianDate): Zodiac =
             entries.getOrNull(persianDate.month - 1) ?: ARIES
 
+        // Or can be named Falaki فلکی
         fun fromIau(longitude: Double): Zodiac =
-            entries.firstOrNull { longitude < it.iauRangeEnd } ?: ARIES
+            if (longitude < ARIES.iauRangeStart) PISCES
+            else entries.firstOrNull { longitude < it.iauNextRangeStart } ?: PISCES
 
+        // Or can be named Borji برجی in addition to اعتدالی ُTropical
         fun fromTropical(longitude: Double): Zodiac =
             entries.getOrNull(floor(longitude / 30).toInt()) ?: PISCES
+
+        // Covers both tropical and iau ranges
+        val scorpioRange = SCORPIO.tropicalRange[0]..SCORPIO.iauNextRangeStart
     }
 }

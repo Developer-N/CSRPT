@@ -89,6 +89,7 @@ fun SharedTransitionScope.DownloadScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 AnimatedVisibility(visible = isLoading) {
                     LinearProgressIndicator(

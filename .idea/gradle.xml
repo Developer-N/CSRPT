@@ -13,7 +13,6 @@
             <option value="$PROJECT_DIR$/SunnahCalendar" />
           </set>
         </option>
-        <option name="resolveExternalAnnotations" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

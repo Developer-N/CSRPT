@@ -70,12 +70,15 @@ import com.byagowi.persiancalendar.global.isGradient
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AskForCalendarPermissionDialog
+import com.byagowi.persiancalendar.ui.common.AutoSizedBodyText
 import com.byagowi.persiancalendar.ui.common.equinoxTitle
 import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.noTransitionSpec
 import com.byagowi.persiancalendar.ui.utils.isLight
+import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
 import com.byagowi.persiancalendar.utils.getShiftWorksInDaysDistance
@@ -96,16 +99,24 @@ fun SharedTransitionScope.EventsTab(
     viewModel: CalendarViewModel,
     animatedContentScope: AnimatedContentScope,
     bottomPadding: Dp,
+    isOnlyEventsTab: Boolean,
 ) {
     Column(Modifier.fillMaxWidth()) {
         Spacer(Modifier.height(8.dp))
 
         val jdn by viewModel.selectedDay.collectAsState()
+
+        if (isOnlyEventsTab) AutoSizedBodyText(
+            jdn.weekDayName + spacedComma + formatDate(jdn on mainCalendar),
+            textStyle = MaterialTheme.typography.titleMedium,
+            topPadding = 12.dp,
+        )
+
         val refreshToken by viewModel.refreshToken.collectAsState()
         val shiftWorkTitle = remember(jdn, refreshToken) { getShiftWorkTitle(jdn) }
-        AnimatedVisibility(visible = shiftWorkTitle != null) {
+        this.AnimatedVisibility(visible = shiftWorkTitle != null) {
             AnimatedContent(
-                targetState = shiftWorkTitle ?: "",
+                targetState = shiftWorkTitle.orEmpty(),
                 label = "shift work title",
                 transitionSpec = appCrossfadeSpec,
             ) { state ->
@@ -122,9 +133,9 @@ fun SharedTransitionScope.EventsTab(
             }
         }
         val shiftWorkInDaysDistance = getShiftWorksInDaysDistance(jdn)
-        AnimatedVisibility(visible = shiftWorkInDaysDistance != null) {
+        this.AnimatedVisibility(visible = shiftWorkInDaysDistance != null) {
             AnimatedContent(
-                targetState = shiftWorkInDaysDistance ?: "",
+                targetState = shiftWorkInDaysDistance.orEmpty(),
                 label = "shift work days diff",
                 transitionSpec = appCrossfadeSpec,
             ) { state ->
@@ -144,7 +155,7 @@ fun SharedTransitionScope.EventsTab(
             val deviceEvents = remember(jdn, refreshToken) { context.readDayDeviceEvents(jdn) }
             val events = readEvents(jdn, viewModel, deviceEvents)
             Spacer(Modifier.height(16.dp))
-            AnimatedVisibility(events.isEmpty()) {
+            this.AnimatedVisibility(events.isEmpty()) {
                 Text(
                     stringResource(R.string.no_event),
                     Modifier.fillMaxWidth(),
@@ -232,7 +243,8 @@ fun DayEvents(events: List<CalendarEvent<*>>, refreshCalendar: () -> Unit) {
     val launcher = rememberLauncherForActivityResult(ViewEventContract()) { refreshCalendar() }
     events.forEach { event ->
         val backgroundColor by animateColor(eventColor(event))
-        val eventTime = (event as? CalendarEvent.DeviceCalendarEvent)?.time?.let { "\n" + it } ?: ""
+        val eventTime =
+            (event as? CalendarEvent.DeviceCalendarEvent)?.time?.let { "\n" + it }.orEmpty()
         AnimatedContent(
             (if (event.isHoliday) language.value.inParentheses.format(
                 event.title, holidayString
@@ -277,9 +289,9 @@ fun DayEvents(events: List<CalendarEvent<*>>, refreshCalendar: () -> Unit) {
                     }
                     if (event is CalendarEvent.EquinoxCalendarEvent) CompositionLocalProvider(
                         LocalLayoutDirection provides LayoutDirection.Ltr
-                    ) { Row { EquinoxCountDown(contentColor, event, backgroundColor) } }
+                    ) { EquinoxCountDown(contentColor, event, backgroundColor) }
                 }
-                AnimatedVisibility(event is CalendarEvent.DeviceCalendarEvent || event is CalendarEvent.EquinoxCalendarEvent) {
+                this.AnimatedVisibility(event is CalendarEvent.DeviceCalendarEvent || event is CalendarEvent.EquinoxCalendarEvent) {
                     Icon(
                         if (event is CalendarEvent.EquinoxCalendarEvent) Icons.Default.Yard
                         else Icons.AutoMirrored.Default.OpenInNew,
@@ -305,53 +317,54 @@ private fun EquinoxCountDown(
     event: CalendarEvent.EquinoxCalendarEvent,
     backgroundColor: Color
 ) {
-    val isGradient by isGradient.collectAsState()
-    val foldedCardBrush = if (isGradient) Brush.verticalGradient(
-        .25f to contentColor,
-        .499f to contentColor.copy(alpha = if (contentColor.isLight) .75f else .5f),
-        .5f to contentColor,
-    ) else Brush.verticalGradient(
-        .49f to contentColor,
-        .491f to Color.Transparent,
-        .509f to Color.Transparent,
-        .51f to contentColor,
-    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        val isGradient by isGradient.collectAsState()
+        val foldedCardBrush = if (isGradient) Brush.verticalGradient(
+            .25f to contentColor,
+            .499f to contentColor.copy(alpha = if (contentColor.isLight) .75f else .5f),
+            .5f to contentColor,
+        ) else Brush.verticalGradient(
+            .49f to contentColor,
+            .491f to Color.Transparent,
+            .509f to Color.Transparent,
+            .51f to contentColor,
+        )
 
-    var remainedTime = event.remainingMillis.milliseconds
-    if (remainedTime < Duration.ZERO || remainedTime > 356.days) return
-    countDownTimeParts.map { (pluralId, interval) ->
-        val x = (remainedTime / interval).toInt()
-        remainedTime -= interval * x
-        x to pluralStringResource(pluralId, x, formatNumber(x))
-    }.dropWhile { it.first == 0 }.forEachIndexed { i, (_, x) ->
-        if (i != 0) Spacer(Modifier.width(8.dp))
-        val parts = x.split(" ")
-        if (parts.size == 2 && parts[0].length <= 2 && !isTalkBackEnabled) Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row {
-                parts[0].padStart(2, formatNumber(0)[0]).forEachIndexed { i, c ->
-                    Text(
-                        "$c",
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center,
-                        color = backgroundColor,
-                        modifier = Modifier
-                            .background(
-                                foldedCardBrush,
-                                MaterialTheme.shapes.extraSmall,
-                            )
-                            .width(28.dp),
-                    )
-                    if (i == 0) Spacer(Modifier.width(2.dp))
+        var remainedTime = event.remainingMillis.milliseconds
+        if (remainedTime < Duration.ZERO || remainedTime > 356.days) return
+        countDownTimeParts.map { (pluralId, interval) ->
+            val x = (remainedTime / interval).toInt()
+            remainedTime -= interval * x
+            x to pluralStringResource(pluralId, x, formatNumber(x))
+        }.dropWhile { it.first == 0 }.forEach { (_, x) ->
+            val parts = x.split(" ")
+            if (parts.size == 2 && parts[0].length <= 3 && !isTalkBackEnabled) Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    val digits = parts[0].padStart(2, formatNumber(0)[0])
+                    digits.forEach {
+                        Text(
+                            "$it",
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            color = backgroundColor,
+                            modifier = Modifier
+                                .background(
+                                    foldedCardBrush,
+                                    MaterialTheme.shapes.extraSmall,
+                                )
+                                .width(28.dp),
+                        )
+                    }
                 }
-            }
-            Text(
-                parts[1],
-                color = contentColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        } else Text(x, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    parts[1],
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else Text(x, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 

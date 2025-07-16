@@ -34,8 +34,6 @@ const val FILE_PICKER_REQUEST_CODE = "req_code"
 const val PREF_APP_FONT = "app_font"
 const val SYSTEM_DEFAULT_FONT = "fonts/Vazirmatn.ttf"
 
-const val ATHAN_NOTIFICATION_ID = 2030
-
 const val PREF_JUMMA_SILENT = "jumma_silent"
 const val PREF_JUMMA_SILENT_MINUTE = "jumma_silent_minute"
 const val DEFAULT_JUMMA_SILENT_MINUTE = 40

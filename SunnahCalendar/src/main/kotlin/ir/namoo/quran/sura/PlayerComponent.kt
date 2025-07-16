@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoubleArrow
@@ -36,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +77,14 @@ fun PlayerComponent(
     val coroutineScope = rememberCoroutineScope()
     val alpha by animateFloatAsState(targetValue = if (isAutoScroll) 1f else 0.5f)
     val position by animateFloatAsState(targetValue = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f)
-    Box(modifier = modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)) {
+    Box(
+        modifier = modifier.background(
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = MaterialTheme.shapes.large.copy(
+                bottomEnd = CornerSize(0.dp), bottomStart = CornerSize(0.dp)
+            )
+        )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,11 +98,12 @@ fun PlayerComponent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AnimatedContent(targetState = qariPhotoLink, label = "qariPhotoLink") {
-                    GlideImage(modifier = Modifier
-                        .padding(vertical = 2.dp, horizontal = 8.dp)
-                        .size(54.dp)
-                        .clip(MaterialTheme.shapes.extraLarge)
-                        .background(color = MaterialTheme.colorScheme.surfaceContainer),
+                    GlideImage(
+                        modifier = Modifier
+                            .padding(vertical = 2.dp, horizontal = 8.dp)
+                            .size(54.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
+                            .background(color = MaterialTheme.colorScheme.surfaceContainer),
                         imageModel = { it.trim() },
                         imageOptions = ImageOptions(
                             contentScale = ContentScale.Fit, alignment = Alignment.Center
@@ -167,11 +175,12 @@ fun PlayerComponent(
                         //Play Pause
                         AnimatedContent(targetState = isPlaying, label = "play") {
                             IconButton(
-                                modifier = Modifier.scale(1.5f),
+                                modifier = Modifier.size(54.dp),
                                 onClick = { if (it) pause() else resume() },
                                 colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Icon(
+                                    modifier = Modifier.size(68.dp),
                                     imageVector = if (it) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
                                     contentDescription = if (isPlaying) "Pause" else "Play"
                                 )
@@ -226,8 +235,7 @@ fun PlayerComponent(
                     coroutineScope.launch {
                         seekTo((it * duration).toLong())
                     }
-                }
-            )
+                })
         }
 
         Icon(

@@ -101,7 +101,8 @@ fun SharedTransitionScope.DownloadPrayTimesScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(4.dp),
+                    .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 

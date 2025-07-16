@@ -1,61 +1,58 @@
 [versions]
-agp = "8.9.1"
+agp = "8.11.1"
 android-test = "1.6.1"
 android-test-runner = "1.6.2"
 androidx-activity = "1.10.1"
-androidx-core = "1.15.0"
-androidx-navigation = "2.8.9"
+androidx-core = "1.16.0"
+androidx-navigation = "2.9.1"
 androidx-test-ext-junit = "1.2.1"
 astronomy = "61dc07020aaa6885d2c7f688a4d82beaf6edb9ef" # is equal to v2.1.19
 browser = "1.8.0"
-compose-bom = "2025.03.01"
-coroutines = "1.10.1"
-datastore-preferences = "1.1.4"
-dynamicanimation = "1.0.0"
+compose-bom = "2025.06.01"
+coroutines = "1.10.2"
+datastore = "1.1.7"
+dynamicanimation = "1.1.0"
 junit = "4.13.2"
-junit-runner = "1.12.1"
-junit5 = "5.12.1"
-kotlin = "2.1.20"
-kotlinpoet = "2.1.0"
+junit-runner = "1.13.3"
+junit5 = "5.13.3"
+kotlin = "2.2.0"
+kotlinpoet = "2.2.0"
 kotlinx-html-jvm = "0.12.0"
-kotlinx-serialization-json = "1.8.0"
-lifecycle = "2.8.7"
-mockito-core = "5.16.1"
-mockito-kotlin = "5.4.0"
+kotlinx-serialization-json = "1.9.0"
+lifecycle = "2.9.1"
 openlocationcode = "1.0.4"
 persiancalendar-calculator = "13a660cb0e5a5943ec7c496f4ff4c2c4631f9fcf"
-persiancalendar-calendar = "d9278c13466a04148e75f74508b4b11d0097bfe6"
-persiancalendar-praytimes = "0e619dfd2683acc0c6f0b53568ed78336a17057a"
+persiancalendar-calendar = "f916a852ca9d48c917768693a127ece5347e8629"
+persiancalendar-praytimes = "135f0698f30bd05ee6b012452ebbe5b88922fa0f"
 persiancalendar-qr = "4ef9d44178046f8704edbc8964fca968f75b08d5"
-truth = "1.4.4"
-work-manager = "2.10.0"
+work-manager = "2.10.2"
 watchface-complications-data-source-ktx = "1.2.1"
 wear-compose = "1.4.1"
-wear-compose-material3 = "1.0.0-alpha35"
+wear-compose-material3 = "1.5.0-beta05"
 wear-glance-tiles = "1.0.0-alpha05"
 wear-tooling-preview = "1.0.0"
-wear-protolayout-proto = "1.2.1"
-wear-tiles-proto = "1.4.1"
+wear-protolayout-proto = "1.3.0"
+wear-tiles-proto = "1.5.0"
 
-gms = "4.4.2"
-firebase-bom = "33.11.0"
+gms = "4.4.3"
+firebase-bom = "33.16.0"
 firebase-pref = "1.4.2"
-crashlytics = "3.0.3"
+crashlytics = "3.0.4"
 
-ksp = "2.1.20-1.0.31"
-room = "2.7.0-rc02"
+ksp = "2.2.0-2.0.2"
+room = "2.7.2"
 multidex = "2.0.1"
 
-koin-bom = "4.1.0-Beta5"
-ktor = "3.0.3"
+koin-bom = "4.1.0"
+ktor = "3.1.3"
 logback = "3.0.0"
-landscapist-bom = "2.4.6"
-media = "1.5.1"
+landscapist-bom = "2.5.0"
+media = "1.7.1"
 gms-location = "21.3.0"
-appcompanist-permissions = "0.37.0"
+appcompanist-permissions = "0.37.3"
 poolakey = "2.2.0"
-myket-billing-client = "1.15"
-coil = "3.0.4"
+myket-billing-client = "1.18"
+coil = "3.2.0"
 
 [libraries]
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
@@ -75,7 +72,7 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore-preferences" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
@@ -90,8 +87,6 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycle" }
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycle" }
-mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
 openlocationcode = { group = "com.google.openlocationcode", name = "openlocationcode", version.ref = "openlocationcode" }
 persiancalendar-calculator = { group = "com.github.persian-calendar", name = "calculator", version.ref = "persiancalendar-calculator" }
 persiancalendar-calendar = { group = "com.github.persian-calendar", name = "calendar", version.ref = "persiancalendar-calendar" }
@@ -100,7 +95,6 @@ persiancalendar-qr = { group = "com.github.persian-calendar", name = "qr", versi
 test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "android-test" }
 test-rules = { group = "androidx.test", name = "rules", version.ref = "android-test" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "android-test-runner" }
-truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 work-manager-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
 wear-glance-tiles = { group = "androidx.glance", name = "glance-wear-tiles", version.ref = "wear-glance-tiles" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wear-tooling-preview" }
@@ -172,7 +166,6 @@ firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
 [bundles]
-mockito = ["mockito-core", "mockito-kotlin"]
 lifecycle = ["lifecycle-runtime-ktx", "lifecycle-service"]
 
 room = ["room-ktx", "room-paging", "room-runtime"]

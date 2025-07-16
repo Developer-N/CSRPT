@@ -64,12 +64,14 @@ value class Clock(val value: Double/*A real number, usually [0-24), portion of a
         }
     }
 
-    operator fun compareTo(clock: Clock) = value.compareTo(clock.value)
+    operator fun compareTo(clock: Clock) = value compareTo clock.value
     operator fun minus(clock: Clock) = Clock(value - clock.value)
     operator fun plus(clock: Clock) = Clock(value + clock.value)
 
     companion object {
         private fun linearFormat(hours: Int, minutes: Int) =
             formatNumber("%02d:%02d".format(Locale.ENGLISH, hours, minutes))
+
+        val zero = Clock(.0)
     }
 }

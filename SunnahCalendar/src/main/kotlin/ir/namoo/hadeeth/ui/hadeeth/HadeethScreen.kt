@@ -54,7 +54,6 @@ import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
-import com.byagowi.persiancalendar.ui.utils.isOnCI
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.hadeeth.repository.LanguageEntity
@@ -341,27 +340,30 @@ private fun SharedTransitionScope.HadeethTopBar(
 ) {
     val context = LocalContext.current
     var showLanguages by remember { mutableStateOf(false) }
-    TopAppBar(title = {
-        Text(
-            text = formatNumber(
-                stringResource(
-                    R.string.hadeeth_number, hadeethID
+    TopAppBar(
+        title = {
+            Text(
+                text = formatNumber(
+                    stringResource(
+                        R.string.hadeeth_number, hadeethID
+                    )
                 )
             )
-        )
-    },
+        },
         navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
         colors = appTopAppBarColors(),
         actions = {
-            IconButton(modifier = if (LocalContext.current.isOnCI()) Modifier else Modifier.sharedElement(
-                rememberSharedContentState(key = "key_language"),
-                animatedVisibilityScope = animatedContentScope
-            ), onClick = { showLanguages = true }) {
+            IconButton(
+                modifier = Modifier.sharedElement(
+                    rememberSharedContentState(key = "key_language"),
+                    animatedVisibilityScope = animatedContentScope
+                ), onClick = { showLanguages = true }) {
                 Icon(
                     imageVector = Icons.Default.Language,
                     contentDescription = stringResource(R.string.language)
                 )
-                AppDropdownMenu(expanded = showLanguages,
+                AppDropdownMenu(
+                    expanded = showLanguages,
                     onDismissRequest = { showLanguages = false },
                     content = {
                         languages.forEach { language ->

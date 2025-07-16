@@ -16,18 +16,19 @@ import kotlinx.coroutines.withContext
 
 @Entity
 data class FileDownloadEntity(
-    @PrimaryKey val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val downloadRequest: Long,
     val downloadFile: String,
     val folderPath: String,
-    val sura: Int
+    val sura: Int,
+    val qariId: Int
 )
 
 @Dao
 interface FileDownloadDAO {
 
     @Query("SELECT * FROM FileDownloadEntity")
-    suspend fun findAllDownloads(): List<FileDownloadEntity>
+    suspend fun getAllDownloads(): List<FileDownloadEntity>
 
     @Query("DELETE FROM FileDownloadEntity WHERE id = :id")
     suspend fun removeByFileId(id: Int)
@@ -37,7 +38,7 @@ interface FileDownloadDAO {
 
 }
 
-@Database(version = 4, exportSchema = false, entities = [FileDownloadEntity::class])
+@Database(version = 7, exportSchema = false, entities = [FileDownloadEntity::class])
 abstract class FileDownloadDB : RoomDatabase() {
     abstract fun getFileDownloadDao(): FileDownloadDAO
 
@@ -56,9 +57,9 @@ abstract class FileDownloadDB : RoomDatabase() {
 }
 
 class FileDownloadRepository(private val fileDownloadDAO: FileDownloadDAO) {
-    suspend fun findDownloadByFileId(): List<FileDownloadEntity> {
+    suspend fun getAllDownloads(): List<FileDownloadEntity> {
         runCatching {
-            return fileDownloadDAO.findAllDownloads()
+            return fileDownloadDAO.getAllDownloads()
         }.onFailure { return emptyList() }.getOrElse { return emptyList() }
     }
 

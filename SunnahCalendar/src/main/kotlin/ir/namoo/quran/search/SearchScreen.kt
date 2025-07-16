@@ -125,6 +125,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 val items = listOf(
                     stringResource(id = R.string.search_in_quran),

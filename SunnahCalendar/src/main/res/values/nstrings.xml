@@ -261,6 +261,7 @@
     <string name="read_azkar">Read Azkar</string>
     <string name="morning_azkar">Remembrance In the morning</string>
     <string name="evening_azkar">Remembrance In the evening</string>
+    <string name="sleep_azkar">Remembrance In the sleep</string>
     <string name="azkar_notification_title" translatable="false">وَلَذِكْرُ ٱللَّهِ أَكْبَرُ</string>
     <string name="azkar_notification_message">It\'s time for read azkar %s!</string>
 

@@ -4,7 +4,9 @@ import android.content.res.Resources
 import android.icu.util.ChineseCalendar
 import android.os.Build
 import androidx.annotation.StringRes
+import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedColon
@@ -17,48 +19,95 @@ import io.github.cosinekitty.astronomy.EquatorEpoch
 import io.github.cosinekitty.astronomy.Observer
 import io.github.cosinekitty.astronomy.Refraction
 import io.github.cosinekitty.astronomy.Time
+import io.github.cosinekitty.astronomy.eclipticGeoMoon
 import io.github.cosinekitty.astronomy.equator
 import io.github.cosinekitty.astronomy.horizon
 import io.github.cosinekitty.astronomy.rotationEqdHor
-import io.github.persiancalendar.calendar.IslamicDate
-import io.github.persiancalendar.calendar.PersianDate
+import io.github.cosinekitty.astronomy.search
 import java.util.GregorianCalendar
+import java.util.TimeZone
 import kotlin.math.atan2
 
-// Based on Mehdi's work
+private fun lunarLongitude(jdn: Jdn, setIranTime: Boolean = false, hourOfDay: Int): Double =
+    eclipticGeoMoon(jdn.toAstronomyTime(hourOfDay, setIranTime)).lon
 
-fun isMoonInScorpio(jdn: Jdn): Boolean = isMoonInScorpio(jdn.toPersianDate(), jdn.toIslamicDate())
+// This only checks the midday, useful for calendar table where fast calculation is needed
+fun isMoonInScorpio(jdn: Jdn, hourOfDay: Int = 12, setIranTime: Boolean = false): Boolean =
+    lunarLongitude(jdn, setIranTime, hourOfDay) in Zodiac.scorpioRange
 
-fun isMoonInScorpio(persianDate: PersianDate, islamicDate: IslamicDate): Boolean {
-    return (((islamicDate.dayOfMonth + 1) * 12.2f + (persianDate.dayOfMonth + 1)) / 30f +
-            persianDate.month).toInt() % 12 == 8
+sealed interface MoonInScorpioState {
+    data object Borji : MoonInScorpioState
+    data object Falaki : MoonInScorpioState
+    data class Start(val clock: Clock) : MoonInScorpioState
+    data class End(val clock: Clock) : MoonInScorpioState
 }
 
-fun generateZodiacInformation(resources: Resources, jdn: Jdn, withEmoji: Boolean): String {
-    val persianDate = jdn.toPersianDate()
-    return "%s\n%s$spacedColon%s".format(
-        generateYearName(resources, persianDate, withEmoji),
-        resources.getString(R.string.zodiac),
-        Zodiac.fromPersianCalendar(persianDate).format(resources, withEmoji)
-    ).trim()
+private fun Double.withMaxDegreeValue(max: Double): Double {
+    var deg = this
+    while (deg <= max - 360.0) deg += 360.0
+    while (deg > max) deg -= 360.0
+    return deg
+}
+
+// setIranTime should be used only for tests
+private fun searchLunarLongitude(jdn: Jdn, targetLon: Double, setIranTime: Boolean): Clock {
+    val startTime = jdn.toAstronomyTime(hourOfDay = 0, setIranTime = setIranTime)
+    val endTime = startTime.addDays(1.0)
+    return search(startTime, endTime, 1.0) { time ->
+        (eclipticGeoMoon(time).lon - targetLon).withMaxDegreeValue(+180.0)
+    }?.toMillisecondsSince1970()?.let { timeInMillis ->
+        Clock(
+            GregorianCalendar().also {
+                if (setIranTime) it.timeZone = TimeZone.getTimeZone(IRAN_TIMEZONE_ID)
+                it.timeInMillis = timeInMillis
+            }
+        )
+    } ?: Clock.zero
+}
+
+fun moonInScorpioState(jdn: Jdn, setIranTime: Boolean = false): MoonInScorpioState? {
+    val end = isMoonInScorpio(jdn, 0, setIranTime)
+    val start = isMoonInScorpio(jdn + 1, 0, setIranTime)
+    return when {
+        start && end ->
+            if (lunarLongitude(jdn, setIranTime, hourOfDay = 12) <= Zodiac.SCORPIO.tropicalRange[1])
+                MoonInScorpioState.Borji else MoonInScorpioState.Falaki
+
+        start -> MoonInScorpioState.Start(
+            searchLunarLongitude(jdn, Zodiac.scorpioRange.start, setIranTime)
+        )
+
+        end -> MoonInScorpioState.End(
+            searchLunarLongitude(jdn, Zodiac.scorpioRange.endInclusive, setIranTime)
+        )
+
+        else -> null
+    }
 }
 
 fun generateYearName(
     resources: Resources,
-    persianDate: PersianDate,
+    jdn: Jdn,
     withEmoji: Boolean,
-    time: GregorianCalendar? = null
+    time: GregorianCalendar? = null,
+    withOldEraName: Boolean = false,
 ): String {
+    val persianDate = jdn.toPersianDate()
     val yearNames = listOfNotNull(
         language.value.inParentheses.format(
-            ChineseZodiac.fromPersianCalendar(persianDate).format(resources, withEmoji, true),
+            ChineseZodiac.fromPersianCalendar(persianDate).format(
+                resources = resources,
+                withEmoji = withEmoji,
+                persianDate = persianDate,
+                withOldEraName = withOldEraName,
+            ),
             resources.getString(R.string.shamsi_calendar_short)
         ),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            val date = ChineseCalendar((time ?: Jdn(persianDate).toGregorianCalendar()).time)
+            val date = ChineseCalendar((time ?: jdn.toGregorianCalendar()).time)
             val year = date[ChineseCalendar.YEAR]
             language.value.inParentheses.format(
-                ChineseZodiac.fromChineseCalendar(date).format(resources, withEmoji, false),
+                ChineseZodiac.fromChineseCalendar(date).format(resources, withEmoji),
                 resources.getString(R.string.chinese) + spacedComma + formatNumber(year)
             )
         } else null

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -20,6 +21,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +58,7 @@ import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.notificationAthan
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.global.updateStoredPreference
+import com.byagowi.persiancalendar.service.AthanNotification
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.settings.SettingsClickable
 import com.byagowi.persiancalendar.ui.settings.SettingsHorizontalDivider
@@ -72,7 +75,7 @@ import com.byagowi.persiancalendar.ui.settings.locationathan.location.GPSLocatio
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.LocationDialog
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
-import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
+import com.byagowi.persiancalendar.utils.isHighLatitude
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.titleStringId
 import io.github.persiancalendar.praytimes.AsrMethod
@@ -109,7 +112,7 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
         stringResource(R.string.athan),
         if (isLocationSet) null else stringResource(R.string.athan_disabled_summary)
     )
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         SettingsSingleSelect(
             PREF_PRAY_TIME_METHOD,
             CalculationMethod.entries.map { stringResource(it.titleStringId) },
@@ -119,7 +122,7 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             title = stringResource(R.string.pray_methods)
         )
     }
-    AnimatedVisibility(coordinates?.enableHighLatitudesConfiguration == true) {
+    this.AnimatedVisibility(coordinates?.isHighLatitude == true) {
         SettingsSingleSelect(
             PREF_HIGH_LATITUDES_METHOD,
             HighLatitudesMethod.entries.map { stringResource(it.titleStringId) },
@@ -129,7 +132,7 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             title = stringResource(R.string.high_latitudes_method)
         )
     }
-    AnimatedVisibility(isLocationSet && !calculationMethod.isJafari) {
+    this.AnimatedVisibility(isLocationSet && !calculationMethod.isJafari) {
         val asrMethod by asrMethod.collectAsState()
         SettingsSwitch(
             key = PREF_ASR_HANAFI_JURISTIC,
@@ -137,32 +140,76 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             title = stringResource(R.string.asr_hanafi_juristic)
         )
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         SettingsClickable(
             stringResource(R.string.athan_gap),
             stringResource(R.string.athan_gap_summary),
         ) { onDismissRequest -> AthanGapDialog(onDismissRequest) }
     }
-    AnimatedVisibility(isLocationSet) {
+
+    @Composable
+    fun ensureNotificationPermissionIsGrantedBeforeDialog(onDismissRequest: () -> Unit): Boolean {
+        var result by remember {
+            mutableStateOf(
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                        ActivityCompat.checkSelfPermission(
+                            context, Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED
+            )
+        }
+        if (result) return true
+        val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (!isGranted) {
+                Toast.makeText(
+                    context,
+                    "اگر امکان فعال‌سازی اعلان وجود ندارد احتمالاً نیاز باشد برنامه را حذف و مجدداً نصب کنید.",
+                    Toast.LENGTH_LONG
+                ).show()
+                onDismissRequest()
+            }
+            result = true
+            context.preferences.edit { putBoolean(PREF_NOTIFICATION_ATHAN, isGranted) }
+            updateStoredPreference(context)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) LaunchedEffect(Unit) {
+            if (language.isPersian) Toast.makeText(
+                context,
+                "جهت عملکرد صحیح اذان برنامه به دسترسی اعلان نیاز دارد.",
+                Toast.LENGTH_LONG
+            ).show()
+            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        return false
+    }
+
+    this.AnimatedVisibility(isLocationSet) {
         SettingsClickable(
             stringResource(R.string.athan_alarm),
             stringResource(R.string.athan_alarm_summary),
             defaultOpen = destination == PREF_ATHAN_ALARM,
-        ) { onDismissRequest -> PrayerSelectDialog(onDismissRequest) }
+        ) { onDismissRequest ->
+            if (ensureNotificationPermissionIsGrantedBeforeDialog(onDismissRequest)) {
+                PrayerSelectDialog(onDismissRequest)
+            }
+        }
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         val athanSoundName by athanSoundName.collectAsState()
         SettingsClickable(
             stringResource(R.string.custom_athan),
             athanSoundName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.default_athan),
         ) { onDismissRequest -> AthanSelectDialog(onDismissRequest) }
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         SettingsClickable(stringResource(R.string.preview)) { onDismissRequest ->
-            PrayerSelectPreviewDialog(onDismissRequest)
+            if (ensureNotificationPermissionIsGrantedBeforeDialog(onDismissRequest)) {
+                PrayerSelectPreviewDialog(onDismissRequest)
+            }
         }
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         val launcher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
@@ -175,6 +222,7 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             stringResource(R.string.notification_athan),
             stringResource(R.string.enable_notification_athan),
             onBeforeToggle = { value ->
+                AthanNotification.invalidateChannel(context)
                 if (value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ActivityCompat.checkSelfPermission(
                         context, Manifest.permission.POST_NOTIFICATIONS
                     ) != PackageManager.PERMISSION_GRANTED
@@ -185,7 +233,7 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             },
         )
     }
-    AnimatedVisibility(isLocationSet && !notificationAthan) {
+    this.AnimatedVisibility(isLocationSet && !notificationAthan) {
         SettingsSwitch(
             PREF_ASCENDING_ATHAN_VOLUME,
             ascendingAthan,
@@ -193,20 +241,24 @@ fun ColumnScope.LocationAthanSettings(navigateToMap: () -> Unit, destination: St
             stringResource(R.string.enable_ascending_athan_volume),
         )
     }
-    AnimatedVisibility(isLocationSet && !notificationAthan && !ascendingAthan) {
+    this.AnimatedVisibility(isLocationSet && !notificationAthan && !ascendingAthan) {
         SettingsClickable(
             stringResource(R.string.athan_volume), stringResource(R.string.athan_volume_summary)
         ) { onDismissRequest -> AthanVolumeDialog(onDismissRequest) }
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         SettingsSwitch(
             PREF_ATHAN_VIBRATION,
             athanVibration.collectAsState().value,
             stringResource(R.string.vibration),
-            language.tryTranslateAthanVibrationSummary()
+            language.tryTranslateAthanVibrationSummary(),
+            onBeforeToggle = {
+                AthanNotification.invalidateChannel(context)
+                it
+            },
         )
     }
-    AnimatedVisibility(isLocationSet) {
+    this.AnimatedVisibility(isLocationSet) {
         var midnightSummary by remember {
             mutableStateOf(getMidnightMethodPreferenceSummary(context))
         }

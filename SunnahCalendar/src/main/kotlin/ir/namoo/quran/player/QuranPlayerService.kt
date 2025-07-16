@@ -149,10 +149,11 @@ class QuranPlayerService : MediaSessionService(), MediaSession.Callback, Player.
 
     override fun onDestroy() {
         session?.run {
+            player.stop()
             player.release()
             release()
+            session = null
         }
-        session = null
         super.onDestroy()
     }
 }

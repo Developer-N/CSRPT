@@ -3,7 +3,10 @@ package com.byagowi.persiancalendar.ui.common
 import android.content.ClipData
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -47,44 +50,60 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MOON
 import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.isAncientIranEnabled
 import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.isForcedIranTimeEnabled
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.global.spacedColon
+import com.byagowi.persiancalendar.ui.astronomy.LunarAge
+import com.byagowi.persiancalendar.ui.astronomy.Tithi
+import com.byagowi.persiancalendar.ui.astronomy.Zodiac
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.utils.ItemWidth
+import com.byagowi.persiancalendar.utils.MoonInScorpioState
 import com.byagowi.persiancalendar.utils.calculateDaysDifference
+import com.byagowi.persiancalendar.utils.formatAsSeleucidAndYazdegerdDate
 import com.byagowi.persiancalendar.utils.formatDate
 import com.byagowi.persiancalendar.utils.formatDateAndTime
 import com.byagowi.persiancalendar.utils.formatNumber
-import com.byagowi.persiancalendar.utils.generateZodiacInformation
+import com.byagowi.persiancalendar.utils.generateYearName
 import com.byagowi.persiancalendar.utils.getA11yDaySummary
-import com.byagowi.persiancalendar.utils.isMoonInScorpio
+import com.byagowi.persiancalendar.utils.jalaliAndHistoricalName
 import com.byagowi.persiancalendar.utils.monthName
+import com.byagowi.persiancalendar.utils.moonInScorpioState
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import com.byagowi.persiancalendar.utils.toLinearDate
+import io.github.cosinekitty.astronomy.eclipticGeoMoon
 import io.github.cosinekitty.astronomy.seasons
+import io.github.cosinekitty.astronomy.sunPosition
 import io.github.persiancalendar.calendar.PersianDate
 import kotlinx.coroutines.launch
 import java.util.Date
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun CalendarsOverview(
+fun SharedTransitionScope.CalendarsOverview(
     jdn: Jdn,
     today: Jdn,
     selectedCalendar: Calendar,
     shownCalendars: List<Calendar>,
     isExpanded: Boolean,
+    navigateToAstronomy: (Jdn) -> Unit,
+    animatedContentScope: AnimatedContentScope,
 ) {
     val context = LocalContext.current
     val isToday = today == jdn
@@ -105,17 +124,23 @@ fun CalendarsOverview(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 24.dp)
         ) {
-            AnimatedVisibility(isAstronomicalExtraFeaturesEnabled && isExpanded) {
+            val language by language.collectAsState()
+            this.AnimatedVisibility(isExpanded || language.alwaysNeedMoonState) {
                 AndroidView(
                     factory = ::MoonView,
                     update = { it.jdn = jdn.value.toFloat() },
                     modifier = Modifier
                         .padding(end = 8.dp)
+                        .semantics { this.hideFromAccessibility() }
+                        .sharedBounds(
+                            rememberSharedContentState(key = SHARED_CONTENT_KEY_MOON),
+                            animatedVisibilityScope = animatedContentScope,
+                        )
+                        .clickable { navigateToAstronomy(jdn) }
                         .size(20.dp)
                 )
             }
             val isForcedIranTimeEnabled by isForcedIranTimeEnabled.collectAsState()
-            val language by language.collectAsState()
             AnimatedContent(
                 if (isToday && isForcedIranTimeEnabled) language.inParentheses.format(
                     jdn.weekDayName, stringResource(R.string.iran_time)
@@ -134,88 +159,76 @@ fun CalendarsOverview(
             if (date.month == 12 && date.dayOfMonth >= 20 || date.month == 1 && date.dayOfMonth == 1)
                 equinoxTitle(date, jdn, context).first else null
         }
-        val contextColor = LocalContentColor.current
 
-        AnimatedVisibility(
-            visible = equinox != null,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+        this.AnimatedVisibility(visible = equinox != null) { AutoSizedBodyText(equinox.orEmpty()) }
+
+        this.AnimatedVisibility(!isToday) {
+            AutoSizedBodyText(
+                listOf(
+                    stringResource(R.string.days_distance),
+                    spacedColon,
+                    calculateDaysDifference(context.resources, jdn, today)
+                ).joinToString("")
+            )
+        }
+
+        val language by language.collectAsState()
+
+        val moonInScorpioState = if (isAstronomicalExtraFeaturesEnabled)
+            moonInScorpioState(jdn) else null
+        this.AnimatedVisibility(moonInScorpioState != null) {
+            AutoSizedBodyText(
+                if (language.isPersian) when (val state = moonInScorpioState) {
+                    MoonInScorpioState.Borji -> "قمر در برج عقرب"
+                    MoonInScorpioState.Falaki -> "قمر در صورت فلکی عقرب"
+                    is MoonInScorpioState.Start ->
+                        "${state.clock.toFormattedString()} قمر وارد برج عقرب می‌شود"
+
+                    is MoonInScorpioState.End ->
+                        "${state.clock.toFormattedString()} قمر از صورت فلکی عقرب خارج می‌شود"
+
+                    else -> ""
+                } else stringResource(R.string.moon_in_scorpio)
+            )
+        }
+
+        this.AnimatedVisibility(isExpanded && isAstronomicalExtraFeaturesEnabled) {
+            AutoSizedBodyText(generateYearName(context.resources, jdn, withEmoji = true))
+        }
+
+        this.AnimatedVisibility(isExpanded && isAstronomicalExtraFeaturesEnabled) {
+            val zodiac = Zodiac.fromTropical(sunPosition(jdn.toAstronomyTime(hourOfDay = 12)).elon)
+            AutoSizedBodyText(
+                stringResource(R.string.zodiac) + spacedColon +
+                        zodiac.format(LocalContext.current.resources, true)
+            )
+        }
+
+        if (language.isPersian) {
+            val persianDate = jdn.toPersianDate()
+            val enableExtra = isAncientIranEnabled || isAstronomicalExtraFeaturesEnabled
+            this.AnimatedVisibility((enableExtra && isExpanded) || persianDate.year < 1304) {
+                AutoSizedBodyText(jalaliAndHistoricalName(persianDate, jdn))
+            }
+            this.AnimatedVisibility(isAstronomicalExtraFeaturesEnabled && isExpanded) {
+                AutoSizedBodyText(formatAsSeleucidAndYazdegerdDate(jdn))
+            }
+        }
+
+        this.AnimatedVisibility(
+            isExpanded && (isAstronomicalExtraFeaturesEnabled || language.isNepali)
         ) {
-            SelectionContainer {
-                BasicText(
-                    equinox ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = { contextColor },
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                    maxLines = 1,
-                    softWrap = false,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = MaterialTheme.typography.labelSmall.fontSize,
-                        maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                    ),
-                )
-            }
-        }
-
-        AnimatedVisibility(!isToday) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 4.dp)
-                    .align(Alignment.CenterHorizontally),
-                contentAlignment = Alignment.Center,
-            ) {
-                SelectionContainer {
-                    BasicText(
-                        listOf(
-                            stringResource(R.string.days_distance),
-                            spacedColon,
-                            calculateDaysDifference(context.resources, jdn, today)
-                        ).joinToString(""),
-                        color = { contextColor },
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.animateContentSize(),
-                        maxLines = 1,
-                        softWrap = false,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = MaterialTheme.typography.labelSmall.fontSize,
-                            maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        ),
-                    )
-                }
-            }
-        }
-
-        val showIsMoonInScorpio = isAstronomicalExtraFeaturesEnabled && isMoonInScorpio(jdn)
-        AnimatedVisibility(showIsMoonInScorpio) {
-            SelectionContainer {
-                Text(
-                    stringResource(R.string.moon_in_scorpio),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 4.dp),
-                )
-            }
-        }
-
-        AnimatedVisibility(isExpanded && isAstronomicalExtraFeaturesEnabled) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 4.dp)
-                    .align(Alignment.CenterHorizontally),
-                contentAlignment = Alignment.Center,
-            ) {
-                SelectionContainer {
-                    Text(
-                        generateZodiacInformation(context.resources, jdn, withEmoji = true),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.animateContentSize(),
-                    )
-                }
-            }
+            val time = jdn.toAstronomyTime(hourOfDay = 12)
+            val lunarAge = LunarAge.fromDegrees(eclipticGeoMoon(time).lon - sunPosition(time).elon)
+            val phase = lunarAge.toPhase()
+            val coordinates by coordinates.collectAsState()
+            AutoSizedBodyText(
+                if (language.isNepali) {
+                    phase.emoji(coordinates) + " " + jdn.toNepaliDate().monthName + " " +
+                            language.moonNames(phase) +
+                            " ~" + Tithi.tithiName(System.currentTimeMillis())
+                } else phase.emoji(coordinates) + " " + language.moonNames(phase)
+            )
         }
 
         val startOfYearJdn = Jdn(selectedCalendar, date.year, 1, 1)
@@ -240,10 +253,12 @@ fun CalendarsOverview(
             label = "stroke width",
         )
 
-        AnimatedVisibility(isExpanded) {
+        this.AnimatedVisibility(isExpanded) {
             Row(
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .fillMaxWidth(),
             ) {
                 progresses.forEach { (stringId, current, max) ->
                     val title = stringResource(stringId)
@@ -274,63 +289,26 @@ fun CalendarsOverview(
             }
         }
 
-        AnimatedVisibility(isExpanded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 4.dp)
-                    .align(Alignment.CenterHorizontally),
-                contentAlignment = Alignment.Center,
-            ) {
-                SelectionContainer {
-                    BasicText(
-                        stringResource(
-                            R.string.start_of_year_diff,
-                            formatNumber(jdn - startOfYearJdn + 1),
-                            formatNumber(currentWeek),
-                            formatNumber(date.month)
-                        ),
-                        color = { contextColor },
-                        modifier = Modifier.animateContentSize(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        softWrap = false,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = MaterialTheme.typography.labelSmall.fontSize,
-                            maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        ),
-                    )
-                }
-            }
+        this.AnimatedVisibility(isExpanded) {
+            AutoSizedBodyText(
+                stringResource(
+                    R.string.start_of_year_diff,
+                    formatNumber(jdn - startOfYearJdn + 1),
+                    formatNumber(currentWeek),
+                    formatNumber(date.month)
+                )
+            )
         }
-        AnimatedVisibility(isExpanded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .align(Alignment.CenterHorizontally),
-                contentAlignment = Alignment.Center,
-            ) {
-                SelectionContainer {
-                    BasicText(
-                        stringResource(
-                            R.string.end_of_year_diff,
-                            formatNumber(endOfYearJdn - jdn),
-                            formatNumber(weeksCount - currentWeek),
-                            formatNumber(12 - date.month)
-                        ),
-                        color = { contextColor },
-                        modifier = Modifier.animateContentSize(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        softWrap = false,
-                        autoSize = TextAutoSize.StepBased(
-                            minFontSize = MaterialTheme.typography.labelSmall.fontSize,
-                            maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        ),
-                    )
-                }
-            }
+        this.AnimatedVisibility(isExpanded) {
+            AutoSizedBodyText(
+                stringResource(
+                    R.string.end_of_year_diff,
+                    formatNumber(endOfYearJdn - jdn),
+                    formatNumber(weeksCount - currentWeek),
+                    formatNumber(12 - date.month)
+                ),
+                topPadding = 0.dp,
+            )
         }
 
         Spacer(Modifier.height(8.dp))
@@ -341,6 +319,36 @@ fun CalendarsOverview(
             isExpanded = isExpanded,
             tint = MaterialTheme.colorScheme.primary,
         )
+    }
+}
+
+@Composable
+fun AutoSizedBodyText(
+    text: String,
+    topPadding: Dp = 4.dp,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+) {
+    val contextColor = LocalContentColor.current
+    Box(
+        modifier = Modifier
+            .padding(top = topPadding, start = 24.dp, end = 24.dp)
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        SelectionContainer {
+            BasicText(
+                text = text,
+                color = { contextColor },
+                style = textStyle,
+                modifier = Modifier.animateContentSize(),
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    maxFontSize = textStyle.fontSize,
+                ),
+            )
+        }
     }
 }
 

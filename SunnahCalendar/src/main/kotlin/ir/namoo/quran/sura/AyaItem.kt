@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -14,8 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.AddComment
@@ -49,7 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -88,6 +90,8 @@ fun AyaItem(
     quran: QuranEntity,
     translates: List<TranslateItem>? = null,
     isPlaying: Boolean,
+    isBookmarked: Boolean,
+    onBookmark: () -> Unit,
     animations: List<State<Float>>,
     onCopyClick: (String) -> Unit,
     onShareClick: (String) -> Unit,
@@ -123,15 +127,15 @@ fun AyaItem(
     }
     var noteText by remember { mutableStateOf(quran.note) }
     var showNotePanel by remember { mutableStateOf(false) }
-    val btnPlayScale by animateFloatAsState(
-        targetValue = if (isPlaying) 1.5f else 1f, label = "scale"
+    val btnPlaySize by animateIntAsState(
+        targetValue = if (isPlaying) 56 else 28, label = "size"
     )
     val background by animateColorAsState(
-        targetValue = if (isPlaying) MaterialTheme.colorScheme.surfaceContainer
+        targetValue = if (isPlaying) MaterialTheme.colorScheme.surfaceContainerHigh
         else MaterialTheme.colorScheme.surfaceContainerLow
     )
     var showDeleteDialog by remember { mutableStateOf(false) }
-
+    val alpha by animateFloatAsState(targetValue = if (isBookmarked) 1f else 0.1f)
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -282,14 +286,22 @@ fun AyaItem(
                 }
             }
             IconButton(
-                modifier = Modifier.scale(btnPlayScale),
                 onClick = { onBtnPlayClick(quran) },
                 colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(
+                    modifier = Modifier.size(btnPlaySize.dp),
                     imageVector = if (isPlaying) Icons.Rounded.StopCircle else Icons.Rounded.PlayCircle,
                     contentDescription = stringResource(id = R.string.play)
                 )
+            }
+            IconButton(
+                onClick = onBookmark,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary.copy(alpha = alpha)
+                )
+            ) {
+                Icon(imageVector = Icons.Default.Book, contentDescription = "")
             }
         }
         AnimatedVisibility(
@@ -351,15 +363,13 @@ fun AyaItem(
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text(
-                        text = stringResource(id = R.string.yes),
-                        fontWeight = FontWeight.SemiBold
+                        text = stringResource(id = R.string.yes), fontWeight = FontWeight.SemiBold
                     )
                 }
             }, dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text(
-                        text = stringResource(id = R.string.no),
-                        fontWeight = FontWeight.SemiBold
+                        text = stringResource(id = R.string.no), fontWeight = FontWeight.SemiBold
                     )
                 }
             }, title = { Text(text = stringResource(id = R.string.alert)) }, text = {

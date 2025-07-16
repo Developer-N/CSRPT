@@ -7,6 +7,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.byagowi.persiancalendar.utils.applyAppLanguage
+import com.byagowi.persiancalendar.utils.logException
 
 class AthanPlayerService : MediaSessionService(), MediaSession.Callback, Player.Listener {
 
@@ -26,11 +27,13 @@ class AthanPlayerService : MediaSessionService(), MediaSession.Callback, Player.
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
     override fun onDestroy() {
-        session?.run {
-            player.release()
-            release()
-            session = null
-        }
+        runCatching {
+            session?.run {
+                player.release()
+                release()
+                session = null
+            }
+        }.onFailure(logException)
         super.onDestroy()
     }
 }

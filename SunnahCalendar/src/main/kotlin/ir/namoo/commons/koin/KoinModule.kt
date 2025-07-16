@@ -133,7 +133,7 @@ val koinModule = module {
     //quran
     viewModel { QuranActivityViewModel(get()) }
     viewModel { QuranDownloadViewModel(get()) }
-    viewModel { ChapterViewModel(get(), get()) }
+    viewModel { ChapterViewModel(get(), get(), get()) }
     viewModel { SuraViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SettingViewModel(get(), get(), get()) }
     viewModel { BookmarkViewModel(get(), get()) }

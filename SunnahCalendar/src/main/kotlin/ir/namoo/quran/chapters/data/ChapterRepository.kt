@@ -1,6 +1,7 @@
 package ir.namoo.quran.chapters.data
 
 import ir.namoo.quran.db.QuranDB
+import ir.namoo.quran.sura.data.QuranEntity
 import ir.namoo.quran.utils.chapterException
 
 
@@ -29,6 +30,10 @@ class ChapterRepository(private val quranDB: QuranDB) {
 
     suspend fun getHizb(hizb: Int): HizbEntity {
         return quranDB.pjhDAO().getHizb(hizb)
+    }
+
+    suspend fun getVerse(id: Int): QuranEntity{
+        return quranDB.quranDAO().getVerse(id)
     }
 }
 

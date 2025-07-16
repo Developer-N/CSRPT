@@ -8,8 +8,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -86,6 +86,8 @@ import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_TIME_BAR
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
+import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.DatePickerDialog
 import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
@@ -159,7 +161,7 @@ fun SharedTransitionScope.AstronomyScreen(
                     TodayActionButton(visible = minutesOffset != 0) {
                         viewModel.animateToAbsoluteMinutesOffset(0)
                     }
-                    AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
+                    this.AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
                         SwitchWithLabel(
                             label = stringResource(R.string.tropical),
                             checked = isTropical,
@@ -167,6 +169,28 @@ fun SharedTransitionScope.AstronomyScreen(
                             toggle = viewModel::toggleIsTropical,
                         )
                     }
+
+                    val astronomyState by viewModel.astronomyState.collectAsState()
+
+                    var showHoroscopeDialog by rememberSaveable { mutableStateOf(false) }
+                    if (showHoroscopeDialog) HoroscopeDialog(astronomyState.date.time) {
+                        showHoroscopeDialog = false
+                    }
+                    var showYearHoroscopeDialog by rememberSaveable { mutableStateOf(false) }
+                    if (showYearHoroscopeDialog) {
+                        YearHoroscopeDialog(PersianDate(astronomyState.date.toCivilDate()).year) {
+                            showYearHoroscopeDialog = false
+                        }
+                    }
+
+                    val coordinates by coordinates.collectAsState()
+                    var showPlanetaryHoursDialog by rememberSaveable { mutableStateOf(false) }
+                    if (showPlanetaryHoursDialog) coordinates?.also {
+                        PlanetaryHoursDialog(it, astronomyState.date.timeInMillis) {
+                            showPlanetaryHoursDialog = false
+                        }
+                    }
+
                     ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
                         AppDropdownMenuItem({ Text(stringResource(R.string.select_date)) }) {
                             closeMenu()
@@ -175,6 +199,27 @@ fun SharedTransitionScope.AstronomyScreen(
                         AppDropdownMenuItem({ Text(stringResource(R.string.map)) }) {
                             closeMenu()
                             navigateToMap()
+                        }
+                        AppDropdownMenuItem({ Text(stringResource(R.string.horoscope)) }) {
+                            showHoroscopeDialog = true
+                            closeMenu()
+                        }
+                        AppDropdownMenuItem({
+                            Text(
+                                stringResource(R.string.horoscope) + spacedComma +
+                                        stringResource(R.string.year)
+                            )
+                        }) {
+                            showYearHoroscopeDialog = true
+                            closeMenu()
+                        }
+                        if (isAstronomicalExtraFeaturesEnabled && coordinates != null) {
+                            AppDropdownMenuItem({
+                                Text(stringResource(R.string.planetary_hours))
+                            }) {
+                                showPlanetaryHoursDialog = true
+                                closeMenu()
+                            }
                         }
                     }
                 },
@@ -185,8 +230,8 @@ fun SharedTransitionScope.AstronomyScreen(
             ScreenSurface(animatedContentScope) {
                 val bottomPadding = paddingValues.calculateBottomPadding()
                 if (isLandscape) BoxWithConstraints(Modifier.fillMaxSize()) {
-                    val maxHeight = maxHeight
-                    val maxWidth = maxWidth
+                    val maxHeight = this.maxHeight
+                    val maxWidth = this.maxWidth
                     Row(Modifier.fillMaxWidth()) {
                         Column(
                             Modifier
@@ -212,8 +257,8 @@ fun SharedTransitionScope.AstronomyScreen(
                     }
                 } else Column {
                     BoxWithConstraints(Modifier.weight(1f, fill = false)) {
-                        val maxHeight = maxHeight
-                        val maxWidth = maxWidth
+                        val maxHeight = this.maxHeight
+                        val maxWidth = this.maxWidth
                         var needsScroll by remember { mutableStateOf(false) }
                         // Puts content in middle of available space after the measured header
                         Layout(
@@ -346,7 +391,6 @@ private fun SharedTransitionScope.SliderBar(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TimeArrow(buttonScrollSlider: (Int) -> Unit, isPrevious: Boolean) {
     val hapticFeedback = LocalHapticFeedback.current
@@ -387,8 +431,6 @@ private fun SharedTransitionScope.SolarDisplay(
     val state by viewModel.astronomyState.collectAsState()
     val isTropical by viewModel.isTropical.collectAsState()
     val mode by viewModel.mode.collectAsState()
-    var showHoroscopeDialog by rememberSaveable { mutableStateOf(false) }
-    if (showHoroscopeDialog) HoroscopesDialog(state.date.time) { showHoroscopeDialog = false }
     Box(modifier) {
         Column(Modifier.align(Alignment.CenterStart)) {
             AstronomyMode.entries.forEach {
@@ -413,10 +455,6 @@ private fun SharedTransitionScope.SolarDisplay(
         AndroidView(
             factory = {
                 val solarView = SolarView(it)
-                var clickCount = 0
-                solarView.setOnClickListener {
-                    if (++clickCount % 2 == 0) showHoroscopeDialog = true
-                }
                 solarView.rotationalMinutesChange = { offset ->
                     viewModel.addMinutesOffset(offset)
                     slider?.manualScrollBy(offset / 200f, 0f)
@@ -491,8 +529,8 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
                 }
             }
         }
-        Seasons(jdn)
-        AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
+        Seasons(jdn, viewModel)
+        this.AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
             Row(Modifier.padding(top = 8.dp)) {
                 Box(Modifier.weight(1f)) {
                     Cell(
@@ -516,7 +554,7 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
 }
 
 @Composable
-private fun Seasons(jdn: Jdn) {
+private fun Seasons(jdn: Jdn, viewModel: AstronomyViewModel) {
     val seasonsCache = remember { lruCache(1024, create = ::seasons) }
     val seasonsOrder = remember {
         if (coordinates.value?.isSouthernHemisphere == true) {
@@ -535,17 +573,18 @@ private fun Seasons(jdn: Jdn) {
                     else -> it.marchEquinox
                 }
             }.toMillisecondsSince1970()
-        ).toGregorianCalendar().formatDateAndTime()
+        ).let { it.time to it.toGregorianCalendar().formatDateAndTime() }
     }
     repeat(2) { row ->
         Row(Modifier.padding(top = 8.dp)) {
             repeat(2) { cell ->
                 Box(Modifier.weight(1f)) {
+                    val (time, title) = equinoxes[cell + row * 2]
                     Cell(
-                        Modifier,
+                        Modifier.clickable { viewModel.animateToTime(time) },
                         seasonsOrder[cell + row * 2].color,
                         stringResource(seasonsOrder[cell + row * 2].nameStringId),
-                        equinoxes[cell + row * 2],
+                        title,
                     )
                 }
             }

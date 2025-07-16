@@ -225,9 +225,8 @@ fun scheduleAlarms(context: Context) {
     if (context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false))
         scheduleAzkars(context, prayTimeProvider)
     val enabledAlarms = getEnabledAlarms2(context).takeIf { it.isNotEmpty() } ?: return
-    val athanGap =
-        ((context.preferences.getString(PREF_ATHAN_GAP, null)?.toDoubleOrNull()
-            ?: .0) * 60.0 * 1000.0).toLong()
+    val athanGap = (context.preferences.getString(PREF_ATHAN_GAP, null)?.toDoubleOrNull()
+        ?: .0).minutes.inWholeMilliseconds
     val athanSettings = AthanSettingsDB.getInstance(context.applicationContext).athanSettingsDAO()
         .getAllAthanSettings()
     var prayTimes = coordinates.value?.calculatePrayTimes() ?: return
@@ -382,8 +381,15 @@ private fun scheduleAlarm(context: Context, prayTime: String, timeInMillis: Long
         PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
     )
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms())
-        AlarmManagerCompat.setExactAndAllowWhileIdle(
-            am, AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent
-        )
+    if (AlarmManagerCompat.canScheduleExactAlarms(am)) AlarmManagerCompat.setExactAndAllowWhileIdle(
+        am,
+        AlarmManager.RTC_WAKEUP,
+        timeInMillis,
+        pendingIntent,
+    ) else AlarmManagerCompat.setAndAllowWhileIdle(
+        am,
+        AlarmManager.RTC_WAKEUP,
+        timeInMillis,
+        pendingIntent
+    )
 }

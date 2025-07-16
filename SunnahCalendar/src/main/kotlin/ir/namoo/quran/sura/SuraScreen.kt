@@ -133,6 +133,8 @@ fun SharedTransitionScope.SuraScreen(
     var showQuranFilesDialog by remember { mutableStateOf(false) }
     var showTranslateFilesDialog by remember { mutableStateOf(false) }
 
+    val bookmarkedVerse by viewModel.bookmarkedVerse.collectAsState()
+
     val infiniteAnimation = rememberInfiniteTransition(label = "bar animation repeat")
     val animations = remember { mutableStateListOf<State<Float>>() }
     val random = remember { Random(System.currentTimeMillis()) }
@@ -155,7 +157,6 @@ fun SharedTransitionScope.SuraScreen(
     val duration by viewModel.duration.collectAsState()
     val currentPosition by viewModel.currentPosition.collectAsState()
     val isPlayerStopped by viewModel.isPlayerStoped.collectAsState()
-    val bottomPadding by animateFloatAsState(targetValue = if (!isPlayerStopped) 140f else 0f)
 
     KeepScreenOn()
     LaunchedEffect(key1 = aya) {
@@ -203,11 +204,13 @@ fun SharedTransitionScope.SuraScreen(
         AnimatedVisibility(
             visible = isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = query,
+            SearchAppBar(
+                query = query,
                 updateQuery = { viewModel.onQuery(it) },
                 closeSearchBar = { viewModel.closeSearchBar() })
         }
     }) { paddingValues ->
+        val bottomPadding by animateFloatAsState(targetValue = if (!isPlayerStopped) 145f else paddingValues.calculateBottomPadding().value)
         Surface(
             modifier = Modifier
                 .fillMaxSize()
@@ -232,16 +235,19 @@ fun SharedTransitionScope.SuraScreen(
                     if (quranList.isNotEmpty()) LazyColumn(state = listState) {
                         viewModel.updateLastVisited(listState.firstVisibleItemIndex + 1)
                         items(items = quranList, key = { it.id }) { quran ->
-                            AyaItem(modifier = Modifier.animateItem(
-                                fadeInSpec = null, fadeOutSpec = null
-                            ),
+                            AyaItem(
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = null, fadeOutSpec = null
+                                ),
                                 quran = quran,
                                 translates = try {
                                     enabledTranslates[quran.verseID] ?: emptyList()
-                                } catch (ex: Exception) {
+                                } catch (_: Exception) {
                                     emptyList()
                                 },
                                 isPlaying = quran.verseID == playingAya && quran.surahID == playingSura && autoScroll,
+                                isBookmarked = quran.id == bookmarkedVerse,
+                                onBookmark = { viewModel.updateBookmarkVerse(quran.id) },
                                 animations = animations,
                                 onCopyClick = {
                                     var text = it

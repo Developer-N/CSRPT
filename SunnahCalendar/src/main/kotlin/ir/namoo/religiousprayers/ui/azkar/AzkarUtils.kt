@@ -61,12 +61,19 @@ fun scheduleAzkars(context: Context, prayTimeProvider: PrayTimeProvider) {
     scheduleAzkar(context, "morning", morningAzkarTime, 17)
 
     val eveningAzkarTime = Calendar.getInstance().also {
-        val alarmTime = Clock(prayTimes.asr).plus(Clock(0.75)).toHoursAndMinutesPair()
+        val alarmTime = Clock(prayTimes.asr).plus(Clock(0.5)).toHoursAndMinutesPair()
         it[Calendar.HOUR_OF_DAY] = alarmTime.first
         it[Calendar.MINUTE] = alarmTime.second
         it[Calendar.SECOND] = 0
     }.timeInMillis
     scheduleAzkar(context, "evening", eveningAzkarTime, 18)
+
+    val sleepAzkarTime = Calendar.getInstance().also {
+        it[Calendar.HOUR_OF_DAY] = 21
+        it[Calendar.MINUTE] = 45
+        it[Calendar.SECOND] = 0
+    }.timeInMillis
+    scheduleAzkar(context, "sleep", sleepAzkarTime, 19)
 }
 
 private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Long, i: Int) {
@@ -142,7 +149,11 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
             "SunnahCalendar:azkar"
         )?.acquire(30.seconds.inWholeMilliseconds)
     }.onFailure(logException)
-    val notificationId = if (name == "morning") 2023 else 2024
+    val notificationId = when (name) {
+        "morning" -> 2023
+        "evening" -> 2024
+        else -> 2025
+    }
     val notificationChannelId = notificationId.toString()
 
     val notificationManager = context.getSystemService<NotificationManager>()
@@ -150,7 +161,13 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val notificationChannel = NotificationChannel(
             notificationChannelId,
-            context.getString(if (name == "morning") R.string.morning_azkar else R.string.evening_azkar),
+            context.getString(
+                when (name) {
+                    "morning" -> R.string.morning_azkar
+                    "evening" -> R.string.evening_azkar
+                    else -> R.string.sleep_azkar
+                }
+            ),
             NotificationManager.IMPORTANCE_HIGH
         ).also {
             it.description = context.getString(R.string.azkar_reminder)
@@ -163,11 +180,19 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
     }
     val title = context.getString(R.string.azkar_notification_title)
     val zikrTitle =
-        if (name == "morning") context.getString(R.string.morning_azkar) else context.getString(R.string.evening_azkar)
+        when (name) {
+            "morning" -> context.getString(R.string.morning_azkar)
+            "evening" -> context.getString(R.string.evening_azkar)
+            else -> context.getString(R.string.sleep_azkar)
+        }
     val subtitle = String.format(context.getString(R.string.azkar_notification_message), zikrTitle)
     val notificationBuilder = NotificationCompat.Builder(context, notificationChannelId)
 
-    val id = if (name == "morning") 27 else 28
+    val id = when (name) {
+        "morning" -> 27
+        "evening" -> 28
+        else -> 29
+    }
     val azkarIntent = Intent(context.applicationContext, AzkarActivity::class.java).also { intent ->
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         intent.putExtra("chapterID", id)

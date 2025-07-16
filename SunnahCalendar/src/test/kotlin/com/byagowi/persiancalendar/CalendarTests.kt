@@ -2,9 +2,18 @@ package com.byagowi.persiancalendar
 
 import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.global.initiateMonthNamesForTest
 import com.byagowi.persiancalendar.utils.calculateDatePartsDifference
+import com.byagowi.persiancalendar.utils.fasliDayName
+import com.byagowi.persiancalendar.utils.formatAsSeleucidDate
+import com.byagowi.persiancalendar.utils.formatDate
+import com.byagowi.persiancalendar.utils.jalaliName
+import com.byagowi.persiancalendar.utils.persianDayOfYear
+import io.github.persiancalendar.calendar.CivilDate
+import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.PersianDate
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertEquals
@@ -43,6 +52,11 @@ class CalendarTests {
 
         (1206..1498).forEach {
             assertEquals(
+                if (it in leapYears) 366 else 365,
+                Jdn(PersianDate(it + 1, 1, 1)) - Jdn(PersianDate(it, 1, 1)),
+                it.toString()
+            )
+            if (1303 < it) assertEquals(
                 if (it in leapYears) 30 else 29,
                 Calendar.SHAMSI.getMonthLength(it, 12),
                 it.toString()
@@ -121,5 +135,102 @@ class CalendarTests {
         val (passedDaysInSeason, totalSeasonDays) = jdn.getPositionInSeason()
         assertEquals(passedDays, passedDaysInSeason)
         assertEquals(daysCount, totalSeasonDays)
+    }
+
+    @Test
+    fun `historical persian dates`() {
+        run {
+            // https://commons.wikimedia.org/wiki/File:HablolMatin_1907-12-31.pdf
+            val jdn = Jdn(CivilDate(1907, 12, 31))
+            assertEquals(
+                jdn,
+                Jdn(IslamicDate(1325, 11, 25))
+            )
+            val persianDate = jdn.toPersianDate()
+            assertEquals(
+                "۱۵ دی جلالی ۸۲۹",
+                jalaliName(persianDate, persianDayOfYear(persianDate, jdn))
+            )
+        }
+        run {
+            // https://w.wiki/DkKf
+            val jdn = Jdn(CivilDate(1921, 4, 10))
+            assertEquals(
+                jdn,
+                Jdn(IslamicDate(1339, 8, 1)) // غره means first of it
+            )
+            // We don't have بزگردی yet if not ever
+//            val persianDate = jdn.toPersianDate()
+//            assertEquals(
+//                "۲۱ فروردین ۸۴۳",
+//                jalaliName(persianDate, persianDayOfYear(persianDate, jdn))
+//            )
+        }
+        initiateMonthNamesForTest()
+        run {
+            // https://commons.wikimedia.org/wiki/File:Moz_4_293.pdf
+            // FIXME: Change this to 6 when calendar dependency covers the year
+            val jdn = Jdn(IslamicDate(1341, 11, 7))
+            assertEquals(jdn.weekDay, 6) // which means جمغع in this code base
+            val persianDate = jdn.toPersianDate()
+            assertEquals(
+                "۳۲ جوزا ۱۳۰۲",
+                formatDate(persianDate)
+            )
+        }
+    }
+
+    @Test
+    fun `historical persian dates smoke test`() {
+        (Jdn(PersianDate(1200, 1, 1))..<Jdn(PersianDate(1500, 1, 1))).forEach { jdn ->
+            val date = jdn.toPersianDate()
+            val name = fasliDayName(
+                jdn - Jdn(PersianDate(date.year, 1, 1)) + 1
+            )
+            val dayOfYear =
+                persianDayOfYear(PersianDate(date.year, date.month, date.dayOfMonth), jdn)
+            assertEquals(
+                expected = name,
+                actual = fasliDayName(dayOfYear),
+                message = "${date.year}/${date.month}/${date.dayOfMonth}" + " " + name
+            )
+            jalaliName(jdn.toPersianDate(), dayOfYear)
+            formatAsSeleucidDate(jdn)
+        }
+    }
+
+    @Test
+    fun `seleucid date format`() {
+        assertAll(
+            listOf(
+                PersianDate(1404, 1, 1) to "۸ آذر ۲۳۳۶",
+                PersianDate(1404, 1, 11) to "۱۸ آذر ۲۳۳۶",
+                PersianDate(1404, 1, 26) to "۲ نیسان ۲۳۳۶",
+                PersianDate(1404, 2, 9) to "۱۶ نیسان ۲۳۳۶",
+                PersianDate(1404, 2, 24) to "۱ ایار ۲۳۳۶",
+                PersianDate(1404, 3, 7) to "۱۵ ایار ۲۳۳۶",
+                PersianDate(1404, 3, 22) to "۳۰ ایار ۲۳۳۶",
+                PersianDate(1404, 4, 6) to "۱۴ حزیران ۲۳۳۶",
+                PersianDate(1404, 4, 21) to "۲۹ حزیران ۲۳۳۶",
+                PersianDate(1404, 5, 4) to "۱۳ تموز ۲۳۳۶",
+                PersianDate(1404, 5, 19) to "۲۸ تموز ۲۳۳۶",
+                PersianDate(1404, 6, 3) to "۱۲ آب ۲۳۳۶",
+                PersianDate(1404, 6, 18) to "۲۷ آب ۲۳۳۶",
+                PersianDate(1404, 7, 2) to "۱۱ ایلول ۲۳۳۶",
+                PersianDate(1404, 7, 17) to "۲۶ ایلول ۲۳۳۶",
+                PersianDate(1404, 8, 1) to "۱۰ تشرین اول ۲۳۳۷",
+                PersianDate(1404, 8, 16) to "۲۵ تشرین اول ۲۳۳۷",
+                PersianDate(1404, 9, 1) to "۹ تشرین آخر ۲۳۳۷",
+                PersianDate(1404, 9, 16) to "۲۴ تشرین آخر ۲۳۳۷",
+                PersianDate(1404, 10, 1) to "۹ کانون اول ۲۳۳۷",
+                PersianDate(1404, 10, 16) to "۲۴ کانون اول ۲۳۳۷",
+                PersianDate(1404, 11, 1) to "۸ کانون آخر ۲۳۳۷",
+                PersianDate(1404, 11, 16) to "۲۳ کانون آخر ۲۳۳۷",
+                PersianDate(1404, 11, 30) to "۶ شباط ۲۳۳۷",
+                PersianDate(1404, 12, 15) to "۲۱ شباط ۲۳۳۷",
+            ).map { (persianDate, expected) ->
+                { assertEquals(expected, formatAsSeleucidDate(Jdn(persianDate))) }
+            }
+        )
     }
 }

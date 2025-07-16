@@ -99,7 +99,8 @@ fun SharedTransitionScope.AzkarScreen(
         AnimatedVisibility(
             visible = isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = searchQuery,
+            SearchAppBar(
+                query = searchQuery,
                 updateQuery = { searchQuery = it },
                 closeSearchBar = { viewModel.closeSearch() })
         }
@@ -129,6 +130,7 @@ fun SharedTransitionScope.AzkarScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(4.dp)
+                    .padding(bottom = paddingValues.calculateBottomPadding())
             ) {
                 AnimatedVisibility(isLoading) {
                     LoadingUIElement()
@@ -145,16 +147,18 @@ fun SharedTransitionScope.AzkarScreen(
                                     )
                                 )
                             ) {
-                                AzkarChapterUI(zikr,
+                                AzkarChapterUI(
+                                    zikr,
                                     searchText = searchQuery,
                                     lang = azkarLang,
                                     onFavClick = { zkr -> viewModel.updateAzkarChapter(zkr) },
                                     onCardClick = { id ->
-                                        context.startActivity(Intent(
-                                            context, AzkarActivity::class.java
-                                        ).apply {
-                                            putExtra("chapterID", id)
-                                        })
+                                        context.startActivity(
+                                            Intent(
+                                                context, AzkarActivity::class.java
+                                            ).apply {
+                                                putExtra("chapterID", id)
+                                            })
                                     })
                             }
                         }
@@ -179,16 +183,17 @@ private fun SharedTransitionScope.DefaultAppBar(
 ) {
     val context = LocalContext.current
 
-    TopAppBar(title = {
-        Column {
-            Text(text = stringResource(id = R.string.azkar))
-            Text(
-                text = stringResource(id = R.string.hisnulmuslim),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    },
+    TopAppBar(
+        title = {
+            Column {
+                Text(text = stringResource(id = R.string.azkar))
+                Text(
+                    text = stringResource(id = R.string.hisnulmuslim),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
         colors = appTopAppBarColors(),
         navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
         actions = {
@@ -205,12 +210,11 @@ private fun SharedTransitionScope.DefaultAppBar(
             }
 
             ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
-                AppDropdownMenuCheckableItem(text = stringResource(id = R.string.azkar_reminder),
+                AppDropdownMenuCheckableItem(
+                    text = stringResource(id = R.string.azkar_reminder),
                     isChecked = context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false),
                     setChecked = {
-                        context.appPrefsLite.edit {
-                            putBoolean(PREF_AZKAR_REINDER, it)
-                        }
+                        context.appPrefsLite.edit { putBoolean(PREF_AZKAR_REINDER, it) }
                         closeMenu()
                     })
                 HorizontalDivider()
@@ -226,7 +230,8 @@ private fun SharedTransitionScope.DefaultAppBar(
 
                 listOf(Language.FA, Language.CKB, Language.AR).forEach { lang ->
                     AnimatedVisibility(visible = showLanguageSubMenu) {
-                        AppDropdownMenuRadioItem(text = lang.nativeName,
+                        AppDropdownMenuRadioItem(
+                            text = lang.nativeName,
                             isSelected = lang.code == selectedLang,
                             setSelected = {
                                 context.appPrefsLite.edit {

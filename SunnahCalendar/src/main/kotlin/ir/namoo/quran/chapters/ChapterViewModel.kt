@@ -1,6 +1,7 @@
 package ir.namoo.quran.chapters
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,8 @@ import ir.namoo.quran.chapters.data.ChapterEntity
 import ir.namoo.quran.chapters.data.ChapterRepository
 import ir.namoo.quran.db.LastVisitedEntity
 import ir.namoo.quran.db.LastVisitedRepository
+import ir.namoo.quran.sura.data.QuranEntity
+import ir.namoo.quran.utils.PREF_BOOKMARK_VERSE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +20,8 @@ import kotlinx.coroutines.launch
 @SuppressLint("SdCardPath")
 class ChapterViewModel(
     private val chapterRepository: ChapterRepository,
-    private val lastVisitedRepository: LastVisitedRepository
+    private val lastVisitedRepository: LastVisitedRepository,
+    private val prefs: SharedPreferences
 ) : ViewModel() {
 
     private val _isLoading = MutableStateFlow(true)
@@ -32,9 +36,16 @@ class ChapterViewModel(
     private val _chapterList = mutableStateListOf<ChapterEntity>()
     val chapterList = _chapterList
 
+    private val _bookmarkedVerse = MutableStateFlow<QuranEntity?>(null)
+    val bookmarkedVerse = _bookmarkedVerse.asStateFlow()
+
     fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
+            prefs.getInt(PREF_BOOKMARK_VERSE, -1).let { id ->
+                if (id > 0)
+                    _bookmarkedVerse.value = chapterRepository.getVerse(id)
+            }
             _chapterList.clear()
             _chapterList.addAll(chapterRepository.getAllChapters())
             _lastVisitedList.clear()

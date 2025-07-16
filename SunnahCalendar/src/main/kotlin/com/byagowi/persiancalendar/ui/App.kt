@@ -200,6 +200,14 @@ fun App(intentStartDestination: String?, initialJdn: Jdn? = null, finish: () -> 
                     }
                 }
 
+                fun navigateToAstronomy(jdn: Jdn) {
+                    navController.graph.findNode(astronomyRoute)?.let { destination ->
+                        navController.navigate(
+                            destination.id, bundleOf(daysOffsetKey to jdn - Jdn.today())
+                        )
+                    }
+                }
+
                 fun isCurrentDestination(route: String) =
                     navController.currentDestination?.route == route
 
@@ -253,13 +261,7 @@ fun App(intentStartDestination: String?, initialJdn: Jdn? = null, finish: () -> 
                             }
                         },
                         navigateToSettingsLocationTab = ::navigateToSettingsLocationTab,
-                        navigateToAstronomy = { daysOffset ->
-                            navController.graph.findNode(astronomyRoute)?.let { destination ->
-                                navController.navigate(
-                                    destination.id, bundleOf(daysOffsetKey to daysOffset)
-                                )
-                            }
-                        },
+                        navigateToAstronomy = ::navigateToAstronomy,
                         viewModel = viewModel,
                         animatedContentScope = this,
                         isCurrentDestination = isCurrentDestination(calendarRoute),
@@ -310,6 +312,7 @@ fun App(intentStartDestination: String?, initialJdn: Jdn? = null, finish: () -> 
                     ConverterScreen(
                         animatedContentScope = this,
                         openDrawer = { coroutineScope.launch { drawerState.open() } },
+                        navigateToAstronomy = ::navigateToAstronomy,
                         viewModel = viewModel<ConverterViewModel>()
                     )
                 }
@@ -371,7 +374,7 @@ fun App(intentStartDestination: String?, initialJdn: Jdn? = null, finish: () -> 
                         navigateToMap = { navController.navigate(mapRoute) },
                         navigateToAthanSettings = { athanId -> navController.navigate("$athanSettingsRoute?athanId=$athanId") },
                         initialPage = backStackEntry.arguments?.getInt(tabKey, 0) ?: 0,
-                        destination = backStackEntry.arguments?.getString(settingsKey) ?: ""
+                        destination = backStackEntry.arguments?.getString(settingsKey).orEmpty()
                     )
                 }
                 composable(azkarRoute) {
@@ -670,7 +673,6 @@ private fun BoxScope.DrawerDarkModeToggle() {
     // If current theme is default theme, isDark is null so no toggle is shown also
     val isDark = userSetTheme.isDark ?: return
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     Crossfade(
         label = "dark mode toggle",
         targetState = if (isDark) Icons.Outlined.LightMode else Icons.Default.ModeNight,

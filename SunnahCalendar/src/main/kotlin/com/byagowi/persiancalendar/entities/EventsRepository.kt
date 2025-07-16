@@ -113,8 +113,10 @@ data class EventsRepository(
 
     fun getEnabledEvents(jdn: Jdn): List<CalendarEvent<*>> {
         return listOf(
-            persianCalendarEvents.getAllEvents(), islamicCalendarEvents.getAllEvents(),
-            nepaliCalendarEvents.getAllEvents(), gregorianCalendarEvents.getAllEvents()
+            persianCalendarEvents.getAllEvents(),
+            islamicCalendarEvents.getAllEvents(),
+            nepaliCalendarEvents.getAllEvents(),
+            gregorianCalendarEvents.getAllEvents()
         ).flatten() + listOf(
             jdn.toPersianDate(),
             jdn.toCivilDate(),
@@ -168,7 +170,7 @@ data class EventsRepository(
             Calendar.GREGORIAN -> gregorianMonths
             Calendar.ISLAMIC -> islamicMonths
             Calendar.NEPALI -> nepaliMonths
-        }.getOrNull(month - 1).debugAssertNotNull ?: ""
+        }.getOrNull(month - 1).debugAssertNotNull.orEmpty()
         return language.dm.format(formatNumber(day), monthName)
     }
 

@@ -51,6 +51,12 @@ fun formatNumber(number: Int, digits: CharArray = preferredDigits): String =
 
 fun formatNumber(number: String, digits: CharArray = preferredDigits): String {
     if (isArabicDigitSelected) return number
+    if (digits === Language.TAMIL_DIGITS) when (number) {
+        "10" -> return "௰"
+        "100" -> return "௱"
+        "1000" -> return "௲"
+        else -> Unit
+    }
     return number.map { digits.getOrNull(Character.getNumericValue(it)) ?: it }
         .joinToString("")
 }
@@ -61,9 +67,9 @@ val Collection<CityItem>.sortCityNames: List<CityItem>
     get() = this.map { city ->
         city to language.value.getCityName(city).let { language.value.prepareForSort(it) }
     }.sortedWith { (leftCity, leftSortName), (rightCity, rightSortName) ->
-        language.value.countriesOrder.indexOf(leftCity.countryCode).compareTo(
-            language.value.countriesOrder.indexOf(rightCity.countryCode)
-        ).takeIf { it != 0 } ?: leftSortName.compareTo(rightSortName)
+        (language.value.countriesOrder.indexOf(leftCity.countryCode) compareTo
+                language.value.countriesOrder.indexOf(rightCity.countryCode)
+                ).takeIf { it != 0 } ?: (leftSortName compareTo rightSortName)
     }.map { (city, _) -> city }
 
 fun <T> listOf31Items(

@@ -56,7 +56,6 @@ import com.byagowi.persiancalendar.utils.update
 import io.github.persiancalendar.calendar.PersianDate
 import ir.namoo.commons.PREF_LAST_UPDATE_CHECK
 import ir.namoo.commons.PREF_LAST_UPDATE_PRAY_TIMES_KEY
-import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.UpdateModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
@@ -77,7 +76,6 @@ import kotlin.time.Duration.Companion.milliseconds
 class MainActivity : ComponentActivity() {
 
     private val prayTimeRepository: PrayTimeRepository = get()
-    private val locationsDB: LocationsDB = get()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Just to make sure we have an initial transparent system bars

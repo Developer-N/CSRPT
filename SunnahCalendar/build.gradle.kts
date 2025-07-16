@@ -30,15 +30,15 @@ android {
         applicationId = "ir.namoo.religiousprayers"
         minSdk = 21
         targetSdk = 36
-        versionCode = 12120
-        versionName = "12.1.2"
+        versionCode = 12200
+        versionName = "12.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
         androidResources.localeFilters += listOf(
             "en", "fa", "ckb", "ar", "ur", "ps", "glk", "azb", "ja", "fr", "es", "tr", "kmr", "tg",
-            "ne", "zh-rCN", "ru", "pt", "it", "ta",
+            "ne", "zh-rCN", "ru", "pt", "it", "ta", "de",
         )
         setProperty("archivesBaseName", "SunnahCalendar-$versionName")
     }
@@ -97,14 +97,11 @@ android {
         language.enableSplit = false
     }
 
-    val javaVersion = JavaVersion.VERSION_23
-
     compileOptions {
+        val javaVersion = JavaVersion.VERSION_21
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
-
-    kotlinOptions { jvmTarget = javaVersion.majorVersion }
 
     lint { disable += listOf("MissingTranslation") }
 
@@ -147,8 +144,6 @@ dependencies {
 
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
-    // Temporarily till bom reaches to it
-    implementation("androidx.compose.foundation:foundation-layout:1.8.0-rc02")
     androidTestImplementation(composeBom)
     implementation(libs.compose.activity)
     implementation(libs.compose.ui)
@@ -171,17 +166,10 @@ dependencies {
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
 
-    testImplementation(libs.bundles.mockito)
-
-    testImplementation(libs.truth)
-
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)
     androidTestImplementation(libs.test.core.ktx)
     androidTestImplementation(libs.androidx.test.ext.junit)
-
-    implementation(libs.bundles.room)
-    annotationProcessor(libs.room.compiler)
 
     // Koin main features for Android
     implementation(platform(libs.koin.bom))
@@ -205,7 +193,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     //room
+    implementation(libs.bundles.room)
     ksp(libs.room.compiler)
+    annotationProcessor(libs.room.compiler)
 
     implementation(libs.multidex)
 

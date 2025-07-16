@@ -36,4 +36,7 @@ interface QuranDAO {
 
     @Query("select * from tafsirs where khorramdel like :query or sahih_international like :query or asan like :query or puxta like :query or hazhar like :query or roshn like :query or tawhid like :query or rebar like :query or maisar like :query or raman like :query or zhian like :query or sanahi like :query")
     suspend fun searchInTafsirs(query: String): List<TafsirEntity>
+
+    @Query("select * from quran where id=:id")
+    suspend fun getVerse(id: Int): QuranEntity
 }

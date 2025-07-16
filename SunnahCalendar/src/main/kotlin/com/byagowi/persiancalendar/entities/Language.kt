@@ -11,6 +11,7 @@ import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.NEPAL_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.ui.astronomy.LunarAge
 import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.listOf12Items
 import com.byagowi.persiancalendar.utils.listOf7Items
@@ -34,6 +35,7 @@ enum class Language(val code: String, val nativeName: String) {
     AR("ar", "العربية"),
     AZB("azb", "تۆرکجه"),
     CKB("ckb", "کوردی"),
+    DE("de", "Deutsch"),
     EN_IR("en", "English (Iran)"),
     EN_US("en-US", "English"),
     ES("es", "Español"),
@@ -55,6 +57,7 @@ enum class Language(val code: String, val nativeName: String) {
     val isDari get() = this == FA_AF
     val isPersian get() = this == FA
     val isNepali get() = this == NE
+    val isTamil get() = this == TA
 
     val showNepaliCalendar get() = this == NE
 
@@ -107,13 +110,13 @@ enum class Language(val code: String, val nativeName: String) {
 
     val betterToUseShortCalendarName: Boolean
         get() = when (this) {
-            EN_US, EN_IR, JA, ZH_CN, FR, ES, PT, IT, AR, TR, TG, RU, CKB -> true
+            EN_US, EN_IR, JA, ZH_CN, FR, ES, DE, PT, IT, AR, TR, TG, RU, CKB -> true
             else -> false
         }
 
     val mightPreferUmmAlquraIslamicCalendar: Boolean
         get() = when (this) {
-            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, PT, IT, TR, KMR, TA, TG, NE, RU -> true
+            FA_AF, PS, UR, AR, CKB, EN_US, JA, ZH_CN, FR, ES, DE, PT, IT, TR, KMR, TA, TG, NE, RU -> true
             else -> false
         }
 
@@ -145,14 +148,14 @@ enum class Language(val code: String, val nativeName: String) {
     // Whether locale uses الفبا or not
     val isArabicScript: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, TR, KMR, EN_IR, TG, NE, TA -> false
+            EN_US, JA, ZH_CN, FR, ES, DE, PT, IT, RU, TR, KMR, EN_IR, TG, NE, TA -> false
             else -> true
         }
 
     // Whether locale would prefer local digits like ۱۲۳ over the global ones, 123, initially at least
     val prefersLocalDigits: Boolean
         get() = when (this) {
-            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, TR, KMR, TG -> false
+            UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, DE, PT, IT, RU, TR, KMR, TG -> false
             else -> true
         }
 
@@ -164,13 +167,14 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
     // Local digits (۱۲۳) make sense for the locale
-    val canHaveLocalDigits get() = isArabicScript || isNepali
+    val canHaveLocalDigits get() = isArabicScript || isNepali || isTamil
 
     // Prefers ٤٥٦ over ۴۵۶
     val preferredDigits
         get() = when (this) {
             AR, CKB -> ARABIC_INDIC_DIGITS
             NE -> DEVANAGARI_DIGITS
+            TA -> TAMIL_DIGITS
             else -> PERSIAN_DIGITS
         }
 
@@ -191,7 +195,7 @@ enum class Language(val code: String, val nativeName: String) {
     // We can presume user would prefer Gregorian calendar at least initially
     private val prefersGregorianCalendar: Boolean
         get() = when (this) {
-            EN_US, JA, ZH_CN, FR, ES, PT, IT, RU, UR, TR, KMR, TG, TA -> true
+            EN_US, JA, ZH_CN, FR, ES, DE, PT, IT, RU, UR, TR, KMR, TG, TA -> true
             else -> false
         }
 
@@ -259,7 +263,7 @@ enum class Language(val code: String, val nativeName: String) {
         alternativeMonthsInAzeri: Boolean,
     ): List<String> = when (this) {
         FA -> persianCalendarMonthsInPersian
-        FA_AF -> persianCalendarMonthsInDari
+        FA_AF -> persianCalendarMonthsInDariOrPersianOldEra
         AZB -> if (alternativeMonthsInAzeri) persianCalendarMonthsInAzeriAlternative
         else persianCalendarMonths.map(resources::getString)
 
@@ -379,7 +383,7 @@ enum class Language(val code: String, val nativeName: String) {
     fun allNumericsDateFormat(year: Int, month: Int, dayOfMonth: Int, digits: CharArray): String {
         val sep = when (this) {
             PS, NE -> '-'
-            KMR, RU, TR -> '.'
+            KMR, RU, TR, DE -> '.'
             else -> '/'
         }
         val needsZeroPad = when (this) {
@@ -393,7 +397,7 @@ enum class Language(val code: String, val nativeName: String) {
             EN_US -> "%2\$s$sep%3\$s$sep%1\$s"
             // Day major, most likely everything else goes here but check via JS'
             // new Date().toLocaleDateString('XX')
-            AR, CKB, ES, FR, IT, KMR, PT, RU, TG, TR, UR, TA -> "%3\$s$sep%2\$s$sep%1\$s"
+            AR, CKB, ES, DE, FR, IT, KMR, PT, RU, TG, TR, UR, TA -> "%3\$s$sep%2\$s$sep%1\$s"
         }
         return format.format(
             formatNumber(year, digits),
@@ -407,6 +411,62 @@ enum class Language(val code: String, val nativeName: String) {
             )
         )
     }
+
+    fun moonNames(lunarAge: LunarAge.Phase): String {
+        return when (this) {
+            // https://commons.wikimedia.org/wiki/File:Lunar-Phase-Diagram-Parsi.png
+            FA, FA_AF -> when (lunarAge) {
+                LunarAge.Phase.NEW_MOON -> "ماه نو یا بَرن"
+                LunarAge.Phase.WAXING_CRESCENT -> "هلال سوی ماه تمام"
+                LunarAge.Phase.FIRST_QUARTER -> "یک‌چهارم نخست"
+                LunarAge.Phase.WAXING_GIBBOUS -> "برآمدگی سوی ماه تمام"
+                LunarAge.Phase.FULL_MOON -> "ماه تمام یا بدر"
+                LunarAge.Phase.WANING_GIBBOUS -> "برآمدگی سوی کمرنگی"
+                LunarAge.Phase.THIRD_QUARTER -> "یک‌چهارم سوم"
+                LunarAge.Phase.WANING_CRESCENT -> "هلال سوی کمرنگی"
+            }
+
+            NE -> when (lunarAge) {
+                LunarAge.Phase.NEW_MOON -> "औंशी"
+                LunarAge.Phase.WAXING_CRESCENT -> "शुक्ल पक्ष प्रतिपदा"
+                LunarAge.Phase.FIRST_QUARTER -> "शुक्ल पक्ष पञ्चमी"
+                LunarAge.Phase.WAXING_GIBBOUS -> "शुक्ल पक्ष चतुर्दशी"
+                LunarAge.Phase.FULL_MOON -> "पूर्णिमा"
+                LunarAge.Phase.WANING_GIBBOUS -> "कृष्ण पक्ष चतुर्दशीर"
+                LunarAge.Phase.THIRD_QUARTER -> "कृष्ण पक्ष पञ्चमी"
+                LunarAge.Phase.WANING_CRESCENT -> "कृष्ण पक्ष प्रतिपदा"
+            }
+
+            TA -> when (lunarAge) {
+                LunarAge.Phase.NEW_MOON -> "இல்மதி"
+                LunarAge.Phase.WAXING_CRESCENT -> "மூன்றாம்பிறை"
+                LunarAge.Phase.FIRST_QUARTER -> "முதல் கால்பகுதி"
+                LunarAge.Phase.WAXING_GIBBOUS -> "வளர்பிறை"
+                LunarAge.Phase.FULL_MOON -> "முழுமதி"
+                LunarAge.Phase.WANING_GIBBOUS -> "தேய்பிறை"
+                LunarAge.Phase.THIRD_QUARTER -> "மூன்றாம் கால்பகுதி"
+                LunarAge.Phase.WANING_CRESCENT -> "தேய் மூன்றாம் பிறை"
+            }
+
+            else -> when (lunarAge) {
+                LunarAge.Phase.NEW_MOON -> "New moon"
+                LunarAge.Phase.WAXING_CRESCENT -> "Waxing crescent"
+                LunarAge.Phase.FIRST_QUARTER -> "First quarter"
+                LunarAge.Phase.WAXING_GIBBOUS -> "Waxing gibbous"
+                LunarAge.Phase.FULL_MOON -> "Full moon"
+                LunarAge.Phase.WANING_GIBBOUS -> "Waning gibbous"
+                LunarAge.Phase.THIRD_QUARTER -> "Third quarter"
+                LunarAge.Phase.WANING_CRESCENT -> "Waning crescent"
+            }
+        }
+    }
+
+    // Indian locales always need to see moon view as https://en.wikipedia.org/wiki/Tithi
+    val alwaysNeedMoonState: Boolean
+        get() = when (this) {
+            NE, TA -> true
+            else -> false
+        }
 
     companion object {
         @SuppressLint("ConstantLocale")
@@ -439,7 +499,7 @@ enum class Language(val code: String, val nativeName: String) {
 
         // Based on https://stackoverflow.com/a/28216764 but doesn't seem to work
         private fun guessLanguageFromKeyboards(context: Context): Language = runCatching {
-            val imm = context.getSystemService<InputMethodManager>() ?: return EN_US
+            val imm = context.getSystemService<InputMethodManager>() ?: return@runCatching EN_US
             imm.enabledInputMethodList.forEach outer@{ method ->
                 imm.getEnabledInputMethodSubtypeList(method, true).forEach { submethod ->
                     if (submethod.mode == "keyboard") {
@@ -449,14 +509,14 @@ enum class Language(val code: String, val nativeName: String) {
                         debugLog("Language: '$locale' is available in keyboards")
                         if (locale.isEmpty()) return@forEach
                         val language = valueOfLanguageCode(locale)
-                            ?: valueOfLanguageCode(locale.split("-").firstOrNull() ?: "")
+                            ?: valueOfLanguageCode(locale.split("-").firstOrNull().orEmpty())
                         // Use the knowledge only to detect Persian language
                         // as others might be surprising
-                        if (language == FA || language == FA_AF) return language
+                        if (language == FA || language == FA_AF) return@runCatching language
                     }
                 }
             }
-            return EN_US
+            return@runCatching EN_US
         }.onFailure(logException).getOrNull() ?: EN_US
 
         fun valueOfLanguageCode(languageCode: String) = entries.find { it.code == languageCode }
@@ -533,13 +593,13 @@ enum class Language(val code: String, val nativeName: String) {
             "ژانویه", "فوریه", "مارس", "آوریل", "مه", "ژوئن",
             "ژوئیه", "اوت", "سپتامبر", "اکتبر", "نوامبر", "دسامبر"
         )
-        private val persianCalendarMonthsInDari = listOf12Items(
+        val persianCalendarMonthsInDariOrPersianOldEra = listOf12Items(
             "حمل", "ثور", "جوزا", "سرطان", "اسد", "سنبله",
             "میزان", "عقرب", "قوس", "جدی", "دلو", "حوت"
         )
         private val gregorianCalendarMonthsInDari = listOf12Items(
             "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
-            "جولای", "آگست", "سپتامبر", "اکتوبر", "نوامبر", "دسامبر"
+            "جولای", "اگست", "سپتمبر", "اکتوبر", "نومبر", "دسمبر",
         )
         private val gregorianCalendarMonthsInPersianEnglishPronunciation = listOf12Items(
             "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
@@ -587,6 +647,7 @@ enum class Language(val code: String, val nativeName: String) {
         val ARABIC_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
         val ARABIC_INDIC_DIGITS = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
         val DEVANAGARI_DIGITS = charArrayOf('०', '१', '२', '३', '४', '५', '६', '७', '८', '९')
+        val TAMIL_DIGITS = charArrayOf('௦', '௧', '௨', '௩', '௪', '௫', '௬', '௭', '௮', '௯')
         // CJK digits: charArrayOf('０', '１', '２', '３', '４', '５', '６', '７', '８', '９')
         // but they weren't looking nice in the UI
     }

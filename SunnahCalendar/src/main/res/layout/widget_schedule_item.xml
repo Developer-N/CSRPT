@@ -78,7 +78,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="1dp"
-                android:elegantTextHeight="false"
                 android:textColor="@color/widget_schedule_today_text"
                 android:textSize="12sp" />
 
@@ -88,7 +87,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="14dp"
-                android:elegantTextHeight="false"
                 android:textColor="@color/widget_schedule_today_text"
                 android:textSize="14sp" />
 
@@ -98,7 +96,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:alpha=".9"
-                android:elegantTextHeight="false"
                 android:textColor="@color/widget_modern_text"
                 android:textSize="10sp"
                 tools:ignore="SmallSp" />
@@ -110,7 +107,6 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/schedule_today_with_secondary"
-                android:elegantTextHeight="false"
                 android:textAlignment="center"
                 android:textColor="@color/widget_schedule_highlight_text"
                 android:textSize="14sp" />
@@ -120,7 +116,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:elegantTextHeight="false"
                 android:lineSpacingMultiplier=".9"
                 android:textColor="@color/widget_schedule_day_first_line"
                 android:textSize="12sp" />
@@ -131,7 +126,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="14dp"
-                android:elegantTextHeight="false"
                 android:lineSpacingMultiplier=".9"
                 android:textColor="@color/widget_modern_text"
                 android:textSize="14sp" />
@@ -143,42 +137,54 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <LinearLayout
-            android:id="@+id/event_background"
+        <FrameLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"
-            android:layout_weight="1"
-            android:gravity="start|center_vertical"
-            android:minHeight="32dp"
-            android:orientation="vertical"
-            android:paddingStart="8dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="4dp">
+            android:layout_weight="1">
 
-            <TextView
-                android:id="@+id/event"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="none"
-                android:singleLine="true"
-                android:textAlignment="viewStart"
-                android:textColor="@android:color/white"
-                android:textSize="14sp" />
+            <ImageView
+                android:id="@+id/event_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:src="@drawable/widget_schedule_item" />
 
-            <TextView
-                android:id="@+id/event_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="none"
-                android:singleLine="true"
-                android:textAlignment="viewStart"
-                android:textColor="@android:color/white"
-                android:textSize="14sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="start|center_vertical"
+                android:minHeight="30dp"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="2dp">
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/event"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="none"
+                    android:singleLine="true"
+                    android:textAlignment="viewStart"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/event_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="none"
+                    android:singleLine="true"
+                    android:textAlignment="viewStart"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
 
         <FrameLayout
             android:id="@+id/event_end_padding"

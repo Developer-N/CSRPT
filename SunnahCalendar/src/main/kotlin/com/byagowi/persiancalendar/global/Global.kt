@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.os.Build
 import android.view.accessibility.AccessibilityManager
+import androidx.annotation.VisibleForTesting
 import androidx.collection.LongSet
 import androidx.collection.emptyLongSet
 import androidx.collection.longSetOf
@@ -101,8 +102,8 @@ import com.byagowi.persiancalendar.ui.calendar.SwipeDownAction
 import com.byagowi.persiancalendar.ui.calendar.SwipeUpAction
 import com.byagowi.persiancalendar.ui.theme.Theme
 import com.byagowi.persiancalendar.utils.applyAppLanguage
-import com.byagowi.persiancalendar.utils.enableHighLatitudesConfiguration
 import com.byagowi.persiancalendar.utils.getJdnOrNull
+import com.byagowi.persiancalendar.utils.isHighLatitude
 import com.byagowi.persiancalendar.utils.isIslamicOffsetExpired
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
@@ -110,7 +111,11 @@ import com.byagowi.persiancalendar.utils.scheduleAlarms
 import com.byagowi.persiancalendar.utils.splitFilterNotEmpty
 import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import com.byagowi.persiancalendar.variants.debugLog
+import io.github.persiancalendar.calendar.AbstractDate
+import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
+import io.github.persiancalendar.calendar.NepaliDate
+import io.github.persiancalendar.calendar.PersianDate
 import io.github.persiancalendar.praytimes.AsrMethod
 import io.github.persiancalendar.praytimes.CalculationMethod
 import io.github.persiancalendar.praytimes.Coordinates
@@ -131,6 +136,8 @@ import java.util.TimeZone
 
 private val monthNameEmptyList = List(12) { "" }
 var persianMonths = monthNameEmptyList
+    private set
+var oldEraPersianMonths = monthNameEmptyList
     private set
 var islamicMonths = monthNameEmptyList
     private set
@@ -295,6 +302,8 @@ var shiftWorkPeriod = 0
     private set
 var isIranHolidaysEnabled = true
     private set
+var isAncientIranEnabled = false
+    private set
 var amString = DEFAULT_AM
     private set
 var pmString = DEFAULT_PM
@@ -344,12 +353,25 @@ fun configureCalendarsAndLoadEvents(context: Context) {
 
     eventsRepository = EventsRepository(preferences, language.value)
     isIranHolidaysEnabled = eventsRepository?.iranHolidays == true
+    isAncientIranEnabled = eventsRepository?.iranAncient == true
+}
+
+fun yearMonthNameOfDate(date: AbstractDate): List<String> {
+    return when (date) {
+        is PersianDate -> if (date.year > 1303) persianMonths else oldEraPersianMonths
+        is CivilDate -> gregorianMonths
+        is IslamicDate -> islamicMonths
+        is NepaliDate -> nepaliMonths
+        else -> monthNameEmptyList
+    }
 }
 
 fun loadLanguageResources(resources: Resources) {
     debugLog("Utils: loadLanguageResources is called")
     val language = language.value
     persianMonths = language.getPersianMonths(resources, alternativePersianMonthsInAzeri)
+    oldEraPersianMonths =
+        if (language.isPersian) Language.persianCalendarMonthsInDariOrPersianOldEra else persianMonths
     islamicMonths = language.getIslamicMonths(resources)
     gregorianMonths = language.getGregorianMonths(resources, alternativeGregorianMonths)
     nepaliMonths = language.getNepaliMonths()
@@ -392,10 +414,10 @@ fun loadLanguageResources(resources: Resources) {
 fun updateStoredPreference(context: Context) {
     debugLog("Utils: updateStoredPreference is called")
     val preferences = context.preferences
-    val language = language.value
-
-    language_.value = preferences.getString(PREF_APP_LANGUAGE, null)
+    val language = preferences.getString(PREF_APP_LANGUAGE, null)
         ?.let(Language::valueOfLanguageCode) ?: Language.getPreferredDefaultLanguage(context)
+
+    language_.value = language
     userSetTheme_.value = run {
         val key = preferences.getString(PREF_THEME, null)
         Theme.entries.find { it.key == key }
@@ -447,7 +469,8 @@ fun updateStoredPreference(context: Context) {
     )
     isWidgetClock = preferences.getBoolean(PREF_WIDGET_CLOCK, DEFAULT_WIDGET_CLOCK)
     isNotifyDate_.value = preferences.getBoolean(PREF_NOTIFY_DATE, DEFAULT_NOTIFY_DATE)
-    notificationAthan_.value = preferences.getBoolean(PREF_NOTIFICATION_ATHAN, isNotifyDate.value)
+    notificationAthan_.value = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ||
+            preferences.getBoolean(PREF_NOTIFICATION_ATHAN, isNotifyDate.value)
     athanVibration_.value = preferences.getBoolean(PREF_ATHAN_VIBRATION, DEFAULT_ATHAN_VIBRATION)
     ascendingAthan_.value =
         preferences.getBoolean(PREF_ASCENDING_ATHAN_VOLUME, DEFAULT_ASCENDING_ATHAN_VOLUME)
@@ -466,7 +489,7 @@ fun updateStoredPreference(context: Context) {
         ?.takeIf { !it.isJafariOnly || calculationMethod.value.isJafari }
         ?: calculationMethod.value.defaultMidnight
     highLatitudesMethod = HighLatitudesMethod.valueOf(
-        if (coordinates.value?.enableHighLatitudesConfiguration != true) DEFAULT_HIGH_LATITUDES_METHOD
+        if (coordinates.value?.isHighLatitude != true) DEFAULT_HIGH_LATITUDES_METHOD
         else preferences.getString(PREF_HIGH_LATITUDES_METHOD, null)
             ?: DEFAULT_HIGH_LATITUDES_METHOD
     )
@@ -528,12 +551,14 @@ fun updateStoredPreference(context: Context) {
     isShowDeviceCalendarEvents_.value =
         preferences.getBoolean(PREF_SHOW_DEVICE_CALENDAR_EVENTS, false)
     eventCalendarsIdsToExclude_.value = if (isShowDeviceCalendarEvents_.value) longSetOf(
-        *(preferences.getString(PREF_CALENDARS_IDS_TO_EXCLUDE, null) ?: "").splitFilterNotEmpty(",")
-            .mapNotNull { it.toLongOrNull() }.toLongArray()
+        *(preferences.getString(PREF_CALENDARS_IDS_TO_EXCLUDE, null).orEmpty()).splitFilterNotEmpty(
+            ","
+        ).mapNotNull { it.toLongOrNull() }.toLongArray()
     ) else emptyLongSet()
     eventCalendarsIdsAsHoliday_.value = if (isShowDeviceCalendarEvents_.value) longSetOf(
-        *(preferences.getString(PREF_CALENDARS_IDS_AS_HOLIDAY, null) ?: "").splitFilterNotEmpty(",")
-            .mapNotNull { it.toLongOrNull() }.toLongArray()
+        *(preferences.getString(PREF_CALENDARS_IDS_AS_HOLIDAY, null).orEmpty()).splitFilterNotEmpty(
+            ","
+        ).mapNotNull { it.toLongOrNull() }.toLongArray()
     ) else emptyLongSet()
 
     whatToShowOnWidgets =
@@ -546,7 +571,7 @@ fun updateStoredPreference(context: Context) {
     if (language.language != context.getString(R.string.code)) applyAppLanguage(context)
 
     shiftWorks =
-        (preferences.getString(PREF_SHIFT_WORK_SETTING, null) ?: "").splitFilterNotEmpty(",")
+        (preferences.getString(PREF_SHIFT_WORK_SETTING, null).orEmpty()).splitFilterNotEmpty(",")
             .map { it.splitFilterNotEmpty("=") }.filter { it.size == 2 }
             .map { ShiftWorkRecord(it[0], it[1].toIntOrNull() ?: 1) }
     shiftWorkPeriod = shiftWorks.sumOf { it.length }
@@ -565,6 +590,11 @@ fun updateStoredPreference(context: Context) {
             } else it.javaClass.getMethod("isHighTextContrastEnabled").invoke(it) as? Boolean
         }
     }.onFailure(logException).getOrNull() == true
+}
+
+@VisibleForTesting
+fun initiateMonthNamesForTest() {
+    oldEraPersianMonths = Language.persianCalendarMonthsInDariOrPersianOldEra
 }
 
 // A very special case to trig coordinates mechanism in saveLocation

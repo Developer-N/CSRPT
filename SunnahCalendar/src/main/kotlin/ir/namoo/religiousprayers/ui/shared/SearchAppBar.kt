@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,38 +31,46 @@ fun SearchAppBar(query: String, updateQuery: (String) -> Unit, closeSearchBar: (
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        SearchBar(modifier = Modifier.fillMaxWidth(),
-            query = query,
-            onQueryChange = { updateQuery(it) },
-            onSearch = {
-                focus.clearFocus()
-                updateQuery(it)
-            },
-            active = false,
-            onActiveChange = { },
-            placeholder = {
-                Text(text = stringResource(id = R.string.search))
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = stringResource(id = R.string.search),
-                    tint = MaterialTheme.colorScheme.primary
+        SearchBar(
+            modifier = Modifier.fillMaxWidth(),
+            inputField = {
+                SearchBarDefaults.InputField(
+                    query = query,
+                    onQueryChange = { updateQuery(it) },
+                    onSearch = {
+                        focus.clearFocus()
+                        updateQuery(it)
+                    },
+                    placeholder = {
+                        Text(text = stringResource(R.string.search))
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = stringResource(R.string.search),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            focus.clearFocus()
+                            if (query.isNotEmpty()) updateQuery("")
+                            else closeSearchBar()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.close),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    expanded = false,
+                    onExpandedChange = {}
                 )
             },
-            trailingIcon = {
-                IconButton(onClick = {
-                    focus.clearFocus()
-                    if (query.isNotEmpty()) updateQuery("")
-                    else closeSearchBar()
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(id = R.string.close),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }) { }
+            expanded = false,
+            onExpandedChange = {}
+        ) { }
     }
 }
 

@@ -82,9 +82,9 @@ fun SettingsSection(title: String, subtitle: String? = null) {
                 color = MaterialTheme.colorScheme.primary,
             )
         }
-        AnimatedVisibility(visible = subtitle != null) {
+        this.AnimatedVisibility(visible = subtitle != null) {
             Text(
-                subtitle ?: "",
+                subtitle.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.alpha(AppBlendAlpha)
             )

@@ -1,6 +1,7 @@
 package com.byagowi.persiancalendar.ui.calendar
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
@@ -10,12 +11,14 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -113,6 +116,7 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.DeviceCalendarEventsStore
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
@@ -121,7 +125,9 @@ import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.isVazirEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.preferredDigits
 import com.byagowi.persiancalendar.global.preferredSwipeUpAction
+import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.DaysTable
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.calendarPagerSize
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.pagerArrowSizeAndPadding
@@ -189,8 +195,11 @@ fun SharedTransitionScope.DaysScreen(
         }
     }
 
-    val addEvent = addEvent(calendarViewModel)
-    val hasWeeksPager = LocalWindowInfo.current.containerSize.height > 600
+    val snackbarHostState = remember { SnackbarHostState() }
+    val addEvent = addEvent(calendarViewModel, snackbarHostState)
+    val density = LocalDensity.current
+    val hasWeeksPager =
+        LocalWindowInfo.current.containerSize.height > with(density) { 600.dp.toPx() }
     val language by language.collectAsState()
     var isAddEventBoxEnabled by remember { mutableStateOf(false) }
 
@@ -218,8 +227,6 @@ fun SharedTransitionScope.DaysScreen(
     }
 
     var addAction by remember { mutableStateOf({}) }
-
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val preferredSwipeUpAction by preferredSwipeUpAction.collectAsState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -262,20 +269,49 @@ fun SharedTransitionScope.DaysScreen(
                                 )
                             ) { if (!isWeekView) isWeekView = true else navigateUp() },
                         ) {
-                            Crossfade(
-                                if (hasWeeksPager) date.monthName
-                                else language.dm.format(
+                            val secondaryCalendar = secondaryCalendar
+                            val title: String
+                            val subtitle: String
+                            if (secondaryCalendar == null) {
+                                title = if (hasWeeksPager) date.monthName else language.dm.format(
                                     formatNumber(date.dayOfMonth), date.monthName
-                                ),
-                                label = "title",
-                            ) { state -> Text(state, style = MaterialTheme.typography.titleLarge) }
-                            Crossfade(formatNumber(date.year), label = "subtitle") { state ->
+                                )
+                                subtitle = formatNumber(date.year)
+                            } else {
+                                title = if (hasWeeksPager) language.my.format(
+                                    date.monthName, formatNumber(date.year)
+                                ) else language.dmy.format(
+                                    formatNumber(date.dayOfMonth),
+                                    date.monthName, formatNumber(date.year)
+                                )
+                                val secondaryDate = selectedDay on secondaryCalendar
+                                subtitle = if (hasWeeksPager) language.my.format(
+                                    secondaryDate.monthName,
+                                    formatNumber(secondaryDate.year)
+                                ) else language.dmy.format(
+                                    formatNumber(secondaryDate.dayOfMonth),
+                                    secondaryDate.monthName,
+                                    formatNumber(secondaryDate.year),
+                                )
+                            }
+
+                            Crossfade(title, label = "title") { state ->
+                                Text(state, style = MaterialTheme.typography.titleLarge)
+                            }
+                            Crossfade(subtitle, label = "subtitle") { state ->
                                 Text(state, style = MaterialTheme.typography.titleMedium)
                             }
                         }
                     },
                     colors = appTopAppBarColors(),
-                    navigationIcon = { NavigationNavigateUpIcon(navigateUp) },
+                    navigationIcon = {
+                        if (isAddEventBoxEnabled) BackHandler(enabled = true) {
+                            isAddEventBoxEnabled = false
+                        }
+                        NavigationNavigateUpIcon {
+                            if (isAddEventBoxEnabled) isAddEventBoxEnabled = false else navigateUp()
+                        }
+                    },
                     actions = {
                         TodayActionButton(isHighlighted || isAddEventBoxEnabled) {
                             todayButtonAction()
@@ -320,6 +356,13 @@ fun SharedTransitionScope.DaysScreen(
                     val isShowDeviceCalendarEvents by isShowDeviceCalendarEvents.collectAsState()
                     val isVazirEnabled by isVazirEnabled.collectAsState()
                     val isShowWeekOfYearEnabled by isShowWeekOfYearEnabled.collectAsState()
+
+                    val scale = rememberSaveable(saver = AnimatableFloatSaver) { Animatable(1f) }
+                    val cellHeight by remember(scale.value) { mutableStateOf((64 * scale.value).dp) }
+                    val initialScroll =
+                        with(density) { (cellHeight * 7 * scale.value - 16.dp).roundToPx() }
+                    val scrollState = rememberScrollState(initialScroll)
+
                     HorizontalPager(
                         state = weekPagerState,
                         verticalAlignment = Alignment.Top,
@@ -406,6 +449,10 @@ fun SharedTransitionScope.DaysScreen(
                                     snackbarHostState = snackbarHostState,
                                     calendarViewModel = calendarViewModel,
                                     screenWidth = screenWidth,
+                                    scrollState = scrollState,
+                                    initialScroll = initialScroll,
+                                    cellHeight = cellHeight,
+                                    scale = scale,
                                 )
                             }
                         }
@@ -462,6 +509,10 @@ fun SharedTransitionScope.DaysScreen(
                                 hasWeekPager = hasWeeksPager,
                                 deviceEvents = dayDeviceEvents,
                                 screenWidth = screenWidth,
+                                scrollState = scrollState,
+                                scale = scale,
+                                initialScroll = initialScroll,
+                                cellHeight = cellHeight,
                             )
                         }
                     }
@@ -525,10 +576,14 @@ private fun DaysView(
     hasWeekPager: Boolean,
     deviceEvents: DeviceCalendarEventsStore,
     screenWidth: Dp,
+    scrollState: ScrollState,
+    scale: Animatable<Float, AnimationVector1D>,
+    initialScroll: Int,
+    cellHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val scale = rememberSaveable(saver = AnimatableFloatSaver) { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
     var interaction by remember { mutableStateOf<Interaction?>(null) }
     Column(
         modifier.detectZoom(
@@ -542,10 +597,6 @@ private fun DaysView(
             onRelease = { if (interaction == Interaction.Zoom) interaction = null },
         )
     ) {
-        val cellHeight by remember(scale.value) { mutableStateOf((64 * scale.value).dp) }
-        val density = LocalDensity.current
-        val initialScroll = with(density) { (cellHeight * 7 * scale.value - 16.dp).roundToPx() }
-        val scrollState = rememberScrollState(initialScroll)
         val events = (startingDay..<startingDay + days).toList().map { jdn ->
             readEvents(jdn, calendarViewModel, deviceEvents)
         }
@@ -553,11 +604,11 @@ private fun DaysView(
             addDivisions(
                 dayEvents.filterIsInstance<CalendarEvent.DeviceCalendarEvent>()
                     .filter { it.time != null }.sortedWith { x, y ->
-                        x.start.timeInMillis.compareTo(y.end.timeInMillis).let {
+                        (x.start.timeInMillis compareTo y.end.timeInMillis).let {
                             if (it != 0) return@sortedWith it
                         }
                         // If both start at the same time, put bigger events first, better for interval graphs
-                        y.start.timeInMillis.compareTo(x.end.timeInMillis)
+                        y.start.timeInMillis compareTo x.end.timeInMillis
                     },
             )
         }
@@ -585,7 +636,7 @@ private fun DaysView(
         val cellWidth = tableWidth / days
 
         // Header
-        AnimatedVisibility(hasHeader) {
+        this.AnimatedVisibility(hasHeader) {
             var isExpanded by rememberSaveable { mutableStateOf(false) }
             val clickToExpandModifier = Modifier.clickable(
                 onClickLabel = stringResource(R.string.more),
@@ -1101,7 +1152,11 @@ private fun DaysView(
                         drawCircle(circleBorder, radius + circleBorderSize, offset2)
                         drawCircle(primaryWithAlpha, radius, offset2)
                     }
-                    val compact = dy < 3 / scale.value
+                    val compact = dy < 3 / scale.value || run {
+                        // This is an ugly hack as the lack of proper autosize here, for now
+                        preferredDigits !== Language.ARABIC_INDIC_DIGITS &&
+                                preferredDigits !== Language.PERSIAN_DIGITS
+                    }
                     Text(
                         text = clockCache[y * 15] + when {
                             !compact -> "\n"

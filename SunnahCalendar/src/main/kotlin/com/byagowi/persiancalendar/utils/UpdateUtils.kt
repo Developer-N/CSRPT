@@ -33,10 +33,13 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.withClip
 import androidx.core.net.toUri
 import androidx.core.text.buildSpannedString
@@ -76,6 +79,7 @@ import com.byagowi.persiancalendar.WidgetMonthView
 import com.byagowi.persiancalendar.WidgetMoon
 import com.byagowi.persiancalendar.WidgetSchedule
 import com.byagowi.persiancalendar.WidgetSunView
+import com.byagowi.persiancalendar.WidgetWeekView
 import com.byagowi.persiancalendar.entities.CalendarEvent
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.DeviceCalendarEventsStore
@@ -102,7 +106,6 @@ import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.loadLanguageResources
 import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.global.mainCalendarDigits
-import com.byagowi.persiancalendar.global.preferredDigits
 import com.byagowi.persiancalendar.global.prefersWidgetsDynamicColorsFlow
 import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.global.spacedComma
@@ -125,6 +128,7 @@ import com.byagowi.persiancalendar.ui.map.MapDraw
 import com.byagowi.persiancalendar.ui.map.MapType
 import com.byagowi.persiancalendar.ui.resumeToken
 import com.byagowi.persiancalendar.ui.settings.agewidget.AgeWidgetConfigureActivity
+import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.isLandscape
 import com.byagowi.persiancalendar.ui.utils.isRtl
@@ -232,7 +236,7 @@ fun update(context: Context, updateDate: Boolean) {
             append(prayTimes[it].toFormattedString())
             if (OWGHAT_LOCATION_KEY in whatToShowOnWidgets) cityName.value?.also { append(" ($it)") }
         }
-    }
+    }.orEmpty()
     // endregion
 
     selectedWidgetTextColor = getWidgetTextColor(preferences)
@@ -279,6 +283,10 @@ fun update(context: Context, updateDate: Boolean) {
         updateFromRemoteViews<WidgetSchedule>(context, now) { width, _, hasSize, widgetId ->
             createScheduleRemoteViews(context, width.takeIf { hasSize }, widgetId)
         }
+        updateFromRemoteViews<WidgetWeekView>(context, now) { width, height, _, _ ->
+            createWeekViewRemoteViews(context, width, height, date, jdn)
+        }
+
         updateFromRemoteViews<NWidget>(context, now) { width, height, _, _ ->
             createNRemoteViews(context, width, height, clock, prayTimes)
         }
@@ -560,20 +568,9 @@ private fun createMonthRemoteViews(context: Context, height: Int?, widgetId: Int
             )
             dayView.setTextViewText(R.id.day, formatNumber(date.dayOfMonth))
             secondaryCalendar?.let {
-                dayView.setTextViewTextSize(
-                    R.id.day,
-                    TypedValue.COMPLEX_UNIT_SP,
-                    if (preferredDigits === Language.ARABIC_DIGITS) 9f else 11f
-                )
-                dayView.setTextViewTextSize(R.id.secondary_day, TypedValue.COMPLEX_UNIT_SP, 9f)
                 val text = formatNumber((day on it).dayOfMonth, it.preferredDigits)
                 dayView.setTextViewText(R.id.secondary_day, "($text)")
             } ?: run {
-                dayView.setTextViewTextSize(
-                    R.id.day,
-                    TypedValue.COMPLEX_UNIT_SP,
-                    if (preferredDigits === Language.ARABIC_DIGITS) 12f else 14f
-                )
                 dayView.setViewVisibility(R.id.secondary_day, View.GONE)
             }
             // TODO: Consider use of addStableView
@@ -591,38 +588,36 @@ private fun createMonthRemoteViews(context: Context, height: Int?, widgetId: Int
         events.take(dayEventsCountToShow - if (overflows) 1 else 0).forEach {
             val eventView = RemoteViews(context.packageName, R.layout.widget_month_event)
             eventView.setTextViewText(R.id.title, it.title)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                eventView.setViewOutlinePreferredRadius(
-                    R.id.title, 3f, TypedValue.COMPLEX_UNIT_DIP
-                )
-                eventView.setBoolean(R.id.title, "setClipToOutline", true)
-            }
             when {
                 it is CalendarEvent.DeviceCalendarEvent -> {
                     val background =
                         if (it.color.isEmpty()) Color.GRAY else it.color.toLong().toInt()
-                    eventView.setInt(R.id.title, "setBackgroundColor", background)
+                    eventView.setInt(R.id.title_background, "setColorFilter", background)
                     eventView.setInt(R.id.title, "setTextColor", eventTextColor(background))
                 }
 
                 it.isHoliday -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         eventView.setColorAttr(
-                            R.id.title,
-                            "setBackgroundColor",
+                            R.id.title_background,
+                            "setColorFilter",
                             android.R.attr.colorAccent,
                         )
                         eventView.setColorInt(
                             R.id.title, "setTextColor", Color.WHITE, Color.WHITE
                         )
                     } else {
-                        eventView.setInt(R.id.title, "setBackgroundColor", 0xFFFF8A65.toInt())
+                        eventView.setInt(
+                            R.id.title_background,
+                            "setColorFilter",
+                            0xFFFF8A65.toInt()
+                        )
                         eventView.setInt(R.id.title, "setTextColor", Color.WHITE)
                     }
                 }
 
                 else -> {
-                    eventView.setInt(R.id.title, "setBackgroundColor", 0xFF8D95AD.toInt())
+                    eventView.setInt(R.id.title_background, "setColorFilter", 0xFF8D95AD.toInt())
                     eventView.setInt(R.id.title, "setTextColor", Color.WHITE)
                 }
             }
@@ -1079,7 +1074,7 @@ private fun create4x1RemoteViews(
         R.id.textPlaceholder1_4x1, R.id.textPlaceholder2_4x1, R.id.textPlaceholder3_4x1
     )
     if (prefersWidgetsDynamicColors) remoteViews.setDynamicTextColor(
-        R.id.textPlaceholder1_4x2, android.R.attr.colorAccent
+        R.id.textPlaceholder1_4x1, android.R.attr.colorAccent
     )
 
     if (!isWidgetClock) remoteViews.setTextViewText(R.id.textPlaceholder1_4x1, weekDayName)
@@ -1271,6 +1266,105 @@ private fun create4x2RemoteViews(
     return remoteViews
 }
 
+private fun createWeekViewRemoteViews(
+    context: Context, width: Int, height: Int, date: AbstractDate, today: Jdn
+): RemoteViews {
+    val weekDays = listOf(
+        Triple(today - 3, R.id.textWeekDayText1, R.id.textWeekDayNumber1),
+        Triple(today - 2, R.id.textWeekDayText2, R.id.textWeekDayNumber2),
+        Triple(today - 1, R.id.textWeekDayText3, R.id.textWeekDayNumber3),
+        Triple(today, R.id.textWeekDayText4, R.id.textWeekDayNumber4),
+        Triple(today + 1, R.id.textWeekDayText5, R.id.textWeekDayNumber5),
+        Triple(today + 2, R.id.textWeekDayText6, R.id.textWeekDayNumber6),
+        Triple(today + 3, R.id.textWeekDayText7, R.id.textWeekDayNumber7),
+    )
+
+    val remoteViews = RemoteViews(context.packageName, R.layout.widget_week_view)
+    remoteViews.setDirection(R.id.widget_layout_week_view, context.resources)
+    remoteViews.setRoundBackground(R.id.widget_layout_week_view_background, width, height)
+
+    val weekDaysViews = weekDays.flatMap { listOf(it.second, it.third) } + R.id.textDate
+    remoteViews.setupForegroundTextColors(*weekDaysViews.toIntArray())
+
+    val holidaysColor = if (prefersWidgetsDynamicColors) {
+        context.getColor(android.R.color.system_accent1_300)
+    } else {
+        0xFFE51C23.toInt()
+    }
+
+    weekDays.forEachIndexed { index, (day, weekDayNameViewId, weekDayNumberViewId) ->
+        val baseDate = mainCalendar.getMonthStartFromMonthsDistance(day, 0)
+        val deviceEvents =
+            if (isShowDeviceCalendarEvents.value) context.readMonthDeviceEvents(Jdn(baseDate))
+            else EventsStore.empty()
+        val events = eventsRepository?.getEvents(day, deviceEvents) ?: emptyList()
+        val isHoliday = events.any { it.isHoliday } || day.isWeekEnd
+
+        if (isHoliday) remoteViews.setTextColor(weekDayNumberViewId, holidaysColor)
+
+        if (index == 3) {
+            // the day is today
+            val drawable = context.resources.getDrawable(R.drawable.hollow_circle, null)
+            drawable.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                if (prefersWidgetsDynamicColors) {
+                    if (isSystemInDarkTheme(context.resources.configuration)) Color.WHITE else Color.BLACK
+                } else {
+                    selectedWidgetTextColor
+                }, BlendModeCompat.SRC_ATOP
+            )
+            remoteViews.setImageViewBitmap(
+                R.id.today_background,
+                drawable.toBitmap(
+                    (32 * context.resources.dp).toInt(),
+                    (32 * context.resources.dp).toInt()
+                )
+            )
+
+            remoteViews.setTextViewText(weekDayNameViewId, day.weekDayName)
+        } else {
+            val weekDayNameColor = when {
+                prefersWidgetsDynamicColors -> if (isSystemInDarkTheme(context.resources.configuration)) Color.WHITE else Color.BLACK
+
+                else -> selectedWidgetTextColor
+            }
+            val weekDayNameColorInt = ColorUtils.setAlphaComponent(
+                weekDayNameColor,
+                (AppBlendAlpha * 255).toInt(),
+            )
+
+            remoteViews.setTextColor(weekDayNameViewId, weekDayNameColorInt)
+
+            remoteViews.setContentDescription(weekDayNameViewId, day.weekDayName)
+            remoteViews.setTextViewText(weekDayNameViewId, day.weekDayNameInitials)
+        }
+
+        val dayOfMonth = (day on mainCalendar).dayOfMonth
+        remoteViews.setTextViewText(weekDayNumberViewId, formatNumber(dayOfMonth))
+
+        val action = jdnActionKey + day.value
+        remoteViews.setOnClickPendingIntent(
+            weekDayNumberViewId,
+            context.launchAppPendingIntent(action)
+        )
+        remoteViews.setInt(
+            weekDayNumberViewId,
+            "setBackgroundResource",
+            R.drawable.widget_month_day_ripple
+        )
+    }
+
+    remoteViews.setTextViewText(
+        R.id.textDate,
+        language.value.my.format(date.monthName, formatNumber(date.year))
+    )
+
+    remoteViews.setOnClickPendingIntent(
+        R.id.widget_layout_week_view,
+        context.launchAppPendingIntent()
+    )
+    return remoteViews
+}
+
 private fun timesToShow(clock: Clock, prayTimes: PrayTimes): List<PrayTime> {
     return if (calculationMethod.value.isJafari) {
         if (clock.value in prayTimes.dhuhr..prayTimes.isha) {
@@ -1425,7 +1519,7 @@ private data class NotificationData(
 
         // Dynamic small icon generator, most of the times disabled as it needs API 23 and
         // we need to have the other path anyway
-        if (language.isNepali && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if ((language.isNepali || language.isTamil) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val icon = IconCompat.createWithBitmap(createStatusIcon(date.dayOfMonth))
             builder.setSmallIcon(icon)
         } else {

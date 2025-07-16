@@ -68,6 +68,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -76,9 +77,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults.PrimaryIndicator
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ripple
@@ -98,6 +97,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -130,6 +134,7 @@ import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.enabledCalendars
+import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
 import com.byagowi.persiancalendar.global.isIranHolidaysEnabled
 import com.byagowi.persiancalendar.global.isNotifyDate
 import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
@@ -201,8 +206,8 @@ fun SharedTransitionScope.CalendarScreen(
     navigateToHolidaysSettings: () -> Unit,
     navigateToSettingsLocationTab: () -> Unit,
     navigateToSettingsLocationTabSetAthanAlarm: () -> Unit,
-    navigateToAstronomy: (Int) -> Unit,
-    navigateToDays: (Jdn, Boolean) -> Unit,
+    navigateToAstronomy: (Jdn) -> Unit,
+    navigateToDays: (Jdn, isWeek: Boolean) -> Unit,
     viewModel: CalendarViewModel,
     animatedContentScope: AnimatedContentScope,
     isCurrentDestination: Boolean,
@@ -213,7 +218,7 @@ fun SharedTransitionScope.CalendarScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val isYearView by viewModel.isYearView.collectAsState()
     val context = LocalContext.current
-    val addEvent = addEvent(viewModel)
+    val addEvent = addEvent(viewModel, snackbarHostState)
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val today by viewModel.today.collectAsState()
 
@@ -223,6 +228,33 @@ fun SharedTransitionScope.CalendarScreen(
     }
 
     Scaffold(
+        modifier = Modifier.onKeyEvent { keyEvent ->
+            if (!viewModel.isYearView.value && keyEvent.type == KeyEventType.KeyDown) {
+                when (keyEvent.key) {
+                    Key.D -> {
+                        navigateToDays(viewModel.selectedDay.value, false)
+                        true
+                    }
+
+                    Key.W -> {
+                        navigateToDays(viewModel.selectedDay.value, true)
+                        true
+                    }
+
+                    Key.Y -> {
+                        viewModel.openYearView()
+                        true
+                    }
+
+                    Key.A -> {
+                        navigateToSchedule()
+                        true
+                    }
+
+                    else -> false
+                }
+            } else false
+        },
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -272,12 +304,12 @@ fun SharedTransitionScope.CalendarScreen(
             // For screens without navigation bar, at least make sure it has some bottom padding
             .coerceAtLeast(24.dp)
         BoxWithConstraints(Modifier.padding(top = paddingValues.calculateTopPadding())) {
-            val maxWidth = maxWidth
-            val maxHeight = maxHeight
+            val maxWidth = this.maxWidth
+            val maxHeight = this.maxHeight
             val pagerSize = calendarPagerSize(isLandscape, maxWidth, maxHeight, bottomPadding)
 
             Column(Modifier.fillMaxSize()) {
-                AnimatedVisibility(isYearView) {
+                this.AnimatedVisibility(isYearView) {
                     YearView(viewModel, maxWidth, maxHeight, bottomPaddingWithMinimum)
                 }
 
@@ -299,7 +331,7 @@ fun SharedTransitionScope.CalendarScreen(
                 )
                 val detailsPagerState = detailsPagerState(viewModel = viewModel, tabs = detailsTabs)
 
-                AnimatedVisibility(
+                this.AnimatedVisibility(
                     !isYearView,
                     enter = fadeIn() + expandVertically(expandFrom = Alignment.Top, clip = false),
                 ) {
@@ -461,7 +493,7 @@ private fun SharedTransitionScope.detailsTabs(
     navigateToHolidaysSettings: () -> Unit,
     navigateToSettingsLocationTab: () -> Unit,
     navigateToSettingsLocationTabSetAthanAlarm: () -> Unit,
-    navigateToAstronomy: (Int) -> Unit,
+    navigateToAstronomy: (Jdn) -> Unit,
     animatedContentScope: AnimatedContentScope,
     bottomPadding: Dp,
     today: Jdn,
@@ -471,26 +503,32 @@ private fun SharedTransitionScope.detailsTabs(
 ): List<DetailsTab> {
     val context = LocalContext.current
     val removeThirdTab by viewModel.removedThirdTab.collectAsState()
+    val hasTimesTab = enableTimesTab(context) && !removeThirdTab
+    val isOnlyEventsTab =
+        !hasTimesTab && enabledCalendars.size == 1 && !isAstronomicalExtraFeaturesEnabled
     return listOfNotNull(
-        R.string.calendar to { interactionSource, minHeight ->
+        if (!isOnlyEventsTab) R.string.calendar to { interactionSource, minHeight ->
             CalendarsTab(
                 viewModel = viewModel,
                 interactionSource = interactionSource,
                 minHeight = minHeight,
                 bottomPadding = bottomPadding,
                 today = today,
+                navigateToAstronomy = navigateToAstronomy,
+                animatedContentScope = animatedContentScope,
             )
-        },
+        } else null,
         R.string.events to { _, _ ->
             EventsTab(
                 navigateToHolidaysSettings = navigateToHolidaysSettings,
                 viewModel = viewModel,
                 animatedContentScope = animatedContentScope,
                 bottomPadding = bottomPadding,
+                isOnlyEventsTab = isOnlyEventsTab,
             )
         },
         // The optional third tab
-        if (enableTimesTab(context) && !removeThirdTab) R.string.times to { interactionSource, minHeight ->
+        if (hasTimesTab) R.string.times to { interactionSource, minHeight ->
             TimesTab(
                 navigateToSettingsLocationTab = navigateToSettingsLocationTab,
                 navigateToSettingsLocationTabSetAthanAlarm = navigateToSettingsLocationTabSetAthanAlarm,
@@ -524,6 +562,7 @@ private fun detailsPagerState(
     return pagerState
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Details(
     viewModel: CalendarViewModel,
@@ -537,15 +576,14 @@ private fun Details(
     Column(modifier.indication(interactionSource = interactionSource, indication = ripple())) {
         val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
         val coroutineScope = rememberCoroutineScope()
+        val isOnlyEventsTab = tabs.size == 1
 
-        TabRow(
+        if (!isOnlyEventsTab) PrimaryTabRow(
             selectedTabIndex = selectedTabIndex,
             divider = {},
             containerColor = Color.Transparent,
-            indicator = @Composable { tabPositions ->
-                if (selectedTabIndex < tabPositions.size) {
-                    PrimaryIndicator(Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]))
-                }
+            indicator = {
+                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(selectedTabIndex))
             },
         ) {
             tabs.forEachIndexed { index, (titlesResId, _) ->
@@ -560,7 +598,7 @@ private fun Details(
 
         HorizontalPager(state = pagerState, verticalAlignment = Alignment.Top) { index ->
             /** See [androidx.compose.material3.SmallTabHeight] for 48.dp */
-            val tabMinHeight = contentMinHeight - 48.dp
+            val tabMinHeight = contentMinHeight - (if (isOnlyEventsTab) 0 else 48).dp
             Box {
                 // Currently scrollable tabs only happen on landscape layout
                 val scrollState = if (scrollableTabs) rememberScrollState() else null
@@ -576,13 +614,16 @@ private fun Details(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun CalendarsTab(
+private fun SharedTransitionScope.CalendarsTab(
     viewModel: CalendarViewModel,
     interactionSource: MutableInteractionSource,
     minHeight: Dp,
     bottomPadding: Dp,
     today: Jdn,
+    navigateToAstronomy: (Jdn) -> Unit,
+    animatedContentScope: AnimatedContentScope,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -603,6 +644,8 @@ private fun CalendarsTab(
             selectedCalendar = mainCalendar,
             shownCalendars = enabledCalendars,
             isExpanded = isExpanded,
+            navigateToAstronomy = navigateToAstronomy,
+            animatedContentScope = animatedContentScope,
         )
 
         val context = LocalContext.current
@@ -843,7 +886,7 @@ private fun SharedTransitionScope.Toolbar(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                AnimatedVisibility(visible = subtitle.isNotEmpty()) {
+                this.AnimatedVisibility(visible = subtitle.isNotEmpty()) {
                     Crossfade(subtitle, label = "subtitle") { state ->
                         val fraction by animateFloatAsState(
                             targetValue = if (isYearView) 1f else 0f, label = "font size"
@@ -873,37 +916,37 @@ private fun SharedTransitionScope.Toolbar(
             }
         },
         actions = {
-            AnimatedVisibility(isYearView) {
+            this.AnimatedVisibility(isYearView) {
                 TodayActionButton(yearViewOffset != 0 && !yearViewIsInYearSelection) {
                     viewModel.commandYearView(YearViewCommand.TodayMonth)
                 }
             }
-            AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
+            this.AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
                 AppIconButton(
                     icon = Icons.Default.KeyboardArrowDown,
                     title = stringResource(R.string.next_x, stringResource(R.string.year)),
                 ) { viewModel.commandYearView(YearViewCommand.NextMonth) }
             }
-            AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
+            this.AnimatedVisibility(isYearView && !yearViewIsInYearSelection) {
                 AppIconButton(
                     icon = Icons.Default.KeyboardArrowUp,
                     title = stringResource(R.string.previous_x, stringResource(R.string.year)),
                 ) { viewModel.commandYearView(YearViewCommand.PreviousMonth) }
             }
 
-            AnimatedVisibility(!isYearView) {
+            this.AnimatedVisibility(!isYearView) {
                 val todayButtonVisibility by viewModel.todayButtonVisibility.collectAsState()
                 TodayActionButton(todayButtonVisibility) {
                     bringDate(viewModel, Jdn.today(), context, highlight = false)
                 }
             }
-            AnimatedVisibility(!isYearView) {
+            this.AnimatedVisibility(!isYearView) {
                 AppIconButton(
                     icon = Icons.Default.Search,
                     title = stringResource(R.string.search_in_events),
                 ) { viewModel.openSearch() }
             }
-            AnimatedVisibility(!isYearView) {
+            this.AnimatedVisibility(!isYearView) {
                 AppIconButton(
                     icon = Icons.AutoMirrored.Default.ContactSupport,
                     title = stringResource(id = R.string.support)
@@ -1066,7 +1109,7 @@ private fun SharedTransitionScope.Menu(
         )
 
         (listOf(null) + enabledCalendars.drop(1)).forEach { calendar ->
-            AnimatedVisibility(showSecondaryCalendarSubMenu) {
+            this.AnimatedVisibility(showSecondaryCalendarSubMenu) {
                 AppDropdownMenuRadioItem(
                     stringResource(calendar?.title ?: R.string.none), calendar == secondaryCalendar
                 ) { _ ->
@@ -1146,19 +1189,31 @@ private class AddEventContract : ActivityResultContract<AddEventData, Void?>() {
 }
 
 @Composable
-fun addEvent(viewModel: CalendarViewModel): (AddEventData) -> Unit {
+fun addEvent(
+    viewModel: CalendarViewModel, snackbarHostState: SnackbarHostState
+): (AddEventData) -> Unit {
     val addEvent = rememberLauncherForActivityResult(AddEventContract()) {
         viewModel.refreshCalendar()
     }
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var addEventData by remember { mutableStateOf<AddEventData?>(null) }
 
     addEventData?.let { data ->
         AskForCalendarPermissionDialog { isGranted ->
             viewModel.refreshCalendar()
             if (isGranted) runCatching { addEvent.launch(data) }.onFailure(logException).onFailure {
-                Toast.makeText(context, R.string.device_does_not_support, Toast.LENGTH_SHORT).show()
+                if (language.value.isPersian) coroutineScope.launch {
+                    if (snackbarHostState.showSnackbar(
+                            "جهت افزودن رویداد نیاز است از نصب و فعال بودن تقویم گوگل اطمینان حاصل کنید",
+                            duration = SnackbarDuration.Long,
+                            actionLabel = "نصب",
+                            withDismissAction = true,
+                        ) == SnackbarResult.ActionPerformed
+                    ) context.bringMarketPage("com.google.android.calendar")
+                } else Toast.makeText(context, R.string.device_does_not_support, Toast.LENGTH_SHORT)
+                    .show()
             }
             addEventData = null
         }
