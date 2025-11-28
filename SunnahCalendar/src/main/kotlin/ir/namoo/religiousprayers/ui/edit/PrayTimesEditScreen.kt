@@ -54,7 +54,7 @@ import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.AppIconButton
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
@@ -65,7 +65,7 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.PrayTimesEditScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope,
     viewModel: EditPrayTimeViewModel = koinViewModel()
 ) {
@@ -87,9 +87,15 @@ fun SharedTransitionScope.PrayTimesEditScreen(
     var showGroupEditDialog by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(text = stringResource(id = R.string.edit_times)) },
+        TopAppBar(
+            title = { Text(text = stringResource(id = R.string.edit_times)) },
             colors = appTopAppBarColors(),
-            navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+            navigationIcon = {
+                NavigationOpenNavigationRailIcon(
+                    animatedContentScope,
+                    openNavigationRail
+                )
+            },
             actions = {
                 AnimatedVisibility(visible = isEnabled) {
                     Row {
@@ -197,22 +203,25 @@ fun SharedTransitionScope.PrayTimesEditScreen(
                                 fontSize = 14.sp
                             )
                         }
-                        EditDateComponent(month = month,
+                        EditDateComponent(
+                            month = month,
                             day = day,
                             onMonthChanged = { viewModel.updateMonth(it) },
                             onDayChanged = { viewModel.updateDay(it) })
                         AnimatedContent(targetState = dayNumber, label = "fs") { d ->
                             Row(modifier = Modifier.fillMaxWidth()) {
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.fajr),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.fajr,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.fajr,
                                     onTimeChanged = { viewModel.updateFajr(it) })
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.sunrise),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.sunrise,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.sunrise,
@@ -221,16 +230,18 @@ fun SharedTransitionScope.PrayTimesEditScreen(
                         }
                         AnimatedContent(targetState = dayNumber, label = "da") { d ->
                             Row(modifier = Modifier.fillMaxWidth()) {
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.dhuhr),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.dhuhr,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.dhuhr,
                                     onTimeChanged = { viewModel.updateDhuhr(it) })
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.asr),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.asr,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.asr,
@@ -239,16 +250,18 @@ fun SharedTransitionScope.PrayTimesEditScreen(
                         }
                         AnimatedContent(targetState = dayNumber, label = "mi") { d ->
                             Row(modifier = Modifier.fillMaxWidth()) {
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.maghrib),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.maghrib,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.maghrib,
                                     onTimeChanged = { viewModel.updateMaghrib(it) })
-                                EditAthanComponent(modifier = Modifier
-                                    .weight(1f)
-                                    .padding(4.dp),
+                                EditAthanComponent(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(4.dp),
                                     title = stringResource(id = R.string.isha),
                                     editedTime = editedTimes.find { it.dayNumber == d }?.isha,
                                     originalTime = originalTimes.find { it.dayNumber == d }?.isha,
@@ -259,7 +272,8 @@ fun SharedTransitionScope.PrayTimesEditScreen(
                 }
 
                 AnimatedVisibility(visible = showSaveDialog) {
-                    AlertDialog(onDismissRequest = { showSaveDialog = false },
+                    AlertDialog(
+                        onDismissRequest = { showSaveDialog = false },
                         confirmButton = {
                             TextButton(onClick = {
                                 showSaveDialog = false
@@ -286,7 +300,8 @@ fun SharedTransitionScope.PrayTimesEditScreen(
                 }
 
                 AnimatedVisibility(visible = showClearDialog) {
-                    AlertDialog(onDismissRequest = { showClearDialog = false },
+                    AlertDialog(
+                        onDismissRequest = { showClearDialog = false },
                         confirmButton = {
                             TextButton(onClick = {
                                 showClearDialog = false

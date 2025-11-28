@@ -44,10 +44,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.global.numeral
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.utils.quranFont
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import org.koin.androidx.compose.koinViewModel
@@ -66,18 +66,19 @@ fun SharedTransitionScope.BookmarksScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val bookmarks = viewModel.bookmarks
     val chapters = viewModel.chapters
+    val numeral by numeral.collectAsState()
 
     Scaffold(topBar = {
         TopAppBar(title = {
             Text(text = stringResource(id = R.string.bookmarks))
         }, navigationIcon = {
-            NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+            NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
         }, colors = appTopAppBarColors(), actions = {
             if (bookmarks.isNotEmpty()) AnimatedContent(
                 targetState = bookmarks.size, label = "Size"
             ) {
                 IconButton(onClick = {}) {
-                    Text(text = formatNumber(it), fontWeight = FontWeight.SemiBold)
+                    Text(text = numeral.format(it), fontWeight = FontWeight.SemiBold)
                 }
             }
         })
@@ -117,7 +118,7 @@ fun SharedTransitionScope.BookmarksScreen(
                             var title =
                                 chapters.find { it.sura == quran.surahID }?.nameArabic ?: " - "
                             title += " " + stringResource(id = R.string.aya) + " "
-                            title += formatNumber(quran.verseID)
+                            title += numeral.format(quran.verseID)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

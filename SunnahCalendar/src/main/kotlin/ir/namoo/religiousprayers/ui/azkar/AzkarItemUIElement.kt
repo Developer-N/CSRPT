@@ -9,9 +9,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +29,7 @@ import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
@@ -35,6 +40,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
@@ -52,7 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarItem
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarReference
 import ir.namoo.religiousprayers.ui.shared.PlayerComponent
@@ -79,7 +84,7 @@ fun AzkarItemUIElement(
     addReadCount: () -> Unit,
     resetReadCount: () -> Unit
 ) {
-
+    val numeral by numeral.collectAsState()
     var expanded by remember { mutableStateOf(false) }
     val rotate by animateFloatAsState(targetValue = if (expanded) 180f else 0f, label = "rotate")
     val downloadProgress by animateFloatAsState(
@@ -94,11 +99,8 @@ fun AzkarItemUIElement(
                     dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow
                 )
             )
-            .padding(4.dp, 2.dp)
-            .combinedClickable(onClick = addReadCount, onLongClick = resetReadCount)
-            .drawBehind {
-
-            },
+            .padding(4.dp, 2.dp),
+        onClick = addReadCount
     ) {
         Column(
             modifier = Modifier
@@ -210,16 +212,42 @@ fun AzkarItemUIElement(
                         }
                     }
                 }
-                AnimatedContent(targetState = itemState.readCount, label = "read count") {
-                    Text(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .alpha(if (it == 0) 0.2f else 1f),
-                        text = formatNumber(it),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                Row {
+                    AnimatedVisibility(
+                        visible = itemState.readCount > 0,
+                        enter = scaleIn(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            )
+                        ),
+                        exit = scaleOut()
+                    ) {
+                        IconButton(
+                            onClick = resetReadCount,
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                        }
+                    }
+                    AnimatedContent(targetState = itemState.readCount, transitionSpec = {
+                        slideInVertically(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            )
+                        ) { -it } togetherWith slideOutVertically { it }
+                    }) {
+                        Text(
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .alpha(if (it == 0) 0.2f else 1f),
+                            text = numeral.format(it),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
             AnimatedVisibility(visible = expanded) {
@@ -234,7 +262,8 @@ fun AzkarItemUIElement(
                 )
             }
             AnimatedVisibility(visible = isPlayingCurrentItem) {
-                PlayerComponent(isPlaying = isPlaying,
+                PlayerComponent(
+                    isPlaying = isPlaying,
                     totalDuration = duration.toFloat(),
                     onPlayPauseClick = {
                         if (isPlaying) pause()

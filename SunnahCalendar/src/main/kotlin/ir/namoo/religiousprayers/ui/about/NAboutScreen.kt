@@ -28,20 +28,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.global.numeral
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import ir.namoo.commons.APP_LINK
 
@@ -49,15 +51,16 @@ import ir.namoo.commons.APP_LINK
 @Composable
 fun SharedTransitionScope.NAboutScreen(
     navigateToPersianCalendar: () -> Unit,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope
 ) {
+    val numeral by numeral.collectAsState()
     val context = LocalContext.current
     val version = programVersion(context.packageManager, context.packageName)
-    val versionDescription = formatNumber(
-        "${context.getString(R.string.app_name)}: ${
+    val versionDescription = numeral.format(
+        number = "${context.getString(R.string.app_name)}: ${
             context.getString(R.string.version, version)
-        }\nنسخه سال 1403-1404"
+        }\nنسخه سال 1404-1405", skipSeparators = true
     )
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
@@ -65,7 +68,12 @@ fun SharedTransitionScope.NAboutScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.about)) },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+                navigationIcon = {
+                    NavigationOpenNavigationRailIcon(
+                        animatedContentScope,
+                        openNavigationRail
+                    )
+                },
                 actions = {
                     IconButton(onClick = { navigateToPersianCalendar() }) {
                         Icon(
@@ -114,6 +122,7 @@ fun SharedTransitionScope.NAboutScreen(
                     .padding(bottom = paddingValues.calculateBottomPadding())
                     .verticalScroll(rememberScrollState())
             ) {
+                val keyboardController = LocalSoftwareKeyboardController.current
                 InfoUIElement(versionDescription)
                 HorizontalDivider(modifier = Modifier.padding(8.dp))
                 ContactUIElement(
@@ -136,7 +145,10 @@ fun SharedTransitionScope.NAboutScreen(
                     val textScrollState = rememberScrollState()
                     Text(
                         modifier = Modifier.verticalScroll(textScrollState),
-                        text = formatNumber(stringResource(id = R.string.changes))
+                        text = numeral.format(
+                            stringResource(id = R.string.changes),
+                            skipSeparators = true
+                        )
                     )
                 },
                 icon = {

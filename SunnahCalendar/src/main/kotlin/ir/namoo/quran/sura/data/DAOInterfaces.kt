@@ -10,6 +10,10 @@ interface QuranDAO {
     @Query("select * from quran where surah_id=:sura")
     suspend fun getQuran(sura: Int): List<QuranEntity>
 
+    @Query("select * from quran where page=:page")
+    suspend fun getQuranPage(page: Int): List<QuranEntity>
+
+
     @Query("select * from quran where surah_id=:sura and verse_id=:aya")
     suspend fun getQuran(sura: Int, aya: Int): QuranEntity?
 
@@ -21,6 +25,9 @@ interface QuranDAO {
 
     @Query("select * from tafsirs")
     suspend fun getTafsir(): List<TafsirEntity>
+
+    @Query("select * from tafsirs where id=:id")
+    suspend fun getTafsirVerse(id:Int): TafsirEntity
 
     @Update
     suspend fun updateTafsir(tafsirEntity: TafsirEntity)

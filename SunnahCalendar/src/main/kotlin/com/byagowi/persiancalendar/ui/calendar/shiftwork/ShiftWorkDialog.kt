@@ -2,7 +2,6 @@ package com.byagowi.persiancalendar.ui.calendar.shiftwork
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material3.BasicAlertDialog
@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
@@ -51,6 +52,7 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.ShiftWorkRecord
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.shiftWorkTitles
 import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.global.spacedComma
@@ -63,7 +65,6 @@ import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
 import com.byagowi.persiancalendar.utils.formatDate
-import com.byagowi.persiancalendar.utils.formatNumber
 import org.jetbrains.annotations.VisibleForTesting
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +78,7 @@ fun ShiftWorkDialog(
     BasicAlertDialog(onDismissRequest = onDismissRequest) {
         DialogSurface {
             Column {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
                 CompositionLocalProvider(
                     LocalTextStyle provides MaterialTheme.typography.bodyMedium
                 ) {
@@ -85,7 +86,7 @@ fun ShiftWorkDialog(
                         viewModel,
                         selectedJdn,
                         onDismissRequest,
-                        refreshCalendar
+                        refreshCalendar,
                     )
                 }
             }
@@ -107,7 +108,7 @@ fun ColumnScope.ShiftWorkDialogContent(
         stringResource(
             if (isFirstSetup) R.string.shift_work_starting_date
             else R.string.shift_work_starting_date_edit,
-            formatDate(startingDate on mainCalendar)
+            formatDate(startingDate on mainCalendar),
         ),
         modifier = Modifier.padding(horizontal = 24.dp),
     )
@@ -115,13 +116,13 @@ fun ColumnScope.ShiftWorkDialogContent(
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable { viewModel.changeRecurs(!recurs) }
+            .toggleable(recurs, role = Role.Checkbox) { viewModel.changeRecurs(it) }
             .padding(horizontal = SettingsHorizontalPaddingItem.dp)
             .height(SettingsItemHeight.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = recurs, onCheckedChange = null)
-        Spacer(modifier = Modifier.width(SettingsHorizontalPaddingItem.dp))
+        Spacer(Modifier.width(SettingsHorizontalPaddingItem.dp))
         Text(stringResource(R.string.recurs))
     }
     TextButton(
@@ -147,16 +148,18 @@ fun ColumnScope.ShiftWorkDialogContent(
             .weight(weight = 1f, fill = false)
             .fillMaxWidth(),
     ) {
+        val numeral by numeral.collectAsState()
         LazyColumn(state = lazyListState) {
             item {
-                val summary = shiftWorkRows.filter { it.length != 0 }.map {
-                    pluralStringResource(
-                        R.plurals.shift_work_record_title,
-                        it.length,
-                        formatNumber(it.length),
-                        shiftWorkKeyToString(it.type)
-                    )
-                }.joinToString(spacedComma)
+                @Suppress("SimplifiableCallChain") val summary =
+                    shiftWorkRows.filter { it.length != 0 }.map {
+                        pluralStringResource(
+                            R.plurals.shift_work_record_title,
+                            it.length,
+                            numeral.format(it.length),
+                            shiftWorkKeyToString(it.type)
+                        )
+                    }.joinToString(spacedComma)
                 Column {
                     this.AnimatedVisibility(summary.isNotEmpty()) {
                         AnimatedContent(
@@ -183,7 +186,7 @@ fun ColumnScope.ShiftWorkDialogContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Spacer(Modifier.width(16.dp))
-                    Text(text = formatNumber(position + 1) + spacedColon)
+                    Text(text = numeral.format(position + 1) + spacedColon)
                     Box(Modifier.weight(70f)) {
                         TextField(shiftWorkKeyToString(type), onValueChange = { value ->
                             selectedTypeDropdownIndex = -1
@@ -216,7 +219,7 @@ fun ColumnScope.ShiftWorkDialogContent(
                     Spacer(Modifier.width(4.dp))
                     Box(Modifier.weight(30f)) {
                         TextField(
-                            value = formatNumber(length),
+                            value = numeral.format(length),
                             readOnly = true,
                             onValueChange = {
                                 selectedTypeDropdownIndex = -1
@@ -243,7 +246,7 @@ fun ColumnScope.ShiftWorkDialogContent(
                             minWidth = 40.dp,
                         ) {
                             (0..14).map { length ->
-                                AppDropdownMenuItem({ Text(formatNumber(length)) }) {
+                                AppDropdownMenuItem({ Text(numeral.format(length)) }) {
                                     focusManager.clearFocus()
                                     selectedLengthDropdownIndex = -1
                                     viewModel.changeShiftWorkLengthOfPosition(position, length)
@@ -262,11 +265,10 @@ fun ColumnScope.ShiftWorkDialogContent(
                 }
             }
         }
-        ScrollShadow(lazyListState, top = true)
-        ScrollShadow(lazyListState, top = false)
+        ScrollShadow(lazyListState)
     }
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(Modifier.height(8.dp))
     Row(Modifier.padding(bottom = 16.dp, start = 24.dp, end = 24.dp)) {
         TextButton(onClick = {
             viewModel.changeShiftWorks(

@@ -2,6 +2,8 @@ package com.byagowi.persiancalendar
 
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.ui.astronomy.Zodiac
+import com.byagowi.persiancalendar.ui.astronomy.generateMoonInScorpioEntries
 import com.byagowi.persiancalendar.utils.MoonInScorpioState
 import com.byagowi.persiancalendar.utils.moonInScorpioState
 import io.github.persiancalendar.calendar.AbstractDate
@@ -9,8 +11,8 @@ import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
 import io.github.persiancalendar.calendar.PersianDate
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertAll
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 
 class CalendarLibraryTests {
@@ -270,9 +272,25 @@ class CalendarLibraryTests {
     }
 
     @Test
-    fun test_it_different_date_object_equal() {
-        assertFalse(
-            CivilDate(2000, 1, 1) as AbstractDate == PersianDate(2000, 1, 1) as AbstractDate
+    fun `Test generateMoonInScorpioEntries`() {
+        // Should more or less match the links
+        // https://github.com/user-attachments/assets/6f236e58-a946-4235-8795-886d062868d0
+        run {
+            val entries = generateMoonInScorpioEntries(1404, Zodiac.SCORPIO.tropicalRange, true)
+            assertEquals(12, entries.size)
+        }
+        // https://github.com/user-attachments/assets/c90873ad-6e0b-4a7f-abeb-ec81a3f55f5f
+        run {
+            val entries = generateMoonInScorpioEntries(1404, Zodiac.SCORPIO.iauRange, true)
+            assertEquals(13, entries.size)
+        }
+    }
+
+    @Test
+    fun `it differentiate date object equal`() {
+        assertNotEquals(
+            CivilDate(2000, 1, 1) as AbstractDate,
+            PersianDate(2000, 1, 1) as AbstractDate
         )
         assertEquals(CivilDate(2000, 1, 1), CivilDate(2000, 1, 1))
         assertNotEquals(CivilDate(2000, 1, 1), CivilDate(2000, 2, 1))
@@ -406,5 +424,30 @@ class CalendarLibraryTests {
             assertEquals(from.month, it[2])
             assertEquals(from.dayOfMonth, it[3])
         }
+    }
+
+    @Test
+    fun `TimeSlots works`() {
+        ((24 * -10)..(24 * 10)).map {
+            val clock = Clock(it / 10.0)
+            "${clock.toHoursAndMinutesPair()}: ${clock.timeSlot}"
+        }
+        (0..(24 * 2)).forEach {
+            val clock = Clock(it / 2.0)
+            "${clock.toHoursAndMinutesPair()}: ${clock.timeSlot}"
+        }
+        listOf(
+            2.0 to Clock.TimeSlot.Dawn,
+            4.0 to Clock.TimeSlot.Dawn,
+            7.0 to Clock.TimeSlot.Morning,
+            10.0 to Clock.TimeSlot.Midday,
+            15.0 to Clock.TimeSlot.Sunset,
+            19.0 to Clock.TimeSlot.Evening,
+            22.0 to Clock.TimeSlot.Dusk,
+            1.0 to Clock.TimeSlot.Dusk,
+            1.5 to Clock.TimeSlot.Dusk,
+        ).map { (hour, slot) ->
+            { assertEquals(slot, Clock(hour).timeSlot, "$hour") }
+        }.let(::assertAll)
     }
 }

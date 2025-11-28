@@ -15,14 +15,13 @@ import com.byagowi.persiancalendar.MONTH_NEXT_COMMAND
 import com.byagowi.persiancalendar.MONTH_PREV_COMMAND
 import com.byagowi.persiancalendar.MONTH_RESET_COMMAND
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.ui.calendar.AddEventData
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.startAthan
 import com.byagowi.persiancalendar.utils.startWorker
 import com.byagowi.persiancalendar.utils.update
 import com.byagowi.persiancalendar.utils.updateMonthWidget
-import com.byagowi.persiancalendar.variants.debugLog
 import ir.namoo.commons.BROADCAST_AZKAR
 import ir.namoo.commons.KEY_AZKAR_EXTRA_NAME
 import ir.namoo.religiousprayers.ui.azkar.startAzkar
@@ -36,8 +35,9 @@ class BroadcastReceivers : BroadcastReceiver() {
             BROADCAST_RESTART_APP -> startWorker(context)
 
             Intent.ACTION_DATE_CHANGED, Intent.ACTION_TIMEZONE_CHANGED -> update(context, true)
-            Intent.ACTION_TIME_CHANGED, Intent.ACTION_SCREEN_ON, BROADCAST_UPDATE_APP ->
-                update(context, false)
+            Intent.ACTION_TIME_CHANGED, Intent.ACTION_SCREEN_ON -> update(context, false)
+
+            BROADCAST_UPDATE_APP -> update(context, true)
 
             ADD_EVENT -> runCatching {
                 val addEventIntent = AddEventData.upcoming().asIntent()
@@ -51,7 +51,6 @@ class BroadcastReceivers : BroadcastReceiver() {
                 val intendedTime = intent.getLongExtra(KEY_EXTRA_PRAYER_TIME, 0).takeIf { it != 0L }
                 debugLog("Alarms: AlarmManager for $key")
                 startAthan(context, key, intendedTime)
-                update(context, false)
             }
 
             BROADCAST_AZKAR -> {

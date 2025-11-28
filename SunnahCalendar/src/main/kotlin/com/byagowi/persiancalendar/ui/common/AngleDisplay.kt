@@ -1,36 +1,41 @@
 package com.byagowi.persiancalendar.ui.common
 
-import android.content.res.Resources
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Build
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.withTranslation
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.isBoldFont
 import com.byagowi.persiancalendar.ui.utils.dp
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 class AngleDisplay(
-    resources: Resources, defaultFormat: String = "00.0",
+    context: Context, defaultFormat: String = "00.0",
     private val backgroundText: String = "88.8"
 ) {
-    private val lcd =
-        // ResourcesCompat.getFont could also be used for better compatibility
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) resources.getFont(R.font.lcd)
-        else null
-    private val lcdTextSize = 20 * resources.dp
+    private val lcd = ResourcesCompat.getFont(context, R.font.dseg7classicminibolditalicsubset)
+
+    // The characters '!' is a whitespace on the font
+    private val whiteSpace = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) '!' else ' '
+    private val dp = context.resources.dp
+    private val lcdTextSize = 20 * dp
     private val lcdForegroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0xFF00FF00.toInt()
         it.textSize = lcdTextSize
         if (lcd != null) it.typeface = lcd
+        if (isBoldFont.value) it.isFakeBoldText = true
         it.textAlign = Paint.Align.CENTER
     }
     private val lcdBackgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = 0x44FFFFFF
         it.textSize = lcdTextSize
         if (lcd != null) it.typeface = lcd
+        if (isBoldFont.value) it.isFakeBoldText = true
         it.textAlign = Paint.Align.CENTER
     }
     private val displayRect = Rect().also {
@@ -38,12 +43,12 @@ class AngleDisplay(
     }
     private val lcdWidth = displayRect.width()
     val lcdHeight = displayRect.height()
-    private val displayDrawable = resources.getDrawable(R.drawable.display, null)
+    private val displayDrawable = context.resources.getDrawable(R.drawable.display, null)
     private val displayFormat = DecimalFormat(defaultFormat).also {
         it.decimalFormatSymbols = DecimalFormatSymbols(Locale.ENGLISH)
     }
-    private val displayPadding = (8 * resources.dp).toInt()
-    val displayGap = (24 * resources.dp).toInt()
+    private val displayPadding = (8 * dp).toInt()
+    val displayGap = (24 * dp).toInt()
 
     fun updatePlacement(x: Int, y: Int) {
         displayRect.set(
@@ -64,7 +69,7 @@ class AngleDisplay(
                 lcdBackgroundPaint
             )
             drawText(
-                displayFormat.format(angle).padStart(backgroundText.length),
+                displayFormat.format(angle).padStart(backgroundText.length, whiteSpace),
                 displayRect.exactCenterX(), displayRect.centerY() + lcdHeight / 2f,
                 lcdForegroundPaint
             )

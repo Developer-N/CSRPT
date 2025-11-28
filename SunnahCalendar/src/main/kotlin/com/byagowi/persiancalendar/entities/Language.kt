@@ -7,21 +7,24 @@ import android.os.Build
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.AFGHANISTAN_TIMEZONE_ID
+import com.byagowi.persiancalendar.AU_IN_KM
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.NEPAL_TIMEZONE_ID
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.spacedComma
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac
 import com.byagowi.persiancalendar.ui.astronomy.LunarAge
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.ui.map.MapType
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.listOf12Items
 import com.byagowi.persiancalendar.utils.listOf7Items
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.variants.debugLog
 import io.github.cosinekitty.astronomy.EclipseKind
 import io.github.persiancalendar.praytimes.CalculationMethod
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.roundToLong
 
 
 enum class Language(val code: String, val nativeName: String) {
@@ -45,6 +48,7 @@ enum class Language(val code: String, val nativeName: String) {
     JA("ja", "日本語"),
     KMR("kmr", "Kurdî"),
     NE("ne", "नेपाली"),
+    OTA("ota", "عثمانى"),
     PT("pt", "Português"),
     RU("ru", "Русский"),
     TA("ta", "தமிழ்"),
@@ -56,6 +60,7 @@ enum class Language(val code: String, val nativeName: String) {
     val isArabic get() = this == AR
     val isDari get() = this == FA_AF
     val isPersian get() = this == FA
+    val isPersianOrDari get() = isPersian || isDari
     val isNepali get() = this == NE
     val isTamil get() = this == TA
 
@@ -75,36 +80,37 @@ enum class Language(val code: String, val nativeName: String) {
     // Formatting "Day Month Year" considerations
     val dmy: String
         get() = when (this) {
-            CKB -> "%1\$sی %2\$sی %3\$s"
-            ZH_CN -> "%3\$s 年 %2\$s %1\$s 日"
-            else -> "%1\$s %2\$s %3\$s"
+            CKB -> $$"%1$sی %2$sی %3$s"
+            ZH_CN -> $$"%3$s 年 %2$s %1$s 日"
+            else -> $$"%1$s %2$s %3$s"
         }
     val dm: String
         get() = when (this) {
-            CKB -> "%1\$sی %2\$s"
-            JA, ZH_CN -> "%2\$s %1\$s"
-            else -> "%1\$s %2\$s"
+            CKB -> $$"%1$sی %2$s"
+            JA, ZH_CN -> $$"%2$s %1$s"
+            EN_US -> $$"%2$s %1$s"
+            else -> $$"%1$s %2$s"
         }
     val my: String
         get() = when (this) {
-            CKB -> "%1\$sی %2\$s"
-            ZH_CN -> "%2\$s 年 %1\$s"
-            else -> "%1\$s %2\$s"
+            CKB -> $$"%1$sی %2$s"
+            ZH_CN -> $$"%2$s 年 %1$s"
+            else -> $$"%1$s %2$s"
         }
     val timeAndDateFormat: String
         get() = when (this) {
-            JA, ZH_CN -> "%2\$s %1\$s"
-            else -> "%1\$s$spacedComma%2\$s"
+            JA, ZH_CN -> $$"%2$s %1$s"
+            else -> $$"%1$s$$spacedComma%2$s"
         }
     val clockAmPmOrder: String
         get() = when (this) {
-            ZH_CN -> "%2\$s %1\$s"
-            else -> "%1\$s %2\$s"
+            ZH_CN -> $$"%2$s %1$s"
+            else -> $$"%1$s %2$s"
         }
 
     val isLessKnownRtl: Boolean
         get() = when (this) {
-            AZB, GLK -> true
+            AZB, GLK, OTA -> true
             else -> false
         }
 
@@ -153,7 +159,7 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
     // Whether locale would prefer local digits like ۱۲۳ over the global ones, 123, initially at least
-    val prefersLocalDigits: Boolean
+    val prefersLocalNumeral: Boolean
         get() = when (this) {
             UR, EN_IR, EN_US, JA, ZH_CN, FR, ES, DE, PT, IT, RU, TR, KMR, TG -> false
             else -> true
@@ -167,15 +173,16 @@ enum class Language(val code: String, val nativeName: String) {
         }
 
     // Local digits (۱۲۳) make sense for the locale
-    val canHaveLocalDigits get() = isArabicScript || isNepali || isTamil
+    val canHaveLocalNumeral get() = isArabicScript || isNepali || isTamil
 
     // Prefers ٤٥٦ over ۴۵۶
-    val preferredDigits
+    val preferredNumeral
         get() = when (this) {
-            AR, CKB -> ARABIC_INDIC_DIGITS
-            NE -> DEVANAGARI_DIGITS
-            TA -> TAMIL_DIGITS
-            else -> PERSIAN_DIGITS
+            FA, FA_AF, PS, GLK, AZB -> Numeral.PERSIAN
+            AR, CKB, OTA -> Numeral.ARABIC_INDIC
+            NE -> Numeral.DEVANAGARI
+            TA -> Numeral.TAMIL
+            else -> Numeral.ARABIC
         }
 
     // We can presume user is from Afghanistan
@@ -205,7 +212,7 @@ enum class Language(val code: String, val nativeName: String) {
     // We can presume user would prefer Gregorian calendar at least initially
     private val prefersIslamicCalendar: Boolean
         get() = when (this) {
-            AR -> true
+            AR, OTA -> true
             else -> false
         }
 
@@ -216,41 +223,36 @@ enum class Language(val code: String, val nativeName: String) {
             else -> false
         }
 
-    val defaultMainCalendar
+    val defaultCalendars
         get() = when {
-            this == FA -> Calendar.SHAMSI.name
-            prefersGregorianCalendar -> Calendar.GREGORIAN.name
-            prefersIslamicCalendar -> Calendar.ISLAMIC.name
-            prefersPersianCalendar -> Calendar.SHAMSI.name
-            prefersNepaliCalendar -> Calendar.NEPALI.name
-            else -> Calendar.SHAMSI.name
-        }
+            this == FA -> listOf(Calendar.SHAMSI, Calendar.GREGORIAN, Calendar.ISLAMIC)
+            prefersGregorianCalendar -> listOf(
+                Calendar.GREGORIAN, Calendar.ISLAMIC, Calendar.SHAMSI
+            )
 
-    val defaultOtherCalendars
-        get() = when {
-            this == FA -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
-            prefersGregorianCalendar -> "${Calendar.ISLAMIC.name},${Calendar.SHAMSI.name}"
-            prefersIslamicCalendar -> "${Calendar.GREGORIAN.name},${Calendar.SHAMSI.name}"
-            prefersPersianCalendar -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
-            prefersNepaliCalendar -> Calendar.GREGORIAN.name
-            else -> "${Calendar.GREGORIAN.name},${Calendar.ISLAMIC.name}"
+            prefersIslamicCalendar -> listOf(Calendar.ISLAMIC, Calendar.GREGORIAN, Calendar.SHAMSI)
+            prefersPersianCalendar -> listOf(Calendar.SHAMSI, Calendar.GREGORIAN, Calendar.ISLAMIC)
+            prefersNepaliCalendar -> listOf(Calendar.NEPALI, Calendar.GREGORIAN)
+            else -> listOf(Calendar.SHAMSI, Calendar.GREGORIAN, Calendar.ISLAMIC)
         }
 
     val defaultWeekStart
         get() = when (this) {
-            FA -> "0"
-            TR, TG, RU -> "2" // Monday
-            else -> if (prefersGregorianCalendar || isNepali) "1"/*Sunday*/ else "0"
+            FA, FA_AF, PS, AR, AZB, CKB, EN_IR, GLK, OTA -> WeekDay.SATURDAY
+            EN_US -> WeekDay.SUNDAY
+            JA, ZH_CN, FR, ES, DE, PT, IT, RU, UR, TR, KMR, TG, TA, NE -> WeekDay.MONDAY
         }
+    val defaultWeekStartAsString get() = defaultWeekStart.ordinal.toString()
 
     val defaultWeekEnds
         get() = when {
-            this == FA || isIranExclusive -> setOf("6")
-            isAfghanistanExclusive -> setOf("6")
-            isNepali -> setOf("0")
-            prefersGregorianCalendar -> setOf("0", "1") // Saturday and Sunday
-            else -> setOf("6") // 6 means Friday
+            this == FA || isIranExclusive -> setOf(WeekDay.FRIDAY)
+            isAfghanistanExclusive -> setOf(WeekDay.FRIDAY)
+            isNepali -> setOf(WeekDay.SATURDAY)
+            prefersGregorianCalendar -> setOf(WeekDay.SATURDAY, WeekDay.SUNDAY)
+            else -> setOf(WeekDay.FRIDAY)
         }
+    val defaultWeekEndsAsStringSet get() = defaultWeekEnds.map { it.ordinal.toString() }.toSet()
 
     val additionalShiftWorkTitles: List<String>
         get() = when (this) {
@@ -261,6 +263,7 @@ enum class Language(val code: String, val nativeName: String) {
     fun getPersianMonths(
         resources: Resources,
         alternativeMonthsInAzeri: Boolean,
+        afghanistanHolidaysIsEnable: Boolean,
     ): List<String> = when (this) {
         FA -> persianCalendarMonthsInPersian
         FA_AF -> persianCalendarMonthsInDariOrPersianOldEra
@@ -269,6 +272,12 @@ enum class Language(val code: String, val nativeName: String) {
 
         AR -> if (userTimeZoneId == IRAN_TIMEZONE_ID) persianCalendarMonthsInArabicIran
         else persianCalendarMonths.map(resources::getString)
+
+        EN_US -> when {
+            userTimeZoneId == AFGHANISTAN_TIMEZONE_ID -> persianCalendarMonthsInDariOrPersianOldEraTransliteration
+            afghanistanHolidaysIsEnable -> persianCalendarMonthsInDariOrPersianOldEraTransliteration
+            else -> persianCalendarMonths.map(resources::getString)
+        }
 
         else -> persianCalendarMonths.map(resources::getString)
     }
@@ -303,13 +312,13 @@ enum class Language(val code: String, val nativeName: String) {
     fun getWeekDays(resources: Resources): List<String> = when (this) {
         FA, FA_AF -> weekDaysInPersian
         EN_IR -> weekDaysInEnglishIran
-        else -> weekDays.map(resources::getString)
+        else -> WeekDay.stringIds.map { resources.getString(it) }
     }
 
     fun getWeekDaysInitials(resources: Resources): List<String> = when (this) {
         FA, FA_AF -> weekDaysInitialsInPersian
         EN_IR -> weekDaysInitialsInEnglishIran
-        else -> weekDaysInitials.map(resources::getString)
+        else -> WeekDay.shortStringIds.map(resources::getString)
     }
 
     fun getCountryName(cityItem: CityItem): String = when {
@@ -380,7 +389,7 @@ enum class Language(val code: String, val nativeName: String) {
     }
 
     // https://en.wikipedia.org/wiki/List_of_date_formats_by_country
-    fun allNumericsDateFormat(year: Int, month: Int, dayOfMonth: Int, digits: CharArray): String {
+    fun allNumericsDateFormat(year: Int, month: Int, dayOfMonth: Int, numeral: Numeral): String {
         val sep = when (this) {
             PS, NE -> '-'
             KMR, RU, TR, DE -> '.'
@@ -388,27 +397,26 @@ enum class Language(val code: String, val nativeName: String) {
         }
         val needsZeroPad = when (this) {
             FR, IT, NE, PT, RU, TR, KMR -> true
+            // According to the dated on the first page of https://calendar.ut.ac.ir/documents/2139738/7092644/Calendar-1404.pdf
+            // It seems it's a zero padded locale
+            // But according to نیازهای شرایط محلی برای زبان فارسی ایران it's not
+            // https://drive.google.com/file/d/1yDoUbXnV_q6mrzzaRZK_AvsOLaU-O9Qy/view
+            FA -> false
             else -> false
         }
         val format = when (this) {
             // Year major
-            FA, AZB, GLK, FA_AF, EN_IR, PS, JA, NE, ZH_CN -> "%1\$s$sep%2\$s$sep%3\$s"
+            FA, AZB, GLK, FA_AF, EN_IR, PS, JA, NE, ZH_CN, OTA -> $$"%1$s$$sep%2$s$$sep%3$s"
             // Month major
-            EN_US -> "%2\$s$sep%3\$s$sep%1\$s"
+            EN_US -> $$"%2$s$$sep%3$s$$sep%1$s"
             // Day major, most likely everything else goes here but check via JS'
             // new Date().toLocaleDateString('XX')
-            AR, CKB, ES, DE, FR, IT, KMR, PT, RU, TG, TR, UR, TA -> "%3\$s$sep%2\$s$sep%1\$s"
+            AR, CKB, ES, DE, FR, IT, KMR, PT, RU, TG, TR, UR, TA -> $$"%3$s$$sep%2$s$$sep%1$s"
         }
         return format.format(
-            formatNumber(year, digits),
-            formatNumber(
-                "$month".let { if (needsZeroPad) it.padStart(2, '0') else it },
-                digits
-            ),
-            formatNumber(
-                "$dayOfMonth".let { if (needsZeroPad) it.padStart(2, '0') else it },
-                digits
-            )
+            numeral.format(year), numeral.format(
+                "$month".let { if (needsZeroPad) it.padStart(2, '0') else it }), numeral.format(
+                "$dayOfMonth".let { if (needsZeroPad) it.padStart(2, '0') else it })
         )
     }
 
@@ -461,11 +469,97 @@ enum class Language(val code: String, val nativeName: String) {
         }
     }
 
+    fun formatCompatibility(compatibility: ChineseZodiac.Compatibility): String {
+        return when {
+            isPersianOrDari -> when (compatibility) {
+                ChineseZodiac.Compatibility.BEST -> "بهترین"
+                ChineseZodiac.Compatibility.BETTER -> "خوب"
+                ChineseZodiac.Compatibility.NEUTRAL -> "خنثی"
+                ChineseZodiac.Compatibility.WORSE -> "بد"
+                ChineseZodiac.Compatibility.WORST -> "بدترین"
+            }
+
+            this == ZH_CN -> when (compatibility) {
+                ChineseZodiac.Compatibility.BEST -> "三合" // Sān Hé
+                ChineseZodiac.Compatibility.BETTER -> "六合" // Liù Hé
+                ChineseZodiac.Compatibility.NEUTRAL -> "三會" // Sān Huì
+                ChineseZodiac.Compatibility.WORSE -> "六沖" // Liù Chōng
+                ChineseZodiac.Compatibility.WORST -> "口舌" // Kǒu Shé
+            }
+
+            else -> when (compatibility) {
+                ChineseZodiac.Compatibility.BEST -> "Best"
+                ChineseZodiac.Compatibility.BETTER -> "Better"
+                ChineseZodiac.Compatibility.NEUTRAL -> "Neutral"
+                ChineseZodiac.Compatibility.WORSE -> "Worse"
+                ChineseZodiac.Compatibility.WORST -> "Worst"
+            }
+        }
+    }
+
     // Indian locales always need to see moon view as https://en.wikipedia.org/wiki/Tithi
     val alwaysNeedMoonState: Boolean
         get() = when (this) {
             NE, TA -> true
             else -> false
+        }
+
+    fun formatAuAsKm(value: Double): String = formatKm((value * AU_IN_KM).roundToLong())
+    fun formatKm(value: Long): String = preferredNumeral.formatLongNumber(value) + " " + kilometer
+
+    fun mapType(mapType: MapType): String? {
+        return when (this) {
+            FA, FA_AF -> when (mapType) {
+                MapType.NONE -> null
+                MapType.DAY_NIGHT -> "تاریکی شب"
+                MapType.MOON_VISIBILITY -> "پدیداری ماه"
+                MapType.MAGNETIC_FIELD_STRENGTH -> "قدرت میدان مغناطیسی"
+                MapType.MAGNETIC_DECLINATION -> "انحراف مغناطیسی"
+                MapType.MAGNETIC_INCLINATION -> "میل مغناطیسی"
+                MapType.TIME_ZONES -> null
+                MapType.TECTONIC_PLATES -> "صفحه‌های زمین‌ساخت/تکتونیک"
+                MapType.EVENING_YALLOP -> null
+                MapType.EVENING_ODEH -> null
+                MapType.MORNING_YALLOP -> null
+                MapType.MORNING_ODEH -> null
+            }
+
+            else -> null
+        }
+    }
+
+    fun mapButtons(stringId: Int): String? {
+        return when (this) {
+            FA, FA_AF -> when (stringId) {
+                R.string.show_globe_view_label -> "کرهٔ سه‌بعدی"
+                R.string.show_direct_path_label -> "مسیر مستقیم"
+                R.string.show_grid_label -> "توری"
+                R.string.show_my_location_label -> "مکان‌یاب / GPS"
+                R.string.show_location_label -> "مکان"
+                R.string.show_night_mask_label -> "تاریکی شب"
+                else -> null
+            }
+
+            else -> null
+        }
+    }
+
+    val inch
+        get() = when {
+            isArabicScript -> "اینچ"
+            else -> "in"
+        }
+
+    val centimeter
+        get() = when {
+            isArabicScript -> "سانتی‌متر"
+            else -> "cm"
+        }
+
+    val kilometer
+        get() = when {
+            isArabicScript -> "کیلومتر"
+            else -> "km"
         }
 
     companion object {
@@ -482,8 +576,9 @@ enum class Language(val code: String, val nativeName: String) {
             return when (userDeviceLanguage) {
                 FA.code -> if (userDeviceCountry == "AF") FA_AF else FA
 
-                "en", EN_US.code ->
-                    guessLanguageFromTimezoneId() ?: guessLanguageFromKeyboards(context)
+                "en", EN_US.code -> guessLanguageFromTimezoneId() ?: guessLanguageFromKeyboards(
+                    context
+                )
 
                 else -> valueOfLanguageCode(userDeviceLanguage) ?: EN_US
             }
@@ -508,11 +603,12 @@ enum class Language(val code: String, val nativeName: String) {
                         } else @Suppress("DEPRECATION") submethod.locale
                         debugLog("Language: '$locale' is available in keyboards")
                         if (locale.isEmpty()) return@forEach
-                        val language = valueOfLanguageCode(locale)
-                            ?: valueOfLanguageCode(locale.split("-").firstOrNull().orEmpty())
+                        val language = valueOfLanguageCode(locale) ?: valueOfLanguageCode(
+                            locale.split("-").firstOrNull().orEmpty()
+                        )
                         // Use the knowledge only to detect Persian language
                         // as others might be surprising
-                        if (language == FA || language == FA_AF) return@runCatching language
+                        if (language?.isPersianOrDari == true) return@runCatching language
                     }
                 }
             }
@@ -560,15 +656,6 @@ enum class Language(val code: String, val nativeName: String) {
             R.string.august, R.string.september, R.string.october,
             R.string.november, R.string.december
         )
-        private val weekDays = listOf7Items(
-            R.string.saturday, R.string.sunday, R.string.monday, R.string.tuesday,
-            R.string.wednesday, R.string.thursday, R.string.friday
-        )
-        private val weekDaysInitials = listOf7Items(
-            R.string.saturday_short, R.string.sunday_short, R.string.monday_short,
-            R.string.tuesday_short, R.string.wednesday_short, R.string.thursday_short,
-            R.string.friday_short
-        )
 
         // These are special cases and new ones should be translated in strings.xml of the language
         private val persianCalendarMonthsInPersian = listOf12Items(
@@ -597,6 +684,11 @@ enum class Language(val code: String, val nativeName: String) {
             "حمل", "ثور", "جوزا", "سرطان", "اسد", "سنبله",
             "میزان", "عقرب", "قوس", "جدی", "دلو", "حوت"
         )
+        val persianCalendarMonthsInDariOrPersianOldEraTransliteration = listOf12Items(
+            // https://www.evertype.com/standards/af/af-locales.pdf
+            "Hamal", "Sawr", "Jawzā", "Saratān", "Asad", "Sonbola",
+            "Mīzān", "Aqrab", "Qaws", "Jady", "Dalv", "Hūt",
+        )
         private val gregorianCalendarMonthsInDari = listOf12Items(
             "جنوری", "فبروری", "مارچ", "اپریل", "می", "جون",
             "جولای", "اگست", "سپتمبر", "اکتوبر", "نومبر", "دسمبر",
@@ -611,8 +703,9 @@ enum class Language(val code: String, val nativeName: String) {
         )
         private val weekDaysInPersian = listOf7Items(
             // https://apll.ir/wp-content/uploads/2018/10/D-1394.pdf
-            // https://www.ekhtebar.ir/wp-content/uploads/2023/07/Dastour-e-Khat-17.04.1402-3.pdf
             // advices to use یکشنبه and پنجشنبه on "مرکبهایی که بسیطگونه است"
+            // The updated version https://www.ekhtebar.ir/wp-content/uploads/2023/07/Dastour-e-Khat-17.04.1402-3.pdf
+            // doesn't have it though
             "شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"
         )
         private val weekDaysInitialsInPersian = listOf7Items(
@@ -641,14 +734,5 @@ enum class Language(val code: String, val nativeName: String) {
         private val afCodeOrder = listOf("zz", "af", "ir", "tr", "iq")
         private val arCodeOrder = listOf("zz", "iq", "tr", "ir", "af")
         private val trCodeOrder = listOf("zz", "tr", "ir", "iq", "af")
-
-        // See the naming here, https://developer.mozilla.org/en-US/docs/Web/CSS/list-style-type
-        val PERSIAN_DIGITS = charArrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
-        val ARABIC_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-        val ARABIC_INDIC_DIGITS = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
-        val DEVANAGARI_DIGITS = charArrayOf('०', '१', '२', '३', '४', '५', '६', '७', '८', '९')
-        val TAMIL_DIGITS = charArrayOf('௦', '௧', '௨', '௩', '௪', '௫', '௬', '௭', '௮', '௯')
-        // CJK digits: charArrayOf('０', '１', '２', '３', '４', '５', '６', '７', '８', '９')
-        // but they weren't looking nice in the UI
     }
 }

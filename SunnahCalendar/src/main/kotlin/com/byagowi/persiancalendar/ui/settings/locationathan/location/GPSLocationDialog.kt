@@ -8,7 +8,6 @@ import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.getSystemService
+import com.byagowi.persiancalendar.LRM
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.spacedColon
@@ -61,7 +61,6 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 private fun AskForLocationPermissionDialog(setGranted: (Boolean) -> Unit) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return setGranted(true)
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { setGranted(it.entries.any()) }
@@ -232,7 +231,7 @@ fun GPSLocationDialog(onDismissRequest: () -> Unit) {
         )
         val text = buildAnnotatedString {
             appendLine(
-                "%s$spacedColon%.2f%s%s$spacedColon%.7f".format(
+                "%s$spacedColon$LRM%.4f°%s%s$spacedColon$LRM%.4f°".format(
                     Locale.getDefault(),
                     stringResource(R.string.latitude), coord.latitude, "\n",
                     stringResource(R.string.longitude), coord.longitude

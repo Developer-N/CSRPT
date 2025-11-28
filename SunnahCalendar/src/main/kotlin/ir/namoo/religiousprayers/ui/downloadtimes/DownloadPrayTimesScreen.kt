@@ -45,7 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.ui.common.AppIconButton
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
@@ -56,7 +56,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.DownloadPrayTimesScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope,
     viewModel: DownloadPrayTimesViewModel = koinViewModel()
 ) {
@@ -79,7 +79,8 @@ fun SharedTransitionScope.DownloadPrayTimesScreen(
         AnimatedVisibility(
             visible = isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
-            SearchAppBar(query = query,
+            SearchAppBar(
+                query = query,
                 updateQuery = { query = it },
                 closeSearchBar = { viewModel.closeSearch() })
         }
@@ -87,7 +88,7 @@ fun SharedTransitionScope.DownloadPrayTimesScreen(
             !isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
             DefaultDTTopAppBar(
-                openDrawer = openDrawer,
+                openNavigationRail = openNavigationRail,
                 animatedContentScope = animatedContentScope,
                 openSearch = { viewModel.openSearch() })
         }
@@ -156,7 +157,8 @@ fun SharedTransitionScope.DownloadPrayTimesScreen(
                                         )
                                     )
                             ) {
-                                CityItemUIElement(city = city,
+                                CityItemUIElement(
+                                    city = city,
                                     searchText = query,
                                     download = { viewModel.download(city, context) })
                             }
@@ -180,13 +182,19 @@ fun SharedTransitionScope.DownloadPrayTimesScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.DefaultDTTopAppBar(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope,
     openSearch: () -> Unit
 ) {
-    TopAppBar(title = { Text(text = stringResource(id = R.string.download_upload)) },
+    TopAppBar(
+        title = { Text(text = stringResource(id = R.string.download_upload)) },
         colors = appTopAppBarColors(),
-        navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+        navigationIcon = {
+            NavigationOpenNavigationRailIcon(
+                animatedContentScope,
+                openNavigationRail
+            )
+        },
         actions = {
             AppIconButton(
                 title = stringResource(id = R.string.search),

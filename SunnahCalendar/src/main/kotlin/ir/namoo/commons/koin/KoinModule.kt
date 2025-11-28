@@ -29,11 +29,17 @@ import ir.namoo.quran.chapters.data.ChapterRepository
 import ir.namoo.quran.db.FileDownloadDB
 import ir.namoo.quran.db.FileDownloadRepository
 import ir.namoo.quran.db.LastVisitedDB
+import ir.namoo.quran.db.LastVisitedPageDB
 import ir.namoo.quran.db.LastVisitedRepository
+import ir.namoo.quran.db.QCFDatabase
+import ir.namoo.quran.db.QPCDatabase
 import ir.namoo.quran.db.QuranDB
 import ir.namoo.quran.download.DownloadQuranAudioViewModel
 import ir.namoo.quran.download.QuranDownloader
 import ir.namoo.quran.home.QuranDownloadViewModel
+import ir.namoo.quran.mushaf.MushafFileDownloaderViewModel
+import ir.namoo.quran.mushaf.MushafPageViewModel
+import ir.namoo.quran.mushaf.MushafViewModel
 import ir.namoo.quran.notes.NotesViewModel
 import ir.namoo.quran.qari.QariDB
 import ir.namoo.quran.qari.QariRepository
@@ -57,7 +63,6 @@ import ir.namoo.religiousprayers.ui.downloadtimes.DownloadPrayTimesViewModel
 import ir.namoo.religiousprayers.ui.edit.EditPrayTimeViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroCustomLocationViewModel
 import ir.namoo.religiousprayers.ui.intro.IntroDownloadViewModel
-import ir.namoo.religiousprayers.ui.intro.IntroHomeViewModel
 import ir.namoo.religiousprayers.ui.settings.athan.AthanDownloadDialogViewModel
 import ir.namoo.religiousprayers.ui.settings.athan.AthanSettingsViewModel
 import ir.namoo.religiousprayers.ui.settings.location.LocationSettingViewModel
@@ -68,9 +73,11 @@ import org.koin.dsl.module
 
 val koinModule = module {
     // Quran
-    single { ChapterRepository(get()) }
+    single { ChapterRepository(get(), get()) }
     single { QuranDB.getInstance(get()) }
-    single { QuranRepository(get()) }
+    single { QCFDatabase.getInstance(get()) }
+    single { QPCDatabase.getInstance(get()) }
+    single { QuranRepository(get(), get(), get()) }
     single { QuranSettingDB.getInstance(get()) }
     single { QuranSettingRepository(get()) }
     single { QariDB.getInstance(get()) }
@@ -79,7 +86,8 @@ val koinModule = module {
     single { QuranDownloader(get()) }
     single { FileDownloadDB.getInstance(get()) }
     single { LastVisitedDB.getInstance(get()) }
-    single { LastVisitedRepository(get()) }
+    single { LastVisitedPageDB.getInstance(get()) }
+    single { LastVisitedRepository(get(), get()) }
 
     single { TawhidDB.getInstance(get()) }
 
@@ -131,7 +139,7 @@ val koinModule = module {
 
     // viewModels
     //quran
-    viewModel { QuranActivityViewModel(get()) }
+    viewModel { QuranActivityViewModel(get(), get()) }
     viewModel { QuranDownloadViewModel(get()) }
     viewModel { ChapterViewModel(get(), get(), get()) }
     viewModel { SuraViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -141,6 +149,9 @@ val koinModule = module {
     viewModel { SearchViewModel(get(), get(), get()) }
     viewModel { DownloadQuranAudioViewModel(get(), get(), get(), get()) }
     viewModel { ReorderTranslatesViewModel(get()) }
+    viewModel { MushafViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { MushafPageViewModel(get(), get()) }
+    viewModel { MushafFileDownloaderViewModel() }
     factory { FileDownloadRepository(get<FileDownloadDB>().getFileDownloadDao()) }
 
     //calendar
@@ -148,8 +159,6 @@ val koinModule = module {
     viewModel { AzkarActivityViewModel(get(), get()) }
     viewModel { DownloadPrayTimesViewModel(get(), get(), get()) }
     viewModel { EditPrayTimeViewModel(get()) }
-
-    viewModel { IntroHomeViewModel() }
     viewModel { IntroDownloadViewModel(get()) }
     viewModel { IntroCustomLocationViewModel(get(), get()) }
 

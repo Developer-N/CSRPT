@@ -116,3 +116,11 @@ const val PREF_PLAYER_SPEED = "player_speed"
 const val DEFAULT_PLAYER_SPEED = 1f
 
 const val PREF_BOOKMARK_VERSE = "pref_bookmark_verse"
+
+const val PREF_PAGE_TYPE = "pref_page_type"
+const val DEFAULT_PAGE_TYPE = 0
+
+const val PREF_HIDE_TOOLBAR_ON_SCROLL = "hide_toolbar_on_scroll"
+
+const val PREF_MUSHAF_TEXT_SIZE ="pref_mushaf_text_size"
+const val DEFAULT_MUSHAF_TEXT_SIZE = 24f

@@ -38,21 +38,22 @@ import com.byagowi.persiancalendar.utils.sortCityNames
 @Composable
 fun LocationDialog(onDismissRequest: () -> Unit) {
     var showProvincesDialog by rememberSaveable { mutableStateOf(false) }
-    if (showProvincesDialog) return ProvincesDialog(onDismissRequest)
+    if (showProvincesDialog) return ProvincesDialog(
+        onDismissRequest = onDismissRequest,
+        navigateUp = { showProvincesDialog = false }
+    )
     val cities = remember { citiesStore.values.sortCityNames }
     val language by language.collectAsState()
     val context = LocalContext.current
     AppDialogWithLazyColumn(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(R.string.location)) },
-        confirmButton = if (language.isIranExclusive) {
-            {
-                TextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { showProvincesDialog = true },
-                ) { Text(stringResource(R.string.more), Modifier.padding(8.dp)) }
-            }
-        } else null
+        confirmButton = if (language.isIranExclusive) ({
+            TextButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { showProvincesDialog = true },
+            ) { Text(stringResource(R.string.more), Modifier.padding(8.dp)) }
+        }) else null,
     ) {
         items(cities, key = { it.key }) { city ->
             Box(

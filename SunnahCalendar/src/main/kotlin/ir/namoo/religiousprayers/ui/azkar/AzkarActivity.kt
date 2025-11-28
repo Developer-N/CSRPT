@@ -12,7 +12,12 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,26 +27,38 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CopyAll
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.theme.AppTheme
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
@@ -49,7 +66,9 @@ import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import ir.namoo.commons.utils.isNetworkConnected
+import ir.namoo.commons.utils.toastMessage
 import ir.namoo.quran.utils.KeepScreenOn
+import ir.namoo.religiousprayers.ui.azkar.data.AzkarChapter
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -59,7 +78,7 @@ class AzkarActivity : ComponentActivity() {
 
     private val viewModel: AzkarActivityViewModel by viewModel()
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         applyEdgeToEdge(isBackgroundColorLight = false, isSurfaceColorLight = true)
 
@@ -91,54 +110,48 @@ class AzkarActivity : ComponentActivity() {
                 val isPlaying by viewModel.isPlaying.collectAsState()
                 val duration by viewModel.totalDuration.collectAsState()
                 val currentPosition by viewModel.currentPosition.collectAsState()
-
+                val playAll by viewModel.playAll.collectAsState()
                 val clipboard = LocalClipboard.current
+                LaunchedEffect(key1 = playAll, key2 = currentPlayingItem) {
+                    runCatching {
+                        val index =
+                            azkarItems.indexOf(azkarItems.find { it.id == currentPlayingItem })
+                        if (isPlaying && index != -1)
+                            state.animateScrollToItem(index)
 
+                    }
+                }
                 Scaffold(topBar = {
-                    TopAppBar(title = {
-                        Text(
-                            modifier = Modifier.basicMarquee(), text = when (azkarLang) {
-                                Language.FA.code -> chapter?.persian
-                                Language.CKB.code -> chapter?.kurdish
-                                else -> chapter?.arabic
-                            } ?: "-"
-                        )
-                    }, colors = appTopAppBarColors(), navigationIcon = {
-                        AppIconButton(
-                            icon = Icons.AutoMirrored.Default.ArrowBack, title = stringResource(
-                                id = R.string.close
-                            )
-                        ) {
-                            finish()
-                        }
-                    }, actions = {
-                        AppIconButton(
-                            title = stringResource(id = R.string.share), onClick = {
-                                val intent = Intent(Intent.ACTION_SEND)
-                                intent.type = "text/plain"
-                                intent.putExtra(Intent.EXTRA_TEXT, viewModel.description)
-                                startActivity(
-                                    Intent.createChooser(
-                                        intent, resources.getString(R.string.share)
-                                    )
+                    AzkarToolbar(
+                        chapter = chapter,
+                        azkarLang = azkarLang,
+                        playAll = playAll,
+                        finish = ::finish,
+                        share = {
+                            val intent = Intent(Intent.ACTION_SEND)
+                            intent.type = "text/plain"
+                            intent.putExtra(Intent.EXTRA_TEXT, viewModel.description)
+                            startActivity(
+                                Intent.createChooser(
+                                    intent, resources.getString(R.string.share)
                                 )
-                            }, icon = Icons.Default.Share
-                        )
-                        AppIconButton(
-                            title = stringResource(id = R.string.copy), onClick = {
-                                lifecycleScope.launch {
-                                    clipboard.setClipEntry(
-                                        ClipEntry(
-                                            ClipData.newPlainText(
-                                                getString(R.string.azkar), viewModel.description
-                                            )
+                            )
+
+                        },
+                        copy = {
+                            lifecycleScope.launch {
+                                clipboard.setClipEntry(
+                                    ClipEntry(
+                                        ClipData.newPlainText(
+                                            getString(R.string.azkar), viewModel.description
                                         )
                                     )
-                                }
-                            }, icon = Icons.Default.CopyAll
-                        )
-
-                    })
+                                )
+                                toastMessage(getString(R.string.copied))
+                            }
+                        },
+                        updatePlayAll = { viewModel.updatePlayAll(it) },
+                    )
                 }) { paddingValues ->
                     Surface(
                         modifier = Modifier
@@ -195,7 +208,6 @@ class AzkarActivity : ComponentActivity() {
                         }
                     }
                 }
-
             }
         }
         lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -221,3 +233,89 @@ class AzkarActivity : ComponentActivity() {
     }
 
 }//end of class
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AzkarToolbar(
+    chapter: AzkarChapter?,
+    playAll: Boolean,
+    azkarLang: String,
+    finish: () -> Unit,
+    share: () -> Unit,
+    copy: () -> Unit,
+    updatePlayAll: (Boolean) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val rotation by animateFloatAsState(
+        targetValue = if (!expanded) 0f
+        else if (LocalLayoutDirection.current == LayoutDirection.Rtl) -90f else 90f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+        ),
+        label = "rotation",
+    )
+    TopAppBar(title = {
+        Text(
+            modifier = Modifier.basicMarquee(), text = when (azkarLang) {
+                Language.FA.code -> chapter?.persian
+                Language.CKB.code -> chapter?.kurdish
+                else -> chapter?.arabic
+            } ?: "-"
+        )
+    }, colors = appTopAppBarColors(), navigationIcon = {
+        AppIconButton(
+            icon = Icons.AutoMirrored.Default.ArrowBack, title = stringResource(
+                id = R.string.close
+            )
+        ) {
+            finish()
+        }
+    }, actions = {
+        Box {
+            AppIconButton(
+                icon = Icons.Default.MoreVert,
+                title = stringResource(id = R.string.more),
+                onClick = { expanded = !expanded },
+                modifier = Modifier.rotate(rotation),
+            )
+            AppDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                AppDropdownMenuItem(
+                    text = { Text(text = stringResource(id = R.string.share)) },
+                    onClick = {
+                        share()
+                        expanded = false
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(id = R.string.share),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                )
+                AppDropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.copy)) },
+                    onClick = {
+                        copy()
+                        expanded = false
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.CopyAll,
+                            contentDescription = stringResource(id = R.string.copy),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                )
+                AppDropdownMenuCheckableItem(
+                    text = stringResource(id = R.string.continue_play_azkar),
+                    isChecked = playAll,
+                    onValueChange = {
+                        updatePlayAll(it)
+                        expanded = false
+                    })
+            }
+        }
+    })
+}

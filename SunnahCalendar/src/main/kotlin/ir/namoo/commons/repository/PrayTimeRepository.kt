@@ -119,6 +119,19 @@ class PrayTimeRepository(
         }
     }.flowOn(Dispatchers.IO)
 
+    fun sendEvent(event: String) = flow {
+        runCatching {
+            emit(DataState.Loading)
+            when (val result = remoteRepository.sendEvent(EventRequest(event))) {
+                is DataResult.Error -> emit(DataState.Error(result.message))
+                is DataResult.Success<*> -> emit(DataState.Success(result.data))
+            }
+        }.onFailure {
+            emit(DataState.Error("Error sendEvent: message ${it.message}"))
+            logException
+        }
+    }.flowOn(Dispatchers.IO)
+
     suspend fun getDownloadedTimesForCity(cityId: Int): List<DownloadedPrayTimesEntity> =
         localRepository.getDownloadedTimesFor(cityId)
 

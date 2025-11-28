@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -22,68 +20,53 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.hideFromAccessibility
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.global.userSetTheme
-import com.byagowi.persiancalendar.ui.utils.isDynamicGrayscale
+import com.byagowi.persiancalendar.ui.theme.isDynamicGrayscale
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun NDrawerPager(drawerState: DrawerState) {
+fun NDrawerPager() {
     var actualImage by remember {
         mutableIntStateOf(NavigationImage.fromDate(jdn = Jdn.today()).ordinal)
     }
     val pageSize = 200
-    val imageState = rememberPagerState(
-        initialPage = pageSize / 2 + actualImage - 3, // minus 3 so it does an initial animation
-        pageCount = { pageSize },
-    )
-    if (drawerState.isOpen) {
-        LaunchedEffect(Unit) {
-            imageState.animateScrollToPage(pageSize / 2 + actualImage)
-            while (true) {
-                delay(30.seconds.inWholeMilliseconds)
-                val imageIndex = NavigationImage.fromDate(jdn = Jdn.today()).ordinal
-                if (imageIndex != actualImage) {
-                    actualImage = imageIndex
-                    imageState.animateScrollToPage(pageSize / 2 + actualImage)
-                }
+    val pagerState = rememberPagerState(pageSize / 2 + actualImage, pageCount = { pageSize })
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(30.seconds)
+            val imageIndex = NavigationImage.fromDate(jdn = Jdn.today()).ordinal
+            if (imageIndex != actualImage) {
+                actualImage = imageIndex
+                pagerState.animateScrollToPage(pageSize / 2 + actualImage)
             }
         }
     }
 
-    val context = LocalContext.current
-    val theme by userSetTheme.collectAsState()
-    val imageFilter = remember(LocalConfiguration.current, theme) {
+    val isDynamicGrayscale = isDynamicGrayscale()
+    val imageFilter = remember(isDynamicGrayscale) {
+        if (!isDynamicGrayscale) null
         // Consider gray scale themes of Android 14
         // And apply a gray scale filter https://stackoverflow.com/a/75698731
-        if (theme.isDynamicColors && context.resources.isDynamicGrayscale) {
-            ColorFilter.colorMatrix(ColorMatrix().also { it.setToSaturation(0f) })
-        } else null
+        else ColorFilter.colorMatrix(ColorMatrix().also { it.setToSaturation(0f) })
     }
 
     HorizontalPager(
-        state = imageState,
+        state = pagerState,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
-            .height(196.dp)
-            .clip(MaterialTheme.shapes.extraLarge)
-            .semantics {
-                this.hideFromAccessibility()
-            },
+            .padding(bottom = 12.dp, top = 12.dp, start = 20.dp, end = 20.dp)
+            .height(170.dp)
+            .clip(MaterialTheme.shapes.extraLarge),
         pageSpacing = 8.dp,
     ) {
         Image(
             ImageBitmap.imageResource(NavigationImage.entries[it % 4].imageID),
-            contentScale = ContentScale.FillWidth,
+            contentScale = ContentScale.FillBounds,
             contentDescription = stringResource(id = NavigationImage.entries[it % 4].nameStringId),
             colorFilter = imageFilter,
             modifier = Modifier

@@ -16,7 +16,7 @@
     <string name="continue_button">Continue</string>
     <string name="outdated_app">Due to being outdated, things can be inaccurate</string>
     <string name="update">Update</string>
-    <!--Navigation drawers-->
+    <!--Navigation rail items-->
     <string name="calendar">Calendar</string>
     <string name="date_converter">Date Converter</string>
     <string name="converter">Converter</string>
@@ -160,7 +160,7 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="longitude">Longitude</string>
     <string name="altitude">Altitude</string>
     <string name="altitude_praytime">in meter (optional)</string>
-    <string name="coordination">Coordination</string>
+    <string name="coordinates">Coordinates</string>
     <string name="athan">Athan</string>
     <string name="in_city_time">in %1$s</string>
     <string name="pray_methods">Calculation methods</string>
@@ -394,11 +394,12 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="time_zones">Time zones</string>
     <string name="qr_code">QR Code</string>
     <string name="navigate_up">Navigate up</string>
-    <string name="open_drawer">Open navigation drawer</string>
+    <string name="open_navigation_rail">Open navigation drawer</string>
     <string name="more_options">More options</string>
     <string name="yes">Yes</string>
     <string name="sample_inputs">Sample inputs</string>
     <string name="year_view">Year view</string>
+    <string name="month_view">Month view</string>
     <string name="daily_schedule">Daily schedule</string>
     <string name="exempt_app_battery_optimization">Would you like to add the app to battery optimization exception for correct functionality of the notification?</string>
     <string name="widget_background_transparency">Widget background transparency</string>
@@ -415,6 +416,20 @@ The app needs this only once, however, if you move to a new location, accessing 
     <string name="horoscope">Horoscope</string>
     <!-- https://en.wikipedia.org/wiki/Planetary_hours -->
     <string name="planetary_hours">Planetary hours</string>
+    <!-- Used in theme select dialog, the 'more' button -->
+    <string name="select_font">Select font</string>
+    <!-- Used in blind people interface to move up an item in calendars priority dialog -->
+    <string name="move_up">Move up</string>
+    <!-- Used in blind people interface to move down an item in calendars priority dialog -->
+    <string name="move_down">Move down</string>
+    <!-- Black moon or lilith is a concept in astrology used in the app's horoscope https://en.wikipedia.org/wiki/Lilith_(fictitious_moon) -->
+    <string name="black_moon">Lilith</string>
+    <string name="dynamic_icon">Dynamic icon</string>
+    <string name="large_day_number_on_notification">Large day number on notification</string>
+    <string name="pref_ui">UI</string>
+    <string name="week">Week</string>
+    <string name="bold_text">Bold test</string>
+    <string name="widget_text_size">Text size</string>
 
     <plurals name="shift_work_record_title">
         <item quantity="one">%1$s %2$s day</item>

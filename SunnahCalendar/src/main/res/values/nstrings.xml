@@ -107,7 +107,7 @@
     <string name="enter_city_name">Enter City Name!</string>
     <string name="select_location_if_not_detect">Select Location if not detect</string>
 
-    <string name="athan_settings">Athan Settings (Form more setting click on athans)</string>
+    <string name="for_more_athan_settings_click">Form more setting click on athans</string>
     <string name="enable_athan">Enable Athan</string>
     <string name="enable_alarm">Enable Alarm</string>
     <string name="alert_type">Alert Type</string>
@@ -224,8 +224,6 @@
     <string name="medinan">Medinan</string>
     <string name="download_quran_db">Donwload Quran Database</string>
 
-    <string name="widget_next_athan_text_color">Widget Next Athan Text Color</string>
-    <string name="select_widgets_next_athan_text_color">Select custom color for widgets next athan texts</string>
 
     <string name="support">Support</string>
     <string name="requset_permision">Request Permission</string>
@@ -249,7 +247,6 @@
     <string name="theme_brown">Brown</string>
     <string name="theme_nblue">Blue</string>
 
-    <string name="select_font">Select font</string>
     <string name="vazir">Vazir</string>
     <string name="vazir_light">Vazir Light</string>
 
@@ -322,4 +319,19 @@
     <string name="hadeeth_not_exist">Internet problem or hadeeth not exist!</string>
     <string name="alarm_reminders">Alarms and Reminders</string>
     <string name="are_you_sure_delete_athan">Are you sure want to delete %s?</string>
+
+    <string name="quran_page_type">Quran Page Type</string>
+    <string name="mushaf">Mushaf</string>
+    <string name="list">List</string>
+    <string name="download_mushaf_msg">Download Mushaf Files</string>
+
+    <string name="audio_file_not_downloaded">Audio file not downloaded!</string>
+    <string name="continue_play_azkar">Continue play azkar</string>
+    <string name="hide_toolbar_on_scroll">Hide toolbar on scroll</string>
+    <string name="increase_font_size">Increase font size</string>
+    <string name="decrease_font_size">Decrease font size</string>
+    <string name="megabyte">%s MB</string>
+    <string name="card_copied">Card Copied!</string>
+    <string name="donate_page_in_site">Donate page in site.</string>
+
 </resources>

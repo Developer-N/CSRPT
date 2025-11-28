@@ -5,6 +5,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -17,12 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 fun AppIconButton(
     icon: ImageVector,
     title: String,
-    iconModifier: Modifier = Modifier,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         tooltip = { PlainTooltip { Text(title) } },
         state = rememberTooltipState()
-    ) { IconButton(onClick = onClick) { Icon(icon, contentDescription = title, iconModifier) } }
+    ) { IconButton(onClick = onClick) { Icon(icon, contentDescription = title, modifier) } }
 }

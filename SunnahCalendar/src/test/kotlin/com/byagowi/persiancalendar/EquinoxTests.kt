@@ -11,6 +11,8 @@ import kotlin.test.assertEquals
 class EquinoxTests {
     @ParameterizedTest
     @CsvSource(
+        // https://calendar.ut.ac.ir/documents/2139738/7092644/Calendar-1405.pdf
+        "2026, 3, 20, 18, 15, 36" /* should be 59 */,
         // https://calendar.ut.ac.ir/documents/2139738/7092644/Calendar-1404.pdf
         "2025, 3, 20, 12, 31, 26" /* should be 30 */,
         // https://calendar.ut.ac.ir/Fa/Tyear/Data/full-1403.pdf

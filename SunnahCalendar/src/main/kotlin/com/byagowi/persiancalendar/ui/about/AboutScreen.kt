@@ -5,12 +5,14 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.StringRes
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -25,14 +27,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,6 +59,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -76,7 +85,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
@@ -91,16 +102,17 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.generated.faq
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.ExpandArrow
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.icons.MaterialIconDimension
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.appContentSizeAnimationSpec
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 
@@ -108,7 +120,7 @@ import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 @Composable
 fun SharedTransitionScope.AboutScreen(
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     navigateToDeviceInformation: () -> Unit,
     navigateToLicenses: () -> Unit,
 ) {
@@ -118,7 +130,9 @@ fun SharedTransitionScope.AboutScreen(
             @OptIn(ExperimentalMaterial3Api::class) TopAppBar(
                 title = { Text(stringResource(R.string.about)) },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+                navigationIcon = {
+                    NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
+                },
                 actions = {
                     val context = LocalContext.current
 //                    ShareActionButton(animatedContentScope) { shareApplication(context) }
@@ -139,14 +153,19 @@ fun SharedTransitionScope.AboutScreen(
             val scrollState = rememberScrollState()
             Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Box(Modifier.offset { IntOffset(0, scrollState.value * 3 / 4) }) { Header() }
-                ScreenSurface(animatedContentScope) {
-                    AboutScreenContent(navigateToLicenses, paddingValues.calculateBottomPadding())
-                }
+                val headerPx = with(LocalDensity.current) { headerSize.toPx() }
+                val bottomPadding = paddingValues.calculateBottomPadding()
+                ScreenSurface(
+                    animatedContentScope,
+                    disableSharedContent = scrollState.value > headerPx,
+                ) { AboutScreenContent(navigateToLicenses, bottomPadding) }
             }
-            ScrollShadow(scrollState, top = false)
+            ScrollShadow(scrollState, skipTop = true)
         }
     }
 }
+
+private val headerSize = 250.dp
 
 @Composable
 private fun Header() {
@@ -164,7 +183,7 @@ private fun Header() {
     val interactionSource = remember { MutableInteractionSource() }
     Row(
         Modifier
-            .height(250.dp)
+            .height(headerSize)
             .fillMaxWidth()
             .indication(interactionSource = interactionSource, indication = ripple()),
     ) {
@@ -182,20 +201,22 @@ private fun Header() {
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = LocalContentColor.current,
                 )
+                val numeral by numeral.collectAsState()
+                val language by language.collectAsState()
                 Text(
                     buildString {
-                        val version = formatNumber("9.8.6")
-                        // Don't formatNumber it if is multi-parted
+                        val version = numeral.format(number = "10.0.5", skipSeparators = true)
+                        // Don't use local numeral if version name is multi-parted (debug and nightly builds)
 //                            if ("-" in BuildConfig.VERSION_NAME) BuildConfig.VERSION_NAME
-//                            else formatNumber(BuildConfig.VERSION_NAME)
+//                            else numeral.format(BuildConfig.VERSION_NAME, skipSeparators = true)
                         append(stringResource(R.string.version, version))
-                        if (language.value.isUserAbleToReadPersian) {
+                        if (language.isUserAbleToReadPersian) {
                             appendLine()
                             append(
                                 stringResource(
                                     R.string.about_help_subtitle,
-                                    formatNumber(supportedYearOfIranCalendar - 1),
-                                    formatNumber(supportedYearOfIranCalendar)
+                                    numeral.format(supportedYearOfIranCalendar - 1),
+                                    numeral.format(supportedYearOfIranCalendar)
                                 )
                             )
                         }
@@ -213,9 +234,7 @@ private fun Header() {
                 .clickable(indication = null, interactionSource = interactionSource) {
                     logoAnimationAtEnd = !logoAnimationAtEnd
                     clickHandlerDialog(activity)
-                    logoEffect = effectsGenerator
-                        ?.invoke()
-                        ?.asComposeRenderEffect()
+                    logoEffect = effectsGenerator?.invoke()?.asComposeRenderEffect()
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -251,7 +270,11 @@ https://github.com/persian-calendar/persian-calendar"""
 
 @Composable
 private fun AboutScreenContent(navigateToLicenses: () -> Unit, bottomPadding: Dp) {
-    Column {
+    Column(
+        Modifier.windowInsetsPadding(
+            WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)
+        )
+    ) {
         // Licenses
         Text(
             stringResource(R.string.licenses, MaterialTheme.typography.bodyLarge),
@@ -267,13 +290,13 @@ private fun AboutScreenContent(navigateToLicenses: () -> Unit, bottomPadding: Dp
         // Help
         val language by language.collectAsState()
         if (language.isUserAbleToReadPersian) {
-            Row(modifier = Modifier.padding(top = 16.dp, start = 12.dp)) {
+            Row(modifier = Modifier.padding(top = 16.dp, start = 20.dp)) {
                 Icon(
-                    modifier = Modifier.padding(start = 8.dp, end = 4.dp),
+                    modifier = Modifier.size(with(LocalDensity.current) { 24.sp.toDp() }),
                     imageVector = Icons.AutoMirrored.Default.Help,
                     contentDescription = stringResource(R.string.help),
                 )
-                Column {
+                Column(Modifier.padding(start = 4.dp)) {
                     Text(
                         stringResource(R.string.help), style = MaterialTheme.typography.bodyLarge
                     )
@@ -324,30 +347,46 @@ private fun HelpItems() {
         }
     }
     Column {
-        sections.forEach { (title, body) ->
-            var isExpanded by rememberSaveable { mutableStateOf(false) }
+        var expandedItem by rememberSaveable { mutableIntStateOf(-1) }
+        val expandArrowSizeModifier = Modifier.size(with(LocalDensity.current) { 24.sp.toDp() })
+        sections.forEachIndexed { i, (title, body) ->
             Column(
                 modifier = Modifier
-                    .clickable { isExpanded = !isExpanded }
-                    .padding(all = 4.dp)
+                    .toggleable(expandedItem == i) { expandedItem = if (it) i else -1 }
+                    .padding(
+                        horizontal = 4.dp,
+                        vertical = animateDpAsState(
+                            if (expandedItem == i) 6.dp else 4.dp,
+                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        ).value,
+                    )
                     .fillMaxWidth()
-                    .animateContentSize(),
+                    .animateContentSize(appContentSizeAnimationSpec),
             ) {
-                FlowRow(verticalArrangement = Arrangement.Center) {
-                    Spacer(modifier = Modifier.width(16.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                ) {
                     ExpandArrow(
-                        isExpanded = isExpanded,
+                        isExpanded = expandedItem == i,
                         tint = MaterialTheme.colorScheme.primary,
                         contentDescription = stringResource(R.string.more),
                         isLineStart = true,
+                        modifier = expandArrowSizeModifier,
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(title, modifier = Modifier.align(alignment = Alignment.CenterVertically))
+                    Text(
+                        title,
+                        modifier = Modifier.align(alignment = Alignment.CenterVertically),
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 11.sp,
+                            maxFontSize = LocalTextStyle.current.fontSize,
+                        ),
+                    )
                 }
-                this.AnimatedVisibility(visible = isExpanded) {
-                    SelectionContainer {
-                        Text(body, Modifier.padding(horizontal = 16.dp))
-                    }
+                this.AnimatedVisibility(visible = expandedItem == i) {
+                    SelectionContainer { Text(body, Modifier.padding(horizontal = 16.dp)) }
                 }
             }
         }
@@ -367,17 +406,18 @@ private fun AboutScreenButton(
         modifier = Modifier
             .clickable { action(context) }
             .padding(start = 20.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)
+            .fillMaxWidth()
             .then(modifier),
     ) {
         Row {
             Icon(
-                modifier = Modifier.padding(end = 4.dp),
+                modifier = Modifier.size(with(LocalDensity.current) { 24.sp.toDp() }),
                 imageVector = icon,
-                contentDescription = stringResource(title),
+                contentDescription = null,
             )
-            Column {
+            Column(Modifier.padding(start = 4.dp)) {
                 Text(stringResource(title), style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     stringResource(summary),
                     style = MaterialTheme.typography.bodySmall,
@@ -414,6 +454,7 @@ private fun Developers() {
     }
     var refreshToken by remember { mutableIntStateOf(0) }
     val developers = remember(refreshToken) { developersBeforeShuffle.shuffled() }
+    val isTalkBackEnabled by isTalkBackEnabled.collectAsState()
 
     Text(
         stringResource(R.string.about_developers),
@@ -436,16 +477,14 @@ private fun Developers() {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         ) {
+            val uriHandler = LocalUriHandler.current
             developers.forEach { (username, displayName, icon) ->
                 ElevatedFilterChip(
                     modifier = Modifier
                         .padding(all = 4.dp),
                     onClick = click@{
-                        if (username == "ImanSoltanian") return@click // The only person without GitHub account
-                        runCatching {
-                            val uri = "https://github.com/$username".toUri()
-                            CustomTabsIntent.Builder().build().launchUrl(context, uri)
-                        }.onFailure(logException)
+                        if (username in listOf("ImanSoltanian", "SeyedHamed")) return@click
+                        uriHandler.openUri("https://github.com/$username")
                     },
                     label = { Text(displayName) },
                     selected = true,

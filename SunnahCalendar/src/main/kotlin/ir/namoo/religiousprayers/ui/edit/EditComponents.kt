@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +64,7 @@ fun EditDateComponent(
     onDayChanged: (Int) -> Unit
 ) {
     val dayRange = if (month < 7) 1..31 else 1..30
+    val pendingConfirms = remember { mutableStateListOf<() -> Unit>() }
     ElevatedCard(modifier = modifier.padding(2.dp)) {
         Row(
             modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically
@@ -73,18 +75,24 @@ fun EditDateComponent(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            NumberPicker(modifier = Modifier
-                .weight(1f)
-                .padding(4.dp),
+            NumberPicker(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
                 range = dayRange,
                 value = day,
-                onValueChange = { onDayChanged(it) })
-            NumberPicker(modifier = Modifier
-                .weight(1f)
-                .padding(4.dp),
+                onValueChange = { onDayChanged(it) },
+                pendingConfirms = pendingConfirms
+            )
+            NumberPicker(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
                 range = 1..12,
                 value = month,
-                onValueChange = { onMonthChanged(it) })
+                onValueChange = { onMonthChanged(it) },
+                pendingConfirms = pendingConfirms
+            )
         }
     }
 }
@@ -100,7 +108,7 @@ fun EditAthanComponent(
 ) {
     originalTime ?: return
     editedTime ?: return
-
+    val pendingConfirms = remember { mutableStateListOf<() -> Unit>() }
     var hour by remember { mutableIntStateOf(editedTime.split(":")[0].toInt()) }
     var minute by remember { mutableIntStateOf(editedTime.split(":")[1].toInt()) }
     var isEquals by remember { mutableStateOf(false) }
@@ -126,24 +134,30 @@ fun EditAthanComponent(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            NumberPicker(modifier = Modifier
-                .weight(1f)
-                .padding(4.dp),
+            NumberPicker(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
                 range = 1..59,
                 value = minute,
                 onValueChange = {
                     minute = it
                     onTimeChanged("$hour:$minute")
-                })
-            NumberPicker(modifier = Modifier
-                .weight(1f)
-                .padding(4.dp),
+                },
+                pendingConfirms = pendingConfirms
+            )
+            NumberPicker(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
                 range = 0..23,
                 value = hour,
                 onValueChange = {
                     hour = it
                     onTimeChanged("$hour:$minute")
-                })
+                },
+                pendingConfirms = pendingConfirms
+            )
         }
     }
 }
@@ -163,16 +177,18 @@ fun PreviewComponents() {
         Column {
             EditDateComponent(day = 14, month = 6, onDayChanged = {}, onMonthChanged = {})
             Row(modifier = Modifier.fillMaxWidth()) {
-                EditAthanComponent(modifier = Modifier
-                    .weight(1f)
-                    .padding(2.dp),
+                EditAthanComponent(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(2.dp),
                     title = stringResource(id = R.string.fajr),
                     editedTime = "6:10",
                     originalTime = "6:10",
                     onTimeChanged = {})
-                EditAthanComponent(modifier = Modifier
-                    .weight(1f)
-                    .padding(2.dp),
+                EditAthanComponent(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(2.dp),
                     title = stringResource(id = R.string.sunrise),
                     editedTime = "12:50",
                     originalTime = "12:51",
@@ -184,9 +200,9 @@ fun PreviewComponents() {
 
 @Composable
 fun GroupEditDialog(
-    onDismiss: () -> Unit,
-    onGroupEdit: (Int, Int, Int, Int, Int, Int, Boolean) -> Unit
+    onDismiss: () -> Unit, onGroupEdit: (Int, Int, Int, Int, Int, Int, Boolean) -> Unit
 ) {
+    val pendingConfirms = remember { mutableStateListOf<() -> Unit>() }
     val athans = listOf(
         stringResource(id = R.string.fajr),
         stringResource(id = R.string.sunrise),
@@ -213,11 +229,8 @@ fun GroupEditDialog(
 
     var selectedEditType by remember { mutableIntStateOf(0) }
     val rotate by animateFloatAsState(
-        targetValue = if (showAthanSelector) 180f else 0f,
-        label = "rotate",
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+        targetValue = if (showAthanSelector) 180f else 0f, label = "rotate", animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium
         )
     )
     AlertDialog(onDismissRequest = { onDismiss() }, confirmButton = {
@@ -265,7 +278,8 @@ fun GroupEditDialog(
                 )
                 ElevatedAssistChip(onClick = { showAthanSelector = true }, label = {
                     Text(text = selectedAthan, fontWeight = FontWeight.SemiBold)
-                    AppDropdownMenu(expanded = showAthanSelector,
+                    AppDropdownMenu(
+                        expanded = showAthanSelector,
                         onDismissRequest = { showAthanSelector = false }) { closeMenu ->
                         athans.forEach { athan ->
                             AppDropdownMenuItem(text = {
@@ -303,17 +317,19 @@ fun GroupEditDialog(
             }
             HorizontalDivider(modifier = Modifier.padding(4.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                EditDateComponent(modifier = Modifier
-                    .weight(1f)
-                    .padding(4.dp),
+                EditDateComponent(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp),
                     title = stringResource(id = R.string.str_from),
                     month = selectedFromMonth,
                     day = selectedFromDay,
                     onMonthChanged = { selectedFromMonth = it },
                     onDayChanged = { selectedFromDay = it })
-                EditDateComponent(modifier = Modifier
-                    .weight(1f)
-                    .padding(4.dp),
+                EditDateComponent(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp),
                     title = stringResource(id = R.string.str_to),
                     month = selectedToMonth,
                     day = selectedToDay,
@@ -333,10 +349,13 @@ fun GroupEditDialog(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp
                 )
-                NumberPicker(modifier = Modifier.weight(1f),
+                NumberPicker(
+                    modifier = Modifier.weight(1f),
                     range = 1..30,
                     value = selectedMinute,
-                    onValueChange = { selectedMinute = it })
+                    onValueChange = { selectedMinute = it },
+                    pendingConfirms = pendingConfirms
+                )
                 Spacer(modifier = Modifier.weight(0.5f))
                 Column(modifier = Modifier.weight(2f)) {
                     types.forEach { item ->

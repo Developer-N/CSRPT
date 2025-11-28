@@ -17,6 +17,7 @@ const val DEFAULT_SUMMER_TIME = false
 const val PREF_FIRST_START = "first_start"
 
 const val PREF_LAST_UPDATE_CHECK = "last_update_check"
+const val PREF_LAST_SHOW_DONATE_DIALOG = "last_show_donate_dialog"
 
 const val PREF_AZKAR_REINDER = "azkar_reminder"
 const val PREF_AZKAR_LANG = "azkar_lang"
@@ -46,4 +47,6 @@ const val LAST_PLAYED_BEFORE_ATHAN_KEY = "last_before_athan_key"
 const val LAST_PLAYED_AFTER_ATHAN_KEY = "last_after_athan_key"
 
 
-const val PREF_LAST_UPDATE_PRAY_TIMES_KEY = "last_update_pray_times_key"
+const val PREF_LAST_UPDATE_PRAY_TIMES_KEY = "last_update_pray_times"
+
+const val PREF_PLAY_ALL_AZKAR = "play_all_azkar"

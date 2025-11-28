@@ -7,30 +7,34 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.annotation.ColorInt
 import androidx.compose.ui.util.lerp
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withRotation
 import androidx.core.graphics.withTranslation
 import androidx.dynamicanimation.animation.FlingAnimation
 import androidx.dynamicanimation.animation.FloatValueHolder
-import com.byagowi.persiancalendar.AU_IN_KM
+import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.isBoldFont
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
+import com.byagowi.persiancalendar.utils.symbol
+import com.byagowi.persiancalendar.utils.titleStringId
 import java.util.GregorianCalendar
-import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 import kotlin.math.sign
 
 class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(context, attrs) {
@@ -73,21 +77,22 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
     private val iauRanges = Zodiac.entries.map { it.iauRange.map(Double::toFloat) }
     private val ranges = iauRanges.map { it.toFloatArray() }
 
-    private val labels = Zodiac.entries.map { it.format(resources, false, short = true) }
+    private val labels = Zodiac.entries.map { it.shortTitle(resources) }
+    private val symbols = Zodiac.entries.map { it.symbol }
 
     init {
         onDraw = { canvas, matrix ->
             canvas.withMatrix(matrix) {
                 when (mode) {
                     AstronomyMode.MOON -> drawMoonOnlyView(this)
-                    AstronomyMode.EARTH -> drawEarthCentricView(this)
+                    AstronomyMode.EARTH -> drawGeoCentricView(this)
                     AstronomyMode.SUN -> drawSolarSystemPlanetsView(this)
                 }
             }
             if (mode == AstronomyMode.MOON) {
                 val radius = min(width, height) / 2f
                 canvas.drawText(
-                    "%,d km".format(Locale.ENGLISH, (state.moon.dist * AU_IN_KM).roundToLong()),
+                    language.value.formatAuAsKm(state.moon.dist),
                     radius, radius * 1.7f, moonTextPaint
                 )
             }
@@ -150,6 +155,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
     private fun drawSolarSystemPlanetsView(canvas: Canvas) {
         val radius = min(width, height) / 2f
         colorTextPaint.textSize = radius / 11
+        colorTextPaint.alpha = 255
         circlesPaint.strokeWidth = radius / 9
         circlesPaint.style = Paint.Style.FILL_AND_STROKE
         (1..8).forEach {
@@ -158,7 +164,7 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
             circlesPaint.style = Paint.Style.STROKE
         }
         canvas.drawCircle(radius, radius, radius / 35, sunIndicatorPaint)
-        state.planets.forEachIndexed { i, (label, ecliptic) ->
+        state.heliocentricPlanets.forEachIndexed { i, ecliptic ->
             canvas.withRotation(-ecliptic.elon.toFloat() + 90, radius, radius) {
                 textPath.rewind()
                 val rectSize = radius / 9 * (1 + i) * .95f
@@ -166,7 +172,9 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                     radius - rectSize, radius - rectSize, radius + rectSize, radius + rectSize
                 )
                 textPath.addArc(textPathRect, 0f, 180f)
-                canvas.drawTextOnPath(resources.getString(label), textPath, 0f, 0f, colorTextPaint)
+                canvas.drawTextOnPath(
+                    heliocentricPlanetsTitles[i], textPath, 0f, 0f, colorTextPaint
+                )
             }
         }
     }
@@ -191,7 +199,14 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         it.color = Color.GRAY
     }
 
-    private fun drawEarthCentricView(canvas: Canvas) {
+    private val heliocentricPlanetsTitles = AstronomyState.heliocentricPlanetsList.map {
+        resources.getString(it.titleStringId) + " " + it.symbol
+    }
+    private val geocentricPlanetsTitles = geocentricPlanetsList.map {
+        resources.getString(it.titleStringId) + " " + it.symbol
+    }
+
+    private fun drawGeoCentricView(canvas: Canvas) {
         val radius = min(width, height) / 2f
         (0..12).forEach {
             canvas.withRotation(it * 30f, pivotX = radius, pivotY = radius) {
@@ -211,28 +226,57 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
                 drawLine(radius, circleInset, radius, radius, zodiacSeparatorPaint)
             }
             canvas.withRotation(-(start + end) / 2 + 90, radius, radius) {
+//                val rectSize = radius * .88f
+//                textPath.rewind()
+//                textPathRect.set(
+//                    radius - rectSize, radius - rectSize, radius + rectSize, radius + rectSize
+//                )
+//                textPath.addArc(textPathRect, 0f, 180f)
+//                drawTextOnPath(labels[(index + 6) % 12], textPath, 0f, 0f, zodiacPaint)
                 drawText(labels[index], radius, radius * .12f, zodiacPaint)
+                drawText(symbols[index], radius, radius * .25f, zodiacSymbolPaint)
             }
         }
         val cr = radius / 8f
         solarDraw.earth(canvas, radius, radius, cr / 1.5f, state.sun)
         val sunDegree = state.sun.elon.toFloat()
         canvas.withRotation(-sunDegree + 90, radius, radius) {
-            solarDraw.sun(this, radius, radius / 3.5f, cr)
+            solarDraw.sun(this, radius, radius / 2.5f, cr)
             canvas.withTranslation(x = radius, y = 0f) {
                 canvas.drawPath(trianglePath, sunIndicatorPaint)
             }
         }
         val moonDegree = state.moon.lon.toFloat()
-        canvas.drawCircle(radius, radius, radius * .3f, moonOrbitPaint)
+        canvas.drawCircle(radius, radius, radius * .25f, moonOrbitPaint)
         canvas.withRotation(-moonDegree + 90, radius, radius) {
             val moonDistance = state.moon.dist / 0.002569 // Lunar distance in AU
             solarDraw.moon(
                 this, state.sun, state.moon, radius,
-                radius * moonDistance.toFloat() * .7f, cr / 1.9f
+                radius * moonDistance.toFloat() * .75f, cr / 1.9f
             )
             canvas.withTranslation(x = radius, y = 0f) {
                 canvas.drawPath(trianglePath, moonIndicatorPaint)
+            }
+        }
+        colorTextPaint.textSize = radius / 15
+        colorTextPaint.alpha = 120
+        state.geocentricPlanets.forEachIndexed { i, ecliptic ->
+            canvas.withRotation(-ecliptic.elon.toFloat() + 270, radius, radius) {
+                val r = when (i) {
+                    0 -> 2.5f
+                    1 -> 3.25f
+                    2 -> 5.25f
+                    3 -> 6f
+                    4 -> 6.75f
+                    else -> 0f
+                }
+                val rectSize = radius / 9 * (1 + r) * .95f
+                textPath.rewind()
+                textPathRect.set(
+                    radius - rectSize, radius - rectSize, radius + rectSize, radius + rectSize
+                )
+                textPath.addArc(textPathRect, 0f, 180f)
+                canvas.drawTextOnPath(geocentricPlanetsTitles[i], textPath, 0f, 0f, colorTextPaint)
             }
         }
     }
@@ -294,6 +338,21 @@ class SolarView(context: Context, attrs: AttributeSet? = null) : ZoomableView(co
         it.strokeWidth = 1 * dp
         it.textSize = 10 * dp
         it.textAlign = Paint.Align.CENTER
+    }
+
+    fun setFont(typeface: Typeface?) {
+        colorTextPaint.typeface = typeface
+        zodiacPaint.typeface = typeface
+        moonTextPaint.typeface = typeface
+    }
+
+    private val zodiacSymbolPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
+        it.color = 0x38808080
+        it.strokeWidth = 1 * dp
+        it.textSize = 20 * dp
+        it.textAlign = Paint.Align.CENTER
+        it.typeface = ResourcesCompat.getFont(context, R.font.notosanssymbolsregularzodiacsubset)
+        if (isBoldFont.value) it.isFakeBoldText = true
     }
     private val moonOrbitPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.style = Paint.Style.STROKE

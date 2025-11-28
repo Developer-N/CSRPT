@@ -82,6 +82,8 @@ class QuranDownloadViewModel(private val qariRepository: QariRepository) : ViewM
                         is DownloadResult.TotalSize -> {
                             _totalSize.value = it.totalSize
                         }
+
+                        is DownloadResult.DownloadedByte -> {}
                     }
                 }
             }

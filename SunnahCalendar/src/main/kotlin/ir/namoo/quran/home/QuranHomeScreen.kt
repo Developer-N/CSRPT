@@ -65,6 +65,7 @@ import com.byagowi.persiancalendar.ui.utils.isLight
 import ir.namoo.quran.bookmarks.BookmarksScreen
 import ir.namoo.quran.chapters.ChaptersScreen
 import ir.namoo.quran.download.DownloadScreen
+import ir.namoo.quran.mushaf.MushafScreen
 import ir.namoo.quran.notes.NotesScreen
 import ir.namoo.quran.search.SearchScreen
 import ir.namoo.quran.settings.SettingsScreen
@@ -76,6 +77,8 @@ import kotlinx.coroutines.launch
 fun QuranHomeScreen(
     startSura: Int = -1,
     startAya: Int = -1,
+    pageType: Int = 1,
+    reload: () -> Unit,
     exit: () -> Unit,
     createShortcut: () -> Unit,
     checkFiles: () -> Unit
@@ -180,30 +183,43 @@ fun QuranHomeScreen(
                 //Sura Screen
                 composable(
                     route = "sura/{sura}/{aya}?play={play}",
-                    arguments = listOf(navArgument("sura") { type = NavType.IntType },
+                    arguments = listOf(
+                        navArgument("sura") { type = NavType.IntType },
                         navArgument("aya") { type = NavType.IntType },
                         navArgument("play") {
                             type = NavType.BoolType
                             defaultValue = false
                         })
                 ) { backStackEntry ->
-                    SuraScreen(
-                        startSura = backStackEntry.arguments?.getInt("sura") ?: 1,
-                        aya = backStackEntry.arguments?.getInt("aya") ?: 1,
-                        animatedContentScope = this,
-                        openDrawer ={scope.launch { drawerState.open() }}
-                    )
+                    val sura = backStackEntry.arguments?.getInt("sura") ?: 1
+                    val aya = backStackEntry.arguments?.getInt("aya") ?: 1
+                    if (pageType == 0) {
+                        SuraScreen(
+                            startSura = sura,
+                            aya = aya,
+                            animatedContentScope = this,
+                            openDrawer = { scope.launch { drawerState.open() } }
+                        )
+                    } else {
+                        MushafScreen(
+                            sura = sura,
+                            aya = aya,
+                            animatedContentScope = this,
+                            openDrawer = { scope.launch { drawerState.open() } })
+                    }
                 }
                 //Search Screen
                 composable(route = searchRoute) {
-                    SearchScreen(navigationUp = { navController.navigateUp() },
+                    SearchScreen(
+                        navigationUp = { navController.navigateUp() },
                         navigateToVerse = { sura, verse ->
                             navController.navigate("sura/$sura/$verse")
                         })
                 }
                 //Notes Screen
                 composable(route = notesRoute) {
-                    NotesScreen(animatedContentScope = this,
+                    NotesScreen(
+                        animatedContentScope = this,
                         openDrawer = { scope.launch { drawerState.open() } },
                         navigateToVerse = { sura, verse ->
                             navController.navigate("sura/$sura/$verse")
@@ -211,7 +227,8 @@ fun QuranHomeScreen(
                 }
                 //Bookmarks Screen
                 composable(route = bookmarksRoute) {
-                    BookmarksScreen(animatedContentScope = this,
+                    BookmarksScreen(
+                        animatedContentScope = this,
                         openDrawer = { scope.launch { drawerState.open() } },
                         navigateToVerse = { sura, verse ->
                             navController.navigate("sura/$sura/$verse")
@@ -219,12 +236,15 @@ fun QuranHomeScreen(
                 }
                 //Download Screen
                 composable(route = downloadRoute) {
-                    DownloadScreen(animatedContentScope = this,
+                    DownloadScreen(
+                        animatedContentScope = this,
                         openDrawer = { scope.launch { drawerState.open() } })
                 }
                 //Setting Screen
                 composable(route = settingsRoute) {
-                    SettingsScreen(animatedContentScope = this,
+                    SettingsScreen(
+                        animatedContentScope = this,
+                        reload = reload,
                         openDrawer = { scope.launch { drawerState.open() } })
                 }
             }

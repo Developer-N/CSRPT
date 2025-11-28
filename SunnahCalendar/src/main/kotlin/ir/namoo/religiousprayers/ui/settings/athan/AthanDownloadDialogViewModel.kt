@@ -126,6 +126,8 @@ class AthanDownloadDialogViewModel(
                     is DownloadResult.TotalSize -> {
                         _athansState[index] = _athansState[index].copy(totalSize = it.totalSize)
                     }
+
+                    is DownloadResult.DownloadedByte -> {}
                 }
             }
         }

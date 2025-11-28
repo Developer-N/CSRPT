@@ -114,20 +114,11 @@
                 <TextView
                     android:id="@+id/textWeekDayText4"
                     style="@style/WidgetTextStyle"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingBottom="4dp"
-                    android:autoSizeMaxTextSize="14sp"
-                    android:autoSizeMinTextSize="9sp"
-                    android:autoSizeStepGranularity="1sp"
-                    android:autoSizeTextType="uniform"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textAlignment="center"
-                    android:textSize="14sp"
                     android:textStyle="bold"
-                    tools:targetApi="26"
-                    tools:text="جمعه" />
+                    tools:text="پ" />
 
                 <FrameLayout
                     android:layout_width="wrap_content"
@@ -239,13 +230,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"
             android:gravity="center_horizontal|bottom"
-            android:autoSizeMaxTextSize="14sp"
-            android:autoSizeMinTextSize="9sp"
-            android:autoSizeStepGranularity="1sp"
-            android:autoSizeTextType="uniform"
             android:textSize="14sp"
             tools:ignore="SpUsage"
-            tools:targetApi="26"
             tools:text="اردیبهشت ۱۴۰۱" />
+
     </LinearLayout>
 </FrameLayout>

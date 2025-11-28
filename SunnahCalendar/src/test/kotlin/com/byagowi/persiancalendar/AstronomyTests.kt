@@ -3,9 +3,33 @@ package com.byagowi.persiancalendar
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.Compatibility.BEST
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.Compatibility.BETTER
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.Compatibility.NEUTRAL
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.Compatibility.WORSE
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.Compatibility.WORST
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.DOG
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.DRAGON
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.FixedElement.EARTH
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.FixedElement.FIRE
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.FixedElement.METAL
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.FixedElement.WATER
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.FixedElement.WOOD
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.GOAT
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.HORSE
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.MONKEY
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.OX
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.PIG
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.RABBIT
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.RAT
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.ROOSTER
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.SNAKE
+import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac.TIGER
 import com.byagowi.persiancalendar.ui.astronomy.LunarAge
 import com.byagowi.persiancalendar.ui.astronomy.Zodiac
 import com.byagowi.persiancalendar.ui.astronomy.houses
+import com.byagowi.persiancalendar.ui.astronomy.meanApogee
+import com.byagowi.persiancalendar.ui.astronomy.toAbjad
 import io.github.cosinekitty.astronomy.seasons
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.PersianDate
@@ -14,6 +38,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import java.util.GregorianCalendar
 import java.util.TimeZone
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class AstronomyTests {
@@ -28,6 +53,11 @@ class AstronomyTests {
             assertEquals(it, lunarAge.days, 1.0e-5)
             assertEquals((index + 1) % 8, lunarAge.toPhase().ordinal)
         }
+        assertEquals(LunarAge.Phase.NEW_MOON, LunarAge.fromDegrees(340.0).toPhase())
+        assertEquals(LunarAge.Phase.NEW_MOON, LunarAge.fromDegrees(0.0).toPhase())
+        assertEquals(LunarAge.Phase.FIRST_QUARTER, LunarAge.fromDegrees(90.0).toPhase())
+        assertEquals(LunarAge.Phase.FULL_MOON, LunarAge.fromDegrees(180.0).toPhase())
+        assertEquals(LunarAge.Phase.THIRD_QUARTER, LunarAge.fromDegrees(270.0).toPhase())
         val time = GregorianCalendar(TimeZone.getTimeZone("UTC"))
         time.clear()
         time.set(2022, 1, 13, 0, 0, 0)
@@ -145,40 +175,28 @@ class AstronomyTests {
     @Test
     fun `Iranian animal year name`() {
         assertEquals(
-            ChineseZodiac.OX,
+            OX,
             ChineseZodiac.fromPersianCalendar(PersianDate(1400, 1, 1))
         )
         assertEquals(
-            ChineseZodiac.TIGER,
+            TIGER,
             ChineseZodiac.fromPersianCalendar(PersianDate(1401, 1, 1))
         )
         listOf(
-            ChineseZodiac.MONKEY, ChineseZodiac.ROOSTER, ChineseZodiac.DOG,
-            ChineseZodiac.PIG, ChineseZodiac.RAT, ChineseZodiac.OX,
-            ChineseZodiac.TIGER, ChineseZodiac.RABBIT, ChineseZodiac.DRAGON,
-            ChineseZodiac.SNAKE, ChineseZodiac.HORSE, ChineseZodiac.GOAT
+            MONKEY, ROOSTER, DOG,
+            PIG, RAT, OX,
+            TIGER, RABBIT, DRAGON,
+            SNAKE, HORSE, GOAT
         ).zip(1395..1406) { expected, year ->
             assertEquals(
                 expected, ChineseZodiac.fromPersianCalendar(PersianDate(year, 1, 1))
             )
         }
+        // Just doesn't crash in negative years
+        (-20..20).forEach { year ->
+            ChineseZodiac.fromPersianCalendar(PersianDate(year, 1, 1))
+        }
     }
-
-//    @Test
-//    fun `Chinese animal year name`() {
-//        // https://en.wikipedia.org/wiki/Chinese_zodiac#Chinese_calendar
-//        (1..5).flatMap {
-//            listOf(
-//                ChineseZodiac.RAT, ChineseZodiac.OX, ChineseZodiac.TIGER,
-//                ChineseZodiac.RABBIT, ChineseZodiac.DRAGON, ChineseZodiac.SNAKE,
-//                ChineseZodiac.HORSE, ChineseZodiac.GOAT, ChineseZodiac.MONKEY,
-//                ChineseZodiac.ROOSTER, ChineseZodiac.DOG, ChineseZodiac.PIG,
-//            )
-//        }.zip(1..60) { expected, year ->
-//            val mock = mock<ChineseCalendar> { on { get(ChineseCalendar.YEAR) } doReturn year }
-//            assertEquals(expected, ChineseZodiac.fromChineseCalendar(mock))
-//        }
-//    }
 
     @Test
     fun `Southern hemisphere in moon draw`() {
@@ -229,14 +247,14 @@ class AstronomyTests {
             329.96107258615484, 61.762612284235615, 145.29968044985748,
             234.77117761711645, 318.8433129667867
         )
-        assertAll((1380..1420).mapIndexed { i, year ->
+        (1380..1420).mapIndexed { i, year ->
             val time = seasons(CivilDate(PersianDate(year, 1, 1)).year).marchEquinox
             val houses = houses(35.68, 51.42, time);
             {
                 assertEquals(ascendants[i], houses[0], 1.0e-5, "$year")
                 assertEquals(midheavens[i], houses[9], 1.0e-5, "$year")
             }
-        })
+        }.run(::assertAll)
         // Smoke test
         (1300..1500).forEach { year ->
             val time = seasons(CivilDate(PersianDate(year, 1, 1)).year).marchEquinox
@@ -244,88 +262,102 @@ class AstronomyTests {
         }
     }
 
+    fun Zodiac.with(degrees: Int, minutes: Int): Double = ordinal * 30 + degrees + minutes / 60.0
+
     @Test
-    fun `Test known ascendants`() {
-        assertAll(
-            listOf(
-                1225 to Zodiac.CAPRICORN, // https://w.wiki/EhPH
-                1243 to Zodiac.CANCER, // https://w.wiki/EhPK https://w.wiki/EhPN
-                1269 to Zodiac.LIBRA, // https://w.wiki/EhPQ
-
-                1272 to Zodiac.CANCER, // https://w.wiki/EhPc
-                // 1273 to Zodiac.VIRGO, // doesn't match https://w.wiki/EhPY
-                1274 to Zodiac.SAGITTARIUS, // https://w.wiki/EhPX
-                1275 to Zodiac.PISCES, // https://w.wiki/EhPV but doesn't match with https://w.wiki/EhPR
-                1276 to Zodiac.CANCER,
-                1277 to Zodiac.VIRGO,
-                1278 to Zodiac.SAGITTARIUS,
-                1279 to Zodiac.PISCES,
-                1280 to Zodiac.GEMINI,
-                1281 to Zodiac.VIRGO,
-                1282 to Zodiac.SCORPIO,
-                1283 to Zodiac.AQUARIUS,
-                1284 to Zodiac.GEMINI,
-                1285 to Zodiac.VIRGO, // implied
-                1286 to Zodiac.SCORPIO,
-                1287 to Zodiac.AQUARIUS,
-                1288 to Zodiac.GEMINI,
-                1289 to Zodiac.LEO,
-                1290 to Zodiac.SCORPIO,
-                1291 to Zodiac.CAPRICORN,
-                1292 to Zodiac.TAURUS,
-                1293 to Zodiac.LEO,
-                1294 to Zodiac.LIBRA,
-                1295 to Zodiac.CAPRICORN,
-                1296 to Zodiac.TAURUS,
-                1297 to Zodiac.LEO,
-                1298 to Zodiac.LIBRA,
-                1299 to Zodiac.CAPRICORN,
-                1300 to Zodiac.ARIES, // implied
-                1301 to Zodiac.CANCER, // implied
-                1302 to Zodiac.LIBRA, // implied
-                1303 to Zodiac.SAGITTARIUS,
-                1304 to Zodiac.ARIES,
-                1305 to Zodiac.CANCER,
-                1306 to Zodiac.LIBRA, // implied
-                1307 to Zodiac.SAGITTARIUS, // implied hardly
-                1308 to Zodiac.PISCES, // implied
-                1309 to Zodiac.CANCER,
-                1310 to Zodiac.VIRGO,
-                1311 to Zodiac.SAGITTARIUS,
-                1312 to Zodiac.PISCES,
-                1313 to Zodiac.GEMINI,
-                1314 to Zodiac.VIRGO,
-                1315 to Zodiac.SCORPIO,
-                1316 to Zodiac.AQUARIUS,
-                1317 to Zodiac.GEMINI,
-                1318 to Zodiac.VIRGO,
-                1319 to Zodiac.SCORPIO,
-                1320 to Zodiac.AQUARIUS,
-                1321 to Zodiac.GEMINI,
-                1322 to Zodiac.LEO,
-                1323 to Zodiac.SCORPIO,
-                1324 to Zodiac.CAPRICORN,
-                // 1325 to Zodiac.TAURUS, doesn't match
-                1326 to Zodiac.LEO,
-                1327 to Zodiac.LIBRA,
-                1328 to Zodiac.CAPRICORN, // implied
-                1329 to Zodiac.TAURUS,
-                1330 to Zodiac.LEO,
-
-                // 1402 to Zodiac.CANCER, // implied
-                // 1403 to Zodiac.LEO, // implied
-                1404 to Zodiac.CANCER
-            ).map { (year, sign) ->
-                val time = seasons(CivilDate(PersianDate(year, 1, 1)).year).marchEquinox
-                val ascendant = houses(35.68, 51.42, time)[0]
-                println("$year: ${ascendant % 30}");
-                { assertEquals(sign, Zodiac.fromTropical(ascendant), "$year") }
-            }
-        )
+    fun `Check black moon values`() {
+        listOf(
+            1398 to Zodiac.AQUARIUS.with(25, 7),
+            1400 to Zodiac.TAURUS.with(16, 42),
+            1401 to Zodiac.GEMINI.with(27, 11),
+            1402 to Zodiac.LEO.with(7, 59),
+            1403 to Zodiac.VIRGO.with(18, 46),
+        ).map { (year, expected) ->
+            val time = seasons(CivilDate(PersianDate(year, 1, 1)).year).marchEquinox
+            { assertEquals(expected, meanApogee(time), .15, "$year") }
+        }.run(::assertAll)
     }
 
     @Test
-    fun `Test against known ascedants`() {
+    fun `Test known ascendants`() {
+        listOf(
+            1225 to Zodiac.CAPRICORN, // https://w.wiki/EhPH
+            1243 to Zodiac.CANCER, // https://w.wiki/EhPK https://w.wiki/EhPN
+            1269 to Zodiac.LIBRA, // https://w.wiki/EhPQ
+
+            1272 to Zodiac.CANCER, // https://w.wiki/EhPc
+            // 1273 to Zodiac.VIRGO, // doesn't match https://w.wiki/EhPY
+            1274 to Zodiac.SAGITTARIUS, // https://w.wiki/EhPX
+            1275 to Zodiac.PISCES, // https://w.wiki/EhPV but doesn't match with https://w.wiki/EhPR
+            1276 to Zodiac.CANCER,
+            1277 to Zodiac.VIRGO,
+            1278 to Zodiac.SAGITTARIUS,
+            1279 to Zodiac.PISCES,
+            1280 to Zodiac.GEMINI,
+            1281 to Zodiac.VIRGO,
+            1282 to Zodiac.SCORPIO,
+            1283 to Zodiac.AQUARIUS,
+            1284 to Zodiac.GEMINI,
+            1285 to Zodiac.VIRGO, // implied
+            1286 to Zodiac.SCORPIO,
+            1287 to Zodiac.AQUARIUS,
+            1288 to Zodiac.GEMINI,
+            1289 to Zodiac.LEO,
+            1290 to Zodiac.SCORPIO,
+            1291 to Zodiac.CAPRICORN,
+            1292 to Zodiac.TAURUS,
+            1293 to Zodiac.LEO,
+            1294 to Zodiac.LIBRA,
+            1295 to Zodiac.CAPRICORN,
+            1296 to Zodiac.TAURUS,
+            1297 to Zodiac.LEO,
+            1298 to Zodiac.LIBRA,
+            1299 to Zodiac.CAPRICORN,
+            1300 to Zodiac.ARIES, // implied
+            1301 to Zodiac.CANCER, // implied
+            1302 to Zodiac.LIBRA, // implied
+            1303 to Zodiac.SAGITTARIUS,
+            1304 to Zodiac.ARIES,
+            1305 to Zodiac.CANCER,
+            1306 to Zodiac.LIBRA, // implied
+            1307 to Zodiac.SAGITTARIUS, // implied hardly
+            1308 to Zodiac.PISCES, // implied
+            1309 to Zodiac.CANCER,
+            1310 to Zodiac.VIRGO,
+            1311 to Zodiac.SAGITTARIUS,
+            1312 to Zodiac.PISCES,
+            1313 to Zodiac.GEMINI,
+            1314 to Zodiac.VIRGO,
+            1315 to Zodiac.SCORPIO,
+            1316 to Zodiac.AQUARIUS,
+            1317 to Zodiac.GEMINI,
+            1318 to Zodiac.VIRGO,
+            1319 to Zodiac.SCORPIO,
+            1320 to Zodiac.AQUARIUS,
+            1321 to Zodiac.GEMINI,
+            1322 to Zodiac.LEO,
+            1323 to Zodiac.SCORPIO,
+            1324 to Zodiac.CAPRICORN,
+            // 1325 to Zodiac.TAURUS, doesn't match
+            1326 to Zodiac.LEO,
+            1327 to Zodiac.LIBRA,
+            1328 to Zodiac.CAPRICORN, // implied
+            1329 to Zodiac.TAURUS,
+            1330 to Zodiac.LEO,
+
+            // 1402 to Zodiac.CANCER, // implied
+            // 1403 to Zodiac.LEO, // implied
+            1404 to Zodiac.CANCER
+        ).map { (year, sign) ->
+            val time = seasons(CivilDate(PersianDate(year, 1, 1)).year).marchEquinox
+            val ascendant = houses(35.68, 51.42, time)[0]
+            println("$year: ${ascendant % 30}");
+            { assertEquals(sign, Zodiac.fromTropical(ascendant), "$year") }
+        }.run(::assertAll)
+    }
+
+    @Test
+    fun `Test against known ascendants`() {
         val time = seasons(CivilDate(PersianDate(1404, 1, 1)).year).marchEquinox
         // These numbers are from swisseph and brought here just for the sake of test
         val expectations = listOf(
@@ -334,11 +366,9 @@ class AstronomyTests {
             290.08328836357674, 311.14478018790146, 335.40614507331907,
             5.351511497078217, 41.0773712487118, 77.73659794974952,
         )
-        assertAll(
-            expectations.zip(houses(35.68, 51.42, time)) { expected, actual ->
-                { assertEquals(expected, actual, 0.025) }
-            },
-        )
+        expectations.zip(houses(35.68, 51.42, time)) { expected, actual ->
+            { assertEquals(expected, actual, 0.025) }
+        }.run(::assertAll)
     }
 
     @Test
@@ -356,5 +386,145 @@ class AstronomyTests {
 //            assertEquals(0.8978681192065139, split.from.value, 1.0e-5)
 //            assertEquals(1.6836708611812483, split.to.value, 1.0e-5)
 //        }
+    }
+
+    /*
+     * https://en.wikipedia.org/wiki/Chinese_zodiac#Compatibility
+     *
+     * |   Sign  |      Best Match      |                    Average Match                   | Super Bad | Harmful |
+     * |:-------:|:--------------------:|:--------------------------------------------------:|:---------:|---------|
+     * | Rat     | Dragon, Monkey, Ox   | Pig, Tiger, Dog, Snake, Rabbit, Rooster, Rat       | Horse     | Goat    |
+     * | Ox      | Rooster, Snake, Rat  | Monkey, Dog, Rabbit, Tiger, Dragon, Pig, Ox        | Goat      | Horse   |
+     * | Tiger   | Horse, Dog, Pig      | Rabbit, Dragon, Rooster, Rat, Goat, Ox, Tiger      | Monkey    | Snake   |
+     * | Rabbit  | Pig, Goat, Dog       | Tiger, Monkey, Rabbit, Ox, Horse, Rat, Snake       | Rooster   | Dragon  |
+     * | Dragon  | Rat, Monkey, Rooster | Tiger, Snake, Horse, Goat, Pig, Ox, Dragon         | Dog       | Rabbit  |
+     * | Snake   | Ox, Rooster, Monkey  | Horse, Dragon, Goat, Dog, Rabbit, Rat, Snake       | Pig       | Tiger   |
+     * | Horse   | Dog, Tiger, Goat     | Snake, Rabbit, Dragon, Rooster, Pig, Monkey, Horse | Rat       | Ox      |
+     * | Goat    | Rabbit, Pig, Horse   | Snake, Goat, Dragon, Monkey, Rooster, Dog, Tiger   | Ox        | Rat     |
+     * | Monkey  | Dragon, Rat, Snake   | Monkey, Dog, Ox, Goat, Rabbit, Rooster, Horse      | Tiger     | Pig     |
+     * | Rooster | Snake, Ox, Dragon    | Horse, Rooster, Goat, Pig, Tiger, Monkey, Rat      | Rabbit    | Dog     |
+     * | Dog     | Tiger, Horse, Rabbit | Monkey, Pig, Rat, Ox, Snake, Goat, Dog             | Dragon    | Rooster |
+     * | Pig     | Rabbit, Goat, Tiger  | Rat, Rooster, Dog, Dragon, Horse, Ox, Pig          | Snake     | Monkey  |
+     */
+    @Test
+    fun `Matches with compatibility table`() {
+        listOf(
+            setOf(DRAGON, MONKEY, OX),
+            setOf(ROOSTER, SNAKE, RAT),
+            setOf(HORSE, DOG, PIG),
+            setOf(PIG, GOAT, DOG),
+            setOf(RAT, MONKEY, ROOSTER),
+            setOf(OX, ROOSTER, MONKEY),
+            setOf(DOG, TIGER, GOAT),
+            setOf(RABBIT, PIG, HORSE),
+            setOf(DRAGON, RAT, SNAKE),
+            setOf(SNAKE, OX, DRAGON),
+            setOf(TIGER, HORSE, RABBIT),
+            setOf(RABBIT, GOAT, TIGER),
+        ).zip(ChineseZodiac.entries) { bestMatch, yearZodiac ->
+            bestMatch.map {
+                { assertContains(listOf(BEST, BETTER), yearZodiac compatibilityWith it) }
+            }
+        }.flatten().let(::assertAll)
+
+        listOf(
+            setOf(PIG, TIGER, DOG, SNAKE, RABBIT, ROOSTER, RAT),
+            setOf(MONKEY, DOG, RABBIT, TIGER, DRAGON, PIG, OX),
+            setOf(RABBIT, DRAGON, ROOSTER, RAT, GOAT, OX, TIGER),
+            setOf(TIGER, MONKEY, RABBIT, OX, HORSE, RAT, SNAKE),
+            setOf(TIGER, SNAKE, HORSE, GOAT, PIG, OX, DRAGON),
+            setOf(HORSE, DRAGON, GOAT, DOG, RABBIT, RAT, SNAKE),
+            setOf(SNAKE, RABBIT, DRAGON, ROOSTER, PIG, MONKEY, HORSE),
+            setOf(SNAKE, GOAT, DRAGON, MONKEY, ROOSTER, DOG, TIGER),
+            setOf(MONKEY, DOG, OX, GOAT, RABBIT, ROOSTER, HORSE),
+            setOf(HORSE, ROOSTER, GOAT, PIG, TIGER, MONKEY, RAT),
+            setOf(MONKEY, PIG, RAT, OX, SNAKE, GOAT, DOG),
+            setOf(RAT, ROOSTER, DOG, DRAGON, HORSE, OX, PIG),
+        ).zip(ChineseZodiac.entries) { neutralMatches, yearZodiac ->
+            neutralMatches.map { { assertEquals(NEUTRAL, yearZodiac compatibilityWith it) } }
+        }.flatten().let(::assertAll)
+
+        listOf(HORSE, GOAT, MONKEY, ROOSTER, DOG, PIG, RAT, OX, TIGER, RABBIT, DRAGON, SNAKE).zip(
+            ChineseZodiac.entries
+        ) { worseMatch, yearZodiac ->
+            { assertEquals(WORSE, yearZodiac compatibilityWith worseMatch) }
+        }.let(::assertAll)
+
+        listOf(GOAT, HORSE, SNAKE, DRAGON, RABBIT, TIGER, OX, RAT, PIG, DOG, ROOSTER, MONKEY).zip(
+            ChineseZodiac.entries
+        ) { worstMatch, yearZodiac ->
+            { assertEquals(WORST, yearZodiac compatibilityWith worstMatch) }
+        }.let(::assertAll)
+    }
+
+    /**
+     * https://en.wikipedia.org/wiki/Chinese_zodiac#Signs
+     *
+     * | Number |  Animal | Yin/Yang | Trine | Fixed Element |
+     * |:------:|:-------:|:--------:|:-----:|:-------------:|
+     * | 1      | Rat     | Yang     | 1st   | Water         |
+     * | 2      | Ox      | Yin      | 2nd   | Earth         |
+     * | 3      | Tiger   | Yang     | 3rd   | Wood          |
+     * | 4      | Rabbit  | Yin      | 4th   | Wood          |
+     * | 5      | Dragon  | Yang     | 1st   | Earth         |
+     * | 6      | Snake   | Yin      | 2nd   | Fire          |
+     * | 7      | Horse   | Yang     | 3rd   | Fire          |
+     * | 8      | Goat    | Yin      | 4th   | Earth         |
+     * | 9      | Monkey  | Yang     | 1st   | Metal         |
+     * | 10     | Rooster | Yin      | 2nd   | Metal         |
+     * | 11     | Dog     | Yang     | 3rd   | Earth         |
+     * | 12     | Pig     | Yin      | 4th   | Water         |
+     */
+    @Test
+    fun `Matches with misc Chinese Zodiac details`() {
+        assertEquals(RAT.yinYang, ChineseZodiac.YinYang.YANG)
+        assertEquals(GOAT.yinYang, ChineseZodiac.YinYang.YIN)
+        assertEquals(DRAGON.trin, 1)
+
+        listOf(
+            WATER, EARTH, WOOD, WOOD, EARTH, FIRE, FIRE, EARTH, METAL, METAL, EARTH, WATER
+        ).forEachIndexed { i, element ->
+            assertEquals(element, ChineseZodiac.entries[i].fixedElement)
+        }
+    }
+
+    @Test
+    fun `Check Abjad conversion`() {
+        listOf(
+            1 to "ا",
+            2 to "ب",
+            3 to "ج",
+            4 to "د",
+            5 to "ه",
+            6 to "و",
+            7 to "ز",
+            8 to "ح",
+            9 to "ط",
+            10 to "ی",
+            11 to "یا",
+            12 to "یب",
+            13 to "یج",
+            14 to "ید",
+            15 to "یه",
+            16 to "یو",
+            17 to "یز",
+            18 to "یح",
+            19 to "یط",
+            20 to "ک",
+            21 to "کا",
+            22 to "کب",
+            23 to "کج",
+            24 to "کد",
+            25 to "که",
+            26 to "کو",
+            27 to "کز",
+            28 to "کح",
+            29 to "کط",
+            30 to "ل",
+            31 to "لا",
+            //360 to "سش"
+        ).map { (input, expected) ->
+            { assertEquals(expected, toAbjad(input), "$input") }
+        }.let(::assertAll)
     }
 }

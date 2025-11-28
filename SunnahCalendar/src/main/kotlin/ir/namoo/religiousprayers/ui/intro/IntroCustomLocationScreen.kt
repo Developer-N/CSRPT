@@ -13,14 +13,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -43,11 +40,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import ir.namoo.religiousprayers.ui.settings.MyLocationSelector
+import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -55,7 +53,6 @@ import org.koin.androidx.compose.koinViewModel
 fun IntroCustomLocationScreen(
     startMainActivity: () -> Unit, viewModel: IntroCustomLocationViewModel = koinViewModel()
 ) {
-
     val locationPermissions = rememberMultiplePermissionsState(
         permissions = listOf(
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -88,13 +85,7 @@ fun IntroCustomLocationScreen(
                 AnimatedVisibility(
                     visible = isLoading, enter = slideInVertically(), exit = shrinkVertically()
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(50.dp)
-                            .size(50.dp),
-                        strokeCap = StrokeCap.Round,
-                        strokeWidth = 10.dp
-                    )
+                    LoadingUIElement()
                 }
                 AnimatedVisibility(
                     visible = message.isNotEmpty(),
@@ -157,7 +148,8 @@ fun GetPermissionSection(locationPermissions: MultiplePermissionsState) {
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
             fontWeight = FontWeight.SemiBold
         )
-        Button(modifier = Modifier.padding(8.dp),
+        Button(
+            modifier = Modifier.padding(8.dp),
             onClick = { locationPermissions.launchMultiplePermissionRequest() }) {
             Text(
                 text = stringResource(id = R.string.ok),
@@ -184,7 +176,7 @@ fun ShowLocationSection(
     val cityList by viewModel.cityList.collectAsState()
     val selectedCity by viewModel.selectedCity.collectAsState()
     val message by viewModel.message.collectAsState()
-
+    val numeral by numeral.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -226,7 +218,7 @@ fun ShowLocationSection(
         ) {
             Text(
                 modifier = Modifier.padding(4.dp),
-                text = formatNumber("${stringResource(id = R.string.latitude)} = $latitude"),
+                text = numeral.format("${stringResource(id = R.string.latitude)} = $latitude"),
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
                 fontWeight = FontWeight.SemiBold,
                 color = if (latitude.isEmpty()) MaterialTheme.colorScheme.error
@@ -235,7 +227,7 @@ fun ShowLocationSection(
 
             Text(
                 modifier = Modifier.padding(4.dp),
-                text = formatNumber(" ${stringResource(id = R.string.longitude)} = $longitude "),
+                text = numeral.format(" ${stringResource(id = R.string.longitude)} = $longitude "),
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
                 fontWeight = FontWeight.SemiBold,
                 color = if (latitude.isEmpty()) MaterialTheme.colorScheme.error
@@ -243,7 +235,7 @@ fun ShowLocationSection(
             )
 
         }
-        AnimatedVisibility(visible = !isLoading && (message.isNotEmpty() || city.isEmpty()) && provinceList.isNotEmpty() && cityList.isNotEmpty()) {
+        AnimatedVisibility(visible = !isLoading && provinceList.isNotEmpty() && cityList.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 HorizontalDivider(modifier = Modifier.padding(8.dp))
 
@@ -267,7 +259,8 @@ fun ShowLocationSection(
                     pList.clear()
                     provinceList.forEach { pList.add(it.name) }
 
-                    MyLocationSelector(locationList = pList,
+                    MyLocationSelector(
+                        locationList = pList,
                         selectedLocation = selectedProvince?.name ?: "",
                         onSelectedLocationChange = { name ->
                             viewModel.updateSelectedProvince(provinceList.find { it.name == name })
@@ -303,7 +296,8 @@ fun ShowLocationSection(
                     contentDescription = stringResource(id = R.string.location)
                 )
             }
-            Button(enabled = !isLoading && city.isNotEmpty() && latitude.isNotEmpty() && longitude.isNotEmpty(),
+            Button(
+                enabled = !isLoading && city.isNotEmpty() && latitude.isNotEmpty() && longitude.isNotEmpty(),
                 onClick = {
                     viewModel.saveAndContinue(
                         context, startMainActivity

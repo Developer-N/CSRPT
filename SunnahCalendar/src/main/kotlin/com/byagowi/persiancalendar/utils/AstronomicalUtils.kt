@@ -9,6 +9,7 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.astronomy.ChineseZodiac
@@ -24,11 +25,14 @@ import io.github.cosinekitty.astronomy.equator
 import io.github.cosinekitty.astronomy.horizon
 import io.github.cosinekitty.astronomy.rotationEqdHor
 import io.github.cosinekitty.astronomy.search
+import io.github.cosinekitty.astronomy.sunPosition
 import java.util.GregorianCalendar
 import java.util.TimeZone
 import kotlin.math.atan2
 
-private fun lunarLongitude(jdn: Jdn, setIranTime: Boolean = false, hourOfDay: Int): Double =
+fun isMoonInScorpio(time: Time) = eclipticGeoMoon(time).lon in Zodiac.scorpioRange
+
+fun lunarLongitude(jdn: Jdn, setIranTime: Boolean = false, hourOfDay: Int): Double =
     eclipticGeoMoon(jdn.toAstronomyTime(hourOfDay, setIranTime)).lon
 
 // This only checks the midday, useful for calendar table where fast calculation is needed
@@ -47,6 +51,15 @@ private fun Double.withMaxDegreeValue(max: Double): Double {
     while (deg <= max - 360.0) deg += 360.0
     while (deg > max) deg -= 360.0
     return deg
+}
+
+fun searchMoonAgeTime(jdn: Jdn, targetDegrees: Double): Clock? {
+    return search(jdn.toAstronomyTime(0), (jdn + 1).toAstronomyTime(0), 1.0) { time ->
+        val d = eclipticGeoMoon(time).lon - sunPosition(time).elon
+        (d.mod(360.0) - targetDegrees).withMaxDegreeValue(+180.0)
+    }?.toMillisecondsSince1970()?.let { timestamp ->
+        Clock(GregorianCalendar().also { it.timeInMillis = timestamp })
+    }
 }
 
 // setIranTime should be used only for tests
@@ -98,7 +111,7 @@ fun generateYearName(
             ChineseZodiac.fromPersianCalendar(persianDate).format(
                 resources = resources,
                 withEmoji = withEmoji,
-                persianDate = persianDate,
+                isPersian = language.value.isPersianOrDari,
                 withOldEraName = withOldEraName,
             ),
             resources.getString(R.string.shamsi_calendar_short)
@@ -107,8 +120,12 @@ fun generateYearName(
             val date = ChineseCalendar((time ?: jdn.toGregorianCalendar()).time)
             val year = date[ChineseCalendar.YEAR]
             language.value.inParentheses.format(
-                ChineseZodiac.fromChineseCalendar(date).format(resources, withEmoji),
-                resources.getString(R.string.chinese) + spacedComma + formatNumber(year)
+                ChineseZodiac.fromChineseCalendar(date).format(
+                    resources = resources,
+                    isPersian = false,
+                    withEmoji = withEmoji,
+                ),
+                resources.getString(R.string.chinese) + spacedComma + numeral.value.format(year)
             )
         } else null
     ).let { if (language.value.isUserAbleToReadPersian) it else it.reversed() }.joinToString(" ")
@@ -143,4 +160,20 @@ val Body.titleStringId
         Body.Sun -> R.string.sun
         Body.Moon -> R.string.moon
         else -> R.string.empty
+    }
+
+val Body.symbol
+    get() = when (this) {
+        Body.Sun -> "☉"
+        Body.Earth -> "🜨"
+        Body.Moon -> "☽"
+        Body.Mars -> "♂"
+        Body.Mercury -> "☿"
+        Body.Jupiter -> "♃"
+        Body.Venus -> "♀"
+        Body.Saturn -> "♄"
+        Body.Uranus -> "⛢"
+        Body.Neptune -> "♆"
+        Body.Pluto -> "♇"
+        else -> ""
     }

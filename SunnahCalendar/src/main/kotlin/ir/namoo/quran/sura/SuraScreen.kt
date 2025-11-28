@@ -58,6 +58,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
@@ -66,6 +67,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
@@ -73,14 +75,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.global.numeral
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.commons.APP_LINK
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.quran.player.isQuranDownloaded
 import ir.namoo.quran.player.isTranslateDownloaded
+import ir.namoo.quran.sura.data.QuranEntity
 import ir.namoo.quran.utils.KeepScreenOn
 import ir.namoo.quran.utils.initQuranUtils
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
@@ -109,16 +112,23 @@ fun SharedTransitionScope.SuraScreen(
         initQuranUtils(context)
     }
     val listState = rememberLazyListState()
+    var showTopBar by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboard.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
+    val numeral by numeral.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val qList = viewModel.quranList
     val resultIDs = viewModel.resultIDs
     val quranList by remember {
         derivedStateOf {
-            qList.filter { resultIDs.contains(it.id) }
+            qList.filter { resultIDs.contains(it.id) }.groupBy { it.page }
+                .flatMap { (page, quranList) ->
+                    val list = mutableListOf<Any>()
+                    list.addAll(quranList)
+                    list.add(page)
+                    list
+                }
         }
     }
     val translateList = viewModel.enabledTranslates
@@ -132,7 +142,7 @@ fun SharedTransitionScope.SuraScreen(
     val scrollToTop by viewModel.scrollToTop.collectAsState()
     var showQuranFilesDialog by remember { mutableStateOf(false) }
     var showTranslateFilesDialog by remember { mutableStateOf(false) }
-
+    val hideToolbarOnScroll by viewModel.hideToolbar.collectAsState()
     val bookmarkedVerse by viewModel.bookmarkedVerse.collectAsState()
 
     val infiniteAnimation = rememberInfiniteTransition(label = "bar animation repeat")
@@ -159,11 +169,40 @@ fun SharedTransitionScope.SuraScreen(
     val isPlayerStopped by viewModel.isPlayerStoped.collectAsState()
 
     KeepScreenOn()
+    LaunchedEffect(listState) {
+        if (!hideToolbarOnScroll) return@LaunchedEffect
+        var previousIndex = listState.firstVisibleItemIndex
+        var previousOffset = listState.firstVisibleItemScrollOffset
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }.collect { (index, offset) ->
+            if (index == previousIndex) {
+                if (offset > previousOffset && !isSearchBarOpen) {
+                    showTopBar = false
+                } else if (offset < previousOffset) {
+                    showTopBar = true
+                }
+            } else if (index > previousIndex && !isSearchBarOpen) {
+                showTopBar = false
+            } else {
+                showTopBar = true
+            }
+            previousIndex = index
+            previousOffset = offset
+        }
+    }
     LaunchedEffect(key1 = aya) {
         withContext(Dispatchers.IO) {
-            sleep(1000)
+            while (quranList.isEmpty()) {
+                sleep(500)
+            }
             withContext(Dispatchers.Main) {
-                if (aya > 1) listState.scrollToItem(aya - 1)
+                if (aya > 1) {
+                    val index = quranList.indexOfFirst { item ->
+                        if (item is QuranEntity) item.verseID == aya
+                        else false
+                    }
+                    if (index > 0)
+                        listState.animateScrollToItem(index)
+                }
             }
         }
     }
@@ -171,20 +210,34 @@ fun SharedTransitionScope.SuraScreen(
         if (!autoScroll) return@LaunchedEffect
         if (isSearchBarOpen) return@LaunchedEffect
         if (currentSura != playingSura) return@LaunchedEffect
-        if (playingAya > 1) listState.animateScrollToItem(playingAya - 1, 0)
+        if (playingAya > 1) {
+            val index = quranList.indexOfFirst { item ->
+                if (item is QuranEntity) item.verseID == playingAya
+                else false
+            }
+            if (index > 0)
+                listState.animateScrollToItem(index)
+        }
     }
     LaunchedEffect(key1 = scrollToTop) {
         if (scrollToTop > 0) listState.animateScrollToItem(0, 0)
     }
     LaunchedEffect(key1 = query) {
-        if (query.isNotEmpty() && query.isDigitsOnly() && query.toInt() > 1 && query.toInt() < quranList.size + 1) listState.animateScrollToItem(
-            query.toInt() - 1, 0
-        )
+        if (query.isNotEmpty() && query.isDigitsOnly() && query.toInt() > 1 && query.toInt() < quranList.size + 1) {
+            val index = quranList.indexOfFirst { item ->
+                if (item is QuranEntity) item.verseID == query.toInt()
+                else false
+            }
+            if (index > 0)
+                listState.animateScrollToItem(index)
+        }
     }
 
     Scaffold(topBar = {
         AnimatedVisibility(
-            visible = !isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
+            visible = !isSearchBarOpen && showTopBar,
+            enter = expandVertically(),
+            exit = shrinkVertically()
         ) {
             DefaultSuraAppBar(
                 title = chapter?.nameArabic ?: "-",
@@ -202,7 +255,9 @@ fun SharedTransitionScope.SuraScreen(
             )
         }
         AnimatedVisibility(
-            visible = isSearchBarOpen, enter = expandVertically(), exit = shrinkVertically()
+            visible = isSearchBarOpen && showTopBar,
+            enter = expandVertically(),
+            exit = shrinkVertically()
         ) {
             SearchAppBar(
                 query = query,
@@ -233,75 +288,95 @@ fun SharedTransitionScope.SuraScreen(
                         )
                     }
                     if (quranList.isNotEmpty()) LazyColumn(state = listState) {
-                        viewModel.updateLastVisited(listState.firstVisibleItemIndex + 1)
-                        items(items = quranList, key = { it.id }) { quran ->
-                            AyaItem(
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = null, fadeOutSpec = null
-                                ),
-                                quran = quran,
-                                translates = try {
-                                    enabledTranslates[quran.verseID] ?: emptyList()
-                                } catch (_: Exception) {
-                                    emptyList()
-                                },
-                                isPlaying = quran.verseID == playingAya && quran.surahID == playingSura && autoScroll,
-                                isBookmarked = quran.id == bookmarkedVerse,
-                                onBookmark = { viewModel.updateBookmarkVerse(quran.id) },
-                                animations = animations,
-                                onCopyClick = {
-                                    var text = it
-                                    text =
-                                        context.getString(R.string.sura) + " " + chapter?.nameArabic + "\n\n" + text + APP_LINK
-                                    scope.launch {
-                                        clipboardManager.setClipEntry(
-                                            ClipEntry(
-                                                ClipData.newPlainText(
-                                                    context.getString(R.string.quran), text
+                        runCatching {
+                            var firstItem = listState.firstVisibleItemIndex
+                            if (quranList[firstItem] !is QuranEntity) firstItem++
+                            viewModel.updateLastVisited((quranList[firstItem] as QuranEntity).verseID)
+                        }
+                        items(items = quranList) { item ->
+                            when (item) {
+                                is QuranEntity -> {
+                                    AyaItem(
+                                        modifier = Modifier.animateItem(
+                                            fadeInSpec = null, fadeOutSpec = null
+                                        ),
+                                        quran = item,
+                                        translates = try {
+                                            enabledTranslates[item.verseID] ?: emptyList()
+                                        } catch (_: Exception) {
+                                            emptyList()
+                                        },
+                                        isPlaying = item.verseID == playingAya && item.surahID == playingSura && autoScroll,
+                                        isBookmarked = item.id == bookmarkedVerse,
+                                        onBookmark = { viewModel.updateBookmarkVerse(item.id) },
+                                        animations = animations,
+                                        onCopyClick = {
+                                            var text = it
+                                            text =
+                                                context.getString(R.string.sura) + " " + chapter?.nameArabic + "\n\n" + text + APP_LINK
+                                            scope.launch {
+                                                clipboardManager.setClipEntry(
+                                                    ClipEntry(
+                                                        ClipData.newPlainText(
+                                                            context.getString(R.string.quran), text
+                                                        )
+                                                    )
+                                                )
+                                            }
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.copied),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        onShareClick = {
+                                            var text = it
+                                            text =
+                                                context.getString(R.string.sura) + " " + chapter?.nameArabic + "\n\n" + text + APP_LINK
+                                            val sendIntent = Intent().apply {
+                                                action = Intent.ACTION_SEND
+                                                putExtra(Intent.EXTRA_TEXT, text)
+                                                type = "text/plain"
+                                            }
+                                            context.startActivity(
+                                                Intent.createChooser(
+                                                    sendIntent, context.getString(R.string.share)
                                                 )
                                             )
-                                        )
-                                    }
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.copied),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                },
-                                onShareClick = {
-                                    var text = it
-                                    text =
-                                        context.getString(R.string.sura) + " " + chapter?.nameArabic + "\n\n" + text + APP_LINK
-                                    val sendIntent = Intent().apply {
-                                        action = Intent.ACTION_SEND
-                                        putExtra(Intent.EXTRA_TEXT, text)
-                                        type = "text/plain"
-                                    }
-                                    context.startActivity(
-                                        Intent.createChooser(
-                                            sendIntent, context.getString(R.string.share)
-                                        )
-                                    )
-                                },
-                                onBookmarkClick = { viewModel.updateBookMark(it) },
-                                onNoteUpdate = { viewModel.updateNote(quran, it) },
-                                onBtnPlayClick = {
-                                    if (!isQuranDownloaded(context = context, quran.surahID))
-                                        showQuranFilesDialog = true
-                                    else if (!isTranslateDownloaded(
-                                            context = context,
-                                            quran.surahID
-                                        )
-                                    )
-                                        showTranslateFilesDialog = true
-                                    else viewModel.onPlay(
-                                        context = context,
-                                        sura = quran.surahID,
-                                        aya = quran.verseID
-                                    )
+                                        },
+                                        onBookmarkClick = { viewModel.updateBookMark(it) },
+                                        onNoteUpdate = { viewModel.updateNote(item, it) },
+                                        onBtnPlayClick = {
+                                            if (!isQuranDownloaded(
+                                                    context = context, item.surahID
+                                                )
+                                            ) showQuranFilesDialog = true
+                                            else if (!isTranslateDownloaded(
+                                                    context = context, item.surahID
+                                                )
+                                            ) showTranslateFilesDialog = true
+                                            else viewModel.onPlay(
+                                                context = context,
+                                                sura = item.surahID,
+                                                aya = item.verseID
+                                            )
+                                        })
+                                }
 
-                                })
+                                is Int -> {
+                                    Text(
+                                        text = numeral.format(" $item"),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        textAlign = TextAlign.Center,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 22.sp
+                                    )
+                                }
+                            }
                         }
+
                     }
                     else if (query.isNotEmpty()) NothingFoundUIElement()
                 }
@@ -309,8 +384,7 @@ fun SharedTransitionScope.SuraScreen(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     visible = !isPlayerStopped,
                     enter = slideInVertically(
-                        initialOffsetY = { it }
-                    ),
+                        initialOffsetY = { it }),
                     exit = shrinkVertically()
                 ) {
                     PlayerComponent(
@@ -331,37 +405,32 @@ fun SharedTransitionScope.SuraScreen(
                         next = viewModel::next,
                         nextSura = {
                             val sura = if (playingSura == 114) 1 else playingSura + 1
-                            if (!isQuranDownloaded(context = context, sura))
-                                Toast.makeText(
-                                    context,
-                                    R.string.audio_files_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            else if (!isTranslateDownloaded(context = context, sura))
-                                Toast.makeText(
-                                    context,
-                                    R.string.audio_translate_files_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                            if (!isQuranDownloaded(context = context, sura)) Toast.makeText(
+                                context, R.string.audio_files_error, Toast.LENGTH_SHORT
+                            ).show()
+                            else if (!isTranslateDownloaded(
+                                    context = context,
+                                    sura
+                                )
+                            ) Toast.makeText(
+                                context, R.string.audio_translate_files_error, Toast.LENGTH_SHORT
+                            ).show()
                             else viewModel.onPlay(context, sura, 1)
                         },
                         previous = viewModel::previous,
                         previousSura = {
                             val sura = if (playingSura == 1) 114 else playingSura - 1
-                            if (!isQuranDownloaded(context = context, sura))
-                                Toast.makeText(
-                                    context,
-                                    R.string.audio_files_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            else if (!isTranslateDownloaded(context = context, sura))
-                                Toast.makeText(
-                                    context,
-                                    R.string.audio_translate_files_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            else
-                                viewModel.onPlay(context, sura, 1)
+                            if (!isQuranDownloaded(context = context, sura)) Toast.makeText(
+                                context, R.string.audio_files_error, Toast.LENGTH_SHORT
+                            ).show()
+                            else if (!isTranslateDownloaded(
+                                    context = context,
+                                    sura
+                                )
+                            ) Toast.makeText(
+                                context, R.string.audio_translate_files_error, Toast.LENGTH_SHORT
+                            ).show()
+                            else viewModel.onPlay(context, sura, 1)
                         },
                         onAutoScrollChange = viewModel::updateAutoScroll
                     )
@@ -421,7 +490,9 @@ fun SharedTransitionScope.SuraScreen(
             }, onDismissRequest = { showTranslateFilesDialog = false }, confirmButton = {
                 TextButton(onClick = {
                     showTranslateFilesDialog = false
-                    if (isNetworkConnected(context)) viewModel.downloadTranslateFiles(context)
+                    if (isNetworkConnected(context)) viewModel.downloadTranslateFiles(
+                        context
+                    )
                     else Toast.makeText(
                         context,
                         context.getString(R.string.network_error_message),
@@ -491,6 +562,7 @@ fun SharedTransitionScope.DefaultSuraAppBar(
     nextSura: () -> Unit,
     prevSura: () -> Unit
 ) {
+    val numeral by numeral.collectAsState()
     CenterAlignedTopAppBar(title = {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -500,7 +572,7 @@ fun SharedTransitionScope.DefaultSuraAppBar(
                 Text(text = it, fontSize = 18.sp)
             }
             Text(
-                text = formatNumber(
+                text = numeral.format(
                     String.format(
                         stringResource(id = R.string.aya_count), aya
                     )
@@ -523,6 +595,6 @@ fun SharedTransitionScope.DefaultSuraAppBar(
             Icon(imageVector = Icons.Filled.ChevronLeft, contentDescription = "Next")
         }
     }, navigationIcon = {
-        NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+        NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
     })
 }

@@ -59,10 +59,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.global.numeral
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
 import org.koin.androidx.compose.koinViewModel
 
@@ -77,6 +77,7 @@ fun SharedTransitionScope.NotesScreen(
     LaunchedEffect(key1 = Unit) {
         viewModel.loadData()
     }
+    val numeral by numeral.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val notes = viewModel.notes
     val chapters = viewModel.chapters
@@ -89,13 +90,13 @@ fun SharedTransitionScope.NotesScreen(
         TopAppBar(title = {
             Text(text = stringResource(id = R.string.notes))
         }, navigationIcon = {
-            NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+            NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
         }, colors = appTopAppBarColors(), actions = {
             if (notes.isNotEmpty()) AnimatedContent(
                 targetState = notes.size, label = "Size"
             ) {
                 IconButton(onClick = {}) {
-                    Text(text = formatNumber(it), fontWeight = FontWeight.SemiBold)
+                    Text(text = numeral.format(it), fontWeight = FontWeight.SemiBold)
                 }
             }
         })
@@ -137,7 +138,7 @@ fun SharedTransitionScope.NotesScreen(
                             var title =
                                 chapters.find { it.sura == quran.surahID }?.nameArabic ?: " - "
                             title += " " + stringResource(id = R.string.aya) + " "
-                            title += formatNumber(quran.verseID)
+                            title += numeral.format(quran.verseID)
                             var showDeleteDialog by remember { mutableStateOf(false) }
                             Row(
                                 modifier = Modifier
@@ -188,9 +189,10 @@ fun SharedTransitionScope.NotesScreen(
                                 }
                             }
                             HorizontalDivider()
-                            TextField(modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
+                            TextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
                                 shape = MaterialTheme.shapes.extraLarge,
                                 colors = TextFieldDefaults.colors(
                                     focusedIndicatorColor = Color.Transparent,
@@ -207,13 +209,14 @@ fun SharedTransitionScope.NotesScreen(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 })
-                            if (showDeleteDialog) AlertDialog(icon = {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.delete),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            },
+                            if (showDeleteDialog) AlertDialog(
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.delete),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
                                 title = {},
                                 text = {
                                     Text(

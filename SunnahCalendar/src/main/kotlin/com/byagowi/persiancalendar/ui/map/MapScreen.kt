@@ -45,12 +45,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,10 +65,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.createBitmap
@@ -80,6 +79,7 @@ import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MAP
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_TIME_BAR
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.common.DatePickerDialog
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
@@ -88,6 +88,7 @@ import com.byagowi.persiancalendar.ui.settings.locationathan.location.Coordinate
 import com.byagowi.persiancalendar.ui.settings.locationathan.location.GPSLocationDialog
 import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
@@ -108,8 +109,8 @@ fun SharedTransitionScope.MapScreen(
     viewModel: MapViewModel,
 ) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current
-    val mapDraw = remember { MapDraw(context.resources) }
+    val resources = LocalResources.current
+    val mapDraw = remember(resources) { MapDraw(resources) }
 
     LaunchedEffect(Unit) { coordinates.collect(viewModel::changeCurrentCoordinates) }
 
@@ -128,41 +129,45 @@ fun SharedTransitionScope.MapScreen(
     var saveCoordinates by rememberSaveable { mutableStateOf(fromSettings) }
     if (showCoordinatesDialog) CoordinatesDialog(
         inputCoordinates = clickedCoordinates,
+        isFromMap = true,
         onDismissRequest = { showCoordinatesDialog = false },
         saveCoordinates = saveCoordinates,
-        toggleSaveCoordinates = { saveCoordinates = !saveCoordinates },
+        toggleSaveCoordinates = { saveCoordinates = it },
         notifyChange = viewModel::changeCurrentCoordinates,
     )
 
+    val language by language.collectAsState()
     var showMapTypesDialog by rememberSaveable { mutableStateOf(false) }
     if (showMapTypesDialog) AppDialog(onDismissRequest = { showMapTypesDialog = false }) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            MapType.entries.drop(1) // Hide "None" option
-                // Hide moon visibilities for now unless is a development build
-                .filter { !it.isCrescentVisibility || BuildConfig.DEVELOPMENT }.forEach {
-                    Text(
-                        stringResource(it.title),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                showMapTypesDialog = false
-                                viewModel.changeMapType(it)
-                            }
-                            .padding(vertical = 16.dp, horizontal = 24.dp),
-                    )
-                }
-        }
+        MapType.entries.drop(1) // Hide "None" option
+            // Hide moon visibilities for now unless is a development build
+            .filter { !it.isCrescentVisibility || BuildConfig.DEVELOPMENT }.forEach {
+                Text(
+                    language.mapType(it) ?: stringResource(it.title),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            showMapTypesDialog = false
+                            viewModel.changeMapType(it)
+                        }
+                        .padding(vertical = 16.dp, horizontal = 24.dp),
+                )
+            }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
     class MenuItem(
         val icon: ImageVector,
-        @get:StringRes val title: Int,
+        @get:StringRes val titleId: Int,
         val isEnabled: () -> Boolean = { false },
         val onClick: () -> Unit
-    )
+    ) {
+        val title
+            @Composable get() = language.mapButtons(titleId) ?: stringResource(titleId)
+    }
 
+    val context = LocalContext.current
     val menu = listOf(
         MenuItem(Icons.Default._3dRotation, R.string.show_globe_view_label) onClick@{
             val textureSize = 2048
@@ -230,6 +235,7 @@ fun SharedTransitionScope.MapScreen(
                 .sharedBounds(
                     rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
                     animatedVisibilityScope = animatedContentScope,
+                    boundsTransform = appBoundsTransform,
                 ),
             factory = {
                 val root = ZoomableView(it)
@@ -309,15 +315,17 @@ fun SharedTransitionScope.MapScreen(
                     selected = false,
                     icon = {
                         TooltipBox(
-                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            tooltip = { PlainTooltip { Text(text = stringResource(it.title)) } },
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                TooltipAnchorPosition.Above
+                            ),
+                            tooltip = { PlainTooltip { Text(it.title) } },
                             state = rememberTooltipState()
                         ) {
                             val tint by animateColor(
                                 if (it.isEnabled()) MaterialTheme.colorScheme.inversePrimary
                                 else LocalContentColor.current
                             )
-                            Icon(it.icon, stringResource(it.title), tint = tint)
+                            Icon(it.icon, it.title, tint = tint)
                         }
                     },
                 )
@@ -370,6 +378,7 @@ fun SharedTransitionScope.MapScreen(
                             .sharedElement(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_TIME_BAR),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             ),
                         color = MaterialTheme.colorScheme.onSurface,
                     )

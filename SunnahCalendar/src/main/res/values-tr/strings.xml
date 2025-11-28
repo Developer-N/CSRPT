@@ -189,7 +189,7 @@
     <string name="pray_methods">Hesaplama yöntemleri</string>
     <string name="in_city_time">%1$s içinde</string>
     <string name="athan">Ezan</string>
-    <string name="coordination">Koordinatlar</string>
+    <string name="coordinates">Koordinatlar</string>
     <string name="altitude_praytime">metre cinsinden (isteğe bağlı)</string>
     <string name="altitude">Rakım (Yükseklik)</string>
     <string name="longitude">Boylam</string>
@@ -396,7 +396,7 @@
         <item quantity="other">%1$s iş günü</item>
     </plurals>
     <string name="navigate_up">Yukarı git</string>
-    <string name="open_drawer">Gezinme çekmecesini aç</string>
+    <string name="open_navigation_rail">Gezinme çekmecesini aç</string>
     <string name="more_options">Daha fazla seçenek</string>
     <string name="widget_background_transparency">Widget arka plan şeffaflığı</string>
     <string name="ask_for_calendar_permission">Aygıtınızın takviminden kişisel etkinliklerinizi etkinleştirmek ister misiniz?</string>
@@ -407,4 +407,24 @@
     <string name="save">Kaydet</string>
     <string name="holidays_in_red">Tatiller kırmızı renkte</string>
     <string name="add_widget">Widget ekle</string>
+    <string name="nothing_scheduled">Planlanan bir şey yok</string>
+    <string name="starting_date">Başlangıç tarihi</string>
+    <string name="month_view">Ay görünümü</string>
+    <string name="daily_schedule">Günlük plan</string>
+    <string name="vibration">Titreşim</string>
+    <string name="schedule">Plan</string>
+    <string name="print">Yazdır</string>
+    <string name="week_view">Hafta görünümü</string>
+    <string name="day_view">Gün görünümü</string>
+    <string name="horoscope">Burç</string>
+    <string name="planetary_hours">Gezegen saatleri</string>
+    <string name="select_font">Yazı tipi seç</string>
+    <string name="move_up">Yukarı taşı</string>
+    <string name="move_down">Aşağı taşı</string>
+    <string name="black_moon">Lilith</string>
+    <string name="dynamic_icon">Değişken simge</string>
+    <string name="large_day_number_on_notification">Bildirimde büyük gün sayısı</string>
+    <string name="pref_ui">Kullanıcı arayüzü</string>
+    <string name="week">Hafta</string>
+    <string name="bold_text">Kalın metin</string>
 </resources>

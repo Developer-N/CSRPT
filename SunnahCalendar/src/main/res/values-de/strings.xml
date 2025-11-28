@@ -91,7 +91,7 @@
     <string name="latitude">Breitengrad</string>
     <string name="longitude">Längengrad</string>
     <string name="location_help">Falls nicht, geben Sie dies unten an</string>
-    <string name="coordination">Koordinierung</string>
+    <string name="coordinates">Koordinaten</string>
     <string name="athan_gap">Adhan Lücke</string>
     <string name="athan_gap_summary">Wie lange vor dem Adhan soll der Alarm ausgelöst werden (in Minuten)</string>
     <string name="abdulbasit">Abdul-Basit Abdel-Samad</string>
@@ -403,7 +403,7 @@
     <string name="enable_notification">Möchten Sie die Datumsbenachrichtigung aktivieren?</string>
     <string name="add_quick_settings_tile">Kachel für Schnelleinstellungen hinzufügen</string>
     <string name="navigate_up">Nach oben navigieren</string>
-    <string name="open_drawer">Navigationsfach öffnen</string>
+    <string name="open_navigation_rail">Navigationsfach öffnen</string>
     <string name="live_wallpaper_settings">Live-Hintergrundbild Einstellungen</string>
     <string name="sample_inputs">Beispieleingaben</string>
     <string name="widget_background_transparency">Transparenz des Widget-Hintergrundes</string>
@@ -413,4 +413,17 @@
         <item quantity="one">%1$s Stunde</item>
         <item quantity="other">%1$s Stunden</item>
     </plurals>
+    <string name="month_view">Monatsansicht</string>
+    <string name="horoscope">Horoskop</string>
+    <string name="planetary_hours">Planetenstunden</string>
+    <string name="select_font">Schriftart auswählen</string>
+    <string name="move_up">Nach oben</string>
+    <string name="move_down">Nach unten</string>
+    <string name="black_moon">Lilith</string>
+    <string name="dynamic_icon">Dynamisches Symbol</string>
+    <string name="large_day_number_on_notification">Große Tageszahl auf der Benachrichtigung</string>
+    <string name="pref_ui">Benutzeroberfläche</string>
+    <string name="week">Woche</string>
+    <string name="bold_text">Fett Text</string>
+    <string name="widget_text_size">Textgröße</string>
 </resources>

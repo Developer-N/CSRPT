@@ -64,12 +64,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.commons.utils.openUrlInCustomTab
 import ir.namoo.hadeeth.repository.LanguageEntity
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
@@ -78,13 +78,13 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.HadeethChapterScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope,
     navigateToHadeeth: (String) -> Unit,
     viewModel: HadeethChapterViewModel = koinViewModel()
 ) {
     viewModel.loadData()
-
+    val numeral by numeral.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
     val chapters by viewModel.chapters.collectAsState()
@@ -115,7 +115,7 @@ fun SharedTransitionScope.HadeethChapterScreen(
             languages,
             selectedLanguage,
             animatedContentScope,
-            openDrawer,
+            openNavigationRail,
             viewModel::onLanguageSelected,
             viewModel::clearCachedData
         )
@@ -245,7 +245,7 @@ fun SharedTransitionScope.HadeethChapterScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(4.dp),
-                                        text = stringResource(R.string.hadeeth_chapters) + formatNumber(
+                                        text = stringResource(R.string.hadeeth_chapters) + numeral.format(
                                             " ($totalItems)"
                                         ),
                                         textAlign = TextAlign.Center,
@@ -279,7 +279,7 @@ fun SharedTransitionScope.HadeethChapterScreen(
                                                         shape = MaterialTheme.shapes.extraLarge
                                                     )
                                                     .padding(horizontal = 10.dp),
-                                                text = formatNumber(page),
+                                                text = numeral.format(page),
                                                 fontWeight = if (currentPage == page) FontWeight.Bold else FontWeight.Normal,
                                                 fontSize = if (currentPage == page) 16.sp else 14.sp,
                                                 color = if (currentPage == page) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -327,7 +327,7 @@ fun SharedTransitionScope.HadeethChapterScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(4.dp),
-                                        text = formatNumber("${index + 1 + (currentPage - 1) * perPage}. ${chapter.title}"),
+                                        text = numeral.format("${index + 1 + (currentPage - 1) * perPage}. ${chapter.title}"),
                                         textAlign = TextAlign.Justify
                                     )
                                 }
@@ -349,7 +349,7 @@ private fun SharedTransitionScope.HadeethTopBar(
     languages: List<LanguageEntity>,
     selectedLanguage: String,
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     onLanguageSelected: (String) -> Unit,
     clearCachedData: () -> Unit
 ) {
@@ -360,7 +360,7 @@ private fun SharedTransitionScope.HadeethTopBar(
     TopAppBar(title = {
         Text(text = stringResource(R.string.hadeeth))
     }, navigationIcon = {
-        NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+        NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
     }, colors = appTopAppBarColors(), actions = {
         IconButton(
             modifier = Modifier.sharedElement(

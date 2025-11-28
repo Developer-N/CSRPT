@@ -2,6 +2,7 @@ package ir.namoo.religiousprayers.ui.settings
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,11 +33,10 @@ import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_PRAY_TIME_METHOD
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.asrMethod
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.settings.SettingsClickable
-import com.byagowi.persiancalendar.ui.settings.SettingsSection
 import com.byagowi.persiancalendar.ui.settings.SettingsSingleSelect
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.titleStringId
@@ -56,7 +56,35 @@ import org.koin.compose.koinInject
 import java.io.File
 
 @Composable
-fun NSettingsScreen(
+fun ColumnScope.NLocationSetting() {
+    val context = LocalContext.current
+    val numeral by numeral.collectAsState()
+    val prefs = context.preferences
+    var summary by mutableStateOf(
+        numeral.format(
+            prefs.getString(PREF_GEOCODED_CITYNAME, "") + ": " + prefs.getString(
+                PREF_LONGITUDE, "0.0"
+            ) + "-" + prefs.getString(PREF_LATITUDE, "0.0") + ""
+        )
+    )
+    SettingsClickable(
+        title = stringResource(id = R.string.location),
+        summary = summary,
+        dialog = { onDismiss ->
+            ShowLocationDialog(closeDialog = {
+                onDismiss()
+                summary = numeral.format(
+                    prefs.getString(PREF_GEOCODED_CITYNAME, "") + prefs.getString(
+                        PREF_LONGITUDE, "0.0"
+                    ) + prefs.getString(PREF_LATITUDE, "0.0") + ""
+                )
+                update(context, true)
+            })
+        })
+}
+
+@Composable
+fun ColumnScope.NAthanSettings(
     navigateToAthanSettings: (Int) -> Unit,
     athanSettings: AthanSettingsDB = koinInject(),
     athanDB: AthanDB = koinInject()
@@ -65,37 +93,13 @@ fun NSettingsScreen(
     val prefs = context.preferences
     val coroutineScope = rememberCoroutineScope()
     val allAthansSetting = athanSettings.athanSettingsDAO().getAllAthanSettings()
-    SettingsSection(title = stringResource(id = R.string.location))
-    run {
-        var summary by mutableStateOf(
-            formatNumber(
-                prefs.getString(PREF_GEOCODED_CITYNAME, "") + ": " + prefs.getString(
-                    PREF_LONGITUDE, "0.0"
-                ) + "-" + prefs.getString(PREF_LATITUDE, "0.0") + ""
-            )
-        )
-        SettingsClickable(title = stringResource(id = R.string.location),
-            summary = summary,
-            dialog = { onDismiss ->
-                ShowLocationDialog(closeDialog = {
-                    onDismiss()
-                    summary = formatNumber(
-                        prefs.getString(PREF_GEOCODED_CITYNAME, "") + prefs.getString(
-                            PREF_LONGITUDE, "0.0"
-                        ) + prefs.getString(PREF_LATITUDE, "0.0") + ""
-                    )
-                    update(context, true)
-                })
-            })
 
-    }
-    HorizontalDivider()
-    SettingsSection(title = stringResource(id = R.string.athan_settings))
     run {
         var showHelpDialog by remember { mutableStateOf(false) }
-        ElevatedButton(modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 16.dp),
+        ElevatedButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp, horizontal = 16.dp),
             onClick = { showHelpDialog = true }) {
             Text(
                 text = stringResource(id = R.string.help_fix_athan_problems),
@@ -143,7 +147,8 @@ fun NSettingsScreen(
     var isChecked by remember {
         mutableStateOf(prefs.getBoolean(PREF_SUMMER_TIME, false))
     }
-    SettingsSwitch(key = PREF_SUMMER_TIME,
+    SettingsSwitch(
+        key = PREF_SUMMER_TIME,
         value = isChecked,
         title = stringResource(id = R.string.summer_time),
         onBeforeToggle = {
@@ -168,7 +173,8 @@ fun NSettingsScreen(
     var isShown by remember {
         mutableStateOf(prefs.getBoolean(PREF_SHOW_SYSTEM_RINGTONES, false))
     }
-    SettingsSwitch(key = PREF_SHOW_SYSTEM_RINGTONES,
+    SettingsSwitch(
+        key = PREF_SHOW_SYSTEM_RINGTONES,
         value = isShown,
         title = stringResource(R.string.show_system_ringtones),
         summary = stringResource(R.string.show_system_ringtones_msg),
@@ -176,9 +182,10 @@ fun NSettingsScreen(
             isShown = it
             isShown
         })
-    SettingsSection(title = stringResource(id = R.string.add_normal_athans))
+
+    Text(text = stringResource(id = R.string.add_normal_athans))
     AthanAlarmComponent(type = 1)
-    SettingsSection(title = stringResource(id = R.string.add_alarm))
+    Text(text = stringResource(id = R.string.add_alarm))
     AthanAlarmComponent(type = 2)
     ClearAthansComponent {
         runCatching {
@@ -199,3 +206,4 @@ fun NSettingsScreen(
         }.onFailure(logException)
     }
 }
+

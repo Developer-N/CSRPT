@@ -9,11 +9,12 @@ import com.byagowi.persiancalendar.PREF_ALTITUDE
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_ASR_HANAFI_JURISTIC
 import com.byagowi.persiancalendar.PREF_ATHAN_VOLUME
+import com.byagowi.persiancalendar.PREF_DISMISSED_OWGHAT
 import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_HOLIDAY_TYPES
 import com.byagowi.persiancalendar.PREF_ISLAMIC_OFFSET_SET_DATE
 import com.byagowi.persiancalendar.PREF_LATITUDE
-import com.byagowi.persiancalendar.PREF_LOCAL_DIGITS
+import com.byagowi.persiancalendar.PREF_LOCAL_NUMERAL
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_MAIN_CALENDAR_KEY
 import com.byagowi.persiancalendar.PREF_OTHER_CALENDARS_KEY
@@ -50,6 +51,7 @@ val SharedPreferences.athanVolume: Int get() = getInt(PREF_ATHAN_VOLUME, DEFAULT
 
 fun SharedPreferences.saveCity(city: CityItem) = edit {
     listOf(PREF_GEOCODED_CITYNAME, PREF_LATITUDE, PREF_LONGITUDE, PREF_ALTITUDE).forEach(::remove)
+    if (city.key == "CUSTOM") putBoolean(PREF_DISMISSED_OWGHAT, true)
     putString(PREF_SELECTED_LOCATION, city.key)
 }
 
@@ -71,19 +73,23 @@ fun SharedPreferences.saveLocation(
 // Preferences changes be applied automatically when user requests a language change
 fun SharedPreferences.saveLanguage(language: Language) = edit {
     putString(PREF_APP_LANGUAGE, language.code)
-    putBoolean(PREF_LOCAL_DIGITS, language.prefersLocalDigits)
+    putBoolean(PREF_LOCAL_NUMERAL, language.prefersLocalNumeral)
 
     when {
         language.isAfghanistanExclusive -> {
             val enabledHolidays = EventsRepository(this@saveLanguage, language, emptySet())
-            if (enabledHolidays.isEmpty || enabledHolidays.onlyIranHolidaysIsEnabled)
-                putStringSet(PREF_HOLIDAY_TYPES, EventsRepository.afghanistanDefault)
+            if (enabledHolidays.isEmpty || enabledHolidays.onlyIranHolidaysIsEnabled) putStringSet(
+                PREF_HOLIDAY_TYPES,
+                EventsRepository.afghanistanDefault
+            )
         }
 
         language.isIranExclusive -> {
             val enabledHolidays = EventsRepository(this@saveLanguage, language, emptySet())
-            if (enabledHolidays.isEmpty || enabledHolidays.onlyAfghanistanHolidaysIsEnabled)
-                putStringSet(PREF_HOLIDAY_TYPES, EventsRepository.iranDefault)
+            if (enabledHolidays.isEmpty || enabledHolidays.onlyAfghanistanHolidaysIsEnabled) putStringSet(
+                PREF_HOLIDAY_TYPES,
+                EventsRepository.iranDefault
+            )
         }
 
         language.isNepali -> {
@@ -91,10 +97,13 @@ fun SharedPreferences.saveLanguage(language: Language) = edit {
         }
     }
 
-    putString(PREF_MAIN_CALENDAR_KEY, language.defaultMainCalendar)
-    putString(PREF_OTHER_CALENDARS_KEY, language.defaultOtherCalendars)
-    putString(PREF_WEEK_START, language.defaultWeekStart)
-    putStringSet(PREF_WEEK_ENDS, language.defaultWeekEnds)
+    putString(PREF_MAIN_CALENDAR_KEY, language.defaultCalendars[0].name)
+    putString(
+        PREF_OTHER_CALENDARS_KEY,
+        language.defaultCalendars.drop(1).joinToString(",") { it.name },
+    )
+    putString(PREF_WEEK_START, language.defaultWeekStartAsString)
+    putStringSet(PREF_WEEK_ENDS, language.defaultWeekEndsAsStringSet)
 
     putString(PREF_PRAY_TIME_METHOD, language.preferredCalculationMethod.name)
     putBoolean(PREF_ASR_HANAFI_JURISTIC, language.isHanafiMajority)

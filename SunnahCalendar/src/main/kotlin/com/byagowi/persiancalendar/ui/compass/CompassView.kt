@@ -10,6 +10,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import androidx.annotation.ColorInt
@@ -21,6 +22,8 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.EarthPosition
 import com.byagowi.persiancalendar.global.coordinates
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AngleDisplay
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.ZoomableView
@@ -48,7 +51,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
 
     private val northwardShapePath = Path()
     private val northArrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.color = 0xFFFF0000.toInt()
+        it.color = Color.RED
         it.style = Paint.Style.FILL
     }
     private val markerPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
@@ -126,17 +129,28 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         it.color = Color.GRAY
         it.textAlign = Paint.Align.CENTER
     }
+    private val textSecondPaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
+        it.color = Color.GRAY
+        it.alpha = 120
+        it.textAlign = Paint.Align.CENTER
+    }
     private val textStrokePaint = Paint(Paint.FAKE_BOLD_TEXT_FLAG).also {
         it.strokeWidth = 5 * dp
         it.style = Paint.Style.STROKE
         it.textAlign = Paint.Align.CENTER
     }
 
+    fun setFont(typeface: Typeface?) {
+        textPaint.typeface = typeface
+        textStrokePaint.typeface = typeface
+        planetsPaint.typeface = typeface
+    }
+
     fun setSurfaceColor(@ColorInt color: Int) {
         textStrokePaint.color = color
     }
 
-    private val angleDisplay = AngleDisplay(resources, "0", "888")
+    private val angleDisplay = AngleDisplay(context, "0", "888")
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -169,6 +183,7 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
             val scale = matrixProperties[Matrix.MSCALE_X]
             planetsPaint.textSize = textSize * scale
             textPaint.textSize = textSize * scale
+            textSecondPaint.textSize = textSize * scale
             textStrokePaint.textSize = textSize * scale
             northArrowPaint.alpha = (100 * cbrt(scale)).roundToInt()
             qiblaPaint.strokeWidth = dashSize * scale
@@ -189,6 +204,33 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         }
     }
 
+    private fun cardinalDirection(value: Int): String {
+        return when (value) {
+            0 -> "N"
+            6 -> "E"
+            12 -> "S"
+            18 -> "W"
+            else -> ""
+        }
+    }
+
+    private val directions = (0..<24).map {
+        when {
+            it % 6 == 0 -> if (language.value.isArabicScript) resources.getString(
+                when (it) {
+                    0 -> R.string.north
+                    6 -> R.string.east
+                    12 -> R.string.south
+                    18 -> R.string.west
+                    else -> R.string.empty
+                }
+            ) else cardinalDirection(it)
+
+            it % 3 == 0 -> numeral.value.format(it * 15) + "°" // Draw the text every alternate 45deg
+            else -> ""
+        }
+    }
+
     private fun Canvas.drawDial() {
         // Draw the background
         drawCircle(cx, cy, radius, circlePaint)
@@ -197,24 +239,17 @@ class CompassView(context: Context, attrs: AttributeSet? = null) : ZoomableView(
         // facing the current bearing.
         val cardinalX = cx
         val cardinalY = cy - radius * .85f
+        val cardinalSecondY = cy - radius * .70f
 
         // Draw the marker every 15 degrees and text every 45.
         repeat(24) {
             withRotation(15f * it, cx, cy) {
                 drawLine(cx, cy - radius, cx, cy - radius * .975f, markerPaint)
                 // Draw the cardinal points
-                if (it % 6 == 0) {
-                    val dirString = when (it) {
-                        0 -> "N"
-                        6 -> "E"
-                        12 -> "S"
-                        18 -> "W"
-                        else -> ""
-                    }
-                    drawText(dirString, cardinalX, cardinalY, textPaint)
-                } else if (it % 3 == 0) {
-                    // Draw the text every alternate 45deg
-                    drawText((it * 15).toString(), cardinalX, cardinalY, textPaint)
+                drawText(directions[it], cardinalX, cardinalY, textPaint)
+                if (language.value.isArabicScript && (it == 0 || it == 6 || it == 12 || it == 18)) {
+                    val label = cardinalDirection(it)
+                    drawText(label, cardinalX, cardinalSecondY, textSecondPaint)
                 }
             }
         }

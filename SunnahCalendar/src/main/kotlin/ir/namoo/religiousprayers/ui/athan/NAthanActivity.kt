@@ -46,6 +46,7 @@ import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.logException
+import com.byagowi.persiancalendar.utils.update
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import ir.namoo.commons.model.AthanSetting
@@ -251,7 +252,8 @@ class NAthanActivity : ComponentActivity() {
                     title = title,
                     subtitle = subtitle,
                     background = setting.backgroundUri,
-                    stop = { stop() })
+                    stop = ::stop
+                )
             }
         }
 
@@ -267,14 +269,16 @@ class NAthanActivity : ComponentActivity() {
             }
 
             override fun onDestroy(owner: LifecycleOwner) {
+                update(this@NAthanActivity, true)
                 if (originalVolume != -1) getSystemService<AudioManager>()?.setStreamVolume(
                     AudioManager.STREAM_ALARM, originalVolume, 0
                 )
                 runCatching {
                     controller.stop()
+                    controller.clearMediaItems()
                     controller.release()
                     MediaController.releaseFuture(mediaController)
-                    stopService(Intent(this@NAthanActivity, AthanPlayerService::class.java))
+//            stopService(Intent(this, AthanPlayerService::class.java))
                 }.onFailure(logException)
                 super.onDestroy(owner)
             }

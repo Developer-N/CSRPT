@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +42,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,16 +68,19 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_COMPASS
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_LEVEL
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_STOP
+import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.ui.common.AppBottomAppBar
+import com.byagowi.persiancalendar.ui.common.AppFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.AppIconButton
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.StopButton
-import com.byagowi.persiancalendar.ui.theme.appFabElevation
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.theme.resolveAndroidCustomTypeface
 import com.byagowi.persiancalendar.ui.utils.ExtraLargeShapeCornerSize
 import com.byagowi.persiancalendar.ui.utils.SensorEventAnnouncer
-import com.byagowi.persiancalendar.variants.debugLog
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
+import com.byagowi.persiancalendar.utils.debugLog
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -89,10 +92,10 @@ fun SharedTransitionScope.LevelScreen(
     navigateToCompass: () -> Unit,
     animatedContentScope: AnimatedContentScope,
 ) {
-    var isStopped by remember { mutableStateOf(false) }
+    var isStopped by rememberSaveable { mutableStateOf(false) }
     var orientationProvider by remember { mutableStateOf<OrientationProvider?>(null) }
     val announcer = remember { SensorEventAnnouncer(R.string.level) }
-    var cmInchFlip by remember { mutableStateOf(false) }
+    var cmInchFlip by rememberSaveable { mutableStateOf(false) }
     var isFullscreen by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -156,10 +159,11 @@ fun SharedTransitionScope.LevelScreen(
                             if (cmInchFlip) 180f else 0f, label = "rotation",
                             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
                         )
+                        val language by language.collectAsState()
                         AppIconButton(
                             icon = Icons.Default.SyncAlt,
-                            title = "cm / in",
-                            iconModifier = Modifier.rotate(rotation),
+                            title = language.centimeter + " / " + language.inch,
+                            modifier = Modifier.rotate(rotation),
                         ) { cmInchFlip = !cmInchFlip }
                     }
                     AppIconButton(
@@ -185,6 +189,7 @@ fun SharedTransitionScope.LevelScreen(
             ),
         ) {
             Box {
+                val typeface = resolveAndroidCustomTypeface()
                 Crossfade(targetState = cmInchFlip, label = "ruler") { state ->
                     AndroidView(
                         modifier = Modifier
@@ -194,17 +199,22 @@ fun SharedTransitionScope.LevelScreen(
                                 else Modifier.padding(top = topCornersRoundness)
                             ),
                         factory = ::RulerView,
-                        update = { it.cmInchFlip = state },
+                        update = {
+                            it.cmInchFlip = state
+                            it.setFont(typeface)
+                        },
                     )
                 }
                 Column {
                     AndroidView(
                         modifier = Modifier
                             .weight(1f, fill = false)
+                            .padding(horizontal = 24.dp)
                             .then(if (isFullscreen) Modifier.safeDrawingPadding() else Modifier)
                             .sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_LEVEL),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             ),
                         factory = {
                             val levelView = LevelView(it)
@@ -230,9 +240,10 @@ fun SharedTransitionScope.LevelScreen(
                             AppIconButton(
                                 icon = Icons.Default.Explore,
                                 title = stringResource(R.string.compass),
-                                iconModifier = Modifier.sharedBounds(
+                                modifier = Modifier.sharedBounds(
                                     rememberSharedContentState(key = SHARED_CONTENT_KEY_COMPASS),
                                     animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = appBoundsTransform,
                                 ),
                                 onClick = navigateToCompass,
                             )
@@ -241,6 +252,7 @@ fun SharedTransitionScope.LevelScreen(
                                 Modifier.sharedElement(
                                     rememberSharedContentState(SHARED_CONTENT_KEY_STOP),
                                     animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = appBoundsTransform,
                                 )
                             ) { StopButton(isStopped) { isStopped = it } }
                         }
@@ -287,7 +299,7 @@ private fun ShrinkingFloatingActionButton(
         enter = scaleIn(),
         exit = scaleOut(),
     ) {
-        FloatingActionButton(onClick = action, elevation = appFabElevation()) {
+        AppFloatingActionButton(onClick = action) {
             var showLabel by rememberSaveable { mutableStateOf(true) }
             Row(
                 Modifier.padding(horizontal = if (showLabel) 16.dp else 0.dp),

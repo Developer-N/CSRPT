@@ -148,9 +148,10 @@ fun IntroDownloadLocationScreen(
             }
 
             AnimatedVisibility(visible = !isLoading && query.isEmpty() && addedCities.isEmpty()) {
-                ElevatedButton(modifier = Modifier.padding(
-                    16.dp
-                ), onClick = { viewModel.loadData() }) {
+                ElevatedButton(
+                    modifier = Modifier.padding(
+                        16.dp
+                    ), onClick = { viewModel.loadData() }) {
                     Text(
                         text = stringResource(id = R.string.str_retry), fontSize = 20.sp
                     )
@@ -178,11 +179,11 @@ fun IntroDownloadLocationScreen(
                                     )
                                 )
                                 .padding(2.dp)
-                                .clickable {
+                                .clickable(enabled = downloadingCityID == -1, onClick = {
                                     if (downloadingCityID == -1) viewModel.downloadAndStart(
                                         context, city, startMainActivity
                                     )
-                                }, shape = MaterialTheme.shapes.extraLarge
+                                }), shape = MaterialTheme.shapes.extraLarge
                         ) {
                             Row(
                                 modifier = Modifier

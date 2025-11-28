@@ -8,6 +8,7 @@ import ir.namoo.commons.utils.appPrefsLite
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
+import java.util.Locale
 
 var quranFont: Typeface = Typeface.SANS_SERIF
     private set
@@ -35,6 +36,10 @@ var uthmanTahaFont: Typeface = Typeface.SANS_SERIF
 var vazirmatnFont: Typeface = Typeface.SANS_SERIF
     private set
 
+var QCF2BISMLFont: Typeface = Typeface.SANS_SERIF
+    private set
+
+
 var chapterException: Throwable? = null
 
 private val playerSpeed_ = MutableStateFlow(DEFAULT_PLAYER_SPEED)
@@ -42,18 +47,10 @@ val playerSpeed = playerSpeed_.asStateFlow()
 
 fun initQuranUtils(context: Context) {
     val prefs = context.appPrefsLite
-
     playerSpeed_.value = prefs.getFloat(PREF_PLAYER_SPEED, DEFAULT_PLAYER_SPEED)
-
-    uthmanTahaFont = Typeface.createFromAsset(
-        context.assets, "fonts/Quran_UthmanTahaN1B.ttf"
-    )
-
-    vazirmatnFont = Typeface.createFromAsset(
-        context.assets, "fonts/Vazirmatn.ttf"
-    )
-
-
+    uthmanTahaFont = Typeface.createFromAsset(context.assets, "fonts/Quran_UthmanTahaN1B.ttf")
+    vazirmatnFont = Typeface.createFromAsset(context.assets, "fonts/Vazirmatn.ttf")
+    QCF2BISMLFont = Typeface.createFromAsset(context.assets, "fonts/QCF2BSML.ttf")
     //Set new fonts if old font selected
     if (prefs.getString(PREF_QURAN_FONT, DEFAULT_QURAN_FONT)
             ?.contains("Vazir.ttf") == true || prefs.getString(PREF_QURAN_FONT, DEFAULT_QURAN_FONT)
@@ -113,25 +110,10 @@ fun getSuraFileName(sura: Int) = when {
 fun getQuranDBDownloadFolder(context: Context): String =
     context.getExternalFilesDir("quranDB")?.absolutePath ?: ""
 
-fun getAyaFileName(sura: Int, aya: Int) = when {
-    sura < 10 -> when {
-        aya < 10 -> "00${sura}00${aya}.mp3"
-        aya < 100 -> "00${sura}0${aya}.mp3"
-        else -> "00${sura}${aya}.mp3"
-    }
+fun getMushafFolder(context: Context): String =
+    context.getExternalFilesDir("mushaf")?.absolutePath ?: ""
 
-    sura < 100 -> when {
-        aya < 10 -> "0${sura}00${aya}.mp3"
-        aya < 100 -> "0${sura}0${aya}.mp3"
-        else -> "0${sura}${aya}.mp3"
-    }
-
-    else -> when {
-        aya < 10 -> "${sura}00${aya}.mp3"
-        aya < 100 -> "${sura}0${aya}.mp3"
-        else -> "${sura}${aya}.mp3"
-    }
-}
+fun getAyaFileName(sura: Int, aya: Int) = "%03d%03d.mp3".format(Locale.ENGLISH, sura, aya)
 
 fun getRootDirs(context: Context): ArrayList<File?> {
     var result: ArrayList<File?>? = null

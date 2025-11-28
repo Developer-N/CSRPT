@@ -1,10 +1,14 @@
 package ir.namoo.commons.repository
 
-import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import ir.namoo.commons.BASE_API_URL
 import ir.namoo.commons.model.ApplicationModel
 import ir.namoo.commons.model.CityModel
@@ -52,10 +56,6 @@ class RemoteRepository(private val httpClient: HttpClient) {
     suspend fun getPrayTimesFor(id: Int): DataResult<Any> {
         runCatching {
             val response = httpClient.get("$BASE_API_URL/getTimes/$id")
-            Log.e(
-                "RemoteRepository",
-                "getPrayTimesFor $id: ${response.status} ${response.body<String>()}"
-            )
             return when (response.status) {
                 HttpStatusCode.OK -> DataResult.Success(response.body<PrayTimesResponse>())
                 else -> DataResult.Error("Error get times, message: ${response.body<String>()}")
@@ -67,10 +67,6 @@ class RemoteRepository(private val httpClient: HttpClient) {
     suspend fun getLastUpdateInfo(): DataResult<Any> {
         runCatching {
             val result = httpClient.get("$BASE_API_URL/app/updates/ir.namoo.religiousprayers")
-            Log.e(
-                "RemoteRepository",
-                "getLastUpdateInfo: ${result.status} ${result.body<String>()}"
-            )
             return when (result.status) {
                 HttpStatusCode.OK -> DataResult.Success(result.body<ServerResponseModel<List<UpdateModel>>>().data)
                 else -> DataResult.Error("Error get updates, message: ${result.body<String>()}")
@@ -89,18 +85,31 @@ class RemoteRepository(private val httpClient: HttpClient) {
 
     suspend fun getAthansOrAlarms(type: Int): DataResult<Any> {
         runCatching {
-            Log.e("RemoteRepository", "getAthansOrAlarms")
             val result =
                 httpClient.get(if (type == 1) "$BASE_API_URL/app/athans" else "$BASE_API_URL/app/alarms")
-            Log.e(
-                "RemoteRepository",
-                "getAthansOrAlarms: ${result.status} ${result.body<String>()}"
-            )
             return when (result.status) {
                 HttpStatusCode.OK -> DataResult.Success(result.body<ServerResponseModel<List<ServerAthanModel>>>().data)
                 else -> DataResult.Error("Error getAthansOrAlarms")
             }
         }.onFailure { return DataResult.Error("Error getAthansOrAlarms, message: ${it.message}") }
             .getOrElse { return DataResult.Error("Error getAthansOrAlarms, message: ${it.message}") }
+    }
+
+    suspend fun sendEvent(event: EventRequest): DataResult<Any> {
+        runCatching {
+            val result = httpClient.post("$BASE_API_URL/event") {
+                headers {
+                    append("Content-Type", "application/json")
+                    append("Accept", "application/json")
+                }
+                contentType(ContentType.Application.Json)
+                setBody(event)
+            }
+            return when (result.status) {
+                HttpStatusCode.OK -> DataResult.Success(result.body<ServerResponseModel<String>>().msg)
+                else -> DataResult.Error("Error sending event")
+            }
+        }.onFailure { return DataResult.Error("Error sending event, message: ${it.message}") }
+            .getOrElse { return DataResult.Error("Error sending event, message: ${it.message}") }
     }
 }

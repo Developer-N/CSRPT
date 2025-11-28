@@ -1,22 +1,30 @@
 package com.byagowi.persiancalendar.ui.calendar
 
 import android.app.Application
+import android.widget.Toast
 import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.byagowi.persiancalendar.LAST_CHOSEN_TAB_KEY
+import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.CalendarEvent
+import com.byagowi.persiancalendar.entities.EventsRepository
+import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.ui.calendar.searchevent.SearchEventsRepository
+import com.byagowi.persiancalendar.global.isTalkBackEnabled
+import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.ui.calendar.shiftwork.ShiftWorkViewModel
 import com.byagowi.persiancalendar.ui.calendar.yearview.YearViewCommand
 import com.byagowi.persiancalendar.ui.resumeToken
+import com.byagowi.persiancalendar.utils.calendar
+import com.byagowi.persiancalendar.utils.createSearchRegex
+import com.byagowi.persiancalendar.utils.getA11yDaySummary
 import com.byagowi.persiancalendar.utils.preferences
+import com.byagowi.persiancalendar.utils.searchDeviceCalendarEvents
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
@@ -31,14 +39,17 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val _selectedMonthOffsetCommand = MutableStateFlow<Int?>(null)
     val selectedMonthOffsetCommand: StateFlow<Int?> get() = _selectedMonthOffsetCommand
 
-    private val _selectedTabIndex = MutableStateFlow(CALENDARS_TAB)
-    val selectedTabIndex: StateFlow<Int> get() = _selectedTabIndex
+    private val _selectedTab = MutableStateFlow(CalendarScreenTab.CALENDAR)
+    val selectedTab: StateFlow<CalendarScreenTab> get() = _selectedTab
 
-    private val _isSearchOpenFlow = MutableStateFlow(false)
-    val isSearchOpen: StateFlow<Boolean> get() = _isSearchOpenFlow
+    private val _isSearchOpen = MutableStateFlow(false)
+    val isSearchOpen: StateFlow<Boolean> get() = _isSearchOpen
 
-    private val _eventsFlow = MutableStateFlow<List<CalendarEvent<*>>>(emptyList())
-    val eventsFlow: StateFlow<List<CalendarEvent<*>>> get() = _eventsFlow
+    private val _foundItems = MutableStateFlow<List<CalendarEvent<*>>>(emptyList())
+    val foundItems: StateFlow<List<CalendarEvent<*>>> get() = _foundItems
+
+    private val _searchTerm = MutableStateFlow("")
+    val searchTerm: StateFlow<String> get() = _searchTerm
 
     private val _refreshToken = MutableStateFlow(0)
     val refreshToken: StateFlow<Int> get() = _refreshToken
@@ -51,9 +62,6 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     private val _shiftWorkViewModel = MutableStateFlow<ShiftWorkViewModel?>(null)
     val shiftWorkViewModel: StateFlow<ShiftWorkViewModel?> get() = _shiftWorkViewModel
-
-    private val _sunViewNeedAnimation = MutableStateFlow(false)
-    val sunViewNeedsAnimation: StateFlow<Boolean> get() = _sunViewNeedAnimation
 
     private val _now = MutableStateFlow(System.currentTimeMillis())
     val now: StateFlow<Long> get() = _now
@@ -79,7 +87,14 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     private val _daysScreenSelectedDay = MutableStateFlow<Jdn?>(null)
     val daysScreenSelectedDay: StateFlow<Jdn?> get() = _daysScreenSelectedDay
 
+    private val _yearViewCalendar = MutableStateFlow<Calendar?>(null)
+    val yearViewCalendar: StateFlow<Calendar?> get() = _yearViewCalendar
+
     // Commands
+    fun changeYearViewCalendar(calendar: Calendar?) {
+        _yearViewCalendar.value = calendar
+    }
+
     fun changeDaysScreenSelectedDay(jdn: Jdn?) {
         jdn?.let { changeSelectedDay(it) }
         _daysScreenSelectedDay.value = jdn
@@ -94,7 +109,7 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * This is just to notify readers of selectedMonthOffset,
+     * This is just to notify the readers of selectedMonthOffset,
      * use [changeSelectedMonthOffsetCommand] for actually altering viewpager's state
      */
     fun notifySelectedMonthOffset(offset: Int) {
@@ -106,12 +121,8 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _selectedDay.value = jdn
     }
 
-    fun clearHighlightedDay() {
-        _isHighlighted.value = false
-    }
-
-    fun changeSelectedTabIndex(index: Int) {
-        _selectedTabIndex.value = index
+    fun changeSelectedTab(tab: CalendarScreenTab) {
+        _selectedTab.value = tab
     }
 
     fun refreshCalendar() {
@@ -123,26 +134,22 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun openSearch() {
-        _isSearchOpenFlow.value = true
+        _isSearchOpen.value = true
     }
 
     fun closeSearch() {
-        _isSearchOpenFlow.value = false
+        _isSearchOpen.value = false
+        changeSearchTerm("")
+        enabledEvents.value = emptyList()
+        _foundItems.value = emptyList()
     }
 
     fun setShiftWorkViewModel(shiftWorkViewModel: ShiftWorkViewModel?) {
         _shiftWorkViewModel.value = shiftWorkViewModel
     }
 
-    fun clearNeedsAnimation() {
-        _sunViewNeedAnimation.value = false
-    }
-
-    fun astronomicalOverviewLaunched() {
-        _sunViewNeedAnimation.value = true
-    }
-
     fun openYearView() {
+        if (_yearViewCalendar.value == null) _yearViewCalendar.value = mainCalendar
         _isYearView.value = true
     }
 
@@ -150,16 +157,15 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _isYearView.value = false
     }
 
-    private var repository: SearchEventsRepository? = null
 
-    fun searchEvent(query: CharSequence) {
-        viewModelScope.launch { _eventsFlow.value = repository?.findEvent(query) ?: emptyList() }
+    fun changeSearchTerm(query: String) {
+        _searchTerm.value = query
     }
 
-    // Events store cache needs to be invalidated as preferences of enabled events can be changed
-    // or user has added an appointment on their calendar outside the app.
-    fun initializeEventsRepository() {
-        repository = SearchEventsRepository(getApplication())
+    private val enabledEvents = MutableStateFlow(emptyList<CalendarEvent<*>>())
+
+    fun initializeEventsStore(repository: EventsRepository) {
+        enabledEvents.value = repository.getEnabledEvents(Jdn.today())
     }
 
     fun commandYearView(command: YearViewCommand) {
@@ -168,7 +174,10 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
 
     fun onYearViewBackPressed() {
         if (yearViewIsInYearSelection.value) commandYearView(YearViewCommand.ToggleYearSelection)
-        else closeYearView()
+        else {
+            changeYearViewCalendar(null)
+            closeYearView()
+        }
     }
 
     fun clearYearViewCommand() {
@@ -179,16 +188,58 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         _yearViewIsInYearSelection.value = value
     }
 
+    fun bringEvent(event: CalendarEvent<*>) {
+        val date = event.date
+        val calendar = date.calendar
+        val jdn = Jdn(
+            calendar = calendar,
+            year = date.year.takeIf { it != -1 } ?: run {
+                val selectedMonth = calendar.getMonthStartFromMonthsDistance(
+                    baseJdn = today.value,
+                    monthsDistance = selectedMonthOffset.value,
+                )
+                selectedMonth.year + if (date.month < selectedMonth.month) 1 else 0
+            },
+            month = date.month,
+            day = date.dayOfMonth,
+        )
+        bringDay(jdn)
+    }
+
+    fun bringDay(jdn: Jdn, highlight: Boolean = true) {
+        changeSelectedDay(jdn)
+        if (!highlight) _isHighlighted.value = false
+        changeSelectedMonthOffsetCommand(mainCalendar.getMonthsDistance(today.value, jdn))
+
+        // a11y
+        if (isTalkBackEnabled.value && jdn != today.value) {
+            val context = getApplication<Application>()
+            Toast.makeText(
+                context,
+                getA11yDaySummary(
+                    resources = context.resources,
+                    jdn = jdn,
+                    isToday = false,
+                    deviceCalendarEvents = EventsStore.empty(),
+                    withZodiac = true,
+                    withOtherCalendars = true,
+                    withTitle = true
+                ),
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
     init {
         viewModelScope.launch {
             val preferences = application.preferences
-            changeSelectedTabIndex(preferences.getInt(LAST_CHOSEN_TAB_KEY, 0))
-            selectedTabIndex.collectLatest { preferences.edit { putInt(LAST_CHOSEN_TAB_KEY, it) } }
-        }
-        viewModelScope.launch {
-            selectedTabIndex.combine(selectedDay) { tabIndex, day ->
-                tabIndex == TIMES_TAB && day == today.value
-            }.collect { if (it) _sunViewNeedAnimation.value = true }
+            changeSelectedTab(
+                CalendarScreenTab.entries.getOrNull(preferences.getInt(LAST_CHOSEN_TAB_KEY, 0))
+                    ?: CalendarScreenTab.entries[0]
+            )
+            selectedTab.collectLatest {
+                preferences.edit { putInt(LAST_CHOSEN_TAB_KEY, it.ordinal) }
+            }
         }
         viewModelScope.launch {
             while (true) {
@@ -212,9 +263,20 @@ class CalendarViewModel(application: Application) : AndroidViewModel(application
         }
         viewModelScope.launch {
             merge(selectedMonthOffset, isHighlighted, isYearView).collectLatest {
-                _todayButtonVisibility.value = if (isYearView.value)
-                    true
-                else selectedMonthOffset.value != 0 || isHighlighted.value
+                _todayButtonVisibility.value =
+                    isYearView.value || selectedMonthOffset.value != 0 || isHighlighted.value
+            }
+        }
+        viewModelScope.launch {
+            merge(searchTerm, enabledEvents).collectLatest {
+                val deviceEvents =
+                    getApplication<Application>().searchDeviceCalendarEvents(searchTerm.value)
+                val events = if (searchTerm.value.isBlank()) emptyList() else {
+                    val regex = createSearchRegex(searchTerm.value)
+                    enabledEvents.value.asSequence().filter { regex.containsMatchIn(it.title) }
+                        .take(50).toList()
+                }
+                _foundItems.value = deviceEvents + events
             }
         }
     }

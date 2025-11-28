@@ -4,12 +4,10 @@ import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.provider.CalendarContract
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,13 +38,12 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.initGlobal
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.theme.AppTheme
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.isLight
 import com.byagowi.persiancalendar.utils.applyAppLanguage
-import com.byagowi.persiancalendar.utils.applyLanguageToConfiguration
 import com.byagowi.persiancalendar.utils.eventKey
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.jdnActionKey
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.readAndStoreDeviceCalendarEventsOfTheDay
@@ -54,8 +52,10 @@ import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import com.byagowi.persiancalendar.utils.update
 import io.github.persiancalendar.calendar.PersianDate
+import ir.namoo.commons.PREF_LAST_SHOW_DONATE_DIALOG
 import ir.namoo.commons.PREF_LAST_UPDATE_CHECK
 import ir.namoo.commons.PREF_LAST_UPDATE_PRAY_TIMES_KEY
+import ir.namoo.commons.model.LocationsDB
 import ir.namoo.commons.model.UpdateModel
 import ir.namoo.commons.repository.DataState
 import ir.namoo.commons.repository.PrayTimeRepository
@@ -63,27 +63,28 @@ import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.getDayNum
 import ir.namoo.commons.utils.isNetworkConnected
 import ir.namoo.commons.utils.openUrlInCustomTab
+import ir.namoo.religiousprayers.ui.donate.DonateDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.get
+import java.util.Calendar
 import java.util.Date
-import kotlin.time.Duration.Companion.milliseconds
 
-class MainActivity : ComponentActivity() {
-
+class MainActivity : BaseActivity() {
     private val prayTimeRepository: PrayTimeRepository = get()
+    private val locationsDB: LocationsDB = get()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Just to make sure we have an initial transparent system bars
-        // System bars are tweaked later with project's with real values
+        // System bars are tweaked later with project's theme matching values
         applyEdgeToEdge(isBackgroundColorLight = false, isSurfaceColorLight = true)
 
         setTheme(R.style.BaseTheme)
-        applyAppLanguage(this)
         super.onCreate(savedInstanceState)
 
         intent.getLongExtra(eventKey, -1L).takeIf { it != -1L }?.let { eventId ->
@@ -124,6 +125,7 @@ class MainActivity : ComponentActivity() {
             //Check For Update
             var showUpdateDialog by remember { mutableStateOf(false) }
             var updateMessage by remember { mutableStateOf("") }
+            var showDonateDialog by remember { mutableStateOf(false) }
             LaunchedEffect(key1 = "Update") {
                 val persianDate = PersianDate(Jdn.today().value)
                 if (isNetworkConnected(this@MainActivity) && appPrefsLite.getInt(
@@ -184,7 +186,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                App(intent?.action, initialJdn, ::finish)
+                App(intent?.action, initialJdn, ::finish, prayTimeRepository)
                 AnimatedVisibility(visible = showUpdateDialog) {
                     AlertDialog(onDismissRequest = { showUpdateDialog = false }, confirmButton = {
                         TextButton(onClick = {
@@ -213,13 +215,14 @@ class MainActivity : ComponentActivity() {
                         )
                     }, text = {
                         Column {
+                            val numeral by numeral.collectAsState()
                             Text(
                                 text = stringResource(id = R.string.update_available),
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Justify
                             )
                             Text(
-                                text = formatNumber(updateMessage), textAlign = TextAlign.Justify
+                                text = numeral.format(updateMessage), textAlign = TextAlign.Justify
                             )
                         }
                     }, icon = {
@@ -227,6 +230,54 @@ class MainActivity : ComponentActivity() {
                             imageVector = Icons.Default.Update, contentDescription = "Update"
                         )
                     })
+                }
+                AnimatedVisibility(visible = showDonateDialog) {
+                    DonateDialog(
+                        onDismiss = { showDonateDialog = false },
+                        copyCardNumber = {
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                prayTimeRepository.sendEvent("Copy Card Number")
+                                    .collectLatest { state ->
+                                        when (state) {
+                                            is DataState.Error -> {}
+                                            DataState.Loading -> {}
+                                            is DataState.Success<*> -> {}
+                                        }
+                                    }
+                            }
+                        }
+                    )
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        prayTimeRepository.sendEvent("Open Donate Dialog").collectLatest { state ->
+                            when (state) {
+                                is DataState.Error -> {}
+                                DataState.Loading -> {}
+                                is DataState.Success<*> -> {}
+                            }
+                        }
+                    }
+                }
+                //Show Donate Dialog every 2 month
+                lifecycleScope.launch(Dispatchers.IO) {
+                    delay(10000)
+                    val calendar = Calendar.getInstance()
+                    val lastShowDay = appPrefsLite.getInt(
+                        PREF_LAST_SHOW_DONATE_DIALOG,
+                        calendar[Calendar.DAY_OF_YEAR] - 60
+                    )
+                    val pInfo: PackageInfo =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            packageManager.getPackageInfo(
+                                packageName, PackageManager.PackageInfoFlags.of(0)
+                            )
+                        } else {
+                            packageManager.getPackageInfo(packageName, 0)
+                        }
+                    val lastUpdateDay =
+                        Date(pInfo.lastUpdateTime).toGregorianCalendar()[Calendar.DAY_OF_YEAR]
+                    if (calendar[Calendar.DAY_OF_YEAR] - lastShowDay >= 60 && calendar[Calendar.DAY_OF_YEAR] - lastUpdateDay > 1) {
+                        showDonateDialog = true
+                    }
                 }
             }
         }
@@ -242,13 +293,11 @@ class MainActivity : ComponentActivity() {
         //update downloaded times every week
         lifecycleScope.launch(Dispatchers.IO) {
             if (isNetworkConnected(this@MainActivity)) {
-                val lastDownloadDay = Jdn(
-                    appPrefsLite.getLong(
-                        PREF_LAST_UPDATE_PRAY_TIMES_KEY, 0
-                    )
-                ).value
-                val diff = Jdn.today().value - lastDownloadDay
-                if (diff.milliseconds.inWholeDays > 7) {
+                val calendar = Calendar.getInstance()
+                val lastDownloadDay = appPrefsLite.getInt(
+                    PREF_LAST_UPDATE_PRAY_TIMES_KEY, calendar[Calendar.DAY_OF_YEAR] - 7
+                )
+                if (calendar[Calendar.DAY_OF_YEAR] - lastDownloadDay >= 7) {
                     val cityList = prayTimeRepository.getLocalCityList()
                     cityList.find { it.name == cityName.value }?.id?.let { cityID ->
                         prayTimeRepository.getTimesForCityAndSaveToLocalDB(cityID)
@@ -258,8 +307,9 @@ class MainActivity : ComponentActivity() {
                                     DataState.Loading -> {}
                                     is DataState.Success -> {
                                         appPrefsLite.edit {
-                                            putLong(
-                                                PREF_LAST_UPDATE_PRAY_TIMES_KEY, Jdn.today().value
+                                            putInt(
+                                                PREF_LAST_UPDATE_PRAY_TIMES_KEY,
+                                                calendar[Calendar.DAY_OF_YEAR]
                                             )
                                         }
                                     }
@@ -285,14 +335,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(applyLanguageToConfiguration(newConfig))
-        applyAppLanguage(this)
-    }
-
     override fun onResume() {
         super.onResume()
-        applyAppLanguage(this)
         update(applicationContext, false)
         ++resumeToken_.value
     }

@@ -1,58 +1,56 @@
 [versions]
-agp = "8.11.1"
-android-test = "1.6.1"
-android-test-runner = "1.6.2"
-androidx-activity = "1.10.1"
-androidx-core = "1.16.0"
-androidx-navigation = "2.9.1"
-androidx-test-ext-junit = "1.2.1"
+agp = "8.13.1"
+android-test = "1.7.0"
+android-test-runner = "1.7.0"
+androidx-activity = "1.12.0"
+androidx-core = "1.17.0"
+androidx-navigation = "2.9.6"
+androidx-test-ext-junit = "1.3.0"
 astronomy = "61dc07020aaa6885d2c7f688a4d82beaf6edb9ef" # is equal to v2.1.19
-browser = "1.8.0"
-compose-bom = "2025.06.01"
+browser = "1.9.0"
+compose-bom = "2025.11.01"
 coroutines = "1.10.2"
-datastore = "1.1.7"
+datastore = "1.2.0"
 dynamicanimation = "1.1.0"
 junit = "4.13.2"
-junit-runner = "1.13.3"
-junit5 = "5.13.3"
-kotlin = "2.2.0"
+junit-runner = "1.14.1"
+junit5 = "6.0.1"
+kotlin = "2.2.21"
 kotlinpoet = "2.2.0"
 kotlinx-html-jvm = "0.12.0"
 kotlinx-serialization-json = "1.9.0"
-lifecycle = "2.9.1"
+lifecycle = "2.10.0"
 openlocationcode = "1.0.4"
-persiancalendar-calculator = "13a660cb0e5a5943ec7c496f4ff4c2c4631f9fcf"
-persiancalendar-calendar = "f916a852ca9d48c917768693a127ece5347e8629"
-persiancalendar-praytimes = "135f0698f30bd05ee6b012452ebbe5b88922fa0f"
-persiancalendar-qr = "4ef9d44178046f8704edbc8964fca968f75b08d5"
-work-manager = "2.10.2"
+persiancalendar-calculator = "64d264a2c4c9eff6e7c060c3ff0bff0b15879f0e"
+persiancalendar-calendar = "652d510f7075daf0ca66a778287d87205196b34d"
+persiancalendar-praytimes = "57299c1efd720d61467dfaf5d86b0ef785117fa8"
+persiancalendar-qr = "58da9a077e1acc2ba80b43635533117fea462c7b"
+work-manager = "2.11.0"
 watchface-complications-data-source-ktx = "1.2.1"
-wear-compose = "1.4.1"
-wear-compose-material3 = "1.5.0-beta05"
-wear-glance-tiles = "1.0.0-alpha05"
+wear-compose = "1.5.5"
+wear-protolayout = "1.3.0"
+wear-tiles = "1.5.0"
 wear-tooling-preview = "1.0.0"
-wear-protolayout-proto = "1.3.0"
-wear-tiles-proto = "1.5.0"
 
-gms = "4.4.3"
-firebase-bom = "33.16.0"
-firebase-pref = "1.4.2"
-crashlytics = "3.0.4"
+gms = "4.4.4"
+firebase-bom = "34.6.0"
+firebase-pref = "2.0.2"
+crashlytics = "3.0.6"
 
-ksp = "2.2.0-2.0.2"
-room = "2.7.2"
+ksp = "2.3.0"
+room = "2.8.4"
 multidex = "2.0.1"
 
-koin-bom = "4.1.0"
-ktor = "3.1.3"
+koin-bom = "4.1.1"
+ktor = "3.3.2"
 logback = "3.0.0"
-landscapist-bom = "2.5.0"
-media = "1.7.1"
+landscapist-bom = "2.6.1"
+media = "1.8.0"
 gms-location = "21.3.0"
 appcompanist-permissions = "0.37.3"
 poolakey = "2.2.0"
 myket-billing-client = "1.18"
-coil = "3.2.0"
+coil = "3.3.0"
 
 [libraries]
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity" }
@@ -72,7 +70,6 @@ compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
@@ -96,14 +93,14 @@ test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "and
 test-rules = { group = "androidx.test", name = "rules", version.ref = "android-test" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "android-test-runner" }
 work-manager-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
-wear-glance-tiles = { group = "androidx.glance", name = "glance-wear-tiles", version.ref = "wear-glance-tiles" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wear-tooling-preview" }
 wear-watchface-complications-data-source-ktx = { group = "androidx.wear.watchface", name = "watchface-complications-data-source-ktx", version.ref = "watchface-complications-data-source-ktx" }
 wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wear-compose" }
-wear-compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "wear-compose-material3" }
+wear-compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "wear-compose" }
 wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-navigation", version.ref = "wear-compose" }
-wear-protolayout-proto = { module = "androidx.wear.protolayout:protolayout-proto", version.ref = "wear-protolayout-proto" }
-wear-tiles-proto = { module = "androidx.wear.tiles:tiles-proto", version.ref = "wear-tiles-proto" }
+wear-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+wear-protolayout-material3 = { group = "androidx.wear.protolayout", name = "protolayout-material3", version.ref = "wear-protolayout" }
+wear-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "wear-tiles" }
 
 multidex = { group = "androidx.multidex", name = "multidex", version.ref = "multidex" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
@@ -147,9 +144,9 @@ appcomanist-permissions = { group = "com.google.accompanist", name = "accompanis
 cafebazar-poolakey = { group = "com.github.cafebazaar.Poolakey", name = "poolakey", version.ref = "poolakey" }
 myket-billing-client = { module = "com.github.myketstore:myket-billing-client", version.ref = "myket-billing-client" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
-firebase-inappmessaging = { group = "com.google.firebase", name = "firebase-inappmessaging-display-ktx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-inappmessaging = { group = "com.google.firebase", name = "firebase-inappmessaging-display" }
 
 [plugins]
 com-android-application = { id = "com.android.application", version.ref = "agp" }

@@ -36,12 +36,12 @@ import com.byagowi.persiancalendar.ui.athan.AthanActivity.Companion.CANCEL_ATHAN
 import com.byagowi.persiancalendar.ui.athan.PreventPhoneCallIntervention
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
 import com.byagowi.persiancalendar.utils.getAthanUri
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.setDirection
 import com.byagowi.persiancalendar.utils.startAthanActivity
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import kotlin.time.Duration.Companion.minutes
 
 class AthanNotification : Service() {
@@ -122,8 +122,7 @@ class AthanNotification : Service() {
                         .setAction(CANCEL_ATHAN_NOTIFICATION)
                         .putExtra(KEY_EXTRA_PRAYER, prayTime)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                    PendingIntent.FLAG_UPDATE_CURRENT or
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
             )
 

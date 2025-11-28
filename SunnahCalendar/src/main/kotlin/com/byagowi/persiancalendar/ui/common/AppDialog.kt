@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui.common
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -48,7 +50,7 @@ private fun BaseAppDialog(
                                 start = SettingsHorizontalPaddingItem.dp,
                                 bottom = 16.dp,
                                 end = SettingsHorizontalPaddingItem.dp,
-                            )
+                            ),
                         ) { title() }
                     }
                 }
@@ -59,12 +61,12 @@ private fun BaseAppDialog(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .weight(weight = 1f, fill = false)
+                            .weight(weight = 1f, fill = false),
                     ) { content() }
                 }
 
                 if (neutralButton != null || dismissButton != null || confirmButton != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     Row(Modifier.padding(bottom = 16.dp, start = 24.dp, end = 24.dp)) {
                         neutralButton?.invoke()
@@ -87,6 +89,7 @@ fun AppDialog(
     neutralButton: (@Composable () -> Unit)? = null,
     confirmButton: (@Composable () -> Unit)? = null,
     dismissButton: (@Composable () -> Unit)? = null,
+    scrollState: ScrollState = rememberScrollState(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     BaseAppDialog(
@@ -96,15 +99,13 @@ fun AppDialog(
         confirmButton = confirmButton,
         dismissButton = dismissButton,
     ) {
-        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(scrollState),
-            content = content
+            content = content,
         )
-        ScrollShadow(scrollState, top = true)
-        ScrollShadow(scrollState, top = false)
+        ScrollShadow(scrollState)
     }
 }
 
@@ -115,6 +116,7 @@ fun AppDialogWithLazyColumn(
     neutralButton: (@Composable () -> Unit)? = null,
     confirmButton: (@Composable () -> Unit)? = null,
     dismissButton: (@Composable () -> Unit)? = null,
+    lazyListState: LazyListState = rememberLazyListState(),
     content: LazyListScope.() -> Unit,
 ) {
     BaseAppDialog(
@@ -124,9 +126,7 @@ fun AppDialogWithLazyColumn(
         confirmButton = confirmButton,
         dismissButton = dismissButton,
     ) {
-        val lazyState = rememberLazyListState()
-        LazyColumn(state = lazyState, content = content)
-        ScrollShadow(lazyState, top = true)
-        ScrollShadow(lazyState, top = false)
+        LazyColumn(state = lazyListState, content = content)
+        ScrollShadow(lazyListState)
     }
 }

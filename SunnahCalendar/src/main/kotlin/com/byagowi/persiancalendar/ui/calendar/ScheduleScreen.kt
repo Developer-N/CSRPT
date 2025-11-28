@@ -50,12 +50,12 @@ import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_EVENTS
 import com.byagowi.persiancalendar.entities.CalendarEvent
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.entities.Language
+import com.byagowi.persiancalendar.global.customFontName
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
-import com.byagowi.persiancalendar.global.isVazirEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
-import com.byagowi.persiancalendar.global.mainCalendarDigits
+import com.byagowi.persiancalendar.global.mainCalendarNumeral
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.preferredSwipeUpAction
 import com.byagowi.persiancalendar.ui.calendar.reports.monthHtmlReport
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
@@ -66,9 +66,9 @@ import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
 import com.byagowi.persiancalendar.utils.formatDate
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.monthName
 import com.byagowi.persiancalendar.utils.readDayDeviceEvents
@@ -84,18 +84,18 @@ fun SharedTransitionScope.ScheduleScreen(
     navigateUp: () -> Unit,
 ) {
     var baseJdn by remember { mutableStateOf(initiallySelectedDay) }
-    val state = rememberLazyListState(ITEMS_COUNT / 2, 0)
+    val listState = rememberLazyListState(ITEMS_COUNT / 2, 0)
     val today by calendarViewModel.today.collectAsState()
     var isFirstTime by remember { mutableStateOf(true) }
     val firstVisibleItemJdn by remember {
-        derivedStateOf { indexToJdn(baseJdn, state.firstVisibleItemIndex) }
+        derivedStateOf { indexToJdn(baseJdn, listState.firstVisibleItemIndex) }
     }
     LaunchedEffect(today) {
         if (isFirstTime) {
             isFirstTime = false
         } else if (firstVisibleItemJdn == today - 1) {
             baseJdn = today
-            state.animateScrollToItem(ITEMS_COUNT / 2)
+            listState.animateScrollToItem(ITEMS_COUNT / 2)
         }
     }
     val coroutineScope = rememberCoroutineScope()
@@ -111,6 +111,7 @@ fun SharedTransitionScope.ScheduleScreen(
             }
         }
     }
+    val numeral by numeral.collectAsState()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -124,7 +125,7 @@ fun SharedTransitionScope.ScheduleScreen(
                         Crossfade(date.monthName, label = "title") { state ->
                             Text(state, style = MaterialTheme.typography.titleLarge)
                         }
-                        Crossfade(formatNumber(date.year), label = "subtitle") { state ->
+                        Crossfade(numeral.format(date.year), label = "subtitle") { state ->
                             Text(state, style = MaterialTheme.typography.titleMedium)
                         }
                     }
@@ -136,9 +137,9 @@ fun SharedTransitionScope.ScheduleScreen(
                         baseJdn = today
                         coroutineScope.launch {
                             val destination = ITEMS_COUNT / 2
-                            if (abs(state.firstVisibleItemIndex - destination) < 30) {
-                                state.animateScrollToItem(ITEMS_COUNT / 2)
-                            } else state.scrollToItem(ITEMS_COUNT / 2)
+                            if (abs(listState.firstVisibleItemIndex - destination) < 30) {
+                                listState.animateScrollToItem(ITEMS_COUNT / 2)
+                            } else listState.scrollToItem(ITEMS_COUNT / 2)
                         }
                     }
 
@@ -151,7 +152,7 @@ fun SharedTransitionScope.ScheduleScreen(
                                 baseJdn = jdn
                             }
                             coroutineScope.launch {
-                                state.animateScrollToItem(jdn - baseJdn + ITEMS_COUNT / 2)
+                                listState.animateScrollToItem(jdn - baseJdn + ITEMS_COUNT / 2)
                             }
                         }
                     }
@@ -200,15 +201,14 @@ fun SharedTransitionScope.ScheduleScreen(
     ) { paddingValues ->
         Box(Modifier.padding(top = paddingValues.calculateTopPadding())) {
             ScreenSurface(animatedContentScope) {
-                val context = LocalContext.current
-                val mainCalendarDigitsIsArabic = mainCalendarDigits === Language.ARABIC_DIGITS
-                val isVazirEnabled by isVazirEnabled.collectAsState()
+                val customFontName by customFontName.collectAsState()
+                val isTalkBackEnabled by isTalkBackEnabled.collectAsState()
                 val circleTextStyle =
-                    if (mainCalendarDigitsIsArabic || isVazirEnabled) MaterialTheme.typography.titleMedium
+                    if (!mainCalendarNumeral.isArabicIndicVariants || customFontName != null) MaterialTheme.typography.titleMedium
                     else MaterialTheme.typography.titleLarge
                 Box {
                     val eventsCache = eventsCache(calendarViewModel)
-                    LazyColumn(state = state) {
+                    LazyColumn(state = listState) {
                         items(ITEMS_COUNT) { index ->
                             val jdn = indexToJdn(baseJdn, index)
                             if (index == 0 || index == ITEMS_COUNT - 1) return@items Box(
@@ -220,7 +220,7 @@ fun SharedTransitionScope.ScheduleScreen(
                             ) {
                                 MoreButton(stringResource(R.string.more)) {
                                     baseJdn = jdn
-                                    coroutineScope.launch { state.scrollToItem(ITEMS_COUNT / 2) }
+                                    coroutineScope.launch { listState.scrollToItem(ITEMS_COUNT / 2) }
                                 }
                             }
                             val events = eventsCache(jdn)
@@ -236,7 +236,7 @@ fun SharedTransitionScope.ScheduleScreen(
                                                 interactionSource = null,
                                                 indication = ripple(bounded = false),
                                             ) {
-                                                bringDate(calendarViewModel, jdn, context)
+                                                calendarViewModel.bringDay(jdn)
                                                 navigateUp()
                                             }
                                             .size(36.dp)
@@ -254,7 +254,7 @@ fun SharedTransitionScope.ScheduleScreen(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
-                                            text = formatNumber(date.dayOfMonth),
+                                            text = numeral.format(date.dayOfMonth),
                                             style = circleTextStyle,
                                             color = when {
                                                 jdn < today -> MaterialTheme.colorScheme.onPrimaryContainer
@@ -272,6 +272,7 @@ fun SharedTransitionScope.ScheduleScreen(
                                         if (baseJdn == jdn) Modifier.sharedBounds(
                                             rememberSharedContentState(SHARED_CONTENT_KEY_EVENTS),
                                             animatedVisibilityScope = animatedContentScope,
+                                            boundsTransform = appBoundsTransform,
                                         ) else Modifier,
                                     ) { DayEvents(events) {} }
                                 }
@@ -285,7 +286,8 @@ fun SharedTransitionScope.ScheduleScreen(
                                     )
                                     Text(
                                         if (nextMonth.month == 1) language.my.format(
-                                            nextMonth.monthName, formatNumber(nextMonth.year),
+                                            nextMonth.monthName,
+                                            numeral.format(nextMonth.year),
                                         ) else nextMonth.monthName,
                                         fontSize = 24.sp,
                                         modifier = Modifier
@@ -296,10 +298,15 @@ fun SharedTransitionScope.ScheduleScreen(
                                                 interactionSource = null,
                                                 indication = ripple(bounded = false),
                                             ) {
+                                                val monthOffset = mainCalendar.getMonthsDistance(
+                                                    Jdn.today(),
+                                                    Jdn(nextMonth),
+                                                )
                                                 calendarViewModel.changeSelectedMonthOffsetCommand(
-                                                    mainCalendar.getMonthsDistance(
-                                                        Jdn.today(), Jdn(nextMonth),
-                                                    )
+                                                    monthOffset
+                                                )
+                                                calendarViewModel.notifySelectedMonthOffset(
+                                                    monthOffset
                                                 )
                                                 calendarViewModel.openYearView()
                                                 navigateUp()
@@ -309,8 +316,7 @@ fun SharedTransitionScope.ScheduleScreen(
                             }
                         }
                     }
-                    ScrollShadow(state, top = true)
-                    ScrollShadow(state, top = false)
+                    ScrollShadow(listState)
                 }
             }
         }

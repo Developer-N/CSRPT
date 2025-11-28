@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 
 @Composable
 fun QuranDownloadItem(
@@ -45,6 +46,7 @@ fun QuranDownloadItem(
     onDelete: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val numeral by numeral.collectAsState()
     val progress by animateFloatAsState(targetValue = state.progress, label = "progress")
     ElevatedCard(
         modifier = modifier
@@ -61,7 +63,7 @@ fun QuranDownloadItem(
         ) {
             Text(
                 modifier = Modifier.padding(vertical = 2.dp, horizontal = 8.dp),
-                text = formatNumber(title),
+                text = numeral.format(title),
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -138,15 +140,15 @@ fun QuranDownloadItem(
                     ) {
                         Text(
                             lineHeight = 8.sp,
-                            text = formatNumber((progress * 100).toInt()) + "%",
+                            text = numeral.format((progress * 100).toInt()) + "%",
                             fontSize = 8.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         val text =
                             if (state.totalSize / 1024 / 1024 < 1)
-                                formatNumber((state.totalSize / 1024).toInt()) + "KB"
-                            else formatNumber((state.totalSize / 1024 / 1024).toInt()) + "MB"
+                                numeral.format((state.totalSize / 1024).toInt()) + "KB"
+                            else numeral.format((state.totalSize / 1024 / 1024).toInt()) + "MB"
                         Text(
                             lineHeight = 8.sp,
                             text = text,

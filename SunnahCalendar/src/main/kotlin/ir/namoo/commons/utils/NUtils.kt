@@ -34,6 +34,11 @@ import ir.namoo.religiousprayers.praytimeprovider.DownloadedPrayTimesEntity
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.GregorianCalendar
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 
 fun String.digitsOf(): String {
@@ -192,72 +197,47 @@ fun fixSummerTimes(prayTimes: PrayTimes?, add: Boolean = true): PrayTimes? {
     val isha = prayTimes.javaClass.getDeclaredField("isha").apply { isAccessible = true }
 
     imsak.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.imsak).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.imsak).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.imsak).plus(Clock(1.0)).value
+        else Clock(prayTimes.imsak).minus(Clock(1.0)).value
     )
     fajr.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.fajr).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.fajr).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.fajr).plus(Clock(1.0)).value
+        else Clock(prayTimes.fajr).minus(Clock(1.0)).value
     )
 
     sunrise.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.sunrise).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.sunrise).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.sunrise).plus(Clock(1.0)).value
+        else Clock(prayTimes.sunrise).minus(Clock(1.0)).value
     )
     dhuhr.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.dhuhr).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.dhuhr).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.dhuhr).plus(Clock(1.0)).value
+        else Clock(prayTimes.dhuhr).minus(Clock(1.0)).value
     )
     asr.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.asr).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.asr).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.asr).plus(Clock(1.0)).value
+        else Clock(prayTimes.asr).minus(Clock(1.0)).value
     )
     sunset.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.sunset).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.sunset).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.sunset).plus(Clock(1.0)).value
+        else Clock(prayTimes.sunset).minus(Clock(1.0)).value
     )
     maghrib.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.maghrib).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.maghrib).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.maghrib).plus(Clock(1.0)).value
+        else Clock(prayTimes.maghrib).minus(Clock(1.0)).value
     )
     isha.set(
-        prayTimes,
-        if (add)
-            Clock(prayTimes.isha).plus(Clock(1.0)).value
-        else
-            Clock(prayTimes.isha).minus(Clock(1.0)).value
+        prayTimes, if (add) Clock(prayTimes.isha).plus(Clock(1.0)).value
+        else Clock(prayTimes.isha).minus(Clock(1.0)).value
     )
 
     return prayTimes
 }
 
 fun timeToDouble(time: String): Double {
+    val date = GregorianCalendar.getInstance()
     val hour = time.split(":")[0].toInt()
     val minute = time.split(":")[1].toInt()
-    val ashari = (minute * 100) / 60
-    return if (minute < 6) "$hour.0$ashari".toDouble()
-    else "$hour.$ashari".toDouble()
+    return (hour.hours + minute.minutes + date[GregorianCalendar.SECOND].seconds + date[GregorianCalendar.MILLISECOND].milliseconds) / 1.hours
 }
 
 fun getAthansDirectoryPath(context: Context): String =
@@ -473,9 +453,10 @@ fun getDefaultDOAUri(context: Context): Uri = "%s://%s/%s/%s".format(
 
 fun getAthanUri(setting: AthanSetting?, key: String?, context: Context): Uri {
     return if (setting == null || key == null) getDefaultAthanUri(context)
-    else if (key.startsWith("B") || (key.startsWith("A") && key != PrayTime.ASR.name) || key == "SUNRISE")
-        if (setting.alertURI == "") getDefaultAlertUri(context)
-        else setting.alertURI.toUri()
+    else if (key.startsWith("B") || (key.startsWith("A") && key != PrayTime.ASR.name) || key == "SUNRISE") if (setting.alertURI == "") getDefaultAlertUri(
+        context
+    )
+    else setting.alertURI.toUri()
     else if (setting.athanURI == "") when (setting.athanKey) {
         "FAJR" -> getDefaultFajrAthanUri(context)
         "SUNRISE" -> getDefaultAlertUri(context)

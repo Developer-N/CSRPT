@@ -4,30 +4,56 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.Typeface
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.entities.Language
-import com.byagowi.persiancalendar.global.preferredDigits
+import com.byagowi.persiancalendar.entities.Numeral
+import com.byagowi.persiancalendar.global.numeral
+import java.io.File
 
 // Dynamic icon generation, currently unused
-fun createStatusIcon(dayOfMonth: Int): Bitmap {
+fun createStatusIcon(
+    dayOfMonth: Int,
+    customFontFile: File? = null,
+    isBoldFont: Boolean = false,
+    color: Int = Color.WHITE,
+    addShadow: Boolean = false,
+): Bitmap {
+    val numeral = numeral.value
+    val text = numeral.format(dayOfMonth)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG).also {
-        it.textSize = if (isArabicDigitSelected) 75f else 90f
+        it.textSize = when {
+            numeral.isArabicIndicVariants -> 90f
+            numeral.isTamil -> if (text.length == 1) 65f else 40f
+            else -> 75f
+        }
         it.textAlign = Paint.Align.CENTER
-        it.color = Color.WHITE
+        it.color = color
+        if (customFontFile != null) it.typeface = Typeface.createFromFile(customFontFile)
+        if (isBoldFont) it.typeface = Typeface.create(it.typeface, Typeface.BOLD)
+        if (addShadow) it.setShadowLayer(1f, 1f, 1f, Color.BLACK)
     }
-    val text = formatNumber(dayOfMonth)
     val bounds = Rect()
     paint.getTextBounds(text, 0, text.length, bounds)
-    return createBitmap(90, 90).applyCanvas {
-        drawText(text, 45f, 45 + bounds.height() / 2f, paint)
+    val size = 90
+    val widthWithoutPadding = size - 10
+    if (bounds.width() > widthWithoutPadding) {
+        paint.textSize *= widthWithoutPadding.toFloat() / bounds.width()
+        paint.getTextBounds(text, 0, text.length, bounds)
+    }
+    return createBitmap(size, size).applyCanvas {
+        val y = when {
+            numeral.isTamil -> if (text.length == 1) 62.5f else 55f
+            else -> 45f + bounds.height() / 2f
+        }
+        drawText(text, 45f, y, paint)
     }
 }
 
-fun getDayIconResource(day: Int): Int = when (preferredDigits) {
-    Language.DEVANAGARI_DIGITS, Language.ARABIC_DIGITS, Language.TAMIL_DIGITS -> DAYS_ICONS_ARABIC
-    Language.ARABIC_INDIC_DIGITS -> DAYS_ICONS_ARABIC_INDIC
+fun getDayIconResource(day: Int): Int = when (numeral.value) {
+    Numeral.DEVANAGARI, Numeral.ARABIC, Numeral.TAMIL -> DAYS_ICONS_ARABIC
+    Numeral.ARABIC_INDIC -> DAYS_ICONS_ARABIC_INDIC
     else -> DAYS_ICONS_PERSIAN
 }.getOrNull(day - 1) ?: 0
 

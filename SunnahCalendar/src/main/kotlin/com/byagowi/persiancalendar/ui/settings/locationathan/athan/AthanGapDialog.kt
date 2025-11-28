@@ -7,6 +7,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.PREF_ATHAN_GAP
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.utils.preferences
 
@@ -29,14 +31,15 @@ fun AthanGapDialog(onDismissRequest: () -> Unit) {
     var minutes by rememberSaveable {
         mutableStateOf(context.preferences.getString(PREF_ATHAN_GAP, null) ?: "0")
     }
+    val numeral by numeral.collectAsState()
     AppDialog(
         title = { Text(stringResource(R.string.athan_gap_summary)) },
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(onClick = {
                 onDismissRequest()
-                if (minutes.toDoubleOrNull() != null)
-                    context.preferences.edit { putString(PREF_ATHAN_GAP, minutes) }
+                val value = numeral.parseDouble(minutes)
+                if (value != null) context.preferences.edit { putString(PREF_ATHAN_GAP, "$value") }
             }) { Text(stringResource(R.string.accept)) }
         },
         dismissButton = {
@@ -46,7 +49,8 @@ fun AthanGapDialog(onDismissRequest: () -> Unit) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             TextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = minutes,
+                isError = numeral.parseDouble(minutes) == null,
+                value = numeral.format(minutes, isInEdit = true),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 onValueChange = { minutes = it },
             )

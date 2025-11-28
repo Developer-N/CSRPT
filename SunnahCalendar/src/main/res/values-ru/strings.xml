@@ -248,7 +248,7 @@
     <string name="longitude">Долгота</string>
     <string name="altitude">Высота</string>
     <string name="altitude_praytime">в метрах (необязательно)</string>
-    <string name="coordination">Координаты</string>
+    <string name="coordinates">Координаты</string>
     <string name="athan">Азан</string>
     <string name="in_city_time">в %1$s</string>
     <string name="pray_methods">Методы расчета</string>
@@ -409,7 +409,7 @@
     <string name="time_zones">Часовые пояса</string>
     <string name="exit_full_screen">Выйти из полноэкранного режима</string>
     <string name="full_screen">Полноэкранный режим</string>
-    <string name="open_drawer">Открыть панель навигации</string>
+    <string name="open_navigation_rail">Открыть панель навигации</string>
     <plurals name="work_days">
         <item quantity="one">%1$s рабочий день</item>
         <item quantity="few">%1$s рабочих дня</item>

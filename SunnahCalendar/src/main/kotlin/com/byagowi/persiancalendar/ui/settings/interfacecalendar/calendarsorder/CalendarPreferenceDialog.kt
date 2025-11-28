@@ -5,7 +5,6 @@ import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Checkbox
@@ -32,6 +32,10 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.PREF_MAIN_CALENDAR_KEY
@@ -83,33 +87,49 @@ fun CalendarPreferenceDialog(onDismissRequest: () -> Unit) {
         onDismissRequest = onDismissRequest,
     ) {
         var dragStarted by remember { mutableStateOf(false) }
+        fun onSettle(fromIndex: Int, toIndex: Int) {
+            list = list.toMutableList().apply { add(toIndex, removeAt(fromIndex)) }
+        }
         ReorderableColumn(
             modifier = Modifier.fillMaxSize(),
             list = list,
-            onSettle = { fromIndex, toIndex ->
-                list = list.toMutableList().apply { add(toIndex, removeAt(fromIndex)) }
-            },
+            onSettle = ::onSettle,
             onMove = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)
                 }
             },
-        ) { _, (calendar, enabled), isDragging ->
+        ) { i, (calendar, checked), isDragging ->
             key(calendar) {
                 val blur by animateDpAsState(if (dragStarted) 2.dp else 0.dp, label = "blur")
                 val interactionSource = remember(calendar) { MutableInteractionSource() }
+                val moveUp = stringResource(R.string.move_up)
+                val moveDown = stringResource(R.string.move_down)
                 Row(
                     modifier = Modifier
                         .blur(if (dragStarted && !isDragging) blur else 0.dp)
-                        .clickable(
+                        .toggleable(
+                            value = checked,
                             interactionSource = interactionSource,
                             indication = ripple(),
-                            onClick = {
-                                list = list.map {
-                                    it.first to (if (it.first == calendar) !it.second else it.second)
-                                }
-                            },
-                        )
+                            role = Role.Checkbox,
+                        ) { newValue ->
+                            list = list.map {
+                                it.first to (if (it.first == calendar) newValue else it.second)
+                            }
+                        }
+                        .semantics {
+                            customActions = listOfNotNull(
+                                CustomAccessibilityAction(moveUp) {
+                                    onSettle(i, i - 1)
+                                    true
+                                }.takeIf { i > 0 },
+                                CustomAccessibilityAction(moveDown) {
+                                    onSettle(i, i + 1)
+                                    true
+                                }.takeIf { i < list.size - 1 },
+                            )
+                        }
                         .draggableHandle(
                             interactionSource = interactionSource,
                             onDragStarted = {
@@ -132,8 +152,8 @@ fun CalendarPreferenceDialog(onDismissRequest: () -> Unit) {
                         .fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(checked = enabled, onCheckedChange = null)
-                    Spacer(modifier = Modifier.width(SettingsHorizontalPaddingItem.dp))
+                    Checkbox(checked = checked, onCheckedChange = null)
+                    Spacer(Modifier.width(SettingsHorizontalPaddingItem.dp))
                     Text(stringResource(calendar.title))
                     Spacer(Modifier.weight(1f))
                     Icon(Icons.Rounded.DragHandle, contentDescription = null)

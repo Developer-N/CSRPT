@@ -3,6 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="25">
 
+    <!-- It should be in sync with ShortcutActivity.kt -->
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_quran"
+        android:shortcutId="QURAN"
+        android:shortcutLongLabel="@string/quran"
+        android:shortcutShortLabel="@string/quran">
+
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="ir.namoo.quran.QuranActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+
     <shortcut
         android:enabled="true"
         android:icon="@drawable/ic_azkar2"
@@ -19,14 +35,29 @@
 
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/ic_quran"
-        android:shortcutId="QURAN"
-        android:shortcutLongLabel="@string/quran"
-        android:shortcutShortLabel="@string/quran">
+        android:icon="@drawable/hadeeth"
+        android:shortcutId="HADEETH_CHAPTERS"
+        android:shortcutLongLabel="@string/hadeeth"
+        android:shortcutShortLabel="@string/hadeeth">
 
         <intent
-            android:action="android.intent.action.VIEW"
-            android:targetClass="ir.namoo.quran.QuranActivity"
+            android:action="HADEETH_CHAPTERS"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
+            android:targetPackage="ir.namoo.religiousprayers" />
+
+    </shortcut>
+
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/sc_compass"
+        android:shortcutId="COMPASS"
+        android:shortcutLongLabel="@string/compass"
+        android:shortcutShortLabel="@string/compass">
+
+        <intent
+            android:action="COMPASS"
+            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
             android:targetPackage="ir.namoo.religiousprayers" />
 
     </shortcut>
@@ -45,19 +76,6 @@
 
     </shortcut>
 
-    <shortcut
-        android:enabled="true"
-        android:icon="@drawable/sc_compass"
-        android:shortcutId="COMPASS"
-        android:shortcutLongLabel="@string/compass"
-        android:shortcutShortLabel="@string/compass">
-
-        <intent
-            android:action="COMPASS"
-            android:targetClass="com.byagowi.persiancalendar.ui.MainActivity"
-            android:targetPackage="ir.namoo.religiousprayers" />
-
-    </shortcut>
 
     <shortcut
         android:enabled="true"
@@ -75,7 +93,7 @@
 
     <shortcut
         android:enabled="true"
-        android:icon="@drawable/sc_astrology_horoscope"
+        android:icon="@drawable/sc_astronomy"
         android:shortcutId="ASTRONOMY"
         android:shortcutLongLabel="@string/astronomy"
         android:shortcutShortLabel="@string/astronomy">

@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import org.koin.androidx.compose.koinViewModel
@@ -34,20 +34,23 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SharedTransitionScope.SettingsScreen(
     animatedContentScope: AnimatedContentScope,
+    reload: () -> Unit,
     openDrawer: () -> Unit,
     viewModel: SettingViewModel = koinViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+
     LaunchedEffect(key1 = Unit) {
         viewModel.loadData()
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = {
-            Text(text = stringResource(id = R.string.settings))
-        }, navigationIcon = {
-            NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
-        }, colors = appTopAppBarColors()
+        TopAppBar(
+            title = {
+                Text(text = stringResource(id = R.string.settings))
+            }, navigationIcon = {
+                NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
+            }, colors = appTopAppBarColors()
         )
     }) { paddingValues ->
         Surface(
@@ -71,6 +74,7 @@ fun SharedTransitionScope.SettingsScreen(
                         strokeCap = StrokeCap.Round
                     )
                 }
+                PageTypeComponent(viewModel=viewModel, reload=reload)
                 TranslateItems(viewModel)
                 QaraatItems(viewModel)
                 FontSettingItems(viewModel)

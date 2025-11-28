@@ -10,7 +10,6 @@ import com.byagowi.persiancalendar.PREF_GEOCODED_CITYNAME
 import com.byagowi.persiancalendar.PREF_LATITUDE
 import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.PREF_SELECTED_LOCATION
-import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.utils.preferences
 import ir.namoo.commons.PREF_FIRST_START
 import ir.namoo.commons.PREF_LAST_UPDATE_PRAY_TIMES_KEY
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class IntroDownloadViewModel(
     private val prayTimeRepository: PrayTimeRepository
@@ -76,7 +76,10 @@ class IntroDownloadViewModel(
                                     putBoolean(PREF_FIRST_START, false)
                                 }
                                 context.appPrefsLite.edit {
-                                    putLong(PREF_LAST_UPDATE_PRAY_TIMES_KEY, Jdn.today().value)
+                                    putInt(
+                                        PREF_LAST_UPDATE_PRAY_TIMES_KEY,
+                                        Calendar.getInstance()[Calendar.DAY_OF_YEAR]
+                                    )
                                 }
                                 startMainActivity()
                             }

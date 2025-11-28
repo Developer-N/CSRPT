@@ -1,8 +1,11 @@
 package com.byagowi.persiancalendar.ui.theme
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.Typeface
 import android.os.PowerManager
 import android.view.View
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.animateColorAsState
@@ -13,20 +16,26 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.FloatingActionButtonElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.SliderColors
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Typography
@@ -36,27 +45,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.core.text.layoutDirection
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.STORED_FONT_NAME
+import com.byagowi.persiancalendar.STORED_IMAGE_NAME
+import com.byagowi.persiancalendar.global.customFontName
+import com.byagowi.persiancalendar.global.customImageName
+import com.byagowi.persiancalendar.global.isBoldFont
+import com.byagowi.persiancalendar.global.isCyberpunk
 import com.byagowi.persiancalendar.global.isGradient
+import com.byagowi.persiancalendar.global.isHighTextContrastEnabled
 import com.byagowi.persiancalendar.global.isRedHolidays
-import com.byagowi.persiancalendar.global.isVazirEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.systemDarkTheme
 import com.byagowi.persiancalendar.global.systemLightTheme
@@ -66,44 +89,31 @@ import com.byagowi.persiancalendar.ui.calendar.times.SunViewColors
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.isDynamicGrayscale
 import com.byagowi.persiancalendar.ui.utils.isLight
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
+import com.byagowi.persiancalendar.utils.logException
+import java.io.File
 
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
-    val isVazirEnabled by isVazirEnabled.collectAsState()
-    val language by language.collectAsState()
-    val typography = if (isVazirEnabled && BuildConfig.DEVELOPMENT && language.isArabicScript) {
-        val font = FontFamily(Font(R.font.vazirmatn))
-        Typography(
-            displayLarge = MaterialTheme.typography.displayLarge.copy(fontFamily = font),
-            displayMedium = MaterialTheme.typography.displayMedium.copy(fontFamily = font),
-            displaySmall = MaterialTheme.typography.displaySmall.copy(fontFamily = font),
-
-            headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontFamily = font),
-            headlineMedium = MaterialTheme.typography.headlineMedium.copy(fontFamily = font),
-            headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontFamily = font),
-
-            titleLarge = MaterialTheme.typography.titleLarge.copy(fontFamily = font),
-            titleMedium = MaterialTheme.typography.titleMedium.copy(fontFamily = font),
-            titleSmall = MaterialTheme.typography.titleSmall.copy(fontFamily = font),
-
-            bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontFamily = font),
-            bodyMedium = MaterialTheme.typography.bodyMedium.copy(fontFamily = font),
-            bodySmall = MaterialTheme.typography.bodySmall.copy(fontFamily = font),
-
-            labelLarge = MaterialTheme.typography.labelLarge.copy(fontFamily = font),
-            labelMedium = MaterialTheme.typography.labelMedium.copy(fontFamily = font),
-            labelSmall = MaterialTheme.typography.labelSmall.copy(fontFamily = font)
-        )
-    } else MaterialTheme.typography
-    MaterialTheme(colorScheme = appColorScheme(), typography = typography) {
+    MaterialTheme(
+        colorScheme = appColorScheme(),
+        typography = resolveTypography(),
+        shapes = appShapes(),
+    ) {
         val contentColor by animateColor(MaterialTheme.colorScheme.onBackground)
 
+        val language by language.collectAsState()
         val isRtl =
             language.isLessKnownRtl || language.asSystemLocale().layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val context = LocalContext.current
         CompositionLocalProvider(
             LocalContentColor provides contentColor,
             LocalLayoutDirection provides if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+            LocalUriHandler provides object : UriHandler {
+                override fun openUri(uri: String) = runCatching {
+                    CustomTabsIntent.Builder().build().launchUrl(context, uri.toUri())
+                }.getOrNull().debugAssertNotNull ?: Unit
+            },
         ) {
             Box(
                 Modifier
@@ -112,9 +122,109 @@ fun AppTheme(content: @Composable () -> Unit) {
                     .clipToBounds()
                     // Don't move this upper to top of the chain so .clipToBounds can be applied to it
                     .background(appBackground()),
-            ) { content() }
+            ) {
+                val customImageName by customImageName.collectAsState()
+                if (customImageName != null) {
+                    val bitmap = remember(customImageName) {
+                        val file = File(context.filesDir, STORED_IMAGE_NAME)
+                            .takeIf { it.exists() } ?: return@remember null
+                        BitmapFactory.decodeFile(file.absolutePath).asImageBitmap()
+                    }
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = null,
+                            alpha = .5f,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .blur(6.dp),
+                            contentScale = ContentScale.Crop,
+                        )
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = .3f)),
+                        )
+                    }
+                }
+                content()
+            }
         }
     }
+}
+
+fun resolveCustomFontPath(context: Context): File? {
+    return File(context.filesDir, STORED_FONT_NAME).takeIf { it.exists() }
+}
+
+@Composable
+fun resolveFontFile(): File? {
+    val customFontName by customFontName.collectAsState()
+    return if (customFontName != null) runCatching {
+        resolveCustomFontPath(LocalContext.current)
+    }.onFailure(logException).getOrNull() else null
+}
+
+@Composable
+fun resolveAndroidCustomTypeface(): Typeface? {
+    val fontFile = resolveFontFile()
+    val isBoldFont by isBoldFont.collectAsState()
+    return remember(fontFile, isBoldFont) {
+        fontFile?.let(Typeface::createFromFile).let {
+            if (isBoldFont) Typeface.create(it, Typeface.BOLD) else it
+        }
+    }
+}
+
+@Composable
+fun resolveTypography(): Typography {
+    val result = resolveFontFile()?.let { fontFile ->
+        val typography = MaterialTheme.typography
+        val font = FontFamily(Font(fontFile))
+        typography.copy(
+            displayLarge = typography.displayLarge.copy(fontFamily = font),
+            displayMedium = typography.displayMedium.copy(fontFamily = font),
+            displaySmall = typography.displaySmall.copy(fontFamily = font),
+
+            headlineLarge = typography.headlineLarge.copy(fontFamily = font),
+            headlineMedium = typography.headlineMedium.copy(fontFamily = font),
+            headlineSmall = typography.headlineSmall.copy(fontFamily = font),
+
+            titleLarge = typography.titleLarge.copy(fontFamily = font),
+            titleMedium = typography.titleMedium.copy(fontFamily = font),
+            titleSmall = typography.titleSmall.copy(fontFamily = font),
+
+            bodyLarge = typography.bodyLarge.copy(fontFamily = font),
+            bodyMedium = typography.bodyMedium.copy(fontFamily = font),
+            bodySmall = typography.bodySmall.copy(fontFamily = font),
+
+            labelLarge = typography.labelLarge.copy(fontFamily = font),
+            labelMedium = typography.labelMedium.copy(fontFamily = font),
+            labelSmall = typography.labelSmall.copy(fontFamily = font)
+        )
+    } ?: MaterialTheme.typography
+    val isBoldFont by isBoldFont.collectAsState()
+    return if (isBoldFont) result.copy(
+        displayLarge = result.displayLarge.copy(fontWeight = FontWeight.Bold),
+        displayMedium = result.displayMedium.copy(fontWeight = FontWeight.Bold),
+        displaySmall = result.displaySmall.copy(fontWeight = FontWeight.Bold),
+
+        headlineLarge = result.headlineLarge.copy(fontWeight = FontWeight.Bold),
+        headlineMedium = result.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineSmall = result.headlineSmall.copy(fontWeight = FontWeight.Bold),
+
+        titleLarge = result.titleLarge.copy(fontWeight = FontWeight.Bold),
+        titleMedium = result.titleMedium.copy(fontWeight = FontWeight.Bold),
+        titleSmall = result.titleSmall.copy(fontWeight = FontWeight.Bold),
+
+        bodyLarge = result.bodyLarge.copy(fontWeight = FontWeight.Bold),
+        bodyMedium = result.bodyMedium.copy(fontWeight = FontWeight.Bold),
+        bodySmall = result.bodySmall.copy(fontWeight = FontWeight.Bold),
+
+        labelLarge = result.labelLarge.copy(fontWeight = FontWeight.Bold),
+        labelMedium = result.labelMedium.copy(fontWeight = FontWeight.Bold),
+        labelSmall = result.labelSmall.copy(fontWeight = FontWeight.Bold)
+    ) else result
 }
 
 // The app's theme after custom dark/light theme is applied
@@ -188,6 +298,26 @@ private fun appColorScheme(): ColorScheme {
 }
 
 @Composable
+private fun appShapes(): Shapes {
+    if (!BuildConfig.DEVELOPMENT) return MaterialTheme.shapes
+    val isCyberpunk by isCyberpunk.collectAsState()
+    return if (isCyberpunk) Shapes(
+        extraSmall = CutCornerShape(MaterialTheme.shapes.extraSmall.topStart),
+        small = CutCornerShape(MaterialTheme.shapes.small.topStart),
+        medium = CutCornerShape(MaterialTheme.shapes.medium.topStart),
+        large = CutCornerShape(MaterialTheme.shapes.large.topStart),
+        extraLarge = CutCornerShape(MaterialTheme.shapes.extraLarge.topStart),
+    ) else MaterialTheme.shapes
+}
+
+@Composable
+fun needsScreenSurfaceDragHandle(): Boolean = when (effectiveTheme()) {
+    Theme.BLACK -> true
+    Theme.MODERN -> !isGradient.collectAsState().value
+    else -> false
+}
+
+@Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun appTopAppBarColors(): TopAppBarColors {
     return TopAppBarDefaults.topAppBarColors(
@@ -196,6 +326,21 @@ fun appTopAppBarColors(): TopAppBarColors {
         navigationIconContentColor = LocalContentColor.current,
         actionIconContentColor = LocalContentColor.current,
         titleContentColor = LocalContentColor.current,
+    )
+}
+
+@Composable
+fun appSwitchColors(): SwitchColors {
+    val defaultColors = SwitchDefaults.colors()
+    return defaultColors.copy(
+        checkedThumbColor = animateColor(defaultColors.checkedThumbColor).value,
+        checkedTrackColor = animateColor(defaultColors.checkedTrackColor).value,
+        checkedBorderColor = animateColor(defaultColors.checkedBorderColor).value,
+        checkedIconColor = animateColor(defaultColors.checkedIconColor).value,
+        uncheckedThumbColor = animateColor(defaultColors.uncheckedThumbColor).value,
+        uncheckedTrackColor = animateColor(defaultColors.uncheckedTrackColor).value,
+        uncheckedBorderColor = animateColor(defaultColors.uncheckedBorderColor).value,
+        uncheckedIconColor = animateColor(defaultColors.uncheckedIconColor).value,
     )
 }
 
@@ -216,11 +361,8 @@ private val noTransition = fadeIn(snap()) togetherWith fadeOut(snap())
 val noTransitionSpec: AnimatedContentTransitionScope<*>.() -> ContentTransform = { noTransition }
 
 @Composable
-fun isDynamicGrayscale(): Boolean {
-    // Also track configuration changes
-    LocalConfiguration.current.run {}
-    return effectiveTheme().isDynamicColors && LocalContext.current.resources.isDynamicGrayscale
-}
+fun isDynamicGrayscale(): Boolean =
+    effectiveTheme().isDynamicColors && LocalResources.current.isDynamicGrayscale
 
 @Composable
 private fun appBackground(): Brush {
@@ -308,14 +450,15 @@ private fun appBackground(): Brush {
 }
 
 @Composable
-fun appFabElevation(): FloatingActionButtonElevation {
-    val isGradient by isGradient.collectAsState()
-    return if (!isGradient) FloatingActionButtonDefaults.elevation(
-        defaultElevation = 0.dp,
-        pressedElevation = 0.dp,
-        focusedElevation = 0.dp,
-        hoveredElevation = 0.dp,
-    ) else FloatingActionButtonDefaults.elevation()
+fun appSliderColor(): SliderColors {
+    val defaultColors = SliderDefaults.colors()
+    return defaultColors.copy(
+        thumbColor = animateColor(defaultColors.thumbColor).value,
+        activeTrackColor = animateColor(defaultColors.activeTrackColor).value,
+        activeTickColor = animateColor(defaultColors.activeTickColor).value,
+        inactiveTrackColor = animateColor(defaultColors.inactiveTrackColor).value,
+        inactiveTickColor = animateColor(defaultColors.inactiveTickColor).value,
+    )
 }
 
 @Composable
@@ -374,6 +517,24 @@ fun appMonthColors(): MonthColors {
         Theme.MODERN -> Color(0xFFE51C23)
         else -> null.debugAssertNotNull ?: Color.Transparent
     }
+    val isHighTextContrastEnabled by isHighTextContrastEnabled.collectAsState()
+    val holidayCircleAlpha = if (isHighTextContrastEnabled) .2f
+    else if (theme.isDynamicColors && !isRedHolidays) when (theme) {
+        Theme.LIGHT -> .125f
+        Theme.DARK -> .1f
+        Theme.BLACK -> .2f
+        Theme.MODERN -> .1f
+        else -> null.debugAssertNotNull ?: 0f
+    } else when (theme) {
+        Theme.LIGHT -> .10f
+        Theme.DARK -> .10f
+        Theme.BLACK -> .2f
+        Theme.AQUA -> .15f
+        Theme.MODERN -> .075f
+        Theme.CYAN, Theme.DARK_GREEN, Theme.PURPLE, Theme.DEEP_PURPLE, Theme.INDIGO, Theme.PINK, Theme.GREEN, Theme.BROWN, Theme.NEW_BLUE -> .15f
+        else -> null.debugAssertNotNull ?: 0f
+    }
+    val colorHolidaysCircle = colorHolidays.copy(alpha = holidayCircleAlpha)
     val colorCurrentDay = if (theme.isDynamicColors) when (theme) {
         Theme.LIGHT -> Color(context.getColor(android.R.color.system_accent1_400))
         Theme.DARK, Theme.BLACK -> Color(context.getColor(android.R.color.system_accent1_200))
@@ -400,7 +561,7 @@ fun appMonthColors(): MonthColors {
         Theme.DARK, Theme.BLACK -> Color(context.getColor(android.R.color.system_neutral1_100))
         Theme.MODERN -> Color(context.getColor(android.R.color.system_neutral1_1000))
         Theme.DARK_GREEN, Theme.CYAN, Theme.PURPLE, Theme.DEEP_PURPLE, Theme.INDIGO, Theme.PINK, Theme.GREEN, Theme.BROWN, Theme.NEW_BLUE, Theme.AQUA
-        -> Color(0xFFEFF2F1)
+            -> Color(0xFFEFF2F1)
 
         else -> null.debugAssertNotNull ?: Color.Transparent
     } else when (theme) {
@@ -435,8 +596,9 @@ fun appMonthColors(): MonthColors {
     }
     val indicator = if (theme.isDynamicColors) when (theme) {
         Theme.LIGHT -> Color(context.getColor(android.R.color.system_neutral1_800))
-        Theme.DARK, Theme.BLACK -> Color(context.getColor(android.R.color.system_neutral1_600))
-        Theme.MODERN -> Color(context.getColor(android.R.color.system_accent2_100))
+        Theme.DARK -> Color(context.getColor(android.R.color.system_neutral1_500))
+        Theme.BLACK -> Color(context.getColor(android.R.color.system_neutral1_600))
+        Theme.MODERN -> Color(context.getColor(android.R.color.system_accent2_200))
         Theme.DARK_GREEN, Theme.CYAN, Theme.PURPLE, Theme.DEEP_PURPLE, Theme.INDIGO, Theme.PINK, Theme.GREEN, Theme.BROWN, Theme.NEW_BLUE -> Color(
             0xFFEFF2F1
         )
@@ -456,6 +618,7 @@ fun appMonthColors(): MonthColors {
         contentColor = contentColor,
         appointments = colorAppointments,
         holidays = colorHolidays,
+        holidaysCircle = colorHolidaysCircle,
         currentDay = colorCurrentDay,
         eventIndicator = colorEventIndicator,
         textDaySelected = colorTextDaySelected,

@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui.utils
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -8,6 +9,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
@@ -20,8 +22,8 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.variants.debugLog
 import java.io.ByteArrayOutputStream
 import java.io.File
 
@@ -49,7 +51,7 @@ fun Bitmap.toPngByteArray(): ByteArray {
 //fun Bitmap.toPngBase64(): String =
 //    "data:image/png;base64," + Base64.encodeToString(toByteArray(), Base64.DEFAULT)
 
-private inline fun Context.saveAsFile(fileName: String, crossinline action: (File) -> Unit): Uri {
+inline fun Context.saveAsCacheFile(fileName: String, crossinline action: (File) -> Unit): Uri {
     return FileProvider.getUriForFile(
         applicationContext, "$packageName.provider", File(externalCacheDir, fileName).also(action)
     )
@@ -59,7 +61,7 @@ fun Context.openHtmlInBrowser(html: String) {
     runCatching {
         CustomTabsIntent.Builder().build()
             .also { it.intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            .launchUrl(this, saveAsFile("persian-calendar.html") { it.writeText(html) })
+            .launchUrl(this, saveAsCacheFile("persian-calendar.html") { it.writeText(html) })
     }.onFailure(logException)
 }
 
@@ -80,10 +82,26 @@ private fun Context.shareUriFile(uri: Uri, mime: String) {
 }
 
 fun Context.shareTextFile(text: String, fileName: String, mime: String) =
-    shareUriFile(saveAsFile(fileName) { it.writeText(text) }, mime)
+    shareUriFile(saveAsCacheFile(fileName) { it.writeText(text) }, mime)
 
 fun Context.shareBinaryFile(binary: ByteArray, fileName: String, mime: String) =
-    shareUriFile(saveAsFile(fileName) { it.writeBytes(binary) }, mime)
+    shareUriFile(saveAsCacheFile(fileName) { it.writeBytes(binary) }, mime)
+
+fun getFileName(context: Context, uri: Uri): String? {
+    if (uri.scheme == ContentResolver.SCHEME_CONTENT) context.contentResolver.query(
+        uri, null, null, null, null
+    )?.use { cursor ->
+        if (cursor.moveToFirst()) {
+            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (index != -1) return cursor.getString(index)
+        }
+    }
+
+    return uri.path?.let {
+        val cut = it.lastIndexOf('/')
+        if (cut != -1) it.substring(cut + 1) else it
+    }
+}
 
 fun createFlingDetector(
     context: Context, callback: (velocityX: Float, velocityY: Float) -> Boolean

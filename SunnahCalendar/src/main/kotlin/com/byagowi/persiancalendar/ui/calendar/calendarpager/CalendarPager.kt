@@ -1,8 +1,5 @@
 package com.byagowi.persiancalendar.ui.calendar.calendarpager
 
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -11,7 +8,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -21,25 +17,20 @@ import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
-import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
-import com.byagowi.persiancalendar.global.isVazirEnabled
-import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.ui.calendar.AddEventData
 import com.byagowi.persiancalendar.ui.calendar.CalendarViewModel
-import com.byagowi.persiancalendar.ui.theme.appMonthColors
 import com.byagowi.persiancalendar.utils.readMonthDeviceEvents
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.CalendarPager(
+fun CalendarPager(
     viewModel: CalendarViewModel,
     pagerState: PagerState,
     addEvent: (AddEventData) -> Unit,
     today: Jdn,
     suggestedPagerSize: DpSize,
     navigateToDays: (Jdn, Boolean) -> Unit,
-    animatedContentScope: AnimatedContentScope,
 ) {
     val selectedMonthOffsetCommand by viewModel.selectedMonthOffsetCommand.collectAsState()
     LaunchedEffect(key1 = selectedMonthOffsetCommand) {
@@ -55,20 +46,25 @@ fun SharedTransitionScope.CalendarPager(
         viewModel.changeSelectedMonthOffsetCommand(null)
     }
 
-    val language by language.collectAsState()
-    val monthColors = appMonthColors()
-
     viewModel.notifySelectedMonthOffset(-applyOffset(pagerState.currentPage))
 
-    val coroutineScope = rememberCoroutineScope()
-    val isHighlighted by viewModel.isHighlighted.collectAsState()
-    val selectedDay by viewModel.selectedDay.collectAsState()
     val refreshToken by viewModel.refreshToken.collectAsState()
     val isShowDeviceCalendarEvents by isShowDeviceCalendarEvents.collectAsState()
-    val isVazirEnabled by isVazirEnabled.collectAsState()
-    val isShowWeekOfYearEnabled by isShowWeekOfYearEnabled.collectAsState()
-    val context = LocalContext.current
+    val yearViewCalendar by viewModel.yearViewCalendar.collectAsState()
+    val daysTable = daysTable(
+        suggestedPagerSize = suggestedPagerSize,
+        addEvent = addEvent,
+        today = today,
+        refreshToken = refreshToken,
+        setSelectedDay = viewModel::changeSelectedDay,
+        onWeekClick = navigateToDays,
+        pagerState = pagerState,
+        secondaryCalendar = yearViewCalendar.takeIf { it != mainCalendar } ?: secondaryCalendar,
+    )
 
+    val selectedDay by viewModel.selectedDay.collectAsState()
+    val isHighlighted by viewModel.isHighlighted.collectAsState()
+    val context = LocalContext.current
     HorizontalPager(state = pagerState, verticalAlignment = Alignment.Top) { page ->
         val monthStartDate = mainCalendar.getMonthStartFromMonthsDistance(today, -applyOffset(page))
         val monthStartJdn = Jdn(monthStartDate)
@@ -76,26 +72,14 @@ fun SharedTransitionScope.CalendarPager(
             if (isShowDeviceCalendarEvents) context.readMonthDeviceEvents(monthStartJdn)
             else EventsStore.empty()
         }
-        DaysTable(
-            monthStartDate = monthStartDate,
-            monthStartJdn = monthStartJdn,
-            suggestedPagerSize = suggestedPagerSize,
-            addEvent = addEvent,
-            monthColors = monthColors,
-            animatedContentScope = animatedContentScope,
-            today = today,
-            isHighlighted = isHighlighted,
-            refreshToken = refreshToken,
-            selectedDay = selectedDay,
-            setSelectedDay = { viewModel.changeSelectedDay(it) },
-            onWeekClick = navigateToDays,
-            language = language,
-            coroutineScope = coroutineScope,
-            pagerState = pagerState,
-            page = page,
-            deviceEvents = monthDeviceEvents,
-            isVazirEnabled = isVazirEnabled,
-            isShowWeekOfYearEnabled = isShowWeekOfYearEnabled,
+        daysTable(
+            page,
+            monthStartDate,
+            monthStartJdn,
+            monthDeviceEvents,
+            null,
+            isHighlighted,
+            selectedDay,
         )
     }
 }

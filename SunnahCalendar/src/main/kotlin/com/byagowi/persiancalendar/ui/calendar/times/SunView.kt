@@ -7,6 +7,7 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.annotation.ColorInt
@@ -68,7 +69,16 @@ class SunView(context: Context) : View(context) {
         }
     private var sun: Ecliptic? = null
     private var moon: Spherical? = null
-    private val fontSize = (if (language.value.isArabicScript) 14f else 11.5f) * resources.dp
+    private val fontSize = when {
+        language.value.isArabicScript -> 14f
+        language.value.isTamil -> 11f
+        else -> 11.5f
+    } * resources.dp
+
+    fun setFont(typeface: Typeface?) {
+        paint.typeface = typeface
+        dayPaint.typeface = typeface
+    }
 
     fun setTime(date: Long) {
         val time = Time.fromMillisecondsSince1970(date)
@@ -196,12 +206,20 @@ class SunView(context: Context) : View(context) {
             it.style = Paint.Style.FILL
             it.color = colors.textColorSecondary
         }
-        canvas.drawText(
-            dayLengthString, width * if (isRtl) .70f else .30f, height * .94f, paint
-        )
-        canvas.drawText(
-            remainingString, width * if (isRtl) .30f else .70f, height * .94f, paint
-        )
+        if (language.value.isTamil) {
+            val (a, b) = dayLengthString.split(spacedColon).takeIf { it.size == 2 }
+                ?: listOf("", "")
+            val (c, d) = remainingString.split(spacedColon).takeIf { it.size == 2 }
+                ?: listOf("", "")
+            val lineHeight = paint.descent() - paint.ascent()
+            canvas.drawSideText(isRtl, width, height * .94f - lineHeight / 2, a, c)
+            canvas.drawSideText(isRtl, width, height * .94f + lineHeight / 2, b, d)
+        } else canvas.drawSideText(isRtl, width, height * .94f, dayLengthString, remainingString)
+    }
+
+    private fun Canvas.drawSideText(isRtl: Boolean, w: Int, y: Float, a: String, b: String) {
+        drawText(a, w * if (isRtl) .70f else .30f, y, paint)
+        drawText(b, w * if (isRtl) .30f else .70f, y, paint)
     }
 
     private val solarDraw = SolarDraw(resources)
@@ -210,6 +228,7 @@ class SunView(context: Context) : View(context) {
         height - height * ((cos(-PI + x * segment) + 1f) / 2f).toFloat() + height * .1f
 
     fun initiate() {
+        if (animator.isRunning) return
         val prayTimes = prayTimes ?: return
 
         val sunset = prayTimes.sunset

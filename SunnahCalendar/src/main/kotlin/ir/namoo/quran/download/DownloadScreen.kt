@@ -42,7 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import ir.namoo.commons.utils.isNetworkConnected
@@ -72,10 +72,11 @@ fun SharedTransitionScope.DownloadScreen(
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = {
+        TopAppBar(
+            title = {
             Text(text = stringResource(id = R.string.download_audios))
         }, navigationIcon = {
-            NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+                NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
         }, colors = appTopAppBarColors()
         )
     }) { paddingValues ->
@@ -116,8 +117,9 @@ fun SharedTransitionScope.DownloadScreen(
                             fontSize = 16.sp
                         )
                         Spacer(modifier = Modifier.weight(1f))
-                        QariSelector(title = qariList.find { it.folderName == selectedQari }?.name
-                            ?: "-",
+                        QariSelector(
+                            title = qariList.find { it.folderName == selectedQari }?.name
+                                ?: "-",
                             enable = !isLoading && isChecked,
                             list = qariList,
                             selected = selectedQari,
@@ -128,7 +130,8 @@ fun SharedTransitionScope.DownloadScreen(
                 if (chapters.isNotEmpty() && selectedStates.isNotEmpty()) LazyColumn(state = rememberLazyListState()) {
                     items(items = chapters, key = { it.sura }) { chapter ->
                         var showDeleteDialog by remember { mutableStateOf(false) }
-                        QuranDownloadItem(modifier = Modifier,
+                        QuranDownloadItem(
+                            modifier = Modifier,
                             title = "${chapter.sura}: ${chapter.nameArabic}",
                             state = selectedStates.find { it.sura == chapter.sura }
                                 ?: QuranDownloadItemState(1),
@@ -146,11 +149,12 @@ fun SharedTransitionScope.DownloadScreen(
                             onDelete = { showDeleteDialog = true },
                             onCancel = { viewModel.cancelDownload(chapter.sura) })
                         if (showDeleteDialog) {
-                            AlertDialog(icon = {
-                                Icon(
-                                    imageVector = Icons.Default.Warning, contentDescription = ""
-                                )
-                            },
+                            AlertDialog(
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning, contentDescription = ""
+                                    )
+                                },
                                 title = { Text(text = stringResource(id = R.string.warning)) },
                                 text = { Text(text = stringResource(id = R.string.delete_quran_audio_alert_message)) },
                                 onDismissRequest = { showDeleteDialog = false },

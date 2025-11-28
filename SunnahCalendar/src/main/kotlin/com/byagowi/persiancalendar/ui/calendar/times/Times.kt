@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,7 @@ import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.nextTimeColor
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.ItemWidth
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import io.github.persiancalendar.praytimes.PrayTimes
 import java.util.Date
@@ -59,12 +61,14 @@ fun SharedTransitionScope.Times(
             times.forEach { prayTime ->
                 if (isExpandedState || prayTime.isAlwaysShown(isJafari)) Column(
                     modifier = Modifier
+                        .padding(horizontal = 2.dp)
                         .defaultMinSize(minWidth = ItemWidth.dp)
                         .sharedBounds(
                             rememberSharedContentState(
                                 key = SHARED_CONTENT_KEY_TIME + prayTime.name
                             ),
                             animatedVisibilityScope = this@AnimatedContent,
+                            boundsTransform = appBoundsTransform,
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {

@@ -1,5 +1,6 @@
 package com.byagowi.persiancalendar.ui.common
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationResult
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,8 +27,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,10 +42,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -51,7 +61,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
+import com.byagowi.persiancalendar.ui.theme.animateColor
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -62,11 +73,14 @@ import kotlin.math.roundToInt
 @Composable
 fun NumberPicker(
     modifier: Modifier = Modifier,
-    label: (Int) -> String = { formatNumber(it) },
+    label: (Int) -> String = numeral.collectAsState().value::format,
     range: IntRange,
-    value: Int,
     onClickLabel: String? = null,
     disableEdit: Boolean = false,
+    onPreviousLabel: String? = null,
+    onNextLabel: String? = null,
+    pendingConfirms: MutableCollection<() -> Unit>,
+    value: Int,
     onValueChange: (Int) -> Unit,
 ) {
     val minimumAlpha = 0.3f
@@ -137,67 +151,50 @@ fun NumberPicker(
                     .padding(vertical = verticalMargin)
                     .offset { IntOffset(x = 0, y = coercedAnimatedOffset.roundToInt()) },
             ) {
-                if (indexOfElement > 0) Label(
+                fun previousItemExists() = indexOfElement > 0
+                fun nextItemExists() = indexOfElement < range.last - range.first
+                if (previousItemExists()) Label(
                     text = label(range.first + indexOfElement - 1),
                     modifier = Modifier
                         .height(numbersColumnHeight / 3)
-                        .semantics { this.hideFromAccessibility() }
                         .offset(y = -halfNumbersColumnHeight)
                         .alpha(
                             maxOf(minimumAlpha, coercedAnimatedOffset / halfNumbersColumnHeightPx)
-                        ),
+                        )
+                        .clickable(
+                            onClickLabel = onPreviousLabel,
+                            indication = null,
+                            interactionSource = null,
+                        ) {
+                            if (pendingConfirms.isEmpty()) onValueChange(value - 1)
+                            else pendingConfirms.forEach { it() }
+                        }
+                        .semantics(mergeDescendants = true) { this.hideFromAccessibility() }
+                        .clearAndSetSemantics {},
                 )
                 var showTextEdit by remember { mutableStateOf(false) }
-                Crossfade(showTextEdit, label = "edit toggle") { state ->
-                    if (state) {
-                        val focusRequester = remember { FocusRequester() }
-                        var inputValue by remember {
-                            val valueText = formatNumber(value)
-                            mutableStateOf(
-                                TextFieldValue(
-                                    valueText, selection = TextRange(0, valueText.length)
-                                )
-                            )
-                        }
-                        LaunchedEffect(Unit) { focusRequester.requestFocus() }
-                        var isCapturedOnce by remember { mutableStateOf(false) }
-
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isFocused by interactionSource.collectIsFocusedAsState()
-                        if (isFocused && !isCapturedOnce) isCapturedOnce = true
-                        if (!isFocused && isCapturedOnce) showTextEdit = false
-                        Box(
-                            Modifier.height(numbersColumnHeight / 3),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            BasicTextField(
-                                value = inputValue,
-                                interactionSource = interactionSource,
-                                maxLines = 1,
-                                onValueChange = { inputValue = it },
-                                keyboardActions = KeyboardActions(
-                                    onDone = {
-                                        focusManager.clearFocus()
-                                        showTextEdit = false
-                                        inputValue.text.toIntOrNull()?.let {
-                                            if (it in range) onValueChange(it)
-                                        }
-                                    },
-                                ),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Number,
-                                    imeAction = ImeAction.Done,
-                                ),
-                                textStyle = LocalTextStyle.current.copy(
-                                    textAlign = TextAlign.Center,
-                                    color = LocalContentColor.current,
-                                ),
-                                modifier = Modifier.focusRequester(focusRequester),
-                            )
-                        }
-                    } else Label(
+                Crossfade(showTextEdit, label = "edit toggle") { isInNumberEdit ->
+                    if (isInNumberEdit) NumberEdit(
+                        dismissNumberEdit = { showTextEdit = false },
+                        modifier = Modifier.height(numbersColumnHeight / 3),
+                        pendingConfirms = pendingConfirms,
+                        isValid = { it in range },
+                        initialValue = value,
+                        onValueChange = onValueChange,
+                    ) else Label(
                         text = label(range.first + indexOfElement),
                         modifier = Modifier
+                            .semantics {
+                                this.role = Role.ValuePicker
+                                this.customActions = listOfNotNull(
+                                    onPreviousLabel?.takeIf { previousItemExists() }?.let {
+                                        CustomAccessibilityAction(it) { onValueChange(value - 1); true }
+                                    },
+                                    onNextLabel?.takeIf { nextItemExists() }?.let {
+                                        CustomAccessibilityAction(it) { onValueChange(value + 1); true }
+                                    },
+                                )
+                            }
                             .height(numbersColumnHeight / 3)
                             .alpha(
                                 maxOf(
@@ -214,15 +211,24 @@ fun NumberPicker(
                             ),
                     )
                 }
-                if (indexOfElement < range.last - range.first) Label(
+                if (nextItemExists()) Label(
                     text = label(range.first + indexOfElement + 1),
                     modifier = Modifier
                         .height(numbersColumnHeight / 3)
-                        .semantics { this.hideFromAccessibility() }
                         .offset(y = halfNumbersColumnHeight)
                         .alpha(
                             maxOf(minimumAlpha, -coercedAnimatedOffset / halfNumbersColumnHeightPx)
-                        ),
+                        )
+                        .clickable(
+                            onClickLabel = onNextLabel,
+                            indication = null,
+                            interactionSource = null,
+                        ) {
+                            if (pendingConfirms.isEmpty()) onValueChange(value + 1)
+                            else pendingConfirms.forEach { it() }
+                        }
+                        .semantics(mergeDescendants = true) { this.hideFromAccessibility() }
+                        .clearAndSetSemantics {},
                 )
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -235,6 +241,74 @@ fun NumberPicker(
                 yPosition + placeable.height
             }
         }
+    }
+}
+
+@Composable
+fun NumberEdit(
+    dismissNumberEdit: () -> Unit,
+    pendingConfirms: MutableCollection<() -> Unit>,
+    modifier: Modifier = Modifier,
+    isValid: (Int) -> Boolean,
+    initialValue: Int,
+    onValueChange: (Int) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    val numeral by numeral.collectAsState()
+    var value by remember(numeral) {
+        val valueText = numeral.format(initialValue)
+        mutableStateOf(TextFieldValue(valueText, selection = TextRange(0, valueText.length)))
+    }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    var isCapturedOnce by remember { mutableStateOf(false) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    if (isFocused && !isCapturedOnce) isCapturedOnce = true
+    if (!isFocused && isCapturedOnce) dismissNumberEdit()
+
+    val clearFocus = remember(focusManager, dismissNumberEdit) {
+        { focusManager.clearFocus(); dismissNumberEdit() }
+    }
+
+    DisposableEffect(clearFocus) {
+        pendingConfirms.add(clearFocus)
+        onDispose { pendingConfirms.remove(clearFocus) }
+    }
+    BackHandler { clearFocus() }
+
+    fun resolveValue() = value.text.toIntOrNull()?.takeIf(isValid)
+
+    Box(modifier, contentAlignment = Alignment.Center) {
+        val textBackground by animateColor(
+            if (resolveValue() == null) MaterialTheme.colorScheme.error.copy(alpha = .1f)
+            else Color.Transparent
+        )
+        BasicTextField(
+            value = value,
+            interactionSource = interactionSource,
+            maxLines = 1,
+            onValueChange = { value = it },
+            keyboardActions = KeyboardActions(onDone = { pendingConfirms.clear(); clearFocus() }),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+            ),
+            textStyle = LocalTextStyle.current.copy(
+                textAlign = TextAlign.Center,
+                color = LocalContentColor.current,
+                background = textBackground,
+            ),
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .onFocusChanged {
+                    if (!it.isFocused) {
+                        pendingConfirms.remove(clearFocus)
+                        resolveValue()?.let(onValueChange)
+                    }
+                },
+        )
     }
 }
 
@@ -251,10 +325,8 @@ private fun getItemIndexForOffset(
 @Composable
 private fun Label(text: String, modifier: Modifier) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
-        val contentColor = LocalContentColor.current
-        BasicText(
+        Text(
             text = text,
-            color = { contentColor },
             style = LocalTextStyle.current,
             maxLines = 1,
             softWrap = false,

@@ -2,7 +2,9 @@ package com.byagowi.persiancalendar
 
 import com.byagowi.persiancalendar.entities.Calendar
 import com.byagowi.persiancalendar.entities.Jdn
+import com.byagowi.persiancalendar.entities.WeekDay
 import com.byagowi.persiancalendar.global.initiateMonthNamesForTest
+import com.byagowi.persiancalendar.ui.calendar.calendarpager.DayTablePositions
 import com.byagowi.persiancalendar.utils.calculateDatePartsDifference
 import com.byagowi.persiancalendar.utils.fasliDayName
 import com.byagowi.persiancalendar.utils.formatAsSeleucidDate
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class CalendarTests {
     @ParameterizedTest
@@ -84,7 +87,7 @@ class CalendarTests {
     fun `weekDay calculations correctness`(
         weekDay: Int, year: Int, month: Int, dayOfMonth: Int
     ) {
-        assertEquals(weekDay, Jdn(PersianDate(year, month, dayOfMonth)).weekDay)
+        assertEquals(weekDay, Jdn(PersianDate(year, month, dayOfMonth)).weekDay.ordinal)
     }
 
     @ParameterizedTest
@@ -98,7 +101,7 @@ class CalendarTests {
         "1400, 8, 15, 1400, 11, 15, 0, 3, 0",
         "1400, 9, 15, 1400, 11, 15, 0, 2, 0",
         "1400, 10, 15, 1400, 11, 15, 0, 1, 0",
-        // Adopted from http://www.ssu.ac.ir/cms/fileadmin/user_upload/Moavenatha/MBehdashti/Gostaresh/pdf/amar/dastor/Mohasebe-Sen.pdf
+        // Adopted from https://www.ssu.ac.ir/cms/fileadmin/user_upload/Moavenatha/MBehdashti/Gostaresh/pdf/amar/dastor/Mohasebe-Sen.pdf
         // Except we don't have the same result
         "1360, 5, 20, 1379, 6, 10, 19, 0, 21",
         "1360, 5, 20, 1379, 6, 10, 19, 0, 21",
@@ -149,7 +152,7 @@ class CalendarTests {
             val persianDate = jdn.toPersianDate()
             assertEquals(
                 "۱۵ دی جلالی ۸۲۹",
-                jalaliName(persianDate, persianDayOfYear(persianDate, jdn))
+                jalaliName(persianDate.year, persianDayOfYear(persianDate, jdn))
             )
         }
         run {
@@ -171,7 +174,7 @@ class CalendarTests {
             // https://commons.wikimedia.org/wiki/File:Moz_4_293.pdf
             // FIXME: Change this to 6 when calendar dependency covers the year
             val jdn = Jdn(IslamicDate(1341, 11, 7))
-            assertEquals(jdn.weekDay, 6) // which means جمغع in this code base
+            assertEquals(jdn.weekDay, WeekDay.FRIDAY)
             val persianDate = jdn.toPersianDate()
             assertEquals(
                 "۳۲ جوزا ۱۳۰۲",
@@ -194,43 +197,100 @@ class CalendarTests {
                 actual = fasliDayName(dayOfYear),
                 message = "${date.year}/${date.month}/${date.dayOfMonth}" + " " + name
             )
-            jalaliName(jdn.toPersianDate(), dayOfYear)
+            jalaliName(jdn.toPersianDate().year, dayOfYear)
             formatAsSeleucidDate(jdn)
         }
     }
 
     @Test
     fun `seleucid date format`() {
-        assertAll(
-            listOf(
-                PersianDate(1404, 1, 1) to "۸ آذر ۲۳۳۶",
-                PersianDate(1404, 1, 11) to "۱۸ آذر ۲۳۳۶",
-                PersianDate(1404, 1, 26) to "۲ نیسان ۲۳۳۶",
-                PersianDate(1404, 2, 9) to "۱۶ نیسان ۲۳۳۶",
-                PersianDate(1404, 2, 24) to "۱ ایار ۲۳۳۶",
-                PersianDate(1404, 3, 7) to "۱۵ ایار ۲۳۳۶",
-                PersianDate(1404, 3, 22) to "۳۰ ایار ۲۳۳۶",
-                PersianDate(1404, 4, 6) to "۱۴ حزیران ۲۳۳۶",
-                PersianDate(1404, 4, 21) to "۲۹ حزیران ۲۳۳۶",
-                PersianDate(1404, 5, 4) to "۱۳ تموز ۲۳۳۶",
-                PersianDate(1404, 5, 19) to "۲۸ تموز ۲۳۳۶",
-                PersianDate(1404, 6, 3) to "۱۲ آب ۲۳۳۶",
-                PersianDate(1404, 6, 18) to "۲۷ آب ۲۳۳۶",
-                PersianDate(1404, 7, 2) to "۱۱ ایلول ۲۳۳۶",
-                PersianDate(1404, 7, 17) to "۲۶ ایلول ۲۳۳۶",
-                PersianDate(1404, 8, 1) to "۱۰ تشرین اول ۲۳۳۷",
-                PersianDate(1404, 8, 16) to "۲۵ تشرین اول ۲۳۳۷",
-                PersianDate(1404, 9, 1) to "۹ تشرین آخر ۲۳۳۷",
-                PersianDate(1404, 9, 16) to "۲۴ تشرین آخر ۲۳۳۷",
-                PersianDate(1404, 10, 1) to "۹ کانون اول ۲۳۳۷",
-                PersianDate(1404, 10, 16) to "۲۴ کانون اول ۲۳۳۷",
-                PersianDate(1404, 11, 1) to "۸ کانون آخر ۲۳۳۷",
-                PersianDate(1404, 11, 16) to "۲۳ کانون آخر ۲۳۳۷",
-                PersianDate(1404, 11, 30) to "۶ شباط ۲۳۳۷",
-                PersianDate(1404, 12, 15) to "۲۱ شباط ۲۳۳۷",
-            ).map { (persianDate, expected) ->
-                { assertEquals(expected, formatAsSeleucidDate(Jdn(persianDate))) }
-            }
-        )
+        listOf(
+            PersianDate(1404, 1, 1) to "۸ آذر ۲۳۳۶",
+            PersianDate(1404, 1, 11) to "۱۸ آذر ۲۳۳۶",
+            PersianDate(1404, 1, 26) to "۲ نیسان ۲۳۳۶",
+            PersianDate(1404, 2, 9) to "۱۶ نیسان ۲۳۳۶",
+            PersianDate(1404, 2, 24) to "۱ ایار ۲۳۳۶",
+            PersianDate(1404, 3, 7) to "۱۵ ایار ۲۳۳۶",
+            PersianDate(1404, 3, 22) to "۳۰ ایار ۲۳۳۶",
+            PersianDate(1404, 4, 6) to "۱۴ حزیران ۲۳۳۶",
+            PersianDate(1404, 4, 21) to "۲۹ حزیران ۲۳۳۶",
+            PersianDate(1404, 5, 4) to "۱۳ تموز ۲۳۳۶",
+            PersianDate(1404, 5, 19) to "۲۸ تموز ۲۳۳۶",
+            PersianDate(1404, 6, 3) to "۱۲ آب ۲۳۳۶",
+            PersianDate(1404, 6, 18) to "۲۷ آب ۲۳۳۶",
+            PersianDate(1404, 7, 2) to "۱۱ ایلول ۲۳۳۶",
+            PersianDate(1404, 7, 17) to "۲۶ ایلول ۲۳۳۶",
+            PersianDate(1404, 8, 1) to "۱۰ تشرین اول ۲۳۳۷",
+            PersianDate(1404, 8, 16) to "۲۵ تشرین اول ۲۳۳۷",
+            PersianDate(1404, 9, 1) to "۹ تشرین آخر ۲۳۳۷",
+            PersianDate(1404, 9, 16) to "۲۴ تشرین آخر ۲۳۳۷",
+            PersianDate(1404, 10, 1) to "۹ کانون اول ۲۳۳۷",
+            PersianDate(1404, 10, 16) to "۲۴ کانون اول ۲۳۳۷",
+            PersianDate(1404, 11, 1) to "۸ کانون آخر ۲۳۳۷",
+            PersianDate(1404, 11, 16) to "۲۳ کانون آخر ۲۳۳۷",
+            PersianDate(1404, 11, 30) to "۶ شباط ۲۳۳۷",
+            PersianDate(1404, 12, 15) to "۲۱ شباط ۲۳۳۷",
+        ).map { (persianDate, expected) ->
+            { assertEquals(expected, formatAsSeleucidDate(Jdn(persianDate))) }
+        }.run(::assertAll)
+    }
+
+    @Test
+    fun `one day`() {
+        val positions = DayTablePositions()
+        positions.add(5, 3)
+
+        val indices = mutableListOf<Pair<Int, Int>>()
+        positions.forEach { row, column -> indices += row to column }
+
+        assertEquals(listOf(5 to 3), indices)
+    }
+
+    @Test
+    fun `multiple day`() {
+        val positions = DayTablePositions()
+        positions.add(0, 0)
+        positions.add(5, 2)
+        positions.add(5, 6)
+
+        val indices = mutableListOf<Pair<Int, Int>>()
+        positions.forEach { row, column -> indices += row to column }
+
+        assertEquals(listOf(0 to 0, 5 to 2, 5 to 6), indices)
+    }
+
+    @Test
+    fun `empty set`() {
+        val positions = DayTablePositions()
+
+        var called = false
+        positions.forEach { _, _ -> called = true }
+
+        assertFalse(called)
+    }
+
+    @Test
+    fun `idempotent for same day`() {
+        val positions = DayTablePositions()
+        positions.add(5, 6)
+        positions.add(5, 6)
+
+        val indices = mutableListOf<Pair<Int, Int>>()
+        positions.forEach { row, column -> indices += row to column }
+
+        assertEquals(listOf(5 to 6), indices)
+    }
+
+    @Test
+    fun `forEach should iterate in ascending order`() {
+        val positions = DayTablePositions()
+        positions.add(6, 3)
+        positions.add(3, 6)
+        positions.add(2, 2)
+
+        val indices = mutableListOf<Pair<Int, Int>>()
+        positions.forEach { row, column -> indices += row to column }
+
+        assertEquals(listOf(2 to 2, 3 to 6, 6 to 3), indices)
     }
 }

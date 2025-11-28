@@ -7,7 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +51,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.edit
 import com.byagowi.persiancalendar.EXPANDED_TIME_STATE_KEY
 import com.byagowi.persiancalendar.PREF_ATHAN_ALARM
-import com.byagowi.persiancalendar.PREF_DISABLE_OWGHAT
+import com.byagowi.persiancalendar.PREF_DISMISSED_OWGHAT
 import com.byagowi.persiancalendar.PREF_NOTIFICATION_ATHAN
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_MOON
@@ -70,6 +68,8 @@ import com.byagowi.persiancalendar.ui.calendar.CalendarViewModel
 import com.byagowi.persiancalendar.ui.calendar.EncourageActionLayout
 import com.byagowi.persiancalendar.ui.common.MoonView
 import com.byagowi.persiancalendar.ui.theme.appSunViewColors
+import com.byagowi.persiancalendar.ui.theme.resolveAndroidCustomTypeface
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.dayTitleSummary
 import com.byagowi.persiancalendar.utils.formatDate
@@ -83,7 +83,7 @@ import ir.namoo.religiousprayers.ui.calendar.NTimes
 import ir.namoo.religiousprayers.ui.settings.location.ShowLocationDialog
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.TimesTab(
     navigateToSettingsLocationTab: () -> Unit,
@@ -107,7 +107,7 @@ fun SharedTransitionScope.TimesTab(
             modifier = Modifier.padding(top = 24.dp),
             header = stringResource(R.string.ask_user_to_set_location),
             discardAction = {
-                context.preferences.edit { putBoolean(PREF_DISABLE_OWGHAT, true) }
+                context.preferences.edit { putBoolean(PREF_DISMISSED_OWGHAT, true) }
                 viewModel.removeThirdTab()
             },
             acceptAction = navigateToSettingsLocationTab,
@@ -196,7 +196,7 @@ fun SharedTransitionScope.TimesTab(
                 )
             }
 //            ExpandArrow(
-//                modifier = Modifier.size(20.dp),
+//                modifier = Modifier.size(with(LocalDensity.current) { 20.sp.toDp() }),
 //                isExpanded = isExpanded,
 //                tint = MaterialTheme.colorScheme.primary
 //            )
@@ -217,7 +217,7 @@ fun SharedTransitionScope.TimesTab(
 private fun showEnableAthanForPersianUsers(): Boolean {
     val language by language.collectAsState()
     // As the message is only translated in Persian
-    if (!(language.isPersian || language.isDari)) return false
+    if (!language.isPersianOrDari) return false
     val context = LocalContext.current
     return PREF_ATHAN_ALARM !in context.preferences && PREF_NOTIFICATION_ATHAN !in context.preferences
 }
@@ -233,8 +233,7 @@ private fun SharedTransitionScope.AstronomicalOverview(
     animatedContentScope: AnimatedContentScope,
 ) {
     val jdn by viewModel.selectedDay.collectAsState()
-    val sunViewNeedsAnimation by viewModel.sunViewNeedsAnimation.collectAsState()
-    LaunchedEffect(Unit) { viewModel.astronomicalOverviewLaunched() }
+    var needsAnimation by remember(isToday) { mutableStateOf(isToday) }
 
     Crossfade(
         targetState = isToday,
@@ -244,15 +243,17 @@ private fun SharedTransitionScope.AstronomicalOverview(
             .height(100.dp),
     ) { state ->
         val sunViewColors = appSunViewColors()
+        val typeface = resolveAndroidCustomTypeface()
         if (state) AndroidView(
             factory = ::SunView,
             update = {
+                it.setFont(typeface)
                 it.colors = sunViewColors
                 it.prayTimes = prayTimes
                 it.setTime(now)
-                if (sunViewNeedsAnimation) {
+                if (needsAnimation) {
                     it.startAnimate()
-                    viewModel.clearNeedsAnimation()
+                    needsAnimation = false
                 } else it.initiate()
             },
             modifier = Modifier.fillMaxHeight(),
@@ -267,6 +268,7 @@ private fun SharedTransitionScope.AstronomicalOverview(
                     .sharedBounds(
                         rememberSharedContentState(key = SHARED_CONTENT_KEY_MOON),
                         animatedVisibilityScope = animatedContentScope,
+                        boundsTransform = appBoundsTransform,
                     )
                     .clickable(
                         indication = ripple(bounded = false),

@@ -2,13 +2,13 @@ package ir.namoo.quran.settings
 
 import android.graphics.Typeface
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,14 +61,15 @@ fun MySwitchBox(
     label: String,
     onCheckChanged: (Boolean) -> Unit
 ) {
-    Row(modifier = modifier
-        .clickable { onCheckChanged(!checked) }
-        .padding(2.dp)
-        .background(
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = MaterialTheme.shapes.extraLarge
-        )
-        .padding(6.dp), verticalAlignment = Alignment.CenterVertically,
+    Row(
+        modifier = modifier
+            .clickable { onCheckChanged(!checked) }
+            .padding(2.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = MaterialTheme.shapes.extraLarge
+            )
+            .padding(6.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             modifier = Modifier.padding(4.dp),
@@ -76,20 +77,27 @@ fun MySwitchBox(
             fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Normal
         )
         Switch(checked = checked, onCheckedChange = null, thumbContent = {
-            AnimatedVisibility(
-                visible = checked, enter = expandHorizontally(), exit = shrinkHorizontally()
+            AnimatedContent(
+                targetState = checked,
+                transitionSpec = {
+                    if (!checked)
+                        slideInHorizontally(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            )
+                        ) { -it } togetherWith slideOutHorizontally { it }
+                    else
+                        slideInHorizontally(
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium
+                            )
+                        ) { it } togetherWith slideOutHorizontally { -it }
+                }
             ) {
                 Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Check",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            AnimatedVisibility(
-                visible = !checked, enter = expandHorizontally(), exit = shrinkHorizontally()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = if (it) Icons.Default.Check else Icons.Default.Close,
                     contentDescription = "Check",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -210,11 +218,13 @@ fun MyFontSelector(
                 ) {
                     Text(text = it)
                 }
-                DropdownMenu(expanded = expanded,
+                DropdownMenu(
+                    expanded = expanded,
                     shape = MaterialTheme.shapes.extraLarge,
                     onDismissRequest = { expanded = false }) {
                     fontList.forEach { font ->
-                        DropdownMenuItem(text = { Text(text = fontNames[fontList.indexOf(font)]) },
+                        DropdownMenuItem(
+                            text = { Text(text = fontNames[fontList.indexOf(font)]) },
                             onClick = {
                                 expanded = false
                                 onFontFamilyChanged(font)
@@ -231,7 +241,8 @@ fun MyFontSelector(
             }
         }
 
-        MySlider(modifier = Modifier.padding(16.dp, 2.dp),
+        MySlider(
+            modifier = Modifier.padding(16.dp, 2.dp),
             value = fontSize,
             onValueChanged = { onFontSizeChanged(it) })
 
@@ -257,12 +268,14 @@ fun MyItemsPrev() {
         val checked = remember { mutableStateOf(true) }
         val slider = remember { mutableFloatStateOf(16f) }
         Column(modifier = Modifier.padding(4.dp)) {
-            MySwitchBox(checked = checked.value,
+            MySwitchBox(
+                checked = checked.value,
                 label = "Check box",
                 onCheckChanged = { checked.value = it })
             MySlider(value = slider.floatValue, onValueChanged = { slider.floatValue = it })
             Spacer(modifier = Modifier.height(4.dp))
-            MyBtnGroup(title = "Title",
+            MyBtnGroup(
+                title = "Title",
                 items = listOf("First", "Second", "Thread"),
                 checkedItem = "First",
                 onCheckChanged = {})

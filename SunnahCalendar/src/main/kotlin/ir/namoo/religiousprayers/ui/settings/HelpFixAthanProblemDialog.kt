@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -102,11 +104,7 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                 Lifecycle.Event.ON_RESUME -> {
                     isPhoneStateGranted = phoneStatePermission.status.isGranted
 
-                    isShowOverlayGranted =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Settings.canDrawOverlays(
-                            context
-                        )
-                        else true
+                    isShowOverlayGranted = Settings.canDrawOverlays(context)
 
                     isPostNotificationGranted =
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ActivityCompat.checkSelfPermission(
@@ -115,12 +113,8 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                         else true
 
                     isIgnoringBatteryOptimizations = runCatching {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            context.getSystemService<PowerManager>()
-                                ?.isIgnoringBatteryOptimizations(
-                                    context.applicationContext.packageName
-                                )
-                        } else true
+                        context.getSystemService<PowerManager>()
+                            ?.isIgnoringBatteryOptimizations(context.applicationContext.packageName)
                     }.onFailure(logException).getOrNull() == true
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -169,23 +163,23 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                         .padding(4.dp),
                     text = stringResource(id = R.string.help_fix_athan_problems_msg),
                     style = TextStyle.Default.copy(hyphens = Hyphens.Auto),
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
                 )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    FixAthanItem(
-                        icon = Icons.Default.BatteryStd,
-                        title = stringResource(id = R.string.battery_optimization_title),
-                        subtitle = stringResource(id = R.string.battery_optimization_msg),
-                        isOk = isIgnoringBatteryOptimizations,
-                        onClick = {
-                            context.startActivity(
-                                Intent().apply {
-                                    action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    data = "package:${context.packageName}".toUri()
-                                })
-                        })
-                }
+                FixAthanItem(
+                    icon = Icons.Default.BatteryStd,
+                    title = stringResource(id = R.string.battery_optimization_title),
+                    subtitle = stringResource(id = R.string.battery_optimization_msg),
+                    isOk = isIgnoringBatteryOptimizations,
+                    onClick = {
+                        context.startActivity(
+                            Intent().apply {
+                                action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                data = "package:${context.packageName}".toUri()
+                            })
+                    })
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) FixAthanItem(
                     icon = Icons.Default.Notifications,
                     title = stringResource(id = R.string.post_notification_permission_title),
@@ -200,12 +194,11 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                     subtitle = stringResource(id = R.string.show_overly_permission_msg),
                     isOk = isShowOverlayGranted,
                     onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            context.startActivity(
-                                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                                    data = Uri.fromParts("package", context.packageName, null)
-                                })
-                        }
+                        context.startActivity(
+                            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            })
+
                     })
                 FixAthanItem(
                     icon = Icons.Default.Phone,
@@ -241,8 +234,7 @@ fun HelpFixAthanProblemDialog(onDismiss: () -> Unit) {
                 }
 
             }//end of column
-            ScrollShadow(scrollState = scrollState, top = true)
-            ScrollShadow(scrollState = scrollState, top = false)
+            ScrollShadow(scrollState = scrollState)
         }
     })//end of AlertDialog
 }
@@ -277,12 +269,27 @@ fun FixAthanItem(
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            modifier = Modifier.padding(4.dp),
-            imageVector = icon,
-            contentDescription = title,
-            tint = if (isOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (!isOk) {
+                Icon(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .align(Alignment.CenterEnd),
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+            Icon(
+                modifier = Modifier
+                    .padding(4.dp)
+                    .align(Alignment.Center),
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        }
 
         Text(
             modifier = Modifier

@@ -9,8 +9,6 @@ import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.entities.CityItem
 import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.global.language
-import com.byagowi.persiancalendar.global.preferredDigits
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import java.util.Locale
 
 fun applyAppLanguage(context: Context) {
@@ -40,28 +38,6 @@ fun applyLanguageToConfiguration(
     config.setLayoutDirection(if (Language.FA.isLessKnownRtl) Language.FA.asSystemLocale() else locale)
     return config
 }
-
-fun formatNumber(number: Double): String {
-    if (isArabicDigitSelected) return number.toString()
-    return formatNumber(number.toString()).replace(".", "٫") // U+066B, Arabic Decimal Separator
-}
-
-fun formatNumber(number: Int, digits: CharArray = preferredDigits): String =
-    formatNumber(number.toString(), digits)
-
-fun formatNumber(number: String, digits: CharArray = preferredDigits): String {
-    if (isArabicDigitSelected) return number
-    if (digits === Language.TAMIL_DIGITS) when (number) {
-        "10" -> return "௰"
-        "100" -> return "௱"
-        "1000" -> return "௲"
-        else -> Unit
-    }
-    return number.map { digits.getOrNull(Character.getNumericValue(it)) ?: it }
-        .joinToString("")
-}
-
-val isArabicDigitSelected: Boolean get() = preferredDigits === Language.ARABIC_DIGITS
 
 val Collection<CityItem>.sortCityNames: List<CityItem>
     get() = this.map { city ->

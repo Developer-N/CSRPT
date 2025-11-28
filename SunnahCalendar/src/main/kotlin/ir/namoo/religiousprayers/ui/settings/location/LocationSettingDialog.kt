@@ -37,8 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.ui.settings.SettingsSection
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import ir.namoo.religiousprayers.ui.settings.MyLocationSelector
@@ -51,7 +50,7 @@ fun ShowLocationDialog(
 ) {
     val context = LocalContext.current
     viewModel.loadData(context)
-
+    val numeral by numeral.collectAsState()
     val locationPermissions = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -117,12 +116,13 @@ fun ShowLocationDialog(
             modifier = Modifier.verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SettingsSection(title = stringResource(id = R.string.select_city))
+            Text(text = stringResource(id = R.string.select_city))
             val pList = mutableListOf<String>()
             pList.clear()
             provinceList.forEach { pList.add(it.name) }
 
-            MyLocationSelector(locationList = pList,
+            MyLocationSelector(
+                locationList = pList,
                 selectedLocation = selectedProvince?.name ?: "",
                 onSelectedLocationChange = { name ->
                     viewModel.updateSelectedProvince(provinceList.find { it.name == name })
@@ -132,13 +132,14 @@ fun ShowLocationDialog(
             cList.clear()
             cityList.forEach { cList.add(it.name) }
 
-            MyLocationSelector(locationList = cList,
+            MyLocationSelector(
+                locationList = cList,
                 selectedLocation = selectedCity?.name ?: "",
                 onSelectedLocationChange = { name ->
                     viewModel.updateSelectedCity(cityList.find { it.name == name })
                 })
             HorizontalDivider(modifier = Modifier.padding(2.dp))
-            SettingsSection(title = stringResource(id = R.string.gps_location))
+            Text(text = stringResource(id = R.string.gps_location))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 ElevatedButton(onClick = {
                     if (locationPermissions.allPermissionsGranted) {
@@ -157,7 +158,7 @@ fun ShowLocationDialog(
             }
 
             HorizontalDivider(modifier = Modifier.padding(2.dp))
-            SettingsSection(title = stringResource(id = R.string.selected_location))
+            Text(text = stringResource(id = R.string.selected_location))
             OutlinedTextField(
                 value = cityName,
                 label = {
@@ -171,14 +172,14 @@ fun ShowLocationDialog(
                             Text(text = "${stringResource(id = R.string.longitude)}: ")
                             AnimatedContent(targetState = longitude, label = "longitude") {
                                 Text(
-                                    text = formatNumber(it)
+                                    text = numeral.format(it)
                                 )
                             }
                         }
                         Row {
                             Text(text = "${stringResource(id = R.string.latitude)}: ")
                             AnimatedContent(targetState = latitude, label = "latitude") {
-                                Text(text = formatNumber(it))
+                                Text(text = numeral.format(it))
                             }
                         }
                     }

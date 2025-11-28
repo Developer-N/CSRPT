@@ -38,13 +38,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AthanDownloadComponent(
     type: Int, onDismiss: () -> Unit, viewModel: AthanDownloadDialogViewModel = koinViewModel()
 ) {
+    val numeral by numeral.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(key1 = type) {
         viewModel.loadData(type, context)
@@ -98,7 +99,7 @@ fun AthanDownloadComponent(
                                 modifier = Modifier
                                     .padding(vertical = 4.dp, horizontal = 8.dp)
                                     .weight(4f),
-                                text = formatNumber("${index + 1}: ${athan.name}")
+                                text = numeral.format("${index + 1}: ${athan.name}")
                             )
                             AnimatedVisibility(
                                 modifier = Modifier.weight(1f),
@@ -144,14 +145,14 @@ fun AthanDownloadComponent(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    Text(text = formatNumber((progress * 100).toInt()) + "%")
+                                    Text(text = numeral.format((progress * 100).toInt()) + "%")
                                     var size = (athan.totalSize / 1024 / 1024).toInt()
                                     var isKB = false
                                     if (size == 0) {
                                         size = (athan.totalSize / 1024).toInt()
                                         isKB = true
                                     }
-                                    Text(text = formatNumber("$size" + if (isKB) "KB" else "MB"))
+                                    Text(text = numeral.format("$size" + if (isKB) "KB" else "MB"))
                                 }
                                 LinearProgressIndicator(
                                     progress = { progress },

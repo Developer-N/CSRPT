@@ -23,17 +23,17 @@
     <string name="select_widgets_text_color">انتخاب رنگ دلخواه برای نوشته‌های ویجت</string>
     <string name="notify_date">روشن کردن اعلان</string>
     <string name="enable_notify">اعلان همیشگی برای تاریخ‌ها</string>
-    <string name="select_skin">انتخاب پوسته</string>
+    <string name="select_skin">تنظیم پوسته</string>
     <string name="skin">پوسته</string>
     <string name="pray_methods">شیوه‌های محاسبه</string>
     <string name="pray_methods_calculation">شیوه‌های محاسبهٔ اوقات شرعی</string>
     <string name="altitude">ارتفاع</string>
     <string name="altitude_praytime">به متر (اختیاری)</string>
-    <string name="coordination">مختصات جغرافیایی</string>
-    <string name="gps_location">دریافت مختصات از جی‌پی‌اس</string>
+    <string name="coordinates">مختصات جغرافیایی</string>
+    <string name="gps_location">دریافت مختصات از مکان‌یاب (GPS)</string>
     <string name="gps_location_help">اگر از این طریق ممکن باشد، نیازی به سایر تنظیمات این بخش نیست</string>
     <string name="location">موقعیت</string>
-    <string name="location_help">اگر در فهرست نبود، مختصات را در زیر وارد کنید</string>
+    <string name="location_help">اگر موقعیتتان در این فهرست نبود، مختصات را در گزینهٔ بعدی وارد کنید</string>
     <string name="showing_iran_time">نمایش ویجت و اعلان برنامه به‌وقت ایران در همه‌جا، مناسب ایرانیان خارج از ایران</string>
     <string name="iran_time">وقت ایران</string>
     <string name="compass">قطب‌نما</string>
@@ -71,13 +71,13 @@
     <string name="select_year">انتخاب سال</string>
     <string name="select_month">انتخاب ماه</string>
     <string name="select_day">انتخاب روز</string>
-    <string name="date_exception">تاریخ وارد شده اشتباه است.</string>
+    <string name="date_exception">تاریخ واردشده اشتباه است.</string>
     <string name="in_city_time">به افق %1$s</string>
     <string name="date_copied_clipboard">«%1$s» به حافظه رونوشت شد.</string>
     <string name="stop">توقف</string>
     <string name="wait_for_gps">کمی درنگ کنید… اگر پس از یک دقیقه نتیجه‌ای حاصل نشد مطمئن شوید که مکان‌یاب دستگاه از تنظیمات روشن است. اگر روشن کردن آن کارساز نبود، احتمالاً باید گزینه‌های دیگر را بیازمایید</string>
     <string name="notify_date_lock_screen">نمایش اعلان در قفل صفحه</string>
-    <string name="notify_date_lock_screen_summary">فقط هنگامی که شیوه‌ای برای محافظت از گوشی تنظیم شده باشد کار می‌کند.</string>
+    <string name="notify_date_lock_screen_summary">فقط هنگامی که شیوه‌ای برای محافظت از گوشی تنظیم‌شده باشد کار می‌کند.</string>
     <string name="warn_if_events_not_set">جهت روشن کردن رویدادها و مناسبت‌ها و نیز انتخاب مناسبت‌های مورد نظرتان به تنظیمات مراجعه کنید</string>
     <string name="ask_for_calendar_permission">مایلید رویدادهای شخصی‌تان از تقویم دستگاه نمایش داده شود؟</string>
     <string name="days_distance">فاصله</string>
@@ -110,7 +110,7 @@
     <string name="abdulbasit">عبدالباسط عبدالصمد</string>
     <string name="licenses">مجوز</string>
     <string name="about_license_title">مجوزهای برنامه</string>
-    <string name="about_license_sum">مجوز GPLv3، شرایط مجوزهای استفاده شده در تقویم فارسی و کتابخانه‌های استفاده شده را بررسی کنید.</string>
+    <string name="about_license_sum">مجوز GPLv3، شرایط مجوزهای استفاده‌شده در تقویم فارسی و کتابخانه‌های استفاده‌شده را بررسی کنید.</string>
     <string name="help">راهنما</string>
     <string name="about_report_bug">گزارش اشکال</string>
     <string name="about_report_bug_sum">راه ترجیحی برای گزارش باگ و درخواست قابلیت‌های جدید، نیازمند حسابی در گیت‌هاب</string>
@@ -119,11 +119,11 @@
     <string name="about_developers">توسعه‌دهندگان (ترتیب تصادفی)</string>
     <string name="about_support_developers">پشتیبانی از توسعه‌دهنده</string>
     <string name="about_email_sum">ارسال رایانامهٔ شخصی برای نویسنده‌های برنامه برای موارد پاسخ داده‌نشده در راهنما</string>
-    <string name="gps_internet_desc">لطفاً مکان‌یاب (GPS) و اینترنت را برای یافتن جهت قبله یا جهت جغرافیایی روشن نمایید.
+    <string name="gps_internet_desc">لطفاً مکان‌یاب (GPS) و اینترنت را برای یافتن جهت قبله یا جهت جغرافیایی روشن کنید.
 \n
 \nبرنامه تنها یک‌بار برای یک مکان نیاز به این دسترسی‌ها دارد، اما در صورتی که مکان شما تغییر کند دوباره نیازمند تنظیم است.</string>
-    <string name="start_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) از ابتدای سال</string>
-    <string name="end_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) تا انتهای سال</string>
+    <string name="start_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) از آغاز سال</string>
+    <string name="end_of_year_diff">%1$s روز (~%2$s هفته یا %3$s ماه) تا پایان سال</string>
     <!-- Sun Info -->
     <string name="sunrise_sun_view">طلوع</string>
     <string name="midday_sun_view">ظهر</string>
@@ -141,7 +141,7 @@
     <string name="aries">حَمَل (بره)</string>
     <string name="taurus">ثَور (گاو)</string>
     <string name="gemini">جَوزا (دوپیکر)</string>
-    <string name="cancer">سَرَطان (خرچنگ)</string>
+    <string name="cancer">سرطان (خرچنگ)</string>
     <string name="leo">اسد (شیر)</string>
     <string name="virgo">سُنبُله (خوشه)</string>
     <string name="libra">میزان (ترازو)</string>
@@ -161,9 +161,12 @@
     <string name="animal_year_name_horse">اسب</string>
     <string name="animal_year_name_goat">بز</string>
     <string name="level">تراز</string>
-    <string name="calibrate_compass_summary">جهت عملکرد دقیق‌تر حسگر قطب‌نما، از اشیاء مغناطیسی دور شوید، دستگاه را برگردانید و آن را روی سه محور به جلو و عقب بچرخانید.</string>
-    <string name="set_location">برای داشتن موقعیت خورشید و ماه، و جهت قبله می‌توانید موقعیت خود را در بخش تنظیمات وارد نمایید.</string>
-    <string name="moon_in_scorpio">ایام قمر در عقرب</string>
+    <string name="calibrate_compass_summary">"جهت عملکرد دقیق‌تر حسگر قطب‌نما:
+- از اشیاء مغناطیسی دور شوید.
+- دستگاه را برگردانید و آن را روی سطح مسطحی مانند میز، چند بار بچرخانید.
+- در ساختمان‌های با اسکلت فلزی، قطب نما عملکرد دقیقی نخواهد داشت."</string>
+    <string name="set_location">برای داشتن موقعیت خورشید و ماه، و جهت قبله می‌توانید موقعیت خود را در بخش تنظیمات وارد کنید.</string>
+    <string name="moon_in_scorpio">قمر در عقرب</string>
     <string name="astronomy">ستاره‌شناسی</string>
     <string name="astronomical_info_summary">نمایش اطلاعاتی مانند صورت فلکی، نام سال و قمر در عقرب</string>
     <string name="islamic_offset">تنظیم تقویم اسلامی</string>
@@ -193,7 +196,7 @@
     <string name="update">بروزرسانی</string>
     <string name="spring_equinox">لحظهٔ اعتدال بهاری و تحویل سال %1$s: %2$s</string>
     <string name="shift_work_settings">تنظیم شیفت‌کاری</string>
-    <string name="ask_user_to_set_location">برای نمایش صحیح این بخش مکان خود را در تنظیمات انتخاب نمایید</string>
+    <string name="ask_user_to_set_location">برای نمایش صحیح این بخش مکان خود را در تنظیمات انتخاب کنید</string>
     <string name="remove">حذف</string>
     <string name="shift_work_starting_date">شروع شیفت‌کاری از روز انتخاب‌شده در تقویم، %1$s خواهد بود.</string>
     <string name="shift_work_starting_date_edit">شروع شیفت‌کاری از روز تعیین‌شده‌ در قبل، %1$s خواهد بود.</string>
@@ -299,7 +302,7 @@
     <string name="widget_customization_other_calendars">دیگر تقویم‌ها در ویجت ماه، ۴×۱ و ۲×۲</string>
     <string name="widget_customization_non_holiday_events">مناسبت‌های غیر تعطیل در ویجت ۲×۲ و اعلان</string>
     <string name="widget_customization_owghat">اوقات شرعی در ویجت و اعلان (در صورت تنظیم)</string>
-    <string name="widget_customization_owghat_location">مکان اوقات شرعی در ویجت ۲×۲ و اعلان (در صورت تنظیم)</string>
+    <string name="widget_customization_owghat_location">مکان اوقات شرعی در ویجت ۲×۲ و اعلان</string>
     <string name="farvardin">فروردین</string>
     <string name="ordibehesht">اردیبهشت</string>
     <string name="khordad">خرداد</string>
@@ -404,11 +407,12 @@
     <string name="time_zones">مناطق زمانی</string>
     <string name="qr_code">کیوآر کد</string>
     <string name="navigate_up">پیمایش به بالا</string>
-    <string name="open_drawer">باز کردن کشوی پیمایش</string>
+    <string name="open_navigation_rail">باز کردن کشوی پیمایش</string>
     <string name="more_options">گزینه‌های بیشتر</string>
     <string name="yes">بله</string>
     <string name="sample_inputs">ورودی‌های نمونه</string>
     <string name="year_view">نمای سال</string>
+    <string name="month_view">نمای ماه</string>
     <string name="daily_schedule">برنامهٔ روزانه</string>
     <string name="exempt_app_battery_optimization">مایلید جهت عملکرد صحیح اعلان تاریخ، برنامه را به فهرست نادیده‌گیری از بهینه‌سازی باتری بیافزایید؟</string>
     <string name="widget_background_transparency">شفافیت پس‌زمینهٔ ویجت</string>
@@ -422,4 +426,14 @@
     <string name="day_view">نمای روز</string>
     <string name="horoscope">زایچه</string>
     <string name="planetary_hours">ساعات کواکب</string>
+    <string name="select_font">انتخاب قلم</string>
+    <string name="move_up">انتقال به بالا</string>
+    <string name="move_down">انتقال به پایین</string>
+    <string name="black_moon">قمرالاسود</string>
+    <string name="dynamic_icon">نمایش عدد روز در آیکون</string>
+    <string name="large_day_number_on_notification">عدد بزرگ در نوار اعلان</string>
+    <string name="pref_ui">رابط کاربری</string>
+    <string name="week">هفته</string>
+    <string name="bold_text">نوشتار پررنگ</string>
+    <string name="widget_text_size">اندازهٔ متن</string>
 </resources>

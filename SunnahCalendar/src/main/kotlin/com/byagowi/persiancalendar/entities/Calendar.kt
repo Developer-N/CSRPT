@@ -11,20 +11,20 @@ import io.github.persiancalendar.calendar.PersianDate
 enum class Calendar(
     @get:StringRes val title: Int,
     @get:StringRes val shortTitle: Int,
-    val preferredDigits: CharArray
+    val preferredNumeral: Numeral,
 ) {
     // So vital, don't ever change names of these
     SHAMSI(
-        R.string.shamsi_calendar, R.string.shamsi_calendar_short, Language.PERSIAN_DIGITS
+        R.string.shamsi_calendar, R.string.shamsi_calendar_short, Numeral.PERSIAN
     ),
     ISLAMIC(
-        R.string.islamic_calendar, R.string.islamic_calendar_short, Language.ARABIC_INDIC_DIGITS
+        R.string.islamic_calendar, R.string.islamic_calendar_short, Numeral.ARABIC_INDIC
     ),
     GREGORIAN(
-        R.string.gregorian_calendar, R.string.gregorian_calendar_short, Language.ARABIC_DIGITS
+        R.string.gregorian_calendar, R.string.gregorian_calendar_short, Numeral.ARABIC
     ),
     NEPALI(
-        R.string.nepali_calendar, R.string.nepali_calendar_short, Language.DEVANAGARI_DIGITS
+        R.string.nepali_calendar, R.string.nepali_calendar_short, Numeral.DEVANAGARI
     );
 
     fun createDate(year: Int, month: Int, day: Int): AbstractDate = when (this) {
@@ -34,25 +34,23 @@ enum class Calendar(
         NEPALI -> NepaliDate(year, month, day)
     }
 
-    // "The values are numbered following the ISO-8601 standard, from 1 (Monday) to 7 (Sunday)."
     fun getNthWeekDayOfMonth(year: Int, month: Int, weekDay: Int, nth: Int): Int {
-        val appWeekDay = (weekDay % 7) + 1
-        val monthStartWeekDay = Jdn(this, year, month, 1).weekDay
-        return appWeekDay - monthStartWeekDay + nth * 7 - if (monthStartWeekDay < appWeekDay) 7 else 0
+        val appWeekDay = WeekDay.fromISO8601(weekDay).ordinal
+        val monthStartWeekDay = Jdn(this, year, month, 1).weekDay.ordinal
+        return appWeekDay + 1 - monthStartWeekDay + nth * 7 - if (monthStartWeekDay <= appWeekDay) 7 else 0
     }
 
-    // "The values are numbered following the ISO-8601 standard, from 1 (Monday) to 7 (Sunday)."
     fun getLastWeekDayOfMonth(year: Int, month: Int, weekDay: Int): Int {
-        val appWeekDay = (weekDay % 7) + 1
+        val appWeekDay = WeekDay.fromISO8601(weekDay).ordinal
         val monthLength = getMonthLength(year, month)
-        return monthLength - (Jdn(this, year, month, monthLength) - appWeekDay + 1).weekDay
+        return monthLength - (Jdn(this, year, month, monthLength) - appWeekDay).weekDay.ordinal
     }
 
     fun getYearMonths(year: Int): Int =
-        (Jdn(this, year + 1, 1, 1) - 1).on(this).month
+        ((Jdn(this, year + 1, 1, 1) - 1) on this).month
 
     fun getMonthLength(year: Int, month: Int): Int =
-        (Jdn(getMonthStartFromMonthsDistance(year, month, 1)) - 1).on(this).dayOfMonth
+        ((Jdn(getMonthStartFromMonthsDistance(year, month, 1)) - 1) on this).dayOfMonth
 
     private fun getMonthStartFromMonthsDistance(
         baseYear: Int, baseMonth: Int, monthsDistance: Int

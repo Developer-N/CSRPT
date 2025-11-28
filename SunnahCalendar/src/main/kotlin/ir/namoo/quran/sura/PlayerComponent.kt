@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -45,7 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.glide.GlideImage
@@ -77,6 +78,7 @@ fun PlayerComponent(
     val coroutineScope = rememberCoroutineScope()
     val alpha by animateFloatAsState(targetValue = if (isAutoScroll) 1f else 0.5f)
     val position by animateFloatAsState(targetValue = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f)
+    val numeral by numeral.collectAsState()
     Box(
         modifier = modifier.background(
             color = MaterialTheme.colorScheme.surfaceContainer,
@@ -134,7 +136,7 @@ fun PlayerComponent(
                     ) {
                         AnimatedContent(targetState = sura, label = "sura") {
                             Text(
-                                text = formatNumber(stringResource(R.string.sura) + ": $it"),
+                                text = numeral.format(stringResource(R.string.sura) + ": $it"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center
@@ -142,7 +144,7 @@ fun PlayerComponent(
                         }
                         AnimatedContent(targetState = aya, label = "aya") {
                             Text(
-                                text = formatNumber(stringResource(R.string.aya) + ": $it"),
+                                text = numeral.format(stringResource(R.string.aya) + ": $it"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Center

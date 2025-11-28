@@ -1,6 +1,5 @@
 package ir.namoo.religiousprayers.ui.athan
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -37,6 +36,7 @@ import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.setDirection
+import com.byagowi.persiancalendar.utils.update
 import ir.namoo.commons.model.AthanSetting
 import ir.namoo.commons.model.AthanSettingsDB
 import ir.namoo.commons.utils.getAthanUri
@@ -197,7 +197,8 @@ class NAthanNotification : Service() {
             )
 
             val notificationBuilder = NotificationCompat.Builder(this, notificationChannelId)
-            notificationBuilder.setOngoing(true).setWhen(System.currentTimeMillis())
+            notificationBuilder.setOngoing(true).setAutoCancel(true)
+                .setWhen(System.currentTimeMillis())
                 .setSilent(setting?.playType != 2)//silent if not just notification
                 .setSmallIcon(R.mipmap.ic_launcher).setContentTitle(title).setContentText(subtitle)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -279,6 +280,7 @@ class NAthanNotification : Service() {
 
         if (setting?.isAscending == true) handler.removeCallbacks(ascendVolume)
         handler.removeCallbacks(stopTask)
+        update(this, true)
         super.onDestroy()
     }
 

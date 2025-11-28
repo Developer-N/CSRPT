@@ -1,7 +1,6 @@
 package com.byagowi.persiancalendar.ui.astronomy
 
 import android.content.res.Configuration
-import android.os.Build
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
@@ -16,16 +15,21 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -55,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -63,15 +68,16 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
@@ -86,11 +92,13 @@ import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_TIME_BAR
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.Season
 import com.byagowi.persiancalendar.global.coordinates
-import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.spacedColon
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.DatePickerDialog
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.SolarDraw
 import com.byagowi.persiancalendar.ui.common.SwitchWithLabel
@@ -99,6 +107,9 @@ import com.byagowi.persiancalendar.ui.common.TodayActionButton
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.theme.isDynamicGrayscale
+import com.byagowi.persiancalendar.ui.theme.resolveAndroidCustomTypeface
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
+import com.byagowi.persiancalendar.ui.utils.appContentSizeAnimationSpec
 import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
 import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.utils.formatDateAndTime
@@ -118,9 +129,10 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun SharedTransitionScope.AstronomyScreen(
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     navigateToMap: () -> Unit,
     viewModel: AstronomyViewModel,
+    noBackStackAction: (() -> Unit)?,
 ) {
     LaunchedEffect(Unit) {
         // Default animation screen enter, only if minutes offset is at it's default
@@ -149,11 +161,17 @@ fun SharedTransitionScope.AstronomyScreen(
                     Text(
                         stringResource(R.string.astronomy),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        autoSize = TextAutoSize.StepBased(
+                            maxFontSize = LocalTextStyle.current.fontSize,
+                            minFontSize = 10.sp,
+                        ),
                     )
                 },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+                navigationIcon = {
+                    if (noBackStackAction != null) NavigationNavigateUpIcon(noBackStackAction)
+                    else NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
+                },
                 actions = {
                     val minutesOffset by viewModel.minutesOffset.collectAsState()
                     val isTropical by viewModel.isTropical.collectAsState()
@@ -166,7 +184,7 @@ fun SharedTransitionScope.AstronomyScreen(
                             label = stringResource(R.string.tropical),
                             checked = isTropical,
                             labelBeforeSwitch = true,
-                            toggle = viewModel::toggleIsTropical,
+                            onValueChange = viewModel::toggleIsTropical,
                         )
                     }
 
@@ -191,6 +209,11 @@ fun SharedTransitionScope.AstronomyScreen(
                         }
                     }
 
+                    var showMoonInScorpioDialog by rememberSaveable { mutableStateOf(false) }
+                    if (showMoonInScorpioDialog) MoonInScorpioDialog(astronomyState.date) {
+                        showMoonInScorpioDialog = false
+                    }
+
                     ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
                         AppDropdownMenuItem({ Text(stringResource(R.string.select_date)) }) {
                             closeMenu()
@@ -213,13 +236,17 @@ fun SharedTransitionScope.AstronomyScreen(
                             showYearHoroscopeDialog = true
                             closeMenu()
                         }
-                        if (isAstronomicalExtraFeaturesEnabled && coordinates != null) {
-                            AppDropdownMenuItem({
-                                Text(stringResource(R.string.planetary_hours))
-                            }) {
-                                showPlanetaryHoursDialog = true
-                                closeMenu()
-                            }
+                        if (coordinates != null) AppDropdownMenuItem({
+                            Text(stringResource(R.string.planetary_hours))
+                        }) {
+                            showPlanetaryHoursDialog = true
+                            closeMenu()
+                        }
+                        AppDropdownMenuItem({
+                            Text(stringResource(R.string.moon_in_scorpio))
+                        }) {
+                            showMoonInScorpioDialog = true
+                            closeMenu()
                         }
                     }
                 },
@@ -229,7 +256,11 @@ fun SharedTransitionScope.AstronomyScreen(
         Box(Modifier.padding(top = paddingValues.calculateTopPadding())) {
             ScreenSurface(animatedContentScope) {
                 val bottomPadding = paddingValues.calculateBottomPadding()
-                if (isLandscape) BoxWithConstraints(Modifier.fillMaxSize()) {
+                if (isLandscape) BoxWithConstraints(
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                ) {
                     val maxHeight = this.maxHeight
                     val maxWidth = this.maxWidth
                     Row(Modifier.fillMaxWidth()) {
@@ -348,6 +379,7 @@ private fun SharedTransitionScope.SliderBar(
                 .sharedElement(
                     rememberSharedContentState(key = SHARED_CONTENT_KEY_TIME_BAR),
                     animatedVisibilityScope = animatedContentScope,
+                    boundsTransform = appBoundsTransform,
                 ),
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -450,8 +482,23 @@ private fun SharedTransitionScope.SolarDisplay(
                 )
             }
         }
+        val map = stringResource(R.string.map)
+        NavigationRailItem(
+            modifier = Modifier
+                .size(56.dp)
+                .align(Alignment.CenterEnd)
+                .sharedBounds(
+                    rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
+                    animatedVisibilityScope = animatedContentScope,
+                    boundsTransform = appBoundsTransform,
+                ),
+            selected = false,
+            onClick = navigateToMap,
+            icon = { Text("🗺", modifier = Modifier.semantics { this.contentDescription = map }) },
+        )
         val surfaceColor = MaterialTheme.colorScheme.surface
         val contentColor = LocalContentColor.current
+        val typeface = resolveAndroidCustomTypeface()
         AndroidView(
             factory = {
                 val solarView = SolarView(it)
@@ -470,25 +517,8 @@ private fun SharedTransitionScope.SolarDisplay(
                 it.setContentColor(contentColor.toArgb())
                 it.isTropicalDegree = isTropical
                 it.setTime(state)
+                it.setFont(typeface)
                 it.mode = mode
-            },
-        )
-        val map = stringResource(R.string.map)
-        NavigationRailItem(
-            modifier = Modifier
-                .size(56.dp)
-                .align(Alignment.CenterEnd)
-                .sharedBounds(
-                    rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
-                    animatedVisibilityScope = animatedContentScope,
-                ),
-            selected = false,
-            onClick = navigateToMap,
-            icon = {
-                Text(
-                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) "m" else "🗺",
-                    modifier = Modifier.semantics { this.contentDescription = map },
-                )
             },
         )
     }
@@ -504,20 +534,19 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
     val moonZodiac = if (isTropical) Zodiac.fromTropical(state.moon.lon)
     else Zodiac.fromIau(state.moon.lon)
 
-    val context = LocalContext.current
-    val headerCache = remember {
-        lruCache(1024, create = { jdn: Jdn -> state.generateHeader(context.resources, jdn) })
+    val resources = LocalResources.current
+    val language by language.collectAsState()
+    val headerCache = remember(resources, language) {
+        lruCache(1024, create = { jdn: Jdn -> state.generateHeader(resources, language, jdn) })
     }
 
     Column(modifier) {
         val jdn by remember { derivedStateOf { Jdn(state.date.toCivilDate()) } }
-        val contentColor = LocalContentColor.current
         headerCache[jdn].fastForEach { line ->
             AnimatedContent(targetState = line, label = "line", transitionSpec = appCrossfadeSpec) {
                 SelectionContainer {
-                    BasicText(
-                        it,
-                        color = { contentColor },
+                    Text(
+                        text = it,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         softWrap = false,
@@ -532,21 +561,27 @@ private fun Header(modifier: Modifier, viewModel: AstronomyViewModel) {
         Seasons(jdn, viewModel)
         this.AnimatedVisibility(visible = mode == AstronomyMode.EARTH) {
             Row(Modifier.padding(top = 8.dp)) {
-                Box(Modifier.weight(1f)) {
-                    Cell(
-                        Modifier.align(Alignment.Center),
-                        Color(0xcceaaa00),
-                        stringResource(R.string.sun),
-                        sunZodiac.format(context.resources, true) // ☉☀️
-                    )
-                }
-                Box(Modifier.weight(1f)) {
-                    Cell(
-                        Modifier.align(Alignment.Center),
-                        Color(0xcc606060),
-                        stringResource(R.string.moon),
-                        moonZodiac.format(context.resources, true) // ☽it.moonPhaseEmoji
-                    )
+                listOf(
+                    // ☉☀️
+                    Triple(sunZodiac, R.string.sun, Color(0xcceaaa00)),
+                    // ☽it.moonPhaseEmoji
+                    Triple(moonZodiac, R.string.moon, Color(0xcc606060)),
+                ).forEach { (zodiac, titleId, color) ->
+                    Box(Modifier.weight(1f)) {
+                        val title = stringResource(titleId)
+                        val value = stringResource(zodiac.titleId)
+                        Cell(
+                            Modifier
+                                .semantics(mergeDescendants = true) {
+                                    this.contentDescription = title + spacedColon + value
+                                }
+                                .clearAndSetSemantics {}
+                                .align(Alignment.Center),
+                            color = color,
+                            title = title,
+                            value = zodiac.symbol + " " + value,
+                        )
+                    }
                 }
             }
         }
@@ -579,12 +614,21 @@ private fun Seasons(jdn: Jdn, viewModel: AstronomyViewModel) {
         Row(Modifier.padding(top = 8.dp)) {
             repeat(2) { cell ->
                 Box(Modifier.weight(1f)) {
-                    val (time, title) = equinoxes[cell + row * 2]
+                    val title = stringResource(seasonsOrder[cell + row * 2].nameStringId)
+                    val (time, formattedTime) = equinoxes[cell + row * 2]
                     Cell(
-                        Modifier.clickable { viewModel.animateToTime(time) },
-                        seasonsOrder[cell + row * 2].color,
-                        stringResource(seasonsOrder[cell + row * 2].nameStringId),
-                        title,
+                        Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .semantics(true) {
+                                this.contentDescription = title + spacedComma + formattedTime
+                            }
+                            .clickable(onClickLabel = stringResource(R.string.select_date)) {
+                                viewModel.animateToTime(time)
+                            }
+                            .clearAndSetSemantics {},
+                        color = seasonsOrder[cell + row * 2].color,
+                        title = title,
+                        value = formattedTime,
                     )
                 }
             }
@@ -599,14 +643,15 @@ private fun SharedTransitionScope.MoonIcon(
     astronomyState: AstronomyState,
     animatedContentScope: AnimatedContentScope,
 ) {
-    val context = LocalContext.current
-    val solarDraw = remember { SolarDraw(context.resources) }
+    val resources = LocalResources.current
+    val solarDraw = remember(resources) { SolarDraw(resources) }
     Box(
         modifier = Modifier
             .size(24.dp)
             .sharedBounds(
                 rememberSharedContentState(key = SHARED_CONTENT_KEY_MOON),
                 animatedVisibilityScope = animatedContentScope,
+                boundsTransform = appBoundsTransform,
             )
             .drawBehind {
                 drawIntoCanvas {
@@ -621,13 +666,20 @@ private fun SharedTransitionScope.MoonIcon(
 
 @Stable
 @Composable
-private fun Cell(modifier: Modifier, color: Color, label: String, value: String) {
+private fun Cell(
+    modifier: Modifier,
+    color: Color,
+    title: String,
+    value: String,
+) {
     Row(
-        modifier.animateContentSize(),
+        modifier
+            .heightIn(max = 64.dp)
+            .animateContentSize(appContentSizeAnimationSpec),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            label,
+            title,
             modifier = Modifier
                 .background(
                     if (isDynamicGrayscale()) Color(0xcc808080) else color,
@@ -637,16 +689,20 @@ private fun Cell(modifier: Modifier, color: Color, label: String, value: String)
                 .padding(vertical = 4.dp, horizontal = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = Color.White,
+            fontSize = with(LocalDensity.current) {
+                MaterialTheme.typography.bodyMedium.fontSize.toDp().coerceAtMost(18.dp).toSp()
+            }
         )
         SelectionContainer {
-            val contentColor = LocalContentColor.current
-            BasicText(
+            Text(
                 value,
-                style = LocalTextStyle.current,
-                color = { contentColor },
+                style = LocalTextStyle.current.copy(
+                    lineHeight = with(LocalDensity.current) {
+                        LocalTextStyle.current.lineHeight.toDp().coerceAtMost(28.dp).toSp()
+                    }
+                ),
                 modifier = Modifier.padding(start = 8.dp, end = 4.dp),
-                maxLines = 1,
-                softWrap = false,
+                maxLines = if (LocalDensity.current.fontScale > 1) 2 else 1,
                 autoSize = TextAutoSize.StepBased(
                     minFontSize = 9.sp,
                     maxFontSize = MaterialTheme.typography.bodyMedium.fontSize,

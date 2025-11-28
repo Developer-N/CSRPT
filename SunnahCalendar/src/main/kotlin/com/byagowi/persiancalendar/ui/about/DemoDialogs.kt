@@ -72,8 +72,8 @@ import com.byagowi.persiancalendar.ui.map.GLRenderer
 import com.byagowi.persiancalendar.ui.utils.createFlingDetector
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.performHapticFeedbackVirtualKey
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOn
@@ -562,7 +562,7 @@ fun showPeriodicTableDialog(activity: Activity) {
                     it.textDirection = View.TEXT_DIRECTION_LTR
                     it.setText(
                         elements
-                            .reversed()
+                            .asReversed()
                             .mapIndexed { index, s -> "${elements.size - index},$s" }
                             .joinToString("\n"),
                     )
@@ -915,9 +915,7 @@ fun showSignalGeneratorDialog(activity: ComponentActivity, viewLifecycle: Lifecy
                 buffer.size, AudioTrack.MODE_STATIC
             )
             audioTrack.write(buffer, 0, buffer.size)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                audioTrack.setLoopPoints(0, audioTrack.bufferSizeInFrames, -1)
-            }
+            audioTrack.setLoopPoints(0, audioTrack.bufferSizeInFrames, -1)
             audioTrack.play()
             if (previousAudioTrack?.state == AudioTrack.STATE_INITIALIZED) {
                 previousAudioTrack?.stop()

@@ -45,6 +45,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +70,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import ir.namoo.quran.sura.data.QuranEntity
 import ir.namoo.quran.sura.data.TranslateItem
 import ir.namoo.quran.sura.data.TranslateType
@@ -100,6 +101,7 @@ fun AyaItem(
     onBtnPlayClick: (QuranEntity) -> Unit
 ) {
     var content = ""
+    val numeral by numeral.collectAsState()
     val quranText = buildAnnotatedString {
         append(quran.quranArabic)
         append(" ")
@@ -115,7 +117,7 @@ fun AyaItem(
                 fontFamily = FontFamily(vazirmatnFont)
             )
         ) {
-            append(formatNumber(quran.verseID))
+            append(numeral.format(quran.verseID))
         }
         withStyle(
             style = SpanStyle(

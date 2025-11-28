@@ -84,16 +84,21 @@ import com.byagowi.persiancalendar.ui.common.AppBottomAppBar
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.AppIconButton
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.StopButton
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.icons.In24HoursIcon
+import com.byagowi.persiancalendar.ui.theme.appSliderColor
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.theme.resolveAndroidCustomTypeface
 import com.byagowi.persiancalendar.ui.utils.SensorEventAnnouncer
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
+import com.byagowi.persiancalendar.ui.utils.appContentSizeAnimationSpec
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.formatCoordinateISO6709
 import com.byagowi.persiancalendar.utils.preferences
-import com.byagowi.persiancalendar.variants.debugLog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.VisibleForTesting
@@ -107,11 +112,12 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.CompassScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     navigateToLevel: () -> Unit,
     navigateToMap: () -> Unit,
     navigateToSettingsLocationTab: () -> Unit,
     animatedContentScope: AnimatedContentScope,
+    noBackStackAction: (() -> Unit)?,
 ) {
     val context = LocalContext.current
     val orientation = remember(LocalConfiguration.current) {
@@ -150,7 +156,7 @@ fun SharedTransitionScope.CompassScreen(
         it.time = baseTime
         it.add(GregorianCalendar.MINUTE, (sliderValue * 60f).roundToInt())
     }
-    var isStopped by remember { mutableStateOf(false) }
+    var isStopped by rememberSaveable { mutableStateOf(false) }
     var compassView by remember { mutableStateOf<CompassView?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -173,6 +179,10 @@ fun SharedTransitionScope.CompassScreen(
                 }
             }
         }
+    }
+
+    var showQibla by rememberSaveable {
+        mutableStateOf(context.preferences.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true))
     }
 
     Scaffold(
@@ -203,12 +213,15 @@ fun SharedTransitionScope.CompassScreen(
                     }
                 },
                 colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+                navigationIcon = {
+                    if (noBackStackAction != null) NavigationNavigateUpIcon(noBackStackAction)
+                    else NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
+                },
                 actions = {
                     if (coordinates != null) AppIconButton(
                         icon = In24HoursIcon,
                         title = stringResource(R.string.show_sun_and_moon_path_in_24_hours),
-                        iconModifier = Modifier.rotate(sliderValue / 24f * 360f),
+                        modifier = Modifier.rotate(sliderValue / 24f * 360f),
                     ) {
                         if (isTimeShiftAnimate) {
                             isTimeShiftAnimate = false
@@ -218,11 +231,6 @@ fun SharedTransitionScope.CompassScreen(
                     var showTrueNorth by rememberSaveable {
                         mutableStateOf(
                             context.preferences.getBoolean(PREF_TRUE_NORTH_IN_COMPASS, false)
-                        )
-                    }
-                    var showQibla by rememberSaveable {
-                        mutableStateOf(
-                            context.preferences.getBoolean(PREF_SHOW_QIBLA_IN_COMPASS, true)
                         )
                     }
                     if (coordinates != null || BuildConfig.DEVELOPMENT) ThreeDotsDropdownMenu(
@@ -242,12 +250,13 @@ fun SharedTransitionScope.CompassScreen(
                             context.preferences.edit { putBoolean(PREF_SHOW_QIBLA_IN_COMPASS, it) }
                         }
                         val language by language.collectAsState()
-                        if (isAstronomicalExtraFeaturesEnabled && language.isPersian) {
+                        val isAstronomicalExtraFeaturesEnabled by isAstronomicalExtraFeaturesEnabled.collectAsState()
+                        if (isAstronomicalExtraFeaturesEnabled && language.isPersianOrDari) {
                             var value by remember { mutableStateOf<String?>(null) }
                             AppDropdownMenuItem({
                                 Crossfade(
                                     value ?: "مزبوره/مذکوره",
-                                    Modifier.animateContentSize(),
+                                    Modifier.animateContentSize(appContentSizeAnimationSpec),
                                 ) { Text(it) }
                             }) {
                                 val dayOfMonth = Jdn.today().toIslamicDate().dayOfMonth
@@ -298,13 +307,21 @@ fun SharedTransitionScope.CompassScreen(
                 Column {
                     Box(Modifier.weight(1f, fill = false)) {
                         val surfaceColor = MaterialTheme.colorScheme.surface
+                        val typeface = resolveAndroidCustomTypeface()
                         AndroidView(
                             modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_COMPASS),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             ),
-                            factory = { CompassView(it).also { view -> compassView = view } },
+                            factory = {
+                                CompassView(it).also { view ->
+                                    view.isShowQibla = showQibla
+                                    compassView = view
+                                }
+                            },
                             update = {
+                                it.setFont(typeface)
                                 it.setSurfaceColor(surfaceColor.toArgb())
                                 it.setTime(time)
                             },
@@ -322,6 +339,7 @@ fun SharedTransitionScope.CompassScreen(
                                         isTimeShiftAnimate = false
                                         timeShift = if (it == 24f) 0f else it
                                     },
+                                    colors = appSliderColor(),
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                 )
                             }
@@ -332,18 +350,20 @@ fun SharedTransitionScope.CompassScreen(
                         AppIconButton(
                             icon = ImageVector.vectorResource(R.drawable.ic_level),
                             title = stringResource(R.string.level),
-                            iconModifier = Modifier.sharedBounds(
+                            modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_LEVEL),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             ),
                             onClick = navigateToLevel,
                         )
                         AppIconButton(
                             icon = Icons.Default.Map,
                             title = stringResource(R.string.map),
-                            iconModifier = Modifier.sharedBounds(
+                            modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_MAP),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             ),
                             onClick = navigateToMap,
                         )
@@ -366,6 +386,7 @@ fun SharedTransitionScope.CompassScreen(
                             Modifier.sharedElement(
                                 rememberSharedContentState(SHARED_CONTENT_KEY_STOP),
                                 animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = appBoundsTransform,
                             )
                         ) { StopButton(isStopped) { isStopped = it } }
                     }

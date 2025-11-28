@@ -1,8 +1,6 @@
 package com.byagowi.persiancalendar.ui.settings.wallpaper
 
-import android.content.res.Configuration
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,15 +26,13 @@ import com.byagowi.persiancalendar.PREF_WALLPAPER_DARK
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.wallpaperAutomatic
 import com.byagowi.persiancalendar.global.wallpaperDark
+import com.byagowi.persiancalendar.ui.BaseActivity
 import com.byagowi.persiancalendar.ui.settings.SettingsSwitch
 import com.byagowi.persiancalendar.ui.theme.SystemTheme
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
-import com.byagowi.persiancalendar.utils.applyAppLanguage
-import com.byagowi.persiancalendar.utils.applyLanguageToConfiguration
 
-class WallpaperSettingsActivity : ComponentActivity() {
+class WallpaperSettingsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        applyAppLanguage(this)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
@@ -64,26 +60,21 @@ class WallpaperSettingsActivity : ComponentActivity() {
                         }
                         val wallpaperAutomatic by wallpaperAutomatic.collectAsState()
                         SettingsSwitch(
-                            PREF_WALLPAPER_AUTOMATIC,
-                            wallpaperAutomatic,
-                            stringResource(R.string.theme_default)
+                            key = PREF_WALLPAPER_AUTOMATIC,
+                            value = wallpaperAutomatic,
+                            title = stringResource(R.string.theme_default)
                         )
                         this.AnimatedVisibility(!wallpaperAutomatic) {
                             val wallpaperDark by wallpaperDark.collectAsState()
                             SettingsSwitch(
-                                PREF_WALLPAPER_DARK,
-                                wallpaperDark,
-                                stringResource(R.string.theme_dark)
+                                key = PREF_WALLPAPER_DARK,
+                                value = wallpaperDark,
+                                title = stringResource(R.string.theme_dark)
                             )
                         }
                     }
                 }
             }
         }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(applyLanguageToConfiguration(newConfig))
-        applyAppLanguage(this)
     }
 }

@@ -4,8 +4,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.View
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.utils.dp
 import com.byagowi.persiancalendar.ui.utils.isLandscape
 
@@ -15,7 +18,7 @@ class RulerView(context: Context, attrs: AttributeSet? = null) : View(context, a
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = Color.GRAY
         it.strokeWidth = 1 * dp
-        it.textSize = textSize
+        it.textSize = textSize * if (numeral.value.isArabicIndicVariants) 1.4f else 1f
     }
     private val textSideOffset = 30 * dp
     private val firstLevel = 25 * dp
@@ -29,6 +32,10 @@ class RulerView(context: Context, attrs: AttributeSet? = null) : View(context, a
             invalidate()
         }
 
+    fun setFont(typeface: Typeface?) {
+        paint.typeface = typeface
+    }
+
     override fun onDraw(canvas: Canvas) {
         val dpi = if (resources.isLandscape)
             resources.displayMetrics.xdpi else resources.displayMetrics.ydpi
@@ -40,7 +47,8 @@ class RulerView(context: Context, attrs: AttributeSet? = null) : View(context, a
             val y = steps * i
             val w = when {
                 i % 4 == 0 -> {
-                    val label = if (i == 0) "0 in" else "${i / 4}"
+                    val label = numeral.value.format(i / 4) + " " +
+                            if (i == 0) language.value.inch else ""
                     canvas.drawText(
                         label, if (cmInchFlip) width - textSideOffset else textSideOffset,
                         if (i == 0) topTextOffset else y + textOffset, paint
@@ -64,7 +72,8 @@ class RulerView(context: Context, attrs: AttributeSet? = null) : View(context, a
             val y = cmSteps.toFloat() * i
             val w = when {
                 i % 10 == 0 -> {
-                    val label = if (i == 0) "0 cm" else "${i / 10}"
+                    val label = numeral.value.format(i / 10) + " " +
+                            if (i == 0) language.value.centimeter else ""
                     canvas.drawText(
                         label, if (cmInchFlip) textSideOffset else width - textSideOffset,
                         if (i == 0) topTextOffset else y + textOffset, paint

@@ -8,8 +8,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
 import com.byagowi.persiancalendar.utils.logException
 import io.ktor.client.HttpClient
@@ -17,8 +19,10 @@ import io.ktor.client.engine.android.Android
 import ir.namoo.commons.APP_LINK
 import ir.namoo.commons.DEFAULT_AZKAR_LANG
 import ir.namoo.commons.PREF_AZKAR_LANG
+import ir.namoo.commons.PREF_PLAY_ALL_AZKAR
 import ir.namoo.commons.downloader.DownloadResult
 import ir.namoo.commons.downloader.downloadFile
+import ir.namoo.commons.utils.toastMessage
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarChapter
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarItem
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarReference
@@ -31,7 +35,8 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class AzkarActivityViewModel(
-    private val azkarRepository: AzkarRepository, private val prefs: SharedPreferences
+    private val azkarRepository: AzkarRepository,
+    private val prefs: SharedPreferences,
 ) : ViewModel() {
 
     var description = "\uD83E\uDD32\uD83C\uDFFB"
@@ -74,10 +79,15 @@ class AzkarActivityViewModel(
     private var mediaPlayer: MediaPlayer? = null
     private var handler = Handler(Looper.getMainLooper())
 
+    private val _playAll = MutableStateFlow(false)
+    val playAll = _playAll.asStateFlow()
+
+
     fun loadItems(chapterID: Int, directory: String) {
         viewModelScope.launch {
             _isLoading.value = true
             azkarDirectory = directory
+            _playAll.value = prefs.getBoolean(PREF_PLAY_ALL_AZKAR, false)
             _azkarLang.value =
                 prefs.getString(PREF_AZKAR_LANG, DEFAULT_AZKAR_LANG) ?: DEFAULT_AZKAR_LANG
             _azkarItems.clear()
@@ -96,6 +106,11 @@ class AzkarActivityViewModel(
             }
         }
         _isLoading.value = false
+    }
+
+    fun updatePlayAll(playAll: Boolean) {
+        prefs.edit { putBoolean(PREF_PLAY_ALL_AZKAR, playAll) }
+        _playAll.value = playAll
     }
 
     private fun setDescription() {
@@ -135,7 +150,11 @@ class AzkarActivityViewModel(
                     _isPlaying.value = false
                 }
                 val mp3File = File(azkarDirectory + getIdString(item.id) + ".mp3")
-                if (!mp3File.exists()) return
+                if (!mp3File.exists()) {
+                    context.toastMessage(context.getString(R.string.audio_file_not_downloaded))
+                    stop()
+                    return
+                }
                 _currentPlayingItem.value = -1
                 _currentPosition.value = 0
                 mediaPlayer = MediaPlayer()
@@ -150,12 +169,17 @@ class AzkarActivityViewModel(
                         _totalDuration.value = player.duration
                     }
                     player.setOnCompletionListener {
-                        _isPlaying.value = false
-                        _currentPlayingItem.value = -1
-                        _currentPosition.value = 0
-                        _totalDuration.value = 0
-                        mediaPlayer?.release()
-                        mediaPlayer = null
+                        val index = _azkarItems.indexOf(item)
+                        if (playAll.value && index != -1 && index < _azkarItems.size - 1) {
+                            play(context, _azkarItems[index + 1])
+                        } else {
+                            _isPlaying.value = false
+                            _currentPlayingItem.value = -1
+                            _currentPosition.value = 0
+                            _totalDuration.value = 0
+                            mediaPlayer?.release()
+                            mediaPlayer = null
+                        }
                     }
                 }
             }
@@ -256,6 +280,8 @@ class AzkarActivityViewModel(
                             _itemsState[index] =
                                 _itemsState[index].copy(totalSize = downloadResult.totalSize)
                         }
+
+                        is DownloadResult.DownloadedByte -> {}
                     }
                 }
         }

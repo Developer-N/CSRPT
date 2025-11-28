@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -41,7 +43,7 @@ fun ReorderTranslates(
     }
 
     val settings = viewModel.settings
-
+    val numeral by numeral.collectAsState()
     AlertDialog(onDismissRequest = { onDismiss() },
         confirmButton = {
             TextButton(onClick = { onDismiss() }) {
@@ -72,7 +74,7 @@ fun ReorderTranslates(
                                 modifier = Modifier
                                     .padding(vertical = 4.dp, horizontal = 8.dp)
                                     .weight(4f),
-                                text = formatNumber("${setting.priority}: ${setting.name}"),
+                                text = numeral.format("${setting.priority}: ${setting.name}"),
                                 fontWeight = FontWeight.SemiBold
                             )
                             IconButton(

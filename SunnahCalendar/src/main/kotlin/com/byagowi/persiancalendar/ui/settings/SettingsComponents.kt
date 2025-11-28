@@ -1,12 +1,16 @@
 package com.byagowi.persiancalendar.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +18,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.SettingsBackupRestore
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
@@ -38,64 +51,100 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import androidx.core.graphics.toColorInt
 import com.byagowi.persiancalendar.DEFAULT_SELECTED_WIDGET_BACKGROUND_COLOR
 import com.byagowi.persiancalendar.DEFAULT_SELECTED_WIDGET_TEXT_COLOR
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.settings.common.ColorBox
 import com.byagowi.persiancalendar.ui.settings.common.ColorPickerDialog
 import com.byagowi.persiancalendar.ui.theme.animateColor
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
+import com.byagowi.persiancalendar.ui.theme.appSliderColor
+import com.byagowi.persiancalendar.ui.theme.appSwitchColors
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.SettingsHorizontalPaddingItem
 import com.byagowi.persiancalendar.ui.utils.SettingsItemHeight
+import com.byagowi.persiancalendar.ui.utils.highlightItem
 import com.byagowi.persiancalendar.ui.utils.performLongPress
 import com.byagowi.persiancalendar.utils.preferences
 import java.util.Locale
+import kotlin.math.roundToInt
+
+fun LazyListScope.settingsSection(
+    canScrollBackward: Boolean,
+    disableStickyHeader: Boolean,
+    @StringRes title: Int,
+    subtitle: @Composable () -> String? = { null },
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    if (disableStickyHeader) item { SettingsSectionLayout(title, subtitle) } else stickyHeader {
+        Box(
+            if (canScrollBackward) Modifier.background(
+                Brush.verticalGradient(
+                    .75f to animateColor(
+                        MaterialTheme.colorScheme.surface.copy(alpha = .9f)
+                    ).value,
+                    1f to Color.Transparent,
+                )
+            ) else Modifier,
+        ) { SettingsSectionLayout(title, subtitle) }
+    }
+    item { Column { content() } }
+}
 
 @Composable
-fun SettingsSection(title: String, subtitle: String? = null) {
-    Spacer(Modifier.padding(top = 16.dp))
+fun SettingsSectionLayout(@StringRes title: Int, subtitle: @Composable () -> String? = { null }) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AnimatedContent(
-            title,
-            label = "title",
-            transitionSpec = appCrossfadeSpec,
-        ) { state ->
-            Text(
-                state,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val dividerColor by animateColor(MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = dividerColor, modifier = Modifier.weight(1f))
+            AnimatedContent(
+                stringResource(title),
+                contentAlignment = Alignment.Center,
+                label = "title",
+                transitionSpec = appCrossfadeSpec,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) { state ->
+                Text(
+                    state,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = animateColor(MaterialTheme.colorScheme.primary).value,
+                )
+            }
+            HorizontalDivider(color = dividerColor, modifier = Modifier.weight(1f))
         }
+        val subtitle = subtitle()
         this.AnimatedVisibility(visible = subtitle != null) {
             Text(
                 subtitle.orEmpty(),
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.alpha(AppBlendAlpha)
             )
         }
     }
-}
-
-@Composable
-fun SettingsHorizontalDivider() {
-    val color by animateColor(MaterialTheme.colorScheme.outlineVariant)
-    HorizontalDivider(Modifier.padding(horizontal = 8.dp), color = color)
 }
 
 @Composable
@@ -106,7 +155,13 @@ fun SettingsClickable(
     dialog: @Composable (onDismissRequest: () -> Unit) -> Unit,
 ) {
     var showDialog by rememberSaveable { mutableStateOf(defaultOpen) }
-    SettingsLayout(onClick = { showDialog = true }, title = title, summary = summary)
+    SettingsLayout(
+        modifier = Modifier
+            .clickable { showDialog = true }
+            .highlightItem(defaultOpen && !showDialog),
+        title = title,
+        summary = summary,
+    )
     if (showDialog) dialog { showDialog = false }
 }
 
@@ -130,7 +185,14 @@ fun SettingsColor(
         )
         mutableStateOf(initialColor)
     }
-    SettingsLayout({ showDialog = true }, title, summary) {
+    SettingsLayout(
+        title = title,
+        summary = summary,
+        modifier = Modifier
+            .clickable { showDialog = true }
+            .semantics(mergeDescendants = true) { this.hideFromAccessibility() }
+            .clearAndSetSemantics {},
+    ) {
         ColorBox(
             color = animateColor(persistedColor).value,
             size = widgetSize.dp,
@@ -158,20 +220,17 @@ fun SettingsSingleSelect(
     key: String,
     entries: List<String>,
     entryValues: List<String>,
-    defaultValue: String,
+    persistedValue: String,
     dialogTitleResId: Int,
     title: String,
     summaryResId: Int? = null
 ) {
     val context = LocalContext.current
-    var summary by remember(language.collectAsState().value) {
-        mutableStateOf(
-            if (summaryResId == null) entries[entryValues.indexOf(
-                context.preferences.getString(key, null) ?: defaultValue
-            )] else context.getString(summaryResId)
-        )
-    }
-    SettingsClickable(title = title, summary = summary) { onDismissRequest ->
+    SettingsClickable(
+        title = title,
+        summary = summaryResId?.let { stringResource(it) }
+            ?: entries[entryValues.indexOf(persistedValue)],
+    ) { onDismissRequest ->
         AppDialog(
             title = { Text(stringResource(dialogTitleResId)) },
             dismissButton = {
@@ -179,25 +238,30 @@ fun SettingsSingleSelect(
             },
             onDismissRequest = onDismissRequest,
         ) {
-            val currentValue = remember {
-                context.preferences.getString(key, null) ?: defaultValue
-            }
-            entries.zip(entryValues) { entry, entryValue ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(SettingsItemHeight.dp)
-                        .clickable {
-                            onDismissRequest()
-                            context.preferences.edit { putString(key, entryValue) }
-                            if (summaryResId == null) summary = entry
-                        }
-                        .padding(horizontal = SettingsHorizontalPaddingItem.dp),
-                ) {
-                    RadioButton(selected = entryValue == currentValue, onClick = null)
-                    Spacer(modifier = Modifier.width(SettingsHorizontalPaddingItem.dp))
-                    Text(entry)
+            Column(Modifier.selectableGroup()) {
+                entries.zip(entryValues) { entry, entryValue ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(SettingsItemHeight.dp)
+                            .selectable(entryValue == persistedValue, role = Role.RadioButton) {
+                                onDismissRequest()
+                                context.preferences.edit { putString(key, entryValue) }
+                            }
+                            .padding(horizontal = SettingsHorizontalPaddingItem.dp),
+                    ) {
+                        RadioButton(selected = entryValue == persistedValue, onClick = null)
+                        Spacer(Modifier.width(SettingsHorizontalPaddingItem.dp))
+                        Text(
+                            entry,
+                            maxLines = 1,
+                            autoSize = TextAutoSize.StepBased(
+                                minFontSize = 9.sp,
+                                maxFontSize = LocalTextStyle.current.fontSize,
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -209,25 +273,21 @@ fun SettingsMultiSelect(
     key: String,
     entries: List<String>,
     entryValues: List<String>,
-    defaultValue: Set<String>,
+    persistedSet: Set<String>,
     dialogTitleResId: Int,
     title: String,
     summary: String? = null,
 ) {
-    fun generateSummary(items: List<String>): String =
-        items.map(entryValues::indexOf).sorted().joinToString(spacedComma) { entries[it] }
-
     val context = LocalContext.current
-    var summaryToShow by remember(language.collectAsState().value) {
-        val preferences = context.preferences
-        val items = preferences.getStringSet(key, null) ?: defaultValue
-        mutableStateOf(summary ?: generateSummary(items.toList()))
-    }
-    SettingsClickable(title = title, summary = summaryToShow) { onDismissRequest ->
+    SettingsClickable(
+        title = title,
+        summary = summary ?: persistedSet.map(entryValues::indexOf).sorted()
+            .joinToString(spacedComma) { entries[it] },
+    ) { onDismissRequest ->
         val result = rememberSaveable(
             saver = listSaver(save = { it.toList() }, restore = { it.toMutableStateList() })
         ) {
-            (context.preferences.getStringSet(key, null) ?: defaultValue).toList()
+            (context.preferences.getStringSet(key, null) ?: persistedSet).toList()
                 .toMutableStateList()
         }
         AppDialog(
@@ -240,7 +300,6 @@ fun SettingsMultiSelect(
                 TextButton(onClick = {
                     onDismissRequest()
                     context.preferences.edit { putStringSet(key, result.toSet()) }
-                    if (summary == null) summaryToShow = generateSummary(result)
                 }) { Text(stringResource(R.string.accept)) }
             },
         ) {
@@ -250,37 +309,25 @@ fun SettingsMultiSelect(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(SettingsItemHeight.dp)
-                        .clickable {
-                            if (entryValue in result) result.remove(entryValue)
-                            else result.add(entryValue)
+                        .toggleable(value = entryValue in result, role = Role.Checkbox) {
+                            if (it) result.add(entryValue) else result.remove(entryValue)
                         }
                         .padding(horizontal = SettingsHorizontalPaddingItem.dp),
                 ) {
                     Checkbox(checked = entryValue in result, onCheckedChange = null)
-                    Spacer(modifier = Modifier.width(SettingsHorizontalPaddingItem.dp))
-                    Text(entry)
+                    Spacer(Modifier.width(SettingsHorizontalPaddingItem.dp))
+                    Text(
+                        entry,
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 9.sp,
+                            maxFontSize = LocalTextStyle.current.fontSize,
+                        ),
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-fun SettingsSwitchWithInnerState(
-    key: String,
-    defaultValue: Boolean,
-    title: String,
-    summary: String? = null,
-) {
-    val context = LocalContext.current
-    var currentValue by remember {
-        mutableStateOf(context.preferences.getBoolean(key, defaultValue))
-    }
-    val toggle = {
-        currentValue = !currentValue
-        context.preferences.edit { putBoolean(key, currentValue) }
-    }
-    SettingsSwitchLayout(toggle, title, summary, currentValue)
 }
 
 @Composable
@@ -293,25 +340,68 @@ fun SettingsSwitch(
     onBeforeToggle: (Boolean) -> Boolean = { it },
 ) {
     val context = LocalContext.current
-    val toggle = {
-        val newValue = onBeforeToggle(!value)
-        if (value != newValue) context.preferences.edit { putBoolean(key, newValue) }
+    val toggle = { newValue: Boolean ->
+        val finalValue = onBeforeToggle(newValue)
+        if (value != finalValue) context.preferences.edit { putBoolean(key, finalValue) }
     }
-    SettingsSwitchLayout(toggle, title, summary, value, extraWidget = extraWidget)
+    val hapticFeedback = LocalHapticFeedback.current
+    SettingsLayout(
+        title = title,
+        summary = summary,
+        extraWidget = extraWidget,
+        modifier = Modifier.toggleable(value, role = Role.Switch) {
+            hapticFeedback.performLongPress()
+            toggle(it)
+        },
+    ) {
+        Switch(checked = value, onCheckedChange = null, colors = appSwitchColors(), thumbContent = {
+            AnimatedVisibility(
+                visible = value,
+                enter = expandHorizontally(),
+                exit = shrinkHorizontally()
+            ) {
+                Icon(imageVector = Icons.Default.Check, contentDescription = null)
+            }
+            AnimatedVisibility(
+                visible = !value,
+                enter = expandHorizontally(),
+                exit = shrinkHorizontally()
+            ) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+            }
+        })
+    }
 }
 
 @Composable
-private fun SettingsLayout(
-    onClick: () -> Unit,
+fun SettingsHelp(title: String) {
+    SettingsLayout(
+        title = title,
+        summary = null,
+        modifier = Modifier,
+        widget = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.Help,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    )
+}
+
+@Composable
+fun SettingsLayout(
     title: String,
     summary: String?,
+    modifier: Modifier,
     extraWidget: (@Composable () -> Unit)? = null,
     widget: (@Composable () -> Unit)? = null,
 ) {
     Box(
         Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .then(modifier)
             .padding(horizontal = 8.dp),
     ) {
         val endPadding = 16 + (if (widget != null) widgetSize + 16f else 0f) +
@@ -335,7 +425,7 @@ private fun SettingsLayout(
                     Text(
                         state,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.alpha(AppBlendAlpha)
+                        modifier = Modifier.alpha(AppBlendAlpha),
                     )
                 }
             }
@@ -358,43 +448,12 @@ private fun SettingsLayout(
 }
 
 @Composable
-private fun SettingsSwitchLayout(
-    toggle: () -> Unit,
-    title: String,
-    summary: String?,
-    value: Boolean,
-    extraWidget: (@Composable () -> Unit)? = null,
-) {
-    val hapticFeedback = LocalHapticFeedback.current
-    SettingsLayout(
-        onClick = { hapticFeedback.performLongPress(); toggle() },
-        title = title,
-        summary = summary,
-        extraWidget = extraWidget,
-    ) {
-        Switch(checked = value, onCheckedChange = null, thumbContent = {
-            AnimatedVisibility(
-                visible = value,
-                enter = expandHorizontally(),
-                exit = shrinkHorizontally()
-            ) {
-                Icon(imageVector = Icons.Default.Check, contentDescription = null)
-            }
-            AnimatedVisibility(
-                visible = !value,
-                enter = expandHorizontally(),
-                exit = shrinkHorizontally()
-            ) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = null)
-            }
-        })
-    }
-}
-
-@Composable
 fun SettingsSlider(
     title: String,
     value: Float,
+    defaultValue: Float,
+    visibleScale: Float = 100f,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     onValueChange: (Float) -> Unit,
 ) {
     Column(Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp)) {
@@ -403,9 +462,32 @@ fun SettingsSlider(
             label = "title",
             transitionSpec = appCrossfadeSpec,
         ) { state -> Text(state, style = MaterialTheme.typography.bodyLarge) }
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Slider(
+                value = animateFloatAsState(value).value.coerceIn(valueRange),
+                valueRange = valueRange,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                colors = appSliderColor(),
+            )
+            Spacer(Modifier.width(16.dp))
+            val roundedValue = (value * visibleScale).roundToInt()
+            val numeral by numeral.collectAsState()
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    numeral.format(100),
+                    Modifier.semantics { this.hideFromAccessibility() },
+                    color = Color.Transparent,
+                )
+                Text(numeral.format(roundedValue))
+            }
+            val isDefault = roundedValue == (defaultValue * visibleScale).roundToInt()
+            AnimatedVisibility(visible = isDefault) { Spacer(Modifier.width(16.dp)) }
+            AnimatedVisibility(visible = !isDefault) {
+                IconButton(onClick = { onValueChange(defaultValue) }) {
+                    Icon(Icons.Default.SettingsBackupRestore, stringResource(R.string.cancel))
+                }
+            }
+        }
     }
 }

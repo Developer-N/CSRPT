@@ -9,9 +9,13 @@ import androidx.navigation.NavHostController
 import ir.namoo.quran.chapters.data.ChapterEntity
 import ir.namoo.quran.chapters.data.ChapterRepository
 import ir.namoo.quran.db.LastVisitedEntity
+import ir.namoo.quran.db.LastVisitedPageEntity
 import ir.namoo.quran.db.LastVisitedRepository
+import ir.namoo.quran.db.QCFChapters
 import ir.namoo.quran.sura.data.QuranEntity
+import ir.namoo.quran.utils.DEFAULT_PAGE_TYPE
 import ir.namoo.quran.utils.PREF_BOOKMARK_VERSE
+import ir.namoo.quran.utils.PREF_PAGE_TYPE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,8 +37,18 @@ class ChapterViewModel(
     private val _lastVisitedList = mutableStateListOf<LastVisitedEntity>()
     val lastVisitedList = _lastVisitedList
 
+    private val _lastVisitedPages = mutableStateListOf<LastVisitedPageEntity>()
+    val lastVisitedPages = _lastVisitedPages
+
+    private val _pageType = MutableStateFlow(DEFAULT_PAGE_TYPE)
+    val pageType = _pageType.asStateFlow()
+
     private val _chapterList = mutableStateListOf<ChapterEntity>()
     val chapterList = _chapterList
+
+    private val _qcfChapters = mutableStateListOf<QCFChapters>()
+    val qcfChapters = _qcfChapters
+
 
     private val _bookmarkedVerse = MutableStateFlow<QuranEntity?>(null)
     val bookmarkedVerse = _bookmarkedVerse.asStateFlow()
@@ -42,14 +56,19 @@ class ChapterViewModel(
     fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
+            _pageType.value = prefs.getInt(PREF_PAGE_TYPE, DEFAULT_PAGE_TYPE)
             prefs.getInt(PREF_BOOKMARK_VERSE, -1).let { id ->
                 if (id > 0)
                     _bookmarkedVerse.value = chapterRepository.getVerse(id)
             }
             _chapterList.clear()
             _chapterList.addAll(chapterRepository.getAllChapters())
+            _qcfChapters.clear()
+            _qcfChapters.addAll(chapterRepository.getQCFChapters())
             _lastVisitedList.clear()
             _lastVisitedList.addAll(lastVisitedRepository.getAllLastVisited().reversed())
+            _lastVisitedPages.clear()
+            _lastVisitedPages.addAll(lastVisitedRepository.getAllVisitedPages().reversed())
             _isLoading.value = false
         }
     }

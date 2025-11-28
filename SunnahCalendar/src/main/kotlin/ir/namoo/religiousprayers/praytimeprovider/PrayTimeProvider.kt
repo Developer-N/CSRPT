@@ -131,13 +131,17 @@ class PrayTimeProvider(
         fajr.set(prayTimes, exactTimes.toDouble(exactTimes.fajr))
         sunrise.set(prayTimes, exactTimes.toDouble(exactTimes.sunrise))
         dhuhr.set(prayTimes, exactTimes.toDouble(exactTimes.dhuhr))
-        if (asrMethod.value == AsrMethod.Standard && exactTimes.asr != "00:00:00") asr.set(
-            prayTimes, exactTimes.toDouble(exactTimes.asr)
-        )
-        else if (asrMethod.value == AsrMethod.Hanafi && exactTimes.asrHanafi != "00:00:00") asr.set(
-            prayTimes, exactTimes.toDouble(exactTimes.asrHanafi)
-        )
-        else prayTimesFrom_.value = 3
+        when (asrMethod.value) {
+            AsrMethod.Standard if exactTimes.asr != "00:00:00" -> asr.set(
+                prayTimes, exactTimes.toDouble(exactTimes.asr)
+            )
+
+            AsrMethod.Hanafi if exactTimes.asrHanafi != "00:00:00" -> asr.set(
+                prayTimes, exactTimes.toDouble(exactTimes.asrHanafi)
+            )
+
+            else -> prayTimesFrom_.value = 3
+        }
         sunset.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         maghrib.set(prayTimes, exactTimes.toDouble(exactTimes.maghrib))
         isha.set(prayTimes, exactTimes.toDouble(exactTimes.isha))

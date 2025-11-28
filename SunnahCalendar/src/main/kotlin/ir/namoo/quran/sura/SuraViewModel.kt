@@ -53,6 +53,7 @@ import ir.namoo.quran.utils.DEFAULT_SELECTED_QARI
 import ir.namoo.quran.utils.DEFAULT_TRANSLATE_TO_PLAY
 import ir.namoo.quran.utils.PREF_BOOKMARK_VERSE
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
+import ir.namoo.quran.utils.PREF_HIDE_TOOLBAR_ON_SCROLL
 import ir.namoo.quran.utils.PREF_IS_SURA_VIEW_IS_OPEN
 import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.PREF_SELECTED_QARI
@@ -88,6 +89,9 @@ class SuraViewModel(
     private val _isSearchBarOpen = MutableStateFlow(false)
     val isSearchBarOpen = _isSearchBarOpen.asStateFlow()
 
+    private val _hideToolbar = MutableStateFlow(false)
+    val hideToolbar = _hideToolbar.asStateFlow()
+
     private val _query = MutableStateFlow("")
     val query = _query.asStateFlow()
 
@@ -108,8 +112,7 @@ class SuraViewModel(
 
     private val _tafsirs = mutableStateListOf<TafsirEntity>()
 
-    private val _lastVisitedAya = MutableStateFlow(0)
-    private val lastVisitedAya = _lastVisitedAya.asStateFlow()
+    private var lastVisitedAya = 0
 
     private val _currentSura = MutableStateFlow(1)
     val currentSura = _currentSura.asStateFlow()
@@ -139,6 +142,7 @@ class SuraViewModel(
             _isLoading.value = true
             _currentSura.value = sura
             _autoScroll.value = prefs.getBoolean(PREF_AUTO_SCROLL, true)
+            _hideToolbar.value = prefs.getBoolean(PREF_HIDE_TOOLBAR_ON_SCROLL, false)
             quranSettingRepository.getTranslatesSettings().collectLatest { state ->
                 when (state) {
                     is DataState.Error -> {
@@ -232,7 +236,6 @@ class SuraViewModel(
     fun updateBookmarkVerse(verseID: Int) {
         prefs.edit { putInt(PREF_BOOKMARK_VERSE, verseID) }
         _bookmarkedVerse.value = verseID
-        Log.e("NAMOO", "updateBookmarkVerse: ====> id=$verseID ")
     }
 
     fun updateNote(quran: QuranEntity, newNote: String) {
@@ -576,20 +579,18 @@ class SuraViewModel(
     }
 
     fun updateLastVisited(aya: Int) {
-        viewModelScope.launch {
-            _lastVisitedAya.value = aya
-        }
+        lastVisitedAya = aya
     }
 
     fun saveLastVisited() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (lastVisitedAya.value > 0) {
+            if (lastVisitedAya > 0) {
                 val lastVisitedList = lastVisitedRepository.getAllLastVisited().sortedBy { it.id }
-                if (lastVisitedList.size >= 20) lastVisitedRepository.delete(lastVisitedList.first())
                 chapter.value?.let { chapter ->
-                    if (lastVisitedList.find { (it.suraID == chapter.sura && it.ayaID == lastVisitedAya.value) } == null) lastVisitedRepository.insert(
-                        lastVisitedAya.value, chapter.sura
-                    )
+                    if (lastVisitedList.find { (it.suraID == chapter.sura && it.ayaID == lastVisitedAya) } == null) {
+                        lastVisitedRepository.insert(lastVisitedAya, chapter.sura)
+                        if (lastVisitedList.size >= 20) lastVisitedRepository.delete(lastVisitedList.first())
+                    }
                 }
             }
         }
@@ -641,6 +642,7 @@ class SuraViewModel(
                         }
 
                         is DownloadResult.TotalSize -> {}
+                        is DownloadResult.DownloadedByte -> {}
                     }
                 }
             }.onFailure {}

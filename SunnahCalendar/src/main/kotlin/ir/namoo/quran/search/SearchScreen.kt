@@ -46,8 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.settings.MyBtnGroup
 import ir.namoo.quran.utils.quranFont
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
@@ -61,6 +61,7 @@ fun SearchScreen(
     viewModel: SearchViewModel = koinViewModel()
 ) {
     viewModel.loadData()
+    val numeral by numeral.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isInSearch by viewModel.isInSearch.collectAsState()
     val quranList = viewModel.quranList
@@ -152,7 +153,7 @@ fun SearchScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(4.dp), text = String.format(
-                            stringResource(id = R.string.result_found), formatNumber(quranList.size)
+                            stringResource(id = R.string.result_found), numeral.format(quranList.size)
                         ), textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -173,7 +174,7 @@ fun SearchScreen(
                             var title =
                                 chapters.find { it.sura == quran.surahID }?.nameArabic ?: " - "
                             title += " " + stringResource(id = R.string.aya) + " "
-                            title += formatNumber(quran.verseID)
+                            title += numeral.format(quran.verseID)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

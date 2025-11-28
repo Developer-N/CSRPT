@@ -1,10 +1,6 @@
 package com.byagowi.persiancalendar.entities
 
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
-import com.byagowi.persiancalendar.global.weekDays
-import com.byagowi.persiancalendar.global.weekDaysInitials
-import com.byagowi.persiancalendar.global.weekEnds
-import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
 import com.byagowi.persiancalendar.utils.toCivilDate
 import com.byagowi.persiancalendar.utils.toGregorianCalendar
 import io.github.cosinekitty.astronomy.Time
@@ -23,15 +19,14 @@ import kotlin.math.ceil
 @JvmInline
 value class Jdn(val value: Long) {
     constructor(value: AbstractDate) : this(value.toJdn())
-    constructor(calendar: Calendar, year: Int, month: Int, day: Int) :
-            this(calendar.createDate(year, month, day))
+    constructor(
+        calendar: Calendar,
+        year: Int,
+        month: Int,
+        day: Int,
+    ) : this(calendar.createDate(year, month, day))
 
-    // 0 means Saturday in it, see #`test day of week from jdn`() in the testsuite
-    val weekDay: Int get() = ((value + 2L) % 7L).toInt()
-    val weekDayName: String get() = weekDays[this.weekDay]
-    val weekDayNameInitials: String get() = weekDaysInitials[this.weekDay]
-
-    val isWeekEnd: Boolean get() = weekEnds[this.weekDay]
+    val weekDay: WeekDay get() = WeekDay.entries[((value + 2L) % 7L).toInt()]
 
     infix fun on(calendar: Calendar): AbstractDate = when (calendar) {
         Calendar.ISLAMIC -> toIslamicDate()
@@ -67,9 +62,9 @@ value class Jdn(val value: Long) {
         return Time.fromMillisecondsSince1970(date.timeInMillis)
     }
 
-    fun getWeekOfYear(startOfYear: Jdn): Int {
+    fun getWeekOfYear(startOfYear: Jdn, weekStart: WeekDay): Int {
         val dayOfYear = this - startOfYear
-        return ceil(1 + (dayOfYear - applyWeekStartOffsetToWeekDay(this.weekDay)) / 7.0).toInt()
+        return ceil(1 + (dayOfYear - (this.weekDay - weekStart)) / 7.0).toInt()
     }
 
     // Days passed in a season and total days available in the season

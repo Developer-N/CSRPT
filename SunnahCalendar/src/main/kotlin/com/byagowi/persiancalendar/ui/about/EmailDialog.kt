@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -18,8 +19,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDialog
-import com.byagowi.persiancalendar.utils.formatNumber
 
 @Composable
 fun EmailDialog(onDismissRequest: () -> Unit) {
@@ -46,8 +47,9 @@ fun EmailDialog(onDismissRequest: () -> Unit) {
                 .defaultMinSize(minHeight = 200.dp)
                 .fillMaxWidth(),
         )
+        val numeral by numeral.collectAsState()
         Text(
-            text = formatNumber(message.length),
+            text = numeral.format(message.length),
             modifier = Modifier
                 .align(Alignment.End)
                 .padding(end = 8.dp),

@@ -18,6 +18,7 @@ import ir.namoo.quran.utils.DEFAULT_FARSI_FONT
 import ir.namoo.quran.utils.DEFAULT_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT
 import ir.namoo.quran.utils.DEFAULT_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.DEFAULT_PAGE_TYPE
 import ir.namoo.quran.utils.DEFAULT_PLAYER_SPEED
 import ir.namoo.quran.utils.DEFAULT_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.DEFAULT_PLAY_TYPE
@@ -30,8 +31,10 @@ import ir.namoo.quran.utils.PREF_ENGLISH_FONT_SIZE
 import ir.namoo.quran.utils.PREF_FARSI_FONT
 import ir.namoo.quran.utils.PREF_FARSI_FONT_SIZE
 import ir.namoo.quran.utils.PREF_FARSI_FULL_TRANSLATE
+import ir.namoo.quran.utils.PREF_HIDE_TOOLBAR_ON_SCROLL
 import ir.namoo.quran.utils.PREF_KURDISH_FONT
 import ir.namoo.quran.utils.PREF_KURDISH_FONT_SIZE
+import ir.namoo.quran.utils.PREF_PAGE_TYPE
 import ir.namoo.quran.utils.PREF_PLAYER_SPEED
 import ir.namoo.quran.utils.PREF_PLAY_NEXT_SURA
 import ir.namoo.quran.utils.PREF_PLAY_TYPE
@@ -124,6 +127,14 @@ class SettingViewModel(
     private val _playerSpeed = MutableStateFlow(DEFAULT_PLAYER_SPEED)
     val playerSpeed = _playerSpeed.asStateFlow()
 
+    //----------------------------------------------------------------
+    private val _pageType = MutableStateFlow(DEFAULT_PAGE_TYPE)
+    val pageType = _pageType.asStateFlow()
+
+    private val _hideToolbarOnScroll = MutableStateFlow(false)
+    val hideToolbarOnScroll = _hideToolbarOnScroll.asStateFlow()
+
+
     // ---------------------------------------------------------------
     fun loadPaths(context: Context) {
         viewModelScope.launch {
@@ -142,6 +153,8 @@ class SettingViewModel(
             _playerSpeed.value = prefs.getFloat(PREF_PLAYER_SPEED, DEFAULT_PLAYER_SPEED)
             _playNextSura.value = prefs.getBoolean(PREF_PLAY_NEXT_SURA, DEFAULT_PLAY_NEXT_SURA)
             _isFullFarsiEnabled.value = prefs.getBoolean(PREF_FARSI_FULL_TRANSLATE, false)
+            _pageType.value = prefs.getInt(PREF_PAGE_TYPE, DEFAULT_PAGE_TYPE)
+            _hideToolbarOnScroll.value = prefs.getBoolean(PREF_HIDE_TOOLBAR_ON_SCROLL, false)
             quranSettingRepository.getTranslatesSettings().collectLatest { state ->
                 when (state) {
                     is DataState.Error -> {
@@ -353,6 +366,21 @@ class SettingViewModel(
             prefs.edit { putFloat(PREF_PLAYER_SPEED, speed) }
             _playerSpeed.value = speed
             updatePlayerSpeedGlobal(speed)
+        }
+    }
+
+    fun updatePageType(type: Int, reload: () -> Unit) {
+        viewModelScope.launch {
+            prefs.edit { putInt(PREF_PAGE_TYPE, type) }
+            _pageType.value = type
+            reload()
+        }
+    }
+
+    fun updateHideToolbarOnScroll(hide: Boolean) {
+        viewModelScope.launch {
+            prefs.edit { putBoolean(PREF_HIDE_TOOLBAR_ON_SCROLL, hide) }
+            _hideToolbarOnScroll.value = hide
         }
     }
 

@@ -22,10 +22,22 @@ import com.byagowi.persiancalendar.ui.theme.scrollShadowColor
 import kotlin.math.abs
 
 @Composable
-fun BoxScope.ScrollShadow(scrollState: ScrollState, top: Boolean) {
+fun BoxScope.ScrollShadow(scrollState: ScrollState, skipTop: Boolean = false) {
+    if (!skipTop) ScrollShadowImpl(scrollState, top = true)
+    ScrollShadowImpl(scrollState, top = false)
+}
+
+@Composable
+fun BoxScope.ScrollShadow(listState: LazyListState) {
+    ScrollShadowImpl(listState, top = true)
+    ScrollShadowImpl(listState, top = false)
+}
+
+@Composable
+private fun BoxScope.ScrollShadowImpl(scrollState: ScrollState, top: Boolean) {
     // If max value is infinity the page isn't even initialized
     val height = if (scrollState.maxValue == Int.MAX_VALUE) 0.dp else animateDpAsState(
-        with(LocalDensity.current) {
+        targetValue = with(LocalDensity.current) {
             (abs((scrollState.value - (if (top) 0 else scrollState.maxValue))) / 8).toDp()
         }.coerceAtMost(8.dp),
         label = "scroll shadow height",
@@ -36,10 +48,10 @@ fun BoxScope.ScrollShadow(scrollState: ScrollState, top: Boolean) {
 
 // It doesn't consider the amount unlike the non lazy one
 @Composable
-fun BoxScope.ScrollShadow(listState: LazyListState, top: Boolean) {
+private fun BoxScope.ScrollShadowImpl(listState: LazyListState, top: Boolean) {
     val needsShadow = if (top) listState.canScrollBackward else listState.canScrollForward
     val height = if (listState.canScrollBackward || listState.canScrollForward) animateDpAsState(
-        if (needsShadow) 8.dp else 0.dp,
+        targetValue = if (needsShadow) 8.dp else 0.dp,
         label = "height",
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
     ).value else 0.dp

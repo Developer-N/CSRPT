@@ -35,6 +35,7 @@ import com.byagowi.persiancalendar.PREF_LONGITUDE
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDialog
 import com.byagowi.persiancalendar.ui.common.SwitchWithLabel
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
@@ -54,7 +55,8 @@ fun CoordinatesDialog(
     inputCoordinates: Coordinates? = null,
     notifyChange: (Coordinates) -> Unit = {},
     saveCoordinates: Boolean = true,
-    toggleSaveCoordinates: () -> Unit = {},
+    isFromMap: Boolean = false,
+    toggleSaveCoordinates: (Boolean) -> Unit = {},
     onDismissRequest: () -> Unit,
 ) {
     val coordinates = inputCoordinates ?: coordinates.collectAsState().value
@@ -70,17 +72,22 @@ fun CoordinatesDialog(
     // Whenever text field change this signals geocoder rerun
     // and no need to save as below remember also isn't saved
     var changeCounter by remember { mutableIntStateOf(0) }
+    val numeral by numeral.collectAsState()
+    fun parseDouble(value: String): Double? =
+        numeral.parseDouble(value.replace("°", ""))
     AppDialog(
-        title = { Text(stringResource(R.string.coordination)) },
+        title = { Text(stringResource(R.string.coordinates)) },
         neutralButton = {
             navigateToMap?.also {
                 TextButton(onClick = {
                     onDismissRequest()
                     navigateToMap()
                 }) { Text(stringResource(R.string.map)) }
-            } ?: SwitchWithLabel(stringResource(R.string.save), checked = saveCoordinates) {
-                toggleSaveCoordinates()
             }
+            if (isFromMap) SwitchWithLabel(
+                stringResource(R.string.save),
+                checked = saveCoordinates,
+            ) { toggleSaveCoordinates(it) }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) { Text(stringResource(R.string.cancel)) }
@@ -94,11 +101,11 @@ fun CoordinatesDialog(
                     if (i == 2 && x.value.isEmpty()) "0" else x.value
                 }.mapIndexedNotNull { i, coordinate ->
                     // Make sure coordinates array has both parsable and in range numbers
-                    coordinate.toDoubleOrNull()?.takeIf {
+                    parseDouble(coordinate)?.takeIf {
                         when (i) {
                             0 -> abs(it) <= 90 // Valid latitudes
                             1 -> abs(it) <= 180 // Valid longitudes
-                            else -> it in -418.0..848.0 // Altitude, from Dead Sea to Mount Everest
+                            else -> it in -418.0..8_849.0 // Altitude, from Dead Sea to Mount Everest
                         }
                     }
                 }
@@ -130,7 +137,10 @@ fun CoordinatesDialog(
                             )
                         }
                     },
-                    value = fieldState.value,
+                    isError = parseDouble(fieldState.value) == null,
+                    value = numeral.format(fieldState.value, isInEdit = true).let {
+                        if (stringId == R.string.altitude) it else it.replace("°", "") + "°"
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     onValueChange = {
                         fieldState.value = it
@@ -162,8 +172,8 @@ fun CoordinatesDialog(
         LaunchedEffect(changeCounter) {
             launch(Dispatchers.IO) {
                 runCatching {
-                    val latitude = state[0].value.toDoubleOrNull() ?: 0.0
-                    val longitude = state[1].value.toDoubleOrNull() ?: 0.0
+                    val latitude = parseDouble(state[0].value) ?: 0.0
+                    val longitude = parseDouble(state[1].value) ?: 0.0
                     val geocoder =
                         Geocoder(context, language.value.asSystemLocale()).getFromLocation(
                             latitude, longitude, 20

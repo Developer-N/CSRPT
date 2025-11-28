@@ -1,11 +1,13 @@
 package ir.namoo.religiousprayers.ui.intro
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -23,47 +25,50 @@ import com.byagowi.persiancalendar.R
 
 @Composable
 fun IntroWelcomeScreen(goToDownloadLocation: () -> Unit) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(8.dp)
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(8.dp),
-                text = stringResource(id = R.string.app_name),
-                textAlign = TextAlign.Center,
-                fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                text = stringResource(id = R.string.str_welcome),
-                fontSize = MaterialTheme.typography.bodyMedium.fontSize
-            )
-            Button(modifier = Modifier.padding(8.dp), onClick = { goToDownloadLocation() }) {
                 Text(
-                    text = stringResource(id = R.string.select_city),
-                    fontSize = MaterialTheme.typography.headlineSmall.fontSize
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(8.dp),
+                    text = stringResource(id = R.string.app_name),
+                    textAlign = TextAlign.Center,
+                    fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                    color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold
                 )
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    text = stringResource(id = R.string.str_welcome),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Justify
+                )
+                Button(modifier = Modifier.padding(8.dp), onClick = { goToDownloadLocation() }) {
+                    Text(
+                        text = stringResource(id = R.string.select_city),
+                        fontSize = MaterialTheme.typography.headlineSmall.fontSize
+                    )
 
-                Icon(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    imageVector = Icons.Filled.LocationCity,
-                    contentDescription = stringResource(id = R.string.city)
-                )
+                    Icon(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = stringResource(id = R.string.city)
+                    )
+                }
             }
         }
     }

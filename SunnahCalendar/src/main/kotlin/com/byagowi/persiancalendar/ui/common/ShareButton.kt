@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_SHARE_BUTTON
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -20,10 +21,10 @@ fun SharedTransitionScope.ShareActionButton(
     AppIconButton(
         icon = Icons.Default.Share,
         title = stringResource(R.string.share),
-        // Workaround CI not liking shared elements
-        iconModifier = Modifier.sharedElement(
+        modifier = Modifier.sharedElement(
             rememberSharedContentState(SHARED_CONTENT_KEY_SHARE_BUTTON),
             animatedVisibilityScope = animatedContentScope,
+            boundsTransform = appBoundsTransform,
         ),
         onClick = action,
     )

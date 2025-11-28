@@ -1,6 +1,11 @@
 package ir.namoo.religiousprayers.ui.azkar
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -16,6 +21,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,7 +33,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Language
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import ir.namoo.religiousprayers.ui.azkar.data.AzkarChapter
 
 @Composable
@@ -37,6 +44,7 @@ fun AzkarChapterUI(
     onFavClick: (zkr: AzkarChapter) -> Unit,
     onCardClick: (id: Int) -> Unit
 ) {
+    val numeral by numeral.collectAsState()
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -55,7 +63,7 @@ fun AzkarChapterUI(
             }
             val txt = buildAnnotatedString {
                 withStyle(style = SpanStyle(fontSize = MaterialTheme.typography.titleLarge.fontSize)) {
-                    append(formatNumber(azkar.id))
+                    append(numeral.format(azkar.id))
                 }
                 append(" : ")
                 if (searchText.isNotEmpty() && chapterText?.contains(searchText) == true) {
@@ -93,7 +101,22 @@ fun AzkarChapterUI(
                     text = txt,
                     fontWeight = FontWeight.SemiBold
                 )
-            AnimatedContent(targetState = azkar.fav, label = "fav") {
+            AnimatedContent(targetState = azkar.fav, label = "fav", transitionSpec = {
+                if (azkar.fav == 1)
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) { -it } togetherWith slideOutHorizontally { it }
+                else
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) { it } togetherWith slideOutHorizontally { -it }
+            }) {
                 IconButton(onClick = {
                     onFavClick(azkar)
                 }) {

@@ -11,6 +11,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,14 +77,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavHostController
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.AppIconButton
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.quran.utils.chapterException
 import ir.namoo.quran.utils.getWordsForSearch
 import ir.namoo.religiousprayers.ui.shared.NothingFoundUIElement
@@ -103,14 +106,17 @@ fun SharedTransitionScope.ChaptersScreen(
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
-
+    val numeral by numeral.collectAsState()
     LaunchedEffect(key1 = Unit) {
         viewModel.loadData()
     }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val chapters = viewModel.chapterList
+    val qcfChapters = viewModel.qcfChapters
     val lastVisitedList = viewModel.lastVisitedList
+    val lastVisitedPages = viewModel.lastVisitedPages
+    val pageType by viewModel.pageType.collectAsState()
     val isFavShowing by viewModel.isFavShowing.collectAsState()
     val bookmarkedVerse by viewModel.bookmarkedVerse.collectAsState()
 
@@ -206,10 +212,9 @@ fun SharedTransitionScope.ChaptersScreen(
                         strokeCap = StrokeCap.Round
                     )
                 }
-                AnimatedVisibility(visible = lastVisitedList.isNotEmpty() && chapters.isNotEmpty() && !isFavShowing && !isSearchBarOpen) {
+                AnimatedVisibility(visible = chapters.isNotEmpty() && !isFavShowing && !isSearchBarOpen) {
                     LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        state = rememberLazyListState().apply {
+                        modifier = Modifier.fillMaxWidth(), state = rememberLazyListState().apply {
                             scope.launch {
                                 animateScrollToItem(0)
                             }
@@ -218,18 +223,15 @@ fun SharedTransitionScope.ChaptersScreen(
                             item {
                                 ElevatedButton(
                                     modifier = Modifier.padding(horizontal = 2.dp),
-                                    onClick = { navController.navigate("sura/${verse.surahID}/${verse.verseID}") })
-                                {
+                                    onClick = { navController.navigate("sura/${verse.surahID}/${verse.verseID}") }) {
                                     Icon(
-                                        imageVector = Icons.Default.Book,
-                                        contentDescription = ""
+                                        imageVector = Icons.Default.Book, contentDescription = ""
                                     )
                                     AnimatedContent(targetState = verse) { v ->
                                         Text(
-                                            text =
-                                                chapters.find { it.sura == v.surahID }?.nameArabic + (" " + stringResource(
-                                                    id = R.string.aya
-                                                ) + " " + formatNumber(v.verseID)),
+                                            text = chapters.find { it.sura == v.surahID }?.nameArabic + (" " + stringResource(
+                                                id = R.string.aya
+                                            ) + " " + numeral.format(v.verseID)),
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                         )
@@ -237,7 +239,9 @@ fun SharedTransitionScope.ChaptersScreen(
                                 }
                             }
                         }
-                        items(items = lastVisitedList, key = { it.id }) { last ->
+                        if (pageType == 0 && lastVisitedList.isNotEmpty()) items(
+                            items = lastVisitedList,
+                            key = { it.id }) { last ->
                             ElevatedButton(
                                 modifier = Modifier
                                     .padding(horizontal = 2.dp)
@@ -253,9 +257,32 @@ fun SharedTransitionScope.ChaptersScreen(
                                 Text(
                                     text = chapters.find { it.sura == last.suraID }?.nameArabic + (" " + stringResource(
                                         id = R.string.aya
-                                    ) + " " + formatNumber(
+                                    ) + " " + numeral.format(
                                         last.ayaID
                                     )),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                            }
+                        }
+                        else if (pageType == 1 && lastVisitedPages.isNotEmpty()) items(
+                            items = lastVisitedPages,
+                            key = { it.id }) { page ->
+                            ElevatedButton(
+                                modifier = Modifier
+                                    .padding(horizontal = 2.dp)
+                                    .animateItem(
+                                        fadeInSpec = null,
+                                        fadeOutSpec = null,
+                                        placementSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ), onClick = {
+                                    viewModel.navigateToPage(page.page, navController)
+                                }) {
+                                Text(
+                                    text = numeral.format(stringResource(R.string.page) + " ${page.page}"),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = MaterialTheme.typography.bodyMedium.fontSize
                                 )
@@ -304,9 +331,8 @@ fun SharedTransitionScope.ChaptersScreen(
                     }
                 }
                 LazyColumn(state = listState) {
-                    if (filteredChapters.isNotEmpty()) itemsIndexed(
-                        filteredChapters,
-                        key = { _, chapter -> chapter.sura }) { index, chapter ->
+                    if (filteredChapters.isNotEmpty() && qcfChapters.isNotEmpty()) itemsIndexed(
+                        filteredChapters, key = { _, chapter -> chapter.sura }) { index, chapter ->
                         QuranChapterItem(
                             modifier = Modifier.animateItem(
                                 fadeInSpec = null, fadeOutSpec = null, placementSpec = spring(
@@ -317,6 +343,8 @@ fun SharedTransitionScope.ChaptersScreen(
                             chapter = chapter,
                             rowID = index + 1,
                             query = searchQuery,
+                            isInSearch = isSearchBarOpen,
+                            qcfText = qcfChapters[chapter.sura - 1].text,
                             onFavClick = {
                                 viewModel.updateFav(chapter)
                             },
@@ -357,17 +385,34 @@ fun SharedTransitionScope.DefaultAppBar(
     var showGoToPageDialog by remember { mutableStateOf(false) }
     var showGoToJuzDialog by remember { mutableStateOf(false) }
     var showGoToHizbDialog by remember { mutableStateOf(false) }
+    val numeral by numeral.collectAsState()
     TopAppBar(title = {
         Text(text = stringResource(id = R.string.chapter))
     }, navigationIcon = {
-        NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+        NavigationOpenNavigationRailIcon(animatedContentScope, openDrawer)
     }, colors = appTopAppBarColors(), actions = {
         // Favorite
-        AppIconButton(
-            icon = if (isFavShowing) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-            title = stringResource(id = R.string.favorite)
-        ) {
-            onShowBookmarkClick(!isFavShowing)
+        AnimatedContent(
+            targetState = isFavShowing, transitionSpec = {
+                if (isFavShowing) slideInHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) { -it } togetherWith slideOutHorizontally { it }
+                else slideInHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) { it } togetherWith slideOutHorizontally { -it }
+            }) {
+            AppIconButton(
+                icon = if (it) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                title = stringResource(id = R.string.favorite)
+            ) {
+                onShowBookmarkClick(!isFavShowing)
+            }
         }
         //Search
         AppIconButton(
@@ -547,7 +592,7 @@ fun SharedTransitionScope.DefaultAppBar(
                 isError = !isCorrectPage,
                 supportingText = {
                     AnimatedVisibility(visible = !isCorrectPage) {
-                        Text(text = formatNumber(stringResource(id = R.string.page_out_of_bounds)))
+                        Text(text = numeral.format(stringResource(id = R.string.page_out_of_bounds)))
                     }
                 },
                 shape = MaterialTheme.shapes.extraLarge,
@@ -567,7 +612,7 @@ fun SharedTransitionScope.DefaultAppBar(
     //GoToJuz Dialog
     if (showGoToJuzDialog) {
         val juz = mutableListOf<String>()
-        for (i in 1..30) juz.add(formatNumber(i))
+        for (i in 1..30) juz.add(numeral.format(i))
         AlertDialog(onDismissRequest = { showGoToJuzDialog = false }, confirmButton = {
             TextButton(onClick = { showGoToJuzDialog = false }) {
                 Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
@@ -585,8 +630,7 @@ fun SharedTransitionScope.DefaultAppBar(
                         })
                     }
                 }
-                ScrollShadow(listState = state, top = true)
-                ScrollShadow(listState = state, top = false)
+                ScrollShadow(listState = state)
             }
         }, title = { Text(text = stringResource(id = R.string.select_juz)) }, icon = {
             Icon(imageVector = Icons.AutoMirrored.Default.Shortcut, contentDescription = "")
@@ -596,7 +640,7 @@ fun SharedTransitionScope.DefaultAppBar(
     //GoToHizb Dialog
     if (showGoToHizbDialog) {
         val hizb = mutableListOf<String>()
-        for (i in 1..120) hizb.add(formatNumber(i))
+        for (i in 1..120) hizb.add(numeral.format(i))
         AlertDialog(onDismissRequest = { showGoToHizbDialog = false }, confirmButton = {
             TextButton(onClick = { showGoToHizbDialog = false }) {
                 Text(text = stringResource(R.string.cancel), fontWeight = FontWeight.SemiBold)
@@ -614,8 +658,7 @@ fun SharedTransitionScope.DefaultAppBar(
                         })
                     }
                 }
-                ScrollShadow(listState = state, top = true)
-                ScrollShadow(listState = state, top = false)
+                ScrollShadow(listState = state)
             }
         }, title = { Text(text = stringResource(id = R.string.select_hizb)) }, icon = {
             Icon(imageVector = Icons.AutoMirrored.Default.Shortcut, contentDescription = "")

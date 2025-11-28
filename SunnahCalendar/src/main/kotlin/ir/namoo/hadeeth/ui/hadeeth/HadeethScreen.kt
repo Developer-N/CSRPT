@@ -50,12 +50,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenu
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
 import ir.namoo.hadeeth.repository.LanguageEntity
 import ir.namoo.religiousprayers.ui.shared.LoadingUIElement
 import org.koin.androidx.compose.koinViewModel
@@ -65,7 +65,7 @@ import org.koin.androidx.compose.koinViewModel
 fun SharedTransitionScope.HadeethScreen(
     hadeethID: String,
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     viewModel: HadeethViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
@@ -76,6 +76,7 @@ fun SharedTransitionScope.HadeethScreen(
     val content by viewModel.content.collectAsState()
     val languages = viewModel.languages
     val showRetry by viewModel.showRetry.collectAsState()
+    val numeral by numeral.collectAsState()
 
 
     Scaffold(topBar = {
@@ -85,9 +86,8 @@ fun SharedTransitionScope.HadeethScreen(
             languages = languages,
             selectedLanguage = selectedLanguage,
             content = content,
-            openDrawer = openDrawer,
-            onLanguageSelected = { viewModel.onLanguageSelected(context, it, hadeethID) }
-        )
+            openNavigationRail = openNavigationRail,
+            onLanguageSelected = { viewModel.onLanguageSelected(context, it, hadeethID) })
     }) { paddingValues ->
         Surface(
             shape = materialCornerExtraLargeTop(),
@@ -144,14 +144,14 @@ fun SharedTransitionScope.HadeethScreen(
                     ) {
 
                         Text(
-                            text = formatNumber(hadeeth.title),
+                            text = numeral.format(hadeeth.title),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                         Text(
-                            text = formatNumber(hadeeth.hadeeth),
+                            text = numeral.format(hadeeth.hadeeth),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 18.sp,
                             textAlign = TextAlign.Justify
@@ -203,7 +203,7 @@ fun SharedTransitionScope.HadeethScreen(
                                 shape = MaterialTheme.shapes.medium
                             )
                             .padding(vertical = 2.dp, horizontal = 4.dp),
-                        text = formatNumber(hadeeth.explanation),
+                        text = numeral.format(hadeeth.explanation),
                         textAlign = TextAlign.Justify,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -242,10 +242,10 @@ fun SharedTransitionScope.HadeethScreen(
                                         .padding(vertical = 4.dp),
                                 ) {
                                     Text(
-                                        text = formatNumber("${index + 1}. "), fontSize = 20.sp
+                                        text = numeral.format("${index + 1}. "), fontSize = 20.sp
                                     )
                                     Text(
-                                        text = formatNumber(text),
+                                        text = numeral.format(text),
                                         textAlign = TextAlign.Justify,
                                         fontSize = 16.sp,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -315,7 +315,7 @@ fun SharedTransitionScope.HadeethScreen(
                                     shape = MaterialTheme.shapes.medium
                                 )
                                 .padding(vertical = 2.dp, horizontal = 4.dp),
-                            text = formatNumber(reference),
+                            text = numeral.format(reference),
                             textAlign = TextAlign.Justify,
                             fontSize = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -335,68 +335,69 @@ private fun SharedTransitionScope.HadeethTopBar(
     languages: List<LanguageEntity>,
     selectedLanguage: String,
     content: String,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     onLanguageSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
     var showLanguages by remember { mutableStateOf(false) }
-    TopAppBar(
-        title = {
-            Text(
-                text = formatNumber(
-                    stringResource(
-                        R.string.hadeeth_number, hadeethID
-                    )
+    val numeral by numeral.collectAsState()
+    TopAppBar(title = {
+        Text(
+            text = numeral.format(
+                stringResource(
+                    R.string.hadeeth_number, hadeethID
                 )
             )
-        },
-        navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
-        colors = appTopAppBarColors(),
-        actions = {
-            IconButton(
-                modifier = Modifier.sharedElement(
-                    rememberSharedContentState(key = "key_language"),
-                    animatedVisibilityScope = animatedContentScope
-                ), onClick = { showLanguages = true }) {
-                Icon(
-                    imageVector = Icons.Default.Language,
-                    contentDescription = stringResource(R.string.language)
+        )
+    }, navigationIcon = {
+        NavigationOpenNavigationRailIcon(
+            animatedContentScope, openNavigationRail
+        )
+    }, colors = appTopAppBarColors(), actions = {
+        IconButton(
+            modifier = Modifier.sharedElement(
+                rememberSharedContentState(key = "key_language"),
+                animatedVisibilityScope = animatedContentScope
+            ), onClick = { showLanguages = true }) {
+            Icon(
+                imageVector = Icons.Default.Language,
+                contentDescription = stringResource(R.string.language)
+            )
+            AppDropdownMenu(
+                expanded = showLanguages,
+                onDismissRequest = { showLanguages = false },
+                content = {
+                    languages.forEach { language ->
+                        AppDropdownMenuItem(text = {
+                            Text(
+                                text = language.native,
+                                fontWeight = if (language.code == selectedLanguage) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }, onClick = {
+                            onLanguageSelected(language.code)
+                            showLanguages = false
+                        }, trailingIcon = {
+                            if (language.code == selectedLanguage) Icon(
+                                imageVector = Icons.Default.Check, contentDescription = null
+                            )
+                        })
+                    }
+                })
+        }
+        IconButton(onClick = {
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.type = "text/plain"
+            intent.putExtra(Intent.EXTRA_TEXT, content)
+            context.startActivity(
+                Intent.createChooser(
+                    intent, context.getString(R.string.share)
                 )
-                AppDropdownMenu(
-                    expanded = showLanguages,
-                    onDismissRequest = { showLanguages = false },
-                    content = {
-                        languages.forEach { language ->
-                            AppDropdownMenuItem(text = {
-                                Text(
-                                    text = language.native,
-                                    fontWeight = if (language.code == selectedLanguage) FontWeight.SemiBold else FontWeight.Normal
-                                )
-                            }, onClick = {
-                                onLanguageSelected(language.code)
-                                showLanguages = false
-                            }, trailingIcon = {
-                                if (language.code == selectedLanguage) Icon(
-                                    imageVector = Icons.Default.Check, contentDescription = null
-                                )
-                            })
-                        }
-                    })
-            }
-            IconButton(onClick = {
-                val intent = Intent(Intent.ACTION_SEND)
-                intent.type = "text/plain"
-                intent.putExtra(Intent.EXTRA_TEXT, content)
-                context.startActivity(
-                    Intent.createChooser(
-                        intent, context.getString(R.string.share)
-                    )
-                )
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = stringResource(R.string.sharh)
-                )
-            }
-        })
+            )
+        }) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = stringResource(R.string.sharh)
+            )
+        }
+    })
 }

@@ -6,7 +6,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.quran.chapters.data.ChapterEntity
 import ir.namoo.quran.qari.QariEntity
@@ -34,6 +34,7 @@ fun getPlayList(
     chapter: ChapterEntity?
 ): List<MediaItem> {
     val result = mutableListOf<MediaItem>()
+    val numeral = numeral.value
     val playType = context.appPrefsLite.getInt(PREF_PLAY_TYPE, DEFAULT_PLAY_TYPE)
     val q = qariList.find { folderName.contains(it.folderName) }
     val t = qariList.find { translateFolderName.contains(it.folderName) }
@@ -44,9 +45,9 @@ fun getPlayList(
         result.add(
             MediaItem.Builder().setMediaMetadata(
                 MediaMetadata.Builder().setTitle(
-                    " 📖 " + context.getString(R.string.str_bismillah) + " 📖 " + formatNumber(
+                    " 📖 " + context.getString(R.string.str_bismillah) + " 📖 " + numeral.format(
                         sura
-                    ) + "|" + formatNumber(1)
+                    ) + "|" + numeral.format(1)
                 ).setArtist(q?.name)
                     .setArtworkUri(context.getQariLocalPhotoFile(q?.photoLink?.trim())?.toUri())
                     .build()
@@ -75,9 +76,10 @@ fun getPlayList(
     }
 
     for (i in aya..(chapter?.ayaCount ?: aya)) {
-        val title = " 📖 " + chapter?.nameArabic + " 📖 " + formatNumber(sura) + " | " + formatNumber(
-            i
-        )
+        val title =
+            " 📖 " + chapter?.nameArabic + " 📖 " + numeral.format(sura) + " | " + numeral.format(
+                i
+            )
         when (playType) {
             1 -> {
                 result.add(

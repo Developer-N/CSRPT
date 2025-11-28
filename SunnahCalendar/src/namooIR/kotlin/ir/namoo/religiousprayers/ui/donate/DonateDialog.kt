@@ -3,15 +3,10 @@ package ir.namoo.religiousprayers.ui.donate
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,7 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -35,25 +34,29 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.utils.formatNumber
+import ir.namoo.commons.PREF_LAST_SHOW_DONATE_DIALOG
+import ir.namoo.commons.utils.appPrefsLite
 import ir.namoo.commons.utils.isPackageInstalled
-import kotlinx.coroutines.delay
+import ir.namoo.commons.utils.toastMessage
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 @Composable
-fun DonateDialog(onDismiss: () -> Unit) {
+fun DonateDialog(onDismiss: () -> Unit, copyCardNumber: () -> Unit) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    var cardCopied by remember { mutableStateOf(false) }
+//    val numeral by numeral.collectAsState()
 
-    LaunchedEffect(key1 = "Scroll") {
-        delay(1000)
-        scrollState.animateScrollTo(1000)
-        delay(1000)
-        scrollState.animateScrollTo(0)
+    LaunchedEffect(key1 = Unit) {
+        context.appPrefsLite.edit {
+            putInt(PREF_LAST_SHOW_DONATE_DIALOG, Calendar.getInstance()[Calendar.DAY_OF_YEAR])
+        }
     }
 
     AlertDialog(
@@ -68,49 +71,57 @@ fun DonateDialog(onDismiss: () -> Unit) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResource(id = R.string.donate),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold
             )
         },
         text = {
-            Column(modifier = Modifier.verticalScroll(scrollState)) {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = formatNumber(stringResource(id = R.string.donate_msg)),
+                    text = stringResource(id = R.string.donate_msg),
                     textAlign = TextAlign.Justify
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    ElevatedButton(onClick = {
-                        scope.launch {
-                            clipboardManager.setClipEntry(
-                                ClipEntry(
-                                    ClipData.newPlainText(
-                                        "CardNumber", "5859831016333741"
-                                    )
+                ElevatedButton(onClick = {
+                    scope.launch {
+                        clipboardManager.setClipEntry(
+                            ClipEntry(
+                                ClipData.newPlainText(
+                                    "CardNumber", "5859831016333741"
                                 )
                             )
+                        )
+                        if (!cardCopied) {
+                            copyCardNumber()
+                            cardCopied = true
                         }
-                        Toast.makeText(
-                            context, "شماره کارت کپی شد! 😃", Toast.LENGTH_SHORT
-                        ).show()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.CardGiftcard,
-                            contentDescription = stringResource(id = R.string.copy)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "5859-8310-1633-3741")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Filled.ContentCopy,
-                            contentDescription = stringResource(id = R.string.copy)
-                        )
                     }
+                    context.toastMessage(context.getString(R.string.card_copied))
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.CardGiftcard,
+                        contentDescription = stringResource(id = R.string.copy)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "5859-8310-1633-3741")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = stringResource(id = R.string.copy)
+                    )
                 }
+
+                TextButton(onClick = {
+                    openDonateUrl("https://namoodev.ir/donate", context)
+                }) {
+                    Text(
+                        text = stringResource(R.string.donate_page_in_site),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                /*
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
@@ -132,7 +143,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                         ElevatedButton(
                             onClick = { openDonateUrl(pair.first, context) }) {
                             Text(
-                                text = formatNumber(pair.second),
+                                text = numeral.format(pair.second),
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -162,7 +173,7 @@ fun DonateDialog(onDismiss: () -> Unit) {
                             contentDescription = stringResource(id = R.string.custom_donate)
                         )
                     }
-                }
+                }*/
             }
         })
 }

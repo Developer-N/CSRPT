@@ -12,12 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.global.numeral
 import ir.namoo.hadeeth.repository.CategoryEntity
 
 @Composable
@@ -27,6 +28,7 @@ fun HadeethCategoryItem(
     modifier: Modifier = Modifier
 ) {
     val hadeethsCount by animateFloatAsState(targetValue = category.hadeethsCount.toFloat())
+    val numeral by numeral.collectAsState()
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -54,7 +56,7 @@ fun HadeethCategoryItem(
             }
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = formatNumber(hadeethsCount.toInt()),
+                text = numeral.format(hadeethsCount.toInt()),
                 fontWeight = FontWeight.SemiBold
             )
         }

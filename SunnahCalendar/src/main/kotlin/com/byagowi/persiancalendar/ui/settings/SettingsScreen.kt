@@ -24,17 +24,23 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Palette
@@ -46,14 +52,17 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,101 +70,182 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.BuildConfig
+import com.byagowi.persiancalendar.DEFAULT_THEME_CYBERPUNK
 import com.byagowi.persiancalendar.LOG_TAG
+import com.byagowi.persiancalendar.PREF_DYNAMIC_ICON_ENABLED
+import com.byagowi.persiancalendar.PREF_THEME_CYBERPUNK
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.customImageName
+import com.byagowi.persiancalendar.global.isCyberpunk
+import com.byagowi.persiancalendar.global.isDynamicIconEnabled
+import com.byagowi.persiancalendar.global.isTalkBackEnabled
+import com.byagowi.persiancalendar.global.language
+import com.byagowi.persiancalendar.global.mainCalendar
 import com.byagowi.persiancalendar.service.PersianCalendarTileService
 import com.byagowi.persiancalendar.ui.about.ColorSchemeDemoDialog
+import com.byagowi.persiancalendar.ui.about.ConverterDialog
 import com.byagowi.persiancalendar.ui.about.DynamicColorsDialog
+import com.byagowi.persiancalendar.ui.about.FontWeightsDialog
 import com.byagowi.persiancalendar.ui.about.IconsDemoDialog
 import com.byagowi.persiancalendar.ui.about.ScheduleAlarm
 import com.byagowi.persiancalendar.ui.about.ShapesDemoDialog
 import com.byagowi.persiancalendar.ui.about.TypographyDemoDialog
+import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
-import com.byagowi.persiancalendar.ui.settings.interfacecalendar.InterfaceCalendarSettings
+import com.byagowi.persiancalendar.ui.settings.interfacecalendar.CalendarSettings
+import com.byagowi.persiancalendar.ui.settings.interfacecalendar.InterfaceSettings
 import com.byagowi.persiancalendar.ui.settings.widgetnotification.AddWidgetDialog
-import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetNotificationSettings
+import com.byagowi.persiancalendar.ui.settings.widgetnotification.NotificationSettings
+import com.byagowi.persiancalendar.ui.settings.widgetnotification.WidgetSettings
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.shareTextFile
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.preferences
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
-import com.byagowi.persiancalendar.variants.debugLog
-import ir.namoo.religiousprayers.ui.settings.NSettingsScreen
+import com.byagowi.persiancalendar.utils.supportsDynamicIcon
+import ir.namoo.religiousprayers.ui.settings.NAthanSettings
+import ir.namoo.religiousprayers.ui.settings.NLocationSetting
 import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 fun SharedTransitionScope.SettingsScreen(
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     navigateToMap: () -> Unit,
     navigateToAthanSettings: (Int) -> Unit,
     initialPage: Int,
-    destination: String,
+    destination: String?,
+    destinationItem: String?,
 ) {
+//    var isAtTop by remember { mutableStateOf(true) }
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = {
-                    AnimatedContent(
-                        targetState = stringResource(R.string.settings),
-                        label = "title",
-                        transitionSpec = appCrossfadeSpec,
-                    ) { state -> Text(state) }
-                },
-                colors = appTopAppBarColors(),
-                navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
-                actions = {
-                    var showAddWidgetDialog by rememberSaveable { mutableStateOf(false) }
-                    ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
-                        MenuItems(
-                            openAddWidgetDialog = { closeMenu(); showAddWidgetDialog = true },
-                            closeMenu = closeMenu,
-                        )
-                    }
-                    if (showAddWidgetDialog) AddWidgetDialog { showAddWidgetDialog = false }
-                },
-            )
+            Column(Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets)) {
+//                AnimatedVisibility(isAtTop) {
+                TopAppBar(
+                    windowInsets = WindowInsets(),
+                    title = {
+                        AnimatedContent(
+                            targetState = stringResource(R.string.settings),
+                            label = "title",
+                            transitionSpec = appCrossfadeSpec,
+                        ) { state -> Text(state) }
+                    },
+                    colors = appTopAppBarColors(),
+                    navigationIcon = {
+                        NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
+                    },
+                    actions = {
+                        var showAddWidgetDialog by rememberSaveable { mutableStateOf(false) }
+                        Box(
+                            Modifier
+                                .semantics(mergeDescendants = true) { this.hideFromAccessibility() }
+                                .clearAndSetSemantics {},
+                        ) {
+                            ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
+                                MenuItems(
+                                    openAddWidgetDialog = {
+                                        closeMenu(); showAddWidgetDialog = true
+                                    },
+                                    closeMenu = closeMenu,
+                                )
+                            }
+                        }
+                        if (showAddWidgetDialog) AddWidgetDialog { showAddWidgetDialog = false }
+                    },
+                )
+//                }
+            }
         },
     ) { paddingValues ->
         Column(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+            val isTalkBackEnabled by isTalkBackEnabled.collectAsState()
+            val customImageName by customImageName.collectAsState()
+            val disableStickyHeader = isTalkBackEnabled || customImageName != null
             val tabs = listOf(
                 TabItem(
-                    Icons.Outlined.Palette, Icons.Default.Palette,
-                    R.string.pref_interface, R.string.calendar,
-                ) { InterfaceCalendarSettings(destination) },
+                    outlinedIcon = Icons.Outlined.Palette,
+                    filledIcon = Icons.Default.Palette,
+                    firstTitle = R.string.pref_interface,
+                    secondTitle = R.string.calendar,
+                ) { listState ->
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.pref_ui,
+                    ) { InterfaceSettings(destination) }
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.calendar,
+                    ) { CalendarSettings(destination,destinationItem) }
+                },
                 TabItem(
-                    Icons.Outlined.Widgets, Icons.Default.Widgets,
-                    R.string.pref_notification, R.string.pref_widget,
-                ) { WidgetNotificationSettings() },
+                    outlinedIcon = Icons.Outlined.Widgets,
+                    filledIcon = Icons.Default.Widgets,
+                    firstTitle = R.string.pref_notification,
+                    secondTitle = R.string.pref_widget,
+                ) { listState ->
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.pref_notification,
+                    ) { NotificationSettings() }
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.pref_widget,
+                    ) { WidgetSettings() }
+                },
                 TabItem(
-                    Icons.Outlined.LocationOn, Icons.Default.LocationOn,
-                    R.string.location, R.string.athan,
-                ) { NSettingsScreen(navigateToAthanSettings = navigateToAthanSettings) },
+                    outlinedIcon = Icons.Outlined.LocationOn,
+                    filledIcon = Icons.Default.LocationOn,
+                    firstTitle = R.string.location,
+                    secondTitle = R.string.athan,
+                ) { listState ->
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.location,
+                    ) { NLocationSetting() }
+                    settingsSection(
+                        canScrollBackward = listState.canScrollBackward,
+                        disableStickyHeader = disableStickyHeader,
+                        title = R.string.athan,
+                        subtitle = {
+                            stringResource(R.string.for_more_athan_settings_click)
+                        },
+                    ) { NAthanSettings(navigateToAthanSettings = navigateToAthanSettings) }
+                },
             )
 
             val pagerState = rememberPagerState(initialPage = initialPage, pageCount = tabs::size)
             val coroutineScope = rememberCoroutineScope()
 
-            val selectedTabIndex = pagerState.currentPage
             PrimaryTabRow(
-                selectedTabIndex = selectedTabIndex,
+                selectedTabIndex = pagerState.currentPage,
                 contentColor = LocalContentColor.current,
                 containerColor = Color.Transparent,
                 divider = {},
@@ -163,7 +253,7 @@ fun SharedTransitionScope.SettingsScreen(
                     val isLandscape =
                         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                     TabRowDefaults.PrimaryIndicator(
-                        Modifier.tabIndicatorOffset(selectedTabIndex),
+                        Modifier.tabIndicatorOffset(pagerState.currentPage),
                         width = if (isLandscape) 92.dp else 64.dp,
                         color = LocalContentColor.current.copy(alpha = AppBlendAlpha)
                     )
@@ -172,35 +262,50 @@ fun SharedTransitionScope.SettingsScreen(
                 tabs.forEachIndexed { index, tab ->
                     val isLandscape =
                         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                    val modifier = Modifier.clip(MaterialTheme.shapes.large)
+                    val isSelected = pagerState.currentPage == index
+                    fun onClick() {
+                        coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                    }
                     if (isLandscape) Tab(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                tab.Icon(selectedTabIndex == index)
-                                Spacer(modifier = Modifier.width(8.dp))
+                                tab.Icon(isSelected)
+                                Spacer(Modifier.width(8.dp))
                                 tab.Title()
                             }
                         },
-                        selected = pagerState.currentPage == index,
-                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                        modifier = modifier,
+                        selected = isSelected,
+                        onClick = ::onClick,
                     ) else Tab(
-                        icon = { tab.Icon(selectedTabIndex == index) },
+                        icon = { tab.Icon(isSelected) },
                         text = { tab.Title() },
-                        selected = pagerState.currentPage == index,
-                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                        modifier = modifier,
+                        selected = isSelected,
+                        onClick = ::onClick,
                     )
                 }
             }
 
             ScreenSurface(animatedContentScope) {
                 HorizontalPager(state = pagerState) { index ->
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        val scrollState = rememberScrollState()
-                        Column(Modifier.verticalScroll(scrollState)) {
-                            tabs[index].content(this)
-                            Spacer(Modifier.height(paddingValues.calculateBottomPadding()))
-                        }
-                        ScrollShadow(scrollState, top = true)
-                        ScrollShadow(scrollState, top = false)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)
+                            )
+                    ) {
+                        val listState = rememberLazyListState()
+                        LazyColumn(
+                            state = listState,
+                            contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding()),
+                        ) { tabs[index].content(this, listState) }
+//                        if (pagerState.currentPage == index) {
+//                            isAtTop = !listState.canScrollBackward
+//                        }
+                        ScrollShadow(listState)
                     }
                 }
             }
@@ -214,7 +319,7 @@ private data class TabItem(
     private val filledIcon: ImageVector,
     @get:StringRes private val firstTitle: Int,
     @get:StringRes private val secondTitle: Int,
-    val content: @Composable ColumnScope.() -> Unit,
+    val content: LazyListScope.(listState: LazyListState) -> Unit,
 ) {
     @Composable
     fun Title() {
@@ -276,6 +381,14 @@ private fun MenuItems(openAddWidgetDialog: () -> Unit, closeMenu: () -> Unit) {
             onClick = openAddWidgetDialog,
         )
     }
+    val language by language.collectAsState()
+    if (supportsDynamicIcon(mainCalendar, language)) {
+        val isChecked by isDynamicIconEnabled.collectAsState()
+        AppDropdownMenuCheckableItem(stringResource(R.string.dynamic_icon), isChecked) {
+            closeMenu()
+            context.preferences.edit { putBoolean(PREF_DYNAMIC_ICON_ENABLED, !isChecked) }
+        }
+    }
 
     if (!BuildConfig.DEVELOPMENT) return // Rest are development only functionalities
     run {
@@ -303,6 +416,26 @@ private fun MenuItems(openAddWidgetDialog: () -> Unit, closeMenu: () -> Unit) {
         AppDropdownMenuItem({ Text("Shapes") }) { showDialog = true }
         if (showDialog) ShapesDemoDialog { showDialog = false }
     }
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem({ Text("Font Weights") }) { showDialog = true }
+        if (showDialog) FontWeightsDialog { showDialog = false }
+    }
+    val isCyberpunk by isCyberpunk.collectAsState()
+    AppDropdownMenuCheckableItem(
+        text = "Cyberpunk",
+        isChecked = isCyberpunk,
+        onValueChange = {
+            val preferences = context.preferences
+            preferences.edit {
+                putBoolean(
+                    PREF_THEME_CYBERPUNK,
+                    !preferences.getBoolean(PREF_THEME_CYBERPUNK, DEFAULT_THEME_CYBERPUNK)
+                )
+            }
+            closeMenu()
+        },
+    )
     val activity = LocalActivity.current
     AppDropdownMenuItem({ Text("Clear preferences store and exit") }) {
         context.preferences.edit { clear() }
@@ -312,6 +445,11 @@ private fun MenuItems(openAddWidgetDialog: () -> Unit, closeMenu: () -> Unit) {
         var showDialog by rememberSaveable { mutableStateOf(false) }
         AppDropdownMenuItem({ Text("Schedule an alarm") }) { showDialog = true }
         if (showDialog) ScheduleAlarm { showDialog = false }
+    }
+    run {
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        AppDropdownMenuItem({ Text("Converter") }) { showDialog = true }
+        if (showDialog) ConverterDialog { showDialog = false }
     }
 
     HorizontalDivider()

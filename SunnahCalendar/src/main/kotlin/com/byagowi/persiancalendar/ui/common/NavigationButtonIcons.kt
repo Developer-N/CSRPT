@@ -10,23 +10,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.byagowi.persiancalendar.R
-import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_OPEN_DRAWER
+import com.byagowi.persiancalendar.SHARED_CONTENT_KEY_OPEN_NAVIGATION_RAIL
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.NavigationOpenDrawerIcon(
+fun SharedTransitionScope.NavigationOpenNavigationRailIcon(
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
 ) {
     AppIconButton(
         icon = Icons.Default.Menu,
-        title = stringResource(R.string.open_drawer),
-        // Workaround CI not liking shared elements
-        iconModifier = Modifier.sharedElement(
-            rememberSharedContentState(SHARED_CONTENT_KEY_OPEN_DRAWER),
+        title = stringResource(R.string.open_navigation_rail),
+        modifier = Modifier.sharedElement(
+            rememberSharedContentState(SHARED_CONTENT_KEY_OPEN_NAVIGATION_RAIL),
             animatedVisibilityScope = animatedContentScope,
+            boundsTransform = appBoundsTransform,
         ),
-        onClick = openDrawer,
+        onClick = openNavigationRail,
     )
 }
 

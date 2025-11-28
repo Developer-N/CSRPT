@@ -21,7 +21,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,8 +38,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import io.github.persiancalendar.praytimes.PrayTimes
@@ -106,12 +108,12 @@ fun NTimes(
 private fun TimeItem(
     modifier: Modifier = Modifier,
     time: TimesState,
-    prayTimes: PrayTimes,
+    prayTimes: PrayTimes?,
     changeTimeState: () -> Unit,
     navigationToAthanSetting: () -> Unit
 ) {
     val cardScale by animateFloatAsState(
-        targetValue = if (time.isNext) 1f else 0.96f,
+        targetValue = if (time.isNext) 1f else 0.94f,
         label = "scale",
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -127,15 +129,16 @@ private fun TimeItem(
         )
     )
 
-    OutlinedCard(
+    Surface(
         modifier = modifier
-            .padding(2.dp)
+            .padding(vertical = 1.dp, horizontal = 4.dp)
             .scale(cardScale),
         border = BorderStroke(
             if (time.isNext) (1.5).dp else 1.dp,
             MaterialTheme.colorScheme.primary.copy(alpha = if (time.isNext) 0.5f else 0.3f)
         ),
-        shape = MaterialTheme.shapes.extraLarge
+        shape = MaterialTheme.shapes.extraLarge,
+        shadowElevation = if (time.isNext) 1.dp else 0.5.dp
     ) {
         Row(
             modifier = Modifier
@@ -157,18 +160,20 @@ private fun TimeItem(
             Text(
                 modifier = Modifier.weight(3f),
                 text = stringResource(id = time.time.stringRes),
-                fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal,
+                fontSize = MaterialTheme.typography.titleMedium.fontSize
             )
             AnimatedContent(
                 modifier = Modifier.weight(2f),
-                targetState = prayTimes[time.time]
-                    .toFormattedString(),
+                targetState = prayTimes?.get(time.time)
+                    ?.toFormattedString() ?: "--:--",
                 label = "time"
             ) {
                 Text(
                     modifier = Modifier.alpha(AppBlendAlpha),
                     text = it,
-                    fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal
+                    fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize
                 )
             }
             AnimatedContent(
@@ -179,7 +184,8 @@ private fun TimeItem(
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.error,
-                    fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal
+                    fontWeight = if (time.isNext) FontWeight.SemiBold else FontWeight.Normal,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize
                 )
             }
 
@@ -195,6 +201,41 @@ private fun TimeItem(
                 imageVector = if (time.isActive) Icons.AutoMirrored.Default.VolumeUp else Icons.AutoMirrored.Default.VolumeOff,
                 contentDescription = "",
                 tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Preview(showSystemUi = true, locale = "fa")
+@Composable
+private fun PreviewTimeItem() {
+    MaterialTheme {
+        Column(modifier = Modifier.padding(top = 56.dp)) {
+            TimeItem(
+                time = TimesState(
+                    position = 0,
+                    icon = R.drawable.ic_fajr_isha,
+                    time = PrayTime.FAJR,
+                    remainingTime = "",
+                    isActive = false,
+                    isNext = false
+                ),
+                prayTimes = null,
+                changeTimeState = {},
+                navigationToAthanSetting = {}
+            )
+            TimeItem(
+                time = TimesState(
+                    position = 1,
+                    icon = R.drawable.ic_dhuhr_asr,
+                    time = PrayTime.DHUHR,
+                    remainingTime = "",
+                    isActive = true,
+                    isNext = true
+                ),
+                prayTimes = null,
+                changeTimeState = {},
+                navigationToAthanSetting = {}
             )
         }
     }

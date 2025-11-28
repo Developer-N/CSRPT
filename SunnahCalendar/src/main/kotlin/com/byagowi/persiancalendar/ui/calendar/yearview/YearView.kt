@@ -24,6 +24,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -45,6 +46,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -57,18 +59,21 @@ import com.byagowi.persiancalendar.entities.DeviceCalendarEventsStore
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.enabledCalendars
+import com.byagowi.persiancalendar.global.isBoldFont
 import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
 import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.calendar.CalendarViewModel
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.DayPainter
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.renderMonthWidget
+import com.byagowi.persiancalendar.ui.calendar.detectHorizontalSwipe
 import com.byagowi.persiancalendar.ui.calendar.detectZoom
 import com.byagowi.persiancalendar.ui.theme.appMonthColors
+import com.byagowi.persiancalendar.ui.theme.resolveFontFile
 import com.byagowi.persiancalendar.ui.utils.AnimatableFloatSaver
 import com.byagowi.persiancalendar.ui.utils.LargeShapeCornerSize
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.monthName
 import com.byagowi.persiancalendar.utils.otherCalendarFormat
 import com.byagowi.persiancalendar.utils.readYearDeviceEvents
@@ -79,10 +84,11 @@ import kotlin.math.floor
 @Composable
 fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPadding: Dp) {
     val today by viewModel.today.collectAsState()
-    val todayDate = today on mainCalendar
+    val calendar = viewModel.yearViewCalendar.collectAsState().value ?: mainCalendar
+    val todayDate = today on calendar
     val selectedMonthOffset by viewModel.selectedMonthOffset.collectAsState()
     val yearOffsetInMonths = run {
-        val selectedMonth = mainCalendar.getMonthStartFromMonthsDistance(today, selectedMonthOffset)
+        val selectedMonth = calendar.getMonthStartFromMonthsDistance(today, selectedMonthOffset)
         selectedMonth.year - todayDate.year
     }
 
@@ -105,20 +111,27 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
     val widthInPx = with(LocalDensity.current) { width.toPx() }
     val paddingInPx = with(LocalDensity.current) { padding.toPx() }
 
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     val monthColors = appMonthColors()
-    val dayPainter = remember(monthColors, widthInPx) {
+    val fontFile = resolveFontFile()
+    val isBoldFont by isBoldFont.collectAsState()
+    val context = LocalContext.current
+    val dayPainter = remember(monthColors, widthInPx, fontFile, isBoldFont) {
         lruCache(4, create = { height: Float ->
             DayPainter(
-                resources = context.resources,
+                context = context,
+                resources = resources,
                 width = (widthInPx - paddingInPx * 2f) / if (isShowWeekOfYearEnabled.value) 8 else 7,
                 height = height / 7,/* rows count*/
                 isRtl = isRtl,
                 colors = monthColors,
+                fontFile = fontFile,
                 isYearView = true,
                 selectedDayColor = monthColors.indicator.toArgb(),
+                holidayCircleColor = monthColors.holidaysCircle.toArgb(),
+                isBoldFont = isBoldFont,
             )
         })
     }
@@ -130,7 +143,9 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
             YearViewCommand.ToggleYearSelection -> scale.snapTo(if (scale.value > .5f) 0.01f else 1f)
 
             YearViewCommand.PreviousMonth -> {
-                lazyListState.animateScrollToItem(lazyListState.firstVisibleItemIndex - 1)
+                lazyListState.animateScrollToItem(
+                    (lazyListState.firstVisibleItemIndex - 1).coerceAtLeast(0)
+                )
             }
 
             YearViewCommand.NextMonth -> {
@@ -160,24 +175,37 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
             )
         }
     }
+    val isShowDeviceCalendarEvents by isShowDeviceCalendarEvents.collectAsState()
+    val language by language.collectAsState()
+    val numeral by numeral.collectAsState()
 
-    LazyColumn(state = lazyListState, modifier = detectZoom) {
+    LazyColumn(
+        state = lazyListState,
+        modifier = detectZoom.detectHorizontalSwipe {
+            { isLeft ->
+                val calendars = enabledCalendars.takeIf { it.size > 1 } ?: language.defaultCalendars
+                val currentCalendar = viewModel.yearViewCalendar.value
+                val index = calendars.indexOf(currentCalendar) + if (isLeft xor isRtl) 1 else -1
+                val newCalendar = calendars[index.mod(calendars.size)]
+                coroutineScope.launch { viewModel.changeYearViewCalendar(newCalendar) }
+            }
+        }
+    ) {
         items(halfPages * 2) {
             val yearOffset = it - halfPages
 
             Column(Modifier.fillMaxWidth()) {
                 if (scale.value > yearSelectionModeMaxScale) {
-                    val yearDeviceEvents: DeviceCalendarEventsStore =
-                        remember(yearOffset, today) {
-                            val yearStartJdn = Jdn(
-                                mainCalendar.createDate(
-                                    today.on(mainCalendar).year + yearOffset, 1, 1
-                                )
+                    val yearDeviceEvents: DeviceCalendarEventsStore = remember(yearOffset, today) {
+                        val yearStartJdn = Jdn(
+                            calendar.createDate(
+                                (today on calendar).year + yearOffset, 1, 1
                             )
-                            if (isShowDeviceCalendarEvents.value) {
-                                context.readYearDeviceEvents(yearStartJdn)
-                            } else EventsStore.empty()
-                        }
+                        )
+                        if (isShowDeviceCalendarEvents) {
+                            context.readYearDeviceEvents(yearStartJdn)
+                        } else EventsStore.empty()
+                    }
                     FlowRow(
                         horizontalArrangement = Arrangement.SpaceAround,
                         modifier = Modifier.fillMaxWidth(),
@@ -187,10 +215,10 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
                                 val month = 1 + column + row * if (isLandscape) 4 else 3
                                 val offset = yearOffset * 12 + month - todayDate.month
                                 val monthDate =
-                                    mainCalendar.getMonthStartFromMonthsDistance(today, offset)
-                                val title = language.value.my.format(
+                                    calendar.getMonthStartFromMonthsDistance(today, offset)
+                                val title = language.my.format(
                                     monthDate.monthName,
-                                    formatNumber(yearOffset + todayDate.year),
+                                    numeral.format(yearOffset + todayDate.year),
                                 )
                                 Column(
                                     Modifier
@@ -200,7 +228,9 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
                                         .then(detectZoom)
                                         .clickable(onClickLabel = stringResource(R.string.select_month)) {
                                             viewModel.closeYearView()
-                                            viewModel.changeSelectedMonthOffsetCommand(offset)
+                                            if (mainCalendar == calendar) {
+                                                viewModel.changeSelectedMonthOffsetCommand(offset)
+                                            } else viewModel.bringDay(Jdn(monthDate))
                                         }
                                         .background(LocalContentColor.current.copy(alpha = .1f))
                                         .then(
@@ -230,6 +260,7 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
                                                 isRtl = isRtl,
                                                 isShowWeekOfYearEnabled = isShowWeekOfYearEnabled.value,
                                                 selectedDay = viewModel.selectedDay.value,
+                                                calendar = calendar,
                                             )
                                         }
                                     }
@@ -242,22 +273,26 @@ fun YearView(viewModel: CalendarViewModel, maxWidth: Dp, maxHeight: Dp, bottomPa
                 val alpha = (.15f * (1 - scale.value)).coerceIn(0f, .15f)
                 Spacer(Modifier.height(space))
                 if (yearOffset != halfPages - 1) Box(Modifier.align(Alignment.CenterHorizontally)) {
-                    val year = yearOffset + todayDate.year + 1
-                    val tooltip = enabledCalendars.let { if (it.size > 1) it.drop(1) else it }
-                        .map { calendar ->
-                            otherCalendarFormat(
-                                year,
-                                calendar
-                            ) + " " + stringResource(calendar.title)
-                        }.joinToString("\n")
-                    @OptIn(ExperimentalMaterial3Api::class)
-                    TooltipBox(
-                        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    val yearViewYear = yearOffset + todayDate.year + 1
+
+                    @Suppress("SimplifiableCallChain") val tooltip =
+                        enabledCalendars.let { if (it.size > 1) it - calendar else it }
+                            .map { otherCalendar ->
+                                otherCalendarFormat(
+                                    yearViewYear,
+                                    calendar,
+                                    otherCalendar,
+                                ) + " " + stringResource(otherCalendar.title)
+                            }.joinToString("\n")
+                    @OptIn(ExperimentalMaterial3Api::class) TooltipBox(
+                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Above
+                        ),
                         tooltip = { PlainTooltip { Text(tooltip, textAlign = TextAlign.Center) } },
                         state = rememberTooltipState(),
                     ) {
                         Text(
-                            formatNumber(year),
+                            numeral.format(yearViewYear),
                             style = MaterialTheme.typography.headlineMedium,
                             textAlign = TextAlign.Center,
                             modifier = Modifier

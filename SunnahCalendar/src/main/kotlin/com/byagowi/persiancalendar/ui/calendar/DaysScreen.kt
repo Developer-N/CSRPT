@@ -47,7 +47,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarViewDay
 import androidx.compose.material.icons.filled.CalendarViewWeek
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -58,6 +57,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
@@ -96,6 +96,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -116,49 +117,43 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.DeviceCalendarEventsStore
 import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
-import com.byagowi.persiancalendar.entities.Language
+import com.byagowi.persiancalendar.entities.Numeral
 import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.isShowDeviceCalendarEvents
-import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
-import com.byagowi.persiancalendar.global.isVazirEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
-import com.byagowi.persiancalendar.global.preferredDigits
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.preferredSwipeUpAction
 import com.byagowi.persiancalendar.global.secondaryCalendar
-import com.byagowi.persiancalendar.ui.calendar.calendarpager.DaysTable
+import com.byagowi.persiancalendar.global.weekStart
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.calendarPagerSize
+import com.byagowi.persiancalendar.ui.calendar.calendarpager.daysTable
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.pagerArrowSizeAndPadding
+import com.byagowi.persiancalendar.ui.common.AppFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.ExpandArrow
 import com.byagowi.persiancalendar.ui.common.NavigationNavigateUpIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
-import com.byagowi.persiancalendar.ui.theme.appFabElevation
-import com.byagowi.persiancalendar.ui.theme.appMonthColors
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.theme.noTransitionSpec
 import com.byagowi.persiancalendar.ui.utils.AnimatableFloatSaver
 import com.byagowi.persiancalendar.ui.utils.AppBlendAlpha
 import com.byagowi.persiancalendar.ui.utils.JdnSaver
 import com.byagowi.persiancalendar.ui.utils.SmallShapeCornerSize
-import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
+import com.byagowi.persiancalendar.ui.utils.appBoundsTransform
+import com.byagowi.persiancalendar.ui.utils.appContentSizeAnimationSpec
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
 import com.byagowi.persiancalendar.utils.dayTitleSummary
-import com.byagowi.persiancalendar.utils.formatNumber
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
 import com.byagowi.persiancalendar.utils.getEnabledAlarms3
-import com.byagowi.persiancalendar.utils.getInitialOfWeekDay
-import com.byagowi.persiancalendar.utils.getWeekDayName
 import com.byagowi.persiancalendar.utils.monthName
 import com.byagowi.persiancalendar.utils.readDayDeviceEvents
 import com.byagowi.persiancalendar.utils.readWeekDeviceEvents
-import com.byagowi.persiancalendar.utils.revertWeekStartOffsetFromWeekDay
 import com.byagowi.persiancalendar.utils.toCivilDate
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import java.util.GregorianCalendar
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -201,6 +196,7 @@ fun SharedTransitionScope.DaysScreen(
     val hasWeeksPager =
         LocalWindowInfo.current.containerSize.height > with(density) { 600.dp.toPx() }
     val language by language.collectAsState()
+    val numeral by numeral.collectAsState()
     var isAddEventBoxEnabled by remember { mutableStateOf(false) }
 
     val todayButtonAction = {
@@ -228,14 +224,12 @@ fun SharedTransitionScope.DaysScreen(
 
     var addAction by remember { mutableStateOf({}) }
 
-    val preferredSwipeUpAction by preferredSwipeUpAction.collectAsState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val swipeDownModifier = Modifier.detectSwipe {
-        { isUp ->
-            if (!isLandscape && !isUp) when (preferredSwipeUpAction) {
-                SwipeUpAction.WeekView, SwipeUpAction.DayView -> navigateUp()
-                else -> {}
-            }
+    val preferredSwipeUpAction by preferredSwipeUpAction.collectAsState()
+    fun onSwipeDown(isUp: Boolean) {
+        if (!isLandscape && !isUp) when (preferredSwipeUpAction) {
+            SwipeUpAction.WeekView, SwipeUpAction.DayView -> navigateUp()
+            else -> {}
         }
     }
 
@@ -248,9 +242,8 @@ fun SharedTransitionScope.DaysScreen(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
-                FloatingActionButton(
+                AppFloatingActionButton(
                     onClick = addAction,
-                    elevation = appFabElevation(),
                     modifier = Modifier
                         .renderInSharedTransitionScopeOverlay()
                         .padding(end = 8.dp),
@@ -258,7 +251,7 @@ fun SharedTransitionScope.DaysScreen(
             },
             topBar = {
                 @OptIn(ExperimentalMaterial3Api::class) TopAppBar(
-                    modifier = swipeDownModifier,
+                    modifier = Modifier.detectSwipe { ::onSwipeDown },
                     title = {
                         Column(
                             Modifier.clickable(
@@ -274,24 +267,26 @@ fun SharedTransitionScope.DaysScreen(
                             val subtitle: String
                             if (secondaryCalendar == null) {
                                 title = if (hasWeeksPager) date.monthName else language.dm.format(
-                                    formatNumber(date.dayOfMonth), date.monthName
+                                    numeral.format(date.dayOfMonth), date.monthName
                                 )
-                                subtitle = formatNumber(date.year)
+                                subtitle = numeral.format(date.year)
                             } else {
                                 title = if (hasWeeksPager) language.my.format(
-                                    date.monthName, formatNumber(date.year)
+                                    date.monthName,
+                                    numeral.format(date.year),
                                 ) else language.dmy.format(
-                                    formatNumber(date.dayOfMonth),
-                                    date.monthName, formatNumber(date.year)
+                                    numeral.format(date.dayOfMonth),
+                                    date.monthName,
+                                    numeral.format(date.year),
                                 )
                                 val secondaryDate = selectedDay on secondaryCalendar
                                 subtitle = if (hasWeeksPager) language.my.format(
                                     secondaryDate.monthName,
-                                    formatNumber(secondaryDate.year)
+                                    numeral.format(secondaryDate.year),
                                 ) else language.dmy.format(
-                                    formatNumber(secondaryDate.dayOfMonth),
+                                    numeral.format(secondaryDate.dayOfMonth),
                                     secondaryDate.monthName,
-                                    formatNumber(secondaryDate.year),
+                                    numeral.format(secondaryDate.year),
                                 )
                             }
 
@@ -326,12 +321,15 @@ fun SharedTransitionScope.DaysScreen(
                             modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_DAYS_SCREEN_ICON),
                                 animatedVisibilityScope = this@AnimatedContent,
+                                boundsTransform = appBoundsTransform,
                             ),
                         ) {
                             val title = if (isWeekView) stringResource(R.string.day_view)
                             else stringResource(R.string.week_view)
                             TooltipBox(
-                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                    TooltipAnchorPosition.Above
+                                ),
                                 tooltip = { PlainTooltip { Text(title) } },
                                 state = rememberTooltipState()
                             ) {
@@ -343,7 +341,6 @@ fun SharedTransitionScope.DaysScreen(
                 )
             },
         ) { paddingValues ->
-            val monthColors = appMonthColors()
             val bottomPadding = paddingValues.calculateBottomPadding().coerceAtLeast(16.dp)
             BoxWithConstraints(Modifier.padding(top = paddingValues.calculateTopPadding())) {
                 val screenWidth = this.maxWidth
@@ -354,14 +351,27 @@ fun SharedTransitionScope.DaysScreen(
                     val now by calendarViewModel.now.collectAsState()
                     val refreshToken by calendarViewModel.refreshToken.collectAsState()
                     val isShowDeviceCalendarEvents by isShowDeviceCalendarEvents.collectAsState()
-                    val isVazirEnabled by isVazirEnabled.collectAsState()
-                    val isShowWeekOfYearEnabled by isShowWeekOfYearEnabled.collectAsState()
+                    val daysTable = daysTable(
+                        modifier = Modifier.detectSwipe { ::onSwipeDown },
+                        suggestedPagerSize = pagerSize,
+                        addEvent = addEvent,
+                        today = today,
+                        refreshToken = refreshToken,
+                        setSelectedDay = setSelectedDayInWeekPager,
+                        pagerState = weekPagerState,
+                        isWeekMode = true,
+                    )
 
                     val scale = rememberSaveable(saver = AnimatableFloatSaver) { Animatable(1f) }
                     val cellHeight by remember(scale.value) { mutableStateOf((64 * scale.value).dp) }
                     val initialScroll =
                         with(density) { (cellHeight * 7 * scale.value - 16.dp).roundToPx() }
                     val scrollState = rememberScrollState(initialScroll)
+                    val swipeDownOnScrollableModifier = Modifier.detectSwipe {
+                        val wasAtTop = scrollState.value == 0
+                        { isUp: Boolean -> if (wasAtTop) onSwipeDown(isUp) }
+                    }
+                    val weekStart by weekStart.collectAsState()
 
                     HorizontalPager(
                         state = weekPagerState,
@@ -372,12 +382,17 @@ fun SharedTransitionScope.DaysScreen(
                             val offset = page - weeksLimit / 2
                             val sampleDay = today + 7 * offset
                             val startOfYearJdn = Jdn(mainCalendar, date.year, 1, 1)
-                            val week = sampleDay.getWeekOfYear(startOfYearJdn)
+                            val week = sampleDay.getWeekOfYear(startOfYearJdn, weekStart)
 
                             val isCurrentPage = weekPagerState.currentPage == page
                             LaunchedEffect(isCurrentPage) {
-                                if (isCurrentPage && selectedDay.getWeekOfYear(startOfYearJdn) != week) {
-                                    val pageDay = sampleDay + (selectedDay.weekDay - today.weekDay)
+                                if (isCurrentPage && selectedDay.getWeekOfYear(
+                                        startOfYearJdn,
+                                        weekStart,
+                                    ) != week
+                                ) {
+                                    val pageDay =
+                                        sampleDay + (selectedDay.weekDay.ordinal - today.weekDay.ordinal)
                                     setSelectedDayInWeekPager(pageDay)
                                     isHighlighted = today != pageDay
                                 }
@@ -388,55 +403,47 @@ fun SharedTransitionScope.DaysScreen(
                                 today, mainCalendar.getMonthsDistance(today, selectedDay)
                             )
                             val monthStartJdn = Jdn(monthStartDate)
-                            val weekStart = (today + (page - weeksLimit / 2) * 7).let {
-                                it - applyWeekStartOffsetToWeekDay(it.weekDay)
+                            val pageWeekStart = (today + (page - weeksLimit / 2) * 7).let {
+                                it - (it.weekDay - weekStart)
                             }
                             val weekDeviceEvents = remember(
-                                refreshToken, isShowDeviceCalendarEvents, weekStart
+                                refreshToken,
+                                isShowDeviceCalendarEvents,
+                                pageWeekStart,
                             ) {
                                 if (isShowDeviceCalendarEvents) {
-                                    context.readWeekDeviceEvents(weekStart)
+                                    context.readWeekDeviceEvents(pageWeekStart)
                                 } else EventsStore.empty()
                             }
 
-                            if (hasWeeksPager) DaysTable(
-                                modifier = swipeDownModifier,
-                                monthStartDate = monthStartDate,
-                                monthStartJdn = monthStartJdn,
-                                suggestedPagerSize = pagerSize,
-                                addEvent = addEvent,
-                                monthColors = monthColors,
-                                animatedContentScope = appAnimatedContentScope,
-                                onlyWeek = week,
-                                today = today,
-                                isHighlighted = isHighlighted,
-                                selectedDay = selectedDay,
-                                refreshToken = refreshToken,
-                                setSelectedDay = setSelectedDayInWeekPager,
-                                language = language,
-                                pagerState = weekPagerState,
-                                page = page,
-                                coroutineScope = coroutineScope,
-                                deviceEvents = weekDeviceEvents,
-                                isVazirEnabled = isVazirEnabled,
-                                isShowWeekOfYearEnabled = isShowWeekOfYearEnabled,
+                            if (hasWeeksPager) daysTable(
+                                page,
+                                monthStartDate,
+                                monthStartJdn,
+                                weekDeviceEvents,
+                                week,
+                                isHighlighted,
+                                selectedDay,
                             )
 
                             if (isWeekViewState) ScreenSurface(
+                                mayNeedDragHandleToDivide = !isLandscape,
                                 animatedContentScope = appAnimatedContentScope,
-                                disableSharedContent = initiallySelectedDay - weekStart !in 0..<7,
+                                disableSharedContent = initiallySelectedDay - pageWeekStart !in 0..<7,
                             ) {
                                 DaysView(
                                     modifier = if (weekPagerState.currentPage == page) Modifier.sharedBounds(
                                         rememberSharedContentState(key = SHARED_CONTENT_KEY_DAYS_SCREEN_SURFACE_CONTENT),
                                         animatedVisibilityScope = this@AnimatedContent,
+                                        boundsTransform = appBoundsTransform,
                                     ) else Modifier,
+                                    scrollableModifier = swipeDownOnScrollableModifier,
                                     bottomPadding = bottomPadding,
                                     setAddAction = {
                                         if (weekPagerState.currentPage == page) addAction = it
                                     },
                                     hasWeekPager = hasWeeksPager,
-                                    startingDay = weekStart,
+                                    startingDay = pageWeekStart,
                                     selectedDay = selectedDay,
                                     setSelectedDay = setSelectedDayInWeekPager,
                                     addEvent = addEvent,
@@ -453,16 +460,21 @@ fun SharedTransitionScope.DaysScreen(
                                     initialScroll = initialScroll,
                                     cellHeight = cellHeight,
                                     scale = scale,
+                                    numeral = numeral,
                                 )
                             }
                         }
                     }
 
-                    if (!isWeekViewState) ScreenSurface(appAnimatedContentScope) {
+                    if (!isWeekViewState) ScreenSurface(
+                        appAnimatedContentScope,
+                        mayNeedDragHandleToDivide = !isLandscape,
+                    ) {
                         HorizontalPager(
                             modifier = Modifier.sharedBounds(
                                 rememberSharedContentState(key = SHARED_CONTENT_KEY_DAYS_SCREEN_SURFACE_CONTENT),
                                 animatedVisibilityScope = this@AnimatedContent,
+                                boundsTransform = appBoundsTransform,
                             ),
                             state = dayPagerState,
                             verticalAlignment = Alignment.Top,
@@ -513,6 +525,8 @@ fun SharedTransitionScope.DaysScreen(
                                 scale = scale,
                                 initialScroll = initialScroll,
                                 cellHeight = cellHeight,
+                                scrollableModifier = swipeDownOnScrollableModifier,
+                                numeral = numeral,
                             )
                         }
                     }
@@ -523,15 +537,15 @@ fun SharedTransitionScope.DaysScreen(
 }
 
 private fun weekPageFromJdn(day: Jdn, today: Jdn): Int {
-    val daysStart = day - applyWeekStartOffsetToWeekDay(day.weekDay)
-    val todaysStart = today - applyWeekStartOffsetToWeekDay(today.weekDay)
-    return (daysStart - todaysStart) / 7 + weeksLimit / 2
+    val daysStart = day - (day.weekDay - weekStart.value)
+    val todayStart = today - (today.weekDay - weekStart.value)
+    return (daysStart - todayStart) / 7 + weeksLimit / 2
 }
 
 private fun dayPageFromJdn(day: Jdn, today: Jdn): Int = day - today + daysLimit / 2
 
 private fun hoursFractionOfDay(date: GregorianCalendar): Float =
-    date[Calendar.HOUR_OF_DAY] + date[Calendar.MINUTE] / 60f
+    date[GregorianCalendar.HOUR_OF_DAY] + date[GregorianCalendar.MINUTE] / 60f
 
 private data class EventDivision(
     val event: CalendarEvent.DeviceCalendarEvent, val column: Int, val columnsCount: Int
@@ -580,7 +594,9 @@ private fun DaysView(
     scale: Animatable<Float, AnimationVector1D>,
     initialScroll: Int,
     cellHeight: Dp,
+    numeral: Numeral,
     modifier: Modifier = Modifier,
+    scrollableModifier: Modifier,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -657,7 +673,7 @@ private fun DaysView(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                 )
-                Column(Modifier.animateContentSize()) {
+                Column(Modifier.animateContentSize(appContentSizeAnimationSpec)) {
                     DayEvents(eventsWithoutTime[0].let { if (isExpanded) it else it.take(3) }) {
                         refreshCalendar()
                     }
@@ -667,7 +683,7 @@ private fun DaysView(
                     ExpandArrow(isExpanded = isExpanded)
                     Spacer(Modifier.height(8.dp))
                 } else Spacer(Modifier.height(12.dp))
-            } else Row(
+            } else if (maxDayAllDayEvents != 0) Row(
                 verticalAlignment = Alignment.Bottom,
                 modifier = if (maxDayAllDayEvents > 3) clickToExpandModifier else Modifier
             ) {
@@ -680,28 +696,28 @@ private fun DaysView(
                 Row(
                     Modifier
                         .padding(end = pagerArrowSizeAndPadding.dp)
-                        .animateContentSize(),
+                        .animateContentSize(appContentSizeAnimationSpec),
                 ) {
                     val headerTextStyle = MaterialTheme.typography.bodySmall.copy(
-                        lineHeight = 24.sp
+                        lineHeight = 24.sp,
+                        textDirection = TextDirection.Content,
                     )
+                    val weekStart by weekStart.collectAsState()
                     eventsWithoutTime.forEachIndexed { i, dayEvents ->
                         Column(Modifier.weight(1f)) {
                             if (!hasWeekPager) {
-                                val weekDayPosition = revertWeekStartOffsetFromWeekDay(i)
-                                val weekDayName = getWeekDayName(weekDayPosition)
+                                val weekDay = weekStart + i
+                                val weekDayTitle = weekDay.title
                                 val isLandscape =
                                     LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
                                 Text(
-                                    text = if (isLandscape) weekDayName else {
-                                        getInitialOfWeekDay(weekDayPosition)
-                                    },
+                                    text = if (isLandscape) weekDayTitle else weekDay.shortTitle,
                                     maxLines = 1,
                                     textAlign = TextAlign.Center,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier
                                         .width(cellWidth)
-                                        .semantics { this.contentDescription = weekDayName },
+                                        .semantics { this.contentDescription = weekDayTitle },
                                 )
                             }
                             dayEvents.forEachIndexed { i, event ->
@@ -730,7 +746,7 @@ private fun DaysView(
                                     )
                                 }
                                 if (i == 2 && dayEvents.size > 3 && !isExpanded) Text(
-                                    " +" + formatNumber(dayEvents.size - 3),
+                                    " +" + numeral.format(dayEvents.size - 3),
                                     modifier = Modifier.padding(bottom = 4.dp),
                                     maxLines = 1,
                                     style = headerTextStyle,
@@ -744,7 +760,11 @@ private fun DaysView(
 
         // Time cells, table and indicators
         Box {
-            Box(Modifier.verticalScroll(scrollState)) {
+            Box(
+                Modifier
+                    .verticalScroll(scrollState)
+                    .then(scrollableModifier),
+            ) {
                 val firstColumnPx = with(density) { pagerArrowSizeAndPadding.dp.toPx() }
                 val oneDayTableWidthPx = with(density) { (tableWidth + 24.dp).toPx() }
                 val tableWidthPx = with(density) { tableWidth.toPx() }
@@ -764,6 +784,7 @@ private fun DaysView(
 
                 // Time cells and table
                 val outlineVariant = MaterialTheme.colorScheme.outlineVariant
+                val isTalkBackEnabled by isTalkBackEnabled.collectAsState()
                 Row(
                     Modifier.drawBehind {
                         val topLineY = 2.dp.toPx()
@@ -807,10 +828,15 @@ private fun DaysView(
                                                 duration = cellHeightPx / scale.value
                                                 setSelectedDay(startingDay + column - 1)
                                             }
-                                            .then(if (isTalkBackEnabled) Modifier.semantics {
-                                                this.contentDescription =
-                                                    (startingDay + (column - 1)).weekDayName + " " + clockCache[row * 60] + " " + clockCache[(row + 1) * 60]
-                                            } else Modifier)
+                                            .semantics {
+                                                if (isTalkBackEnabled) {
+                                                    this.contentDescription = listOf(
+                                                        (startingDay + (column - 1)).weekDay.title,
+                                                        clockCache[row * 60],
+                                                        clockCache[(row + 1) * 60]
+                                                    ).joinToString(" ")
+                                                }
+                                            }
                                     }.size(
                                         if (column == 0 || column == days + 1) pagerArrowSizeAndPadding.dp
                                         else cellWidth,
@@ -842,7 +868,9 @@ private fun DaysView(
                             " " + event.title,
                             color = eventTextColor(color),
                             maxLines = 1,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                textDirection = TextDirection.Content,
+                            ),
                             modifier = Modifier
                                 .offset {
                                     IntOffset(
@@ -909,7 +937,8 @@ private fun DaysView(
                             val tint = prayTime.tint.copy(alpha = AppBlendAlpha)
                             val position = IntOffset(
                                 (cellWidthPx * offsetDay + firstColumnPx).roundToInt(),
-                                (prayTimes[prayTime].value * cellHeightPx).roundToInt()
+                                ((prayTimes[prayTime].value.takeIf { !it.isNaN() }
+                                    ?: .0) * cellHeightPx).roundToInt(),
                             )
                             Canvas(
                                 Modifier
@@ -1060,7 +1089,9 @@ private fun DaysView(
                                         Interaction.ExtendDown -> duration =
                                             (duration + delta.y / scale.value).coerceIn(
                                                 minimumValue = ySteps * 1f,
-                                                maximumValue = (ySteps * 24 * 4) - position.y
+                                                maximumValue = ((ySteps * 24 * 4) - position.y).coerceAtLeast(
+                                                    ySteps * 1f
+                                                )
                                             )
 
                                         Interaction.ExtendUp -> {
@@ -1154,8 +1185,7 @@ private fun DaysView(
                     }
                     val compact = dy < 3 / scale.value || run {
                         // This is an ugly hack as the lack of proper autosize here, for now
-                        preferredDigits !== Language.ARABIC_INDIC_DIGITS &&
-                                preferredDigits !== Language.PERSIAN_DIGITS
+                        !numeral.isArabicIndicVariants
                     }
                     Text(
                         text = clockCache[y * 15] + when {
@@ -1171,8 +1201,7 @@ private fun DaysView(
                     )
                 }
             }
-            ScrollShadow(scrollState, top = true)
-            ScrollShadow(scrollState, top = false)
+            ScrollShadow(scrollState)
         }
     }
 }

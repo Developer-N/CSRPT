@@ -16,8 +16,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.ChecksSdkIntAtLeast
-import androidx.annotation.RequiresApi
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
@@ -31,22 +30,35 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -63,7 +75,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.twotone.SwipeDown
 import androidx.compose.material.icons.twotone.SwipeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -97,20 +108,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
@@ -118,7 +135,7 @@ import androidx.core.content.getSystemService
 import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.PREF_APP_LANGUAGE
 import com.byagowi.persiancalendar.PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT
-import com.byagowi.persiancalendar.PREF_DISABLE_OWGHAT
+import com.byagowi.persiancalendar.PREF_DISMISSED_OWGHAT
 import com.byagowi.persiancalendar.PREF_LAST_APP_VISIT_VERSION
 import com.byagowi.persiancalendar.PREF_NOTIFY_DATE
 import com.byagowi.persiancalendar.PREF_NOTIFY_IGNORED
@@ -129,22 +146,22 @@ import com.byagowi.persiancalendar.PREF_SWIPE_DOWN_ACTION
 import com.byagowi.persiancalendar.PREF_SWIPE_UP_ACTION
 import com.byagowi.persiancalendar.R
 import com.byagowi.persiancalendar.entities.Calendar
-import com.byagowi.persiancalendar.entities.CalendarEvent
-import com.byagowi.persiancalendar.entities.EventsStore
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.enabledCalendars
+import com.byagowi.persiancalendar.global.eventsRepository
 import com.byagowi.persiancalendar.global.isAstronomicalExtraFeaturesEnabled
-import com.byagowi.persiancalendar.global.isIranHolidaysEnabled
 import com.byagowi.persiancalendar.global.isNotifyDate
 import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
 import com.byagowi.persiancalendar.global.isTalkBackEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.preferredSwipeDownAction
 import com.byagowi.persiancalendar.global.preferredSwipeUpAction
 import com.byagowi.persiancalendar.global.secondaryCalendar
 import com.byagowi.persiancalendar.global.updateStoredPreference
+import com.byagowi.persiancalendar.ui.astronomy.PlanetaryHoursDialog
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.CalendarPager
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.calendarPagerSize
 import com.byagowi.persiancalendar.ui.calendar.calendarpager.calendarPagerState
@@ -159,51 +176,51 @@ import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuExpandableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuRadioItem
+import com.byagowi.persiancalendar.ui.common.AppFloatingActionButton
 import com.byagowi.persiancalendar.ui.common.AppIconButton
+import com.byagowi.persiancalendar.ui.common.AppScreenModesDropDown
 import com.byagowi.persiancalendar.ui.common.AskForCalendarPermissionDialog
 import com.byagowi.persiancalendar.ui.common.CalendarsOverview
 import com.byagowi.persiancalendar.ui.common.DatePickerDialog
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ScreenSurface
 import com.byagowi.persiancalendar.ui.common.ScrollShadow
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.common.TodayActionButton
 import com.byagowi.persiancalendar.ui.theme.appCrossfadeSpec
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
+import com.byagowi.persiancalendar.ui.utils.appContentSizeAnimationSpec
 import com.byagowi.persiancalendar.ui.utils.bringMarketPage
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeNoBottomEnd
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
 import com.byagowi.persiancalendar.ui.utils.openHtmlInBrowser
-import com.byagowi.persiancalendar.utils.calendar
 import com.byagowi.persiancalendar.utils.dayTitleSummary
-import com.byagowi.persiancalendar.utils.formatNumber
-import com.byagowi.persiancalendar.utils.getA11yDaySummary
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
 import com.byagowi.persiancalendar.utils.getEnabledAlarms
 import com.byagowi.persiancalendar.utils.hasAnyWidgetUpdateRecently
 import com.byagowi.persiancalendar.utils.logException
 import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
+import com.byagowi.persiancalendar.utils.otherCalendarFormat
 import com.byagowi.persiancalendar.utils.preferences
 import com.byagowi.persiancalendar.utils.supportedYearOfIranCalendar
 import com.byagowi.persiancalendar.utils.update
-import com.byagowi.persiancalendar.utils.yearViewYearFormat
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
 import ir.namoo.commons.utils.openUrlInCustomTab
 import ir.namoo.religiousprayers.praytimeprovider.PrayTimeProvider
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.compose.koinInject
 import java.util.Date
 import java.util.GregorianCalendar
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.CalendarScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     navigateToSchedule: () -> Unit,
-    navigateToHolidaysSettings: () -> Unit,
+    navigateToMonthView: () -> Unit,
+    navigateToHolidaysSettings: (item: String?) -> Unit,
     navigateToSettingsLocationTab: () -> Unit,
     navigateToSettingsLocationTabSetAthanAlarm: () -> Unit,
     navigateToAstronomy: (Jdn) -> Unit,
@@ -224,8 +241,46 @@ fun SharedTransitionScope.CalendarScreen(
 
     val daysScreenSelectedDay by viewModel.daysScreenSelectedDay.collectAsState()
     LaunchedEffect(daysScreenSelectedDay) {
-        daysScreenSelectedDay?.let { bringDate(viewModel, it, context, it != today) }
+        daysScreenSelectedDay?.let { viewModel.bringDay(it, it != today) }
     }
+
+    val density = LocalDensity.current
+    var fabPlaceholderHeight by remember { mutableStateOf<Dp?>(null) }
+
+    val detailsTabs = detailsTabs(
+        viewModel = viewModel,
+        navigateToHolidaysSettings = navigateToHolidaysSettings,
+        navigateToSettingsLocationTab = navigateToSettingsLocationTab,
+        navigateToSettingsLocationTabSetAthanAlarm = navigateToSettingsLocationTabSetAthanAlarm,
+        navigateToAstronomy = navigateToAstronomy,
+        animatedContentScope = animatedContentScope,
+        today = today,
+        fabPlaceholderHeight = fabPlaceholderHeight,
+        navigateToAthanSetting = navigateToAthanSetting,
+        navigateToDownload = navigateToDownload,
+        navigateToEditTimes = navigateToEditTimes
+    )
+    val isOnlyEventsTab = detailsTabs.size == 1
+
+    val swipeUpActions = mapOf(
+        SwipeUpAction.Schedule to { navigateToSchedule() },
+        SwipeUpAction.DayView to { navigateToDays(viewModel.selectedDay.value, false) },
+        SwipeUpAction.WeekView to { navigateToDays(viewModel.selectedDay.value, true) },
+        SwipeUpAction.None to {
+            if (isOnlyEventsTab) viewModel.bringDay(viewModel.selectedDay.value - 7)
+        },
+    )
+
+    val swipeDownActions = mapOf(
+//            SwipeDownAction.MonthView to { navigateToMonthView() },
+        SwipeDownAction.YearView to {
+            viewModel.closeSearch()
+            viewModel.openYearView()
+        },
+        SwipeDownAction.None to {
+            if (isOnlyEventsTab) viewModel.bringDay(viewModel.selectedDay.value + 7)
+        },
+    )
 
     Scaffold(
         modifier = Modifier.onKeyEvent { keyEvent ->
@@ -260,33 +315,61 @@ fun SharedTransitionScope.CalendarScreen(
         topBar = {
             val searchBoxIsOpen by viewModel.isSearchOpen.collectAsState()
             BackHandler(enabled = searchBoxIsOpen, onBack = viewModel::closeSearch)
-
-            Crossfade(searchBoxIsOpen, label = "toolbar") {
-                if (it) Search(viewModel)
-                else Toolbar(
-                    animatedContentScope = animatedContentScope,
-                    openDrawer = openDrawer,
-                    navigateToSchedule = navigateToSchedule,
-                    navigateToDays = navigateToDays,
-                    viewModel = viewModel,
-                    isLandscape = isLandscape,
-                    today = today,
-                )
+            var toolbarHeight by remember { mutableStateOf(0.dp) }
+            Crossfade(searchBoxIsOpen, label = "toolbar") { searchBoxIsOpenState ->
+                Box(
+                    (if (searchBoxIsOpenState) {
+                        val searchTerm by viewModel.searchTerm.collectAsState()
+                        if (searchTerm.isEmpty() && toolbarHeight > 0.dp) Modifier.requiredHeight(
+                            toolbarHeight
+                        ) else Modifier
+                    } else if (isYearView) {
+                        if (toolbarHeight > 0.dp) {
+                            Modifier.requiredHeight(toolbarHeight)
+                        } else Modifier
+                    } else Modifier.onSizeChanged {
+                        toolbarHeight = with(density) { it.height.toDp() }
+                    }).fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (searchBoxIsOpenState) Search(viewModel) else Toolbar(
+                        animatedContentScope = animatedContentScope,
+                        openNavigationRail = openNavigationRail,
+                        swipeUpActions = swipeUpActions,
+                        swipeDownActions = swipeDownActions,
+                        viewModel = viewModel,
+                        isLandscape = isLandscape,
+                        today = today,
+                        hasToolbarHeight = toolbarHeight > 0.dp,
+                    )
+                }
             }
         },
         floatingActionButton = {
-            val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+            val selectedTab by viewModel.selectedTab.collectAsState()
+
+            // Window height fallback for older device isn't consistent, let's just
+            // use some hardcoded value in detailsTabs() instead
+            val windowHeightPx = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                LocalActivity.current?.windowManager?.currentWindowMetrics?.bounds?.height()
+            } else null
+
             AnimatedVisibility(
-                visible = selectedTabIndex == EVENTS_TAB && !isYearView && isCurrentDestination,
+                visible = (selectedTab == CalendarScreenTab.EVENT || isOnlyEventsTab) && !isYearView && isCurrentDestination,
                 modifier = Modifier
                     .padding(end = 8.dp)
+                    .onGloballyPositioned {
+                        if (windowHeightPx != null) fabPlaceholderHeight = with(density) {
+                            (windowHeightPx - it.positionInWindow().y).toDp()
+                        } + 4.dp
+                    }
                     .renderInSharedTransitionScopeOverlay(
                         renderInOverlay = { isCurrentDestination && isTransitionActive },
                     ),
                 enter = scaleIn(),
                 exit = scaleOut(),
             ) {
-                FloatingActionButton(
+                AppFloatingActionButton(
                     onClick = { addEvent(AddEventData.fromJdn(viewModel.selectedDay.value)) },
                 ) { Icon(Icons.Default.Add, stringResource(R.string.add_event)) }
             }
@@ -303,7 +386,11 @@ fun SharedTransitionScope.CalendarScreen(
         val bottomPaddingWithMinimum = bottomPadding
             // For screens without navigation bar, at least make sure it has some bottom padding
             .coerceAtLeast(24.dp)
-        BoxWithConstraints(Modifier.padding(top = paddingValues.calculateTopPadding())) {
+        BoxWithConstraints(
+            Modifier
+                .padding(top = paddingValues.calculateTopPadding())
+                .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+        ) {
             val maxWidth = this.maxWidth
             val maxHeight = this.maxHeight
             val pagerSize = calendarPagerSize(isLandscape, maxWidth, maxHeight, bottomPadding)
@@ -315,20 +402,6 @@ fun SharedTransitionScope.CalendarScreen(
 
                 // To preserve pager's state even in year view where calendar isn't in the tree
                 val pagerState = calendarPagerState()
-
-                val detailsTabs = detailsTabs(
-                    viewModel = viewModel,
-                    navigateToHolidaysSettings = navigateToHolidaysSettings,
-                    navigateToSettingsLocationTab = navigateToSettingsLocationTab,
-                    navigateToSettingsLocationTabSetAthanAlarm = navigateToSettingsLocationTabSetAthanAlarm,
-                    navigateToAstronomy = navigateToAstronomy,
-                    animatedContentScope = animatedContentScope,
-                    bottomPadding = bottomPaddingWithMinimum,
-                    today = today,
-                    navigateToAthanSetting = navigateToAthanSetting,
-                    navigateToDownload = navigateToDownload,
-                    navigateToEditTimes = navigateToEditTimes
-                )
                 val detailsPagerState = detailsPagerState(viewModel = viewModel, tabs = detailsTabs)
 
                 this.AnimatedVisibility(
@@ -344,17 +417,28 @@ fun SharedTransitionScope.CalendarScreen(
                                 addEvent = addEvent,
                                 suggestedPagerSize = pagerSize,
                                 navigateToDays = navigateToDays,
-                                animatedContentScope = animatedContentScope,
                             )
                         }
-                        ScreenSurface(animatedContentScope, materialCornerExtraLargeNoBottomEnd()) {
+                        ScreenSurface(
+                            animatedContentScope,
+                            materialCornerExtraLargeNoBottomEnd(),
+                            drawBehindSurface = false,
+                        ) {
                             Details(
                                 viewModel = viewModel,
                                 tabs = detailsTabs,
                                 pagerState = detailsPagerState,
                                 contentMinHeight = maxHeight,
                                 scrollableTabs = true,
-                                modifier = Modifier.fillMaxHeight(),
+                                bottomPadding = bottomPaddingWithMinimum,
+                                isOnlyEventsTab = isOnlyEventsTab,
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .windowInsetsPadding(
+                                        WindowInsets.displayCutout.only(
+                                            WindowInsetsSides.End
+                                        )
+                                    ),
                             )
                         }
                     } else {
@@ -368,37 +452,30 @@ fun SharedTransitionScope.CalendarScreen(
                                         val wasAtTop = scrollState.value == 0
                                         val wasAtEnd = scrollState.value == scrollState.maxValue
                                         { isUp: Boolean ->
-                                            if (isUp && wasAtEnd) when (preferredSwipeUpAction.value) {
-                                                SwipeUpAction.Schedule -> navigateToSchedule()
-                                                SwipeUpAction.DayView -> {
-                                                    val day = viewModel.selectedDay.value
-                                                    navigateToDays(day, false)
+                                            when {
+                                                isUp && wasAtEnd -> {
+                                                    swipeUpActions[preferredSwipeUpAction.value]
                                                 }
 
-                                                SwipeUpAction.WeekView -> {
-                                                    val day = viewModel.selectedDay.value
-                                                    navigateToDays(day, true)
+                                                !isUp && wasAtTop -> {
+                                                    swipeDownActions[preferredSwipeDownAction.value]
                                                 }
 
-                                                SwipeUpAction.None -> {}
-                                            } else if (!isUp && wasAtTop) when (preferredSwipeDownAction.value) {
-                                                SwipeDownAction.YearView -> viewModel.openYearView()
-                                                SwipeDownAction.None -> {}
-                                            }
+                                                else -> null
+                                            }?.invoke()
                                         }
                                     },
                             ) {
                                 var calendarHeight by remember {
                                     mutableStateOf(pagerSize.height / 7 * 6)
                                 }
-                                val density = LocalDensity.current
                                 Box(
                                     Modifier
                                         .offset { IntOffset(0, scrollState.value * 3 / 4) }
                                         .onSizeChanged {
                                             calendarHeight = with(density) { it.height.toDp() }
                                         }
-                                        .animateContentSize(),
+                                        .animateContentSize(appContentSizeAnimationSpec),
                                 ) {
                                     CalendarPager(
                                         viewModel = viewModel,
@@ -407,22 +484,27 @@ fun SharedTransitionScope.CalendarScreen(
                                         addEvent = addEvent,
                                         suggestedPagerSize = pagerSize,
                                         navigateToDays = navigateToDays,
-                                        animatedContentScope = animatedContentScope,
                                     )
                                 }
 
                                 val detailsMinHeight = maxHeight - calendarHeight
-                                ScreenSurface(animatedContentScope, workaroundClipBug = true) {
+                                ScreenSurface(
+                                    animatedContentScope,
+                                    workaroundClipBug = true,
+                                    mayNeedDragHandleToDivide = true,
+                                ) {
                                     Details(
                                         viewModel = viewModel,
                                         tabs = detailsTabs,
                                         pagerState = detailsPagerState,
                                         contentMinHeight = detailsMinHeight,
+                                        bottomPadding = bottomPaddingWithMinimum,
+                                        isOnlyEventsTab = isOnlyEventsTab,
                                         modifier = Modifier.defaultMinSize(minHeight = detailsMinHeight),
                                     )
                                 }
                             }
-                            ScrollShadow(scrollState, top = false)
+                            ScrollShadow(scrollState, skipTop = true)
                         }
                     }
                 }
@@ -430,10 +512,9 @@ fun SharedTransitionScope.CalendarScreen(
         }
     }
 
-    LaunchedEffect(today) {
-        if (mainCalendar == Calendar.SHAMSI && isIranHolidaysEnabled && today
-                .toPersianDate().year > supportedYearOfIranCalendar
-        ) {
+    val eventsRepository by eventsRepository.collectAsState()
+    LaunchedEffect(today, eventsRepository) {
+        if (mainCalendar == Calendar.SHAMSI && eventsRepository.iranHolidays && today.toPersianDate().year > supportedYearOfIranCalendar) {
             if (snackbarHostState.showSnackbar(
                     context.getString(R.string.outdated_app),
                     duration = SnackbarDuration.Long,
@@ -445,69 +526,47 @@ fun SharedTransitionScope.CalendarScreen(
     }
 }
 
-const val CALENDARS_TAB = 0
-const val EVENTS_TAB = 1
-const val TIMES_TAB = 2
+enum class CalendarScreenTab(@get:StringRes val titleId: Int) {
+    CALENDAR(R.string.calendar), EVENT(R.string.events), TIMES(R.string.times)
+}
 
-private fun enableTimesTab(context: Context): Boolean {
-    val preferences = context.preferences
-    return coordinates.value != null || // if coordinates is set, should be shown
-            (language.value.isPersian && // The placeholder isn't translated to other languages
+@Composable
+private fun enableTimesTab(): Boolean {
+    val coordinates by coordinates.collectAsState()
+    val language by language.collectAsState()
+    val preferences = LocalContext.current.preferences
+    return coordinates != null || // if coordinates is set, should be shown
+            (language.isPersianOrDari && // The placeholder isn't translated to other languages
                     // The user is already dismissed the third tab
-                    !preferences.getBoolean(PREF_DISABLE_OWGHAT, false) &&
+                    !preferences.getBoolean(PREF_DISMISSED_OWGHAT, false) &&
                     // Try to not show the placeholder to established users
                     PREF_APP_LANGUAGE !in preferences)
 }
 
-fun bringDate(
-    viewModel: CalendarViewModel,
-    jdn: Jdn,
-    context: Context,
-    highlight: Boolean = true,
-) {
-    viewModel.changeSelectedDay(jdn)
-    if (!highlight) viewModel.clearHighlightedDay()
-    val today = Jdn.today()
-    viewModel.changeSelectedMonthOffsetCommand(mainCalendar.getMonthsDistance(today, jdn))
-
-    // a11y
-    if (isTalkBackEnabled && jdn != today) Toast.makeText(
-        context, getA11yDaySummary(
-            context.resources,
-            jdn,
-            false,
-            EventsStore.empty(),
-            withZodiac = true,
-            withOtherCalendars = true,
-            withTitle = true
-        ), Toast.LENGTH_SHORT
-    ).show()
-}
-
-private typealias DetailsTab = Pair<Int, @Composable (MutableInteractionSource, Dp) -> Unit>
+private typealias DetailsTab = Pair<CalendarScreenTab, @Composable (MutableInteractionSource, minHeight: Dp, bottomPadding: Dp) -> Unit>
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SharedTransitionScope.detailsTabs(
     viewModel: CalendarViewModel,
-    navigateToHolidaysSettings: () -> Unit,
+    navigateToHolidaysSettings: (item: String?) -> Unit,
     navigateToSettingsLocationTab: () -> Unit,
     navigateToSettingsLocationTabSetAthanAlarm: () -> Unit,
     navigateToAstronomy: (Jdn) -> Unit,
     animatedContentScope: AnimatedContentScope,
-    bottomPadding: Dp,
     today: Jdn,
+    fabPlaceholderHeight: Dp?,
     navigateToAthanSetting: (Int) -> Unit,
     navigateToDownload: () -> Unit,
     navigateToEditTimes: () -> Unit,
 ): List<DetailsTab> {
-    val context = LocalContext.current
     val removeThirdTab by viewModel.removedThirdTab.collectAsState()
-    val hasTimesTab = enableTimesTab(context) && !removeThirdTab
+    val hasTimesTab = enableTimesTab() && !removeThirdTab
+    val isAstronomicalExtraFeaturesEnabled by isAstronomicalExtraFeaturesEnabled.collectAsState()
     val isOnlyEventsTab =
         !hasTimesTab && enabledCalendars.size == 1 && !isAstronomicalExtraFeaturesEnabled
     return listOfNotNull(
-        if (!isOnlyEventsTab) R.string.calendar to { interactionSource, minHeight ->
+        if (!isOnlyEventsTab) CalendarScreenTab.CALENDAR to { interactionSource, minHeight, bottomPadding ->
             CalendarsTab(
                 viewModel = viewModel,
                 interactionSource = interactionSource,
@@ -518,17 +577,17 @@ private fun SharedTransitionScope.detailsTabs(
                 animatedContentScope = animatedContentScope,
             )
         } else null,
-        R.string.events to { _, _ ->
+        CalendarScreenTab.EVENT to { _, _, bottomPadding ->
             EventsTab(
                 navigateToHolidaysSettings = navigateToHolidaysSettings,
                 viewModel = viewModel,
                 animatedContentScope = animatedContentScope,
-                bottomPadding = bottomPadding,
-                isOnlyEventsTab = isOnlyEventsTab,
+                // See the comment in floatingActionButton
+                fabPlaceholderHeight = fabPlaceholderHeight ?: (bottomPadding + 76.dp),
             )
         },
         // The optional third tab
-        if (hasTimesTab) R.string.times to { interactionSource, minHeight ->
+        if (hasTimesTab) CalendarScreenTab.TIMES to { interactionSource, minHeight, bottomPadding ->
             TimesTab(
                 navigateToSettingsLocationTab = navigateToSettingsLocationTab,
                 navigateToSettingsLocationTabSetAthanAlarm = navigateToSettingsLocationTabSetAthanAlarm,
@@ -551,13 +610,16 @@ private fun detailsPagerState(
     viewModel: CalendarViewModel,
     tabs: List<DetailsTab>,
 ): PagerState {
-    val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
     val pagerState = rememberPagerState(
-        initialPage = selectedTabIndex.coerceAtMost(tabs.size - 1),
+        initialPage = selectedTab.ordinal.coerceAtMost(tabs.size - 1),
         pageCount = tabs::size,
     )
     LaunchedEffect(key1 = pagerState.currentPage) {
-        viewModel.changeSelectedTabIndex(pagerState.currentPage)
+        viewModel.changeSelectedTab(
+            CalendarScreenTab.entries.getOrNull(pagerState.currentPage)
+                ?: CalendarScreenTab.entries[0]
+        )
     }
     return pagerState
 }
@@ -570,25 +632,28 @@ private fun Details(
     pagerState: PagerState,
     contentMinHeight: Dp,
     modifier: Modifier,
+    bottomPadding: Dp,
+    isOnlyEventsTab: Boolean,
     scrollableTabs: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Column(modifier.indication(interactionSource = interactionSource, indication = ripple())) {
-        val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+        val selectedTab by viewModel.selectedTab.collectAsState()
         val coroutineScope = rememberCoroutineScope()
-        val isOnlyEventsTab = tabs.size == 1
 
         if (!isOnlyEventsTab) PrimaryTabRow(
-            selectedTabIndex = selectedTabIndex,
+            selectedTabIndex = selectedTab.ordinal,
             divider = {},
             containerColor = Color.Transparent,
             indicator = {
-                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(selectedTabIndex))
+                val offset = selectedTab.ordinal.coerceAtMost(tabs.size - 1)
+                TabRowDefaults.PrimaryIndicator(Modifier.tabIndicatorOffset(offset))
             },
         ) {
-            tabs.forEachIndexed { index, (titlesResId, _) ->
+            tabs.forEachIndexed { index, (tab, _) ->
                 Tab(
-                    text = { Text(stringResource(titlesResId)) },
+                    text = { Text(stringResource(tab.titleId)) },
+                    modifier = Modifier.clip(MaterialTheme.shapes.large),
                     selected = pagerState.currentPage == index,
                     unselectedContentColor = MaterialTheme.colorScheme.onSurface,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
@@ -599,16 +664,26 @@ private fun Details(
         HorizontalPager(state = pagerState, verticalAlignment = Alignment.Top) { index ->
             /** See [androidx.compose.material3.SmallTabHeight] for 48.dp */
             val tabMinHeight = contentMinHeight - (if (isOnlyEventsTab) 0 else 48).dp
-            Box {
+            Box(
+                if (isOnlyEventsTab) run {
+                    val jdn by viewModel.selectedDay.collectAsState()
+                    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+                    Modifier
+                        .detectHorizontalSwipe {
+                            { isLeft ->
+                                val newJdn = jdn + if (isLeft xor isRtl) -1 else 1
+                                viewModel.bringDay(newJdn)
+                            }
+                        }
+                        .then(modifier)
+                } else Modifier,
+            ) {
                 // Currently scrollable tabs only happen on landscape layout
                 val scrollState = if (scrollableTabs) rememberScrollState() else null
                 Box(if (scrollState != null) Modifier.verticalScroll(scrollState) else Modifier) {
-                    tabs[index].second(interactionSource, tabMinHeight)
+                    tabs[index].second(interactionSource, tabMinHeight, bottomPadding)
                 }
-                if (scrollState != null) {
-                    ScrollShadow(scrollState, top = true)
-                    ScrollShadow(scrollState, top = false)
-                }
+                if (scrollState != null) ScrollShadow(scrollState)
             }
         }
     }
@@ -701,7 +776,6 @@ private fun SharedTransitionScope.CalendarsTab(
     }
 }
 
-@ChecksSdkIntAtLeast(Build.VERSION_CODES.M)
 @Composable
 private fun showEncourageToExemptFromBatteryOptimizations(): Boolean {
     val isNotifyDate by isNotifyDate.collectAsState()
@@ -711,10 +785,9 @@ private fun showEncourageToExemptFromBatteryOptimizations(): Boolean {
     if (context.preferences.getInt(PREF_BATTERY_OPTIMIZATION_IGNORED_COUNT, 0) >= 2) return false
     val alarmManager = context.getSystemService<AlarmManager>()
     if (isAnyAthanSet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && runCatching { alarmManager?.canScheduleExactAlarms() }.getOrNull().debugAssertNotNull == false) return true
-    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isIgnoringBatteryOptimizations(context)
+    return !isIgnoringBatteryOptimizations(context)
 }
 
-@RequiresApi(Build.VERSION_CODES.M)
 private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
     return runCatching {
         context.getSystemService<PowerManager>()?.isIgnoringBatteryOptimizations(
@@ -726,25 +799,19 @@ private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun Search(viewModel: CalendarViewModel) {
-    LaunchedEffect(Unit) {
-        launch {
-            // 2s timeout, give up if took too much time
-            withTimeoutOrNull(2.seconds) { viewModel.initializeEventsRepository() }
-        }
-    }
-    var query by rememberSaveable { mutableStateOf("") }
-    viewModel.searchEvent(query)
-    val events by viewModel.eventsFlow.collectAsState()
-    val expanded = query.isNotEmpty()
+    val repository by eventsRepository.collectAsState()
+    LaunchedEffect(repository) { viewModel.initializeEventsStore(repository) }
+    val searchTerm by viewModel.searchTerm.collectAsState()
+    val expanded = searchTerm.isNotEmpty()
+    val items by viewModel.foundItems.collectAsState()
     val padding by animateDpAsState(if (expanded) 0.dp else 32.dp, label = "padding")
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
     SearchBar(
         inputField = {
             SearchBarDefaults.InputField(
-                modifier = Modifier.height(56.dp),
-                query = query,
-                onQueryChange = { query = it },
+                query = searchTerm,
+                onQueryChange = viewModel::changeSearchTerm,
                 onSearch = {},
                 expanded = expanded,
                 onExpandedChange = {},
@@ -758,76 +825,72 @@ private fun Search(viewModel: CalendarViewModel) {
             )
         },
         expanded = expanded,
-        onExpandedChange = { if (!it) query = "" },
+        onExpandedChange = { if (!it) viewModel.changeSearchTerm("") },
         modifier = Modifier
             .padding(horizontal = padding)
             .focusRequester(focusRequester),
     ) {
         if (padding.value != 0f) return@SearchBar
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-            val context = LocalContext.current
-            events.take(10).forEach { event ->
-                Box(
-                    Modifier
-                        .clickable {
-                            viewModel.closeSearch()
-                            bringEvent(viewModel, event, context)
-                        }
-                        .fillMaxWidth()
-                        .padding(vertical = 20.dp, horizontal = 24.dp),
+            Box {
+                val lazyListState = rememberLazyListState()
+                LazyColumn(
+                    state = lazyListState,
+                    contentPadding = WindowInsets.safeDrawing.only(
+                        sides = WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+                    ).asPaddingValues()
                 ) {
-                    AnimatedContent(
-                        targetState = event.formattedTitle,
-                        label = "title",
-                        transitionSpec = appCrossfadeSpec,
-                    ) { state ->
-                        Text(
-                            state,
-                            modifier = Modifier.align(Alignment.CenterStart),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
+                    items(items) {
+                        Box(
+                            Modifier
+                                .clickable {
+                                    viewModel.closeSearch()
+                                    viewModel.bringEvent(it)
+                                }
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp, horizontal = 24.dp),
+                        ) {
+                            AnimatedContent(
+                                targetState = it.title,
+                                label = "title",
+                                transitionSpec = appCrossfadeSpec,
+                            ) { title ->
+                                Text(
+                                    title,
+                                    modifier = Modifier.align(Alignment.CenterStart),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
                     }
                 }
+                ScrollShadow(lazyListState)
             }
-            if (events.size > 10) Text("…", Modifier.padding(vertical = 12.dp, horizontal = 24.dp))
         }
     }
-}
-
-private fun bringEvent(viewModel: CalendarViewModel, event: CalendarEvent<*>, context: Context) {
-    val date = event.date
-    val type = date.calendar
-    val today = Jdn.today() on type
-    bringDate(
-        viewModel,
-        Jdn(
-            type, if (date.year == -1) (today.year + if (date.month < today.month) 1 else 0)
-            else date.year, date.month, date.dayOfMonth
-        ),
-        context,
-    )
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SharedTransitionScope.Toolbar(
     animatedContentScope: AnimatedContentScope,
-    openDrawer: () -> Unit,
-    navigateToSchedule: () -> Unit,
-    navigateToDays: (Jdn, Boolean) -> Unit,
+    openNavigationRail: () -> Unit,
+    swipeUpActions: Map<SwipeUpAction, () -> Unit>,
+    swipeDownActions: Map<SwipeDownAction, () -> Unit>,
     viewModel: CalendarViewModel,
     isLandscape: Boolean,
     today: Jdn,
+    hasToolbarHeight: Boolean,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
 
     val selectedMonthOffset by viewModel.selectedMonthOffset.collectAsState()
-    val todayDate = remember(today, mainCalendar) { today on mainCalendar }
     val selectedMonth = mainCalendar.getMonthStartFromMonthsDistance(today, selectedMonthOffset)
     val isYearView by viewModel.isYearView.collectAsState()
     val yearViewOffset by viewModel.yearViewOffset.collectAsState()
     val yearViewIsInYearSelection by viewModel.yearViewIsInYearSelection.collectAsState()
+    val isTalkBackEnabled by isTalkBackEnabled.collectAsState()
 
     BackHandler(enabled = isYearView, onBack = viewModel::onYearViewBackPressed)
 
@@ -837,62 +900,97 @@ private fun SharedTransitionScope.Toolbar(
             // just a noop to update title and subtitle when secondary calendar is toggled
             refreshToken.run {}
 
-            val secondaryCalendar = secondaryCalendar
+            val yearViewCalendar = viewModel.yearViewCalendar.collectAsState().value
+            val language by language.collectAsState()
             val title: String
             val subtitle: String
-            if (isYearView) {
-                title = stringResource(
-                    if (yearViewIsInYearSelection) R.string.select_year else R.string.year_view
-                )
-                subtitle = if (yearViewOffset == 0 || yearViewIsInYearSelection) "" else {
-                    yearViewYearFormat(todayDate.year + yearViewOffset, secondaryCalendar)
+            run {
+                val numeral by numeral.collectAsState()
+                val secondaryCalendar =
+                    yearViewCalendar.takeIf { it != mainCalendar } ?: secondaryCalendar
+                if (isYearView && yearViewCalendar != null) {
+                    title = stringResource(
+                        if (yearViewIsInYearSelection) R.string.select_year else R.string.year_view
+                    )
+                    subtitle = if (!isTalkBackEnabled && run {
+                            yearViewOffset == 0 || yearViewIsInYearSelection
+                        }) "" else {
+                        val yearViewYear = (today on yearViewCalendar).year + yearViewOffset
+                        val formattedYear = numeral.format(yearViewYear)
+                        if (yearViewCalendar != mainCalendar) {
+                            val mainCalendarTitle =
+                                otherCalendarFormat(yearViewYear, yearViewCalendar, mainCalendar)
+                            language.inParentheses.format(formattedYear, mainCalendarTitle)
+                        } else if (secondaryCalendar == null) formattedYear else {
+                            val secondaryTitle =
+                                otherCalendarFormat(yearViewYear, mainCalendar, secondaryCalendar)
+                            language.inParentheses.format(formattedYear, secondaryTitle)
+                        }
+                    }
+                } else if (secondaryCalendar == null) {
+                    title = selectedMonth.monthName
+                    subtitle = numeral.format(selectedMonth.year)
+                } else {
+                    title = language.my.format(
+                        selectedMonth.monthName, numeral.format(selectedMonth.year)
+                    )
+                    val selectedDay by viewModel.selectedDay.collectAsState()
+                    val selectedDate = selectedDay on mainCalendar
+                    val isCurrentMonth =
+                        selectedDate.year == selectedMonth.year && selectedDate.month == selectedMonth.month
+                    val isHighlighted by viewModel.isHighlighted.collectAsState()
+                    if (isHighlighted && isCurrentMonth) {
+                        val selectedSecondaryDate = selectedDay on secondaryCalendar
+                        subtitle = language.my.format(
+                            selectedSecondaryDate.monthName,
+                            numeral.format(selectedSecondaryDate.year)
+                        )
+                    } else {
+                        subtitle = monthFormatForSecondaryCalendar(selectedMonth, secondaryCalendar)
+                    }
                 }
-            } else if (secondaryCalendar == null) {
-                title = selectedMonth.monthName
-                subtitle = formatNumber(selectedMonth.year)
-            } else {
-                val language by language.collectAsState()
-                title = language.my.format(
-                    selectedMonth.monthName, formatNumber(selectedMonth.year)
-                )
-                subtitle = monthFormatForSecondaryCalendar(selectedMonth, secondaryCalendar)
             }
             Column(
-                Modifier.clickable(
-                    indication = ripple(bounded = false),
-                    interactionSource = null,
-                    onClickLabel = stringResource(
-                        if (isYearView && !yearViewIsInYearSelection) R.string.select_year
-                        else R.string.year_view
-                    ),
-                ) {
-                    if (isYearView) viewModel.commandYearView(YearViewCommand.ToggleYearSelection)
-                    else viewModel.openYearView()
-                },
-            ) {
-                Crossfade(title, label = "title") { state ->
-                    val fraction by animateFloatAsState(
-                        targetValue = if (isYearView && subtitle.isNotEmpty()) 1f else 0f,
-                        label = "font size"
-                    )
-                    Text(
-                        state,
-                        style = lerp(
-                            MaterialTheme.typography.titleLarge,
-                            MaterialTheme.typography.titleMedium,
-                            fraction,
+                Modifier
+                    .clickable(
+                        indication = null,
+                        interactionSource = null,
+                        onClickLabel = stringResource(
+                            if (isYearView && !yearViewIsInYearSelection) R.string.select_year
+                            else R.string.year_view
                         ),
+                    ) {
+                        if (isYearView) viewModel.commandYearView(YearViewCommand.ToggleYearSelection)
+                        else viewModel.openYearView()
+                    }
+                    .then(
+                        // Toolbar height might not exist if screen rotated while being in year view
+                        if (isYearView && hasToolbarHeight) Modifier.fillMaxSize() else Modifier
+                    ),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                if (isYearView && yearViewCalendar != null) AppScreenModesDropDown(
+                    yearViewCalendar,
+                    onValueChange = viewModel::changeYearViewCalendar,
+                    label = { stringResource(it.title) },
+                    values = enabledCalendars.takeIf { it.size > 1 } ?: language.defaultCalendars,
+                    small = subtitle.isNotEmpty(),
+                ) else Crossfade(title, label = "title") { title ->
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
                 this.AnimatedVisibility(visible = subtitle.isNotEmpty()) {
-                    Crossfade(subtitle, label = "subtitle") { state ->
+                    Crossfade(subtitle, label = "subtitle") { subtitle ->
                         val fraction by animateFloatAsState(
                             targetValue = if (isYearView) 1f else 0f, label = "font size"
                         )
                         Text(
-                            state,
+                            if (isTalkBackEnabled && isYearView) "$subtitle ${stringResource(R.string.year_view)}"
+                            else subtitle,
                             style = lerp(
                                 MaterialTheme.typography.titleMedium,
                                 MaterialTheme.typography.titleLarge,
@@ -900,6 +998,20 @@ private fun SharedTransitionScope.Toolbar(
                             ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
+                            modifier = if (isYearView) Modifier else when (yearViewCalendar) {
+                                null, mainCalendar, secondaryCalendar -> Modifier
+                                else -> Modifier
+                                    .clip(MaterialTheme.shapes.extraLarge)
+                                    .background(LocalContentColor.current.copy(alpha = .175f))
+                                    .clickable(
+                                        onClickLabel = buildString {
+                                            append(stringResource(R.string.cancel))
+                                            append(" ")
+                                            append(stringResource(R.string.year_view))
+                                        },
+                                    ) { viewModel.changeYearViewCalendar(null) }
+                                    .padding(horizontal = 8.dp)
+                            },
                         )
                     }
                 }
@@ -912,12 +1024,13 @@ private fun SharedTransitionScope.Toolbar(
                     icon = Icons.AutoMirrored.Default.ArrowBack,
                     title = stringResource(R.string.close),
                     onClick = viewModel::onYearViewBackPressed,
-                ) else NavigationOpenDrawerIcon(animatedContentScope, openDrawer)
+                ) else NavigationOpenNavigationRailIcon(animatedContentScope, openNavigationRail)
             }
         },
         actions = {
             this.AnimatedVisibility(isYearView) {
                 TodayActionButton(yearViewOffset != 0 && !yearViewIsInYearSelection) {
+                    viewModel.changeYearViewCalendar(mainCalendar)
                     viewModel.commandYearView(YearViewCommand.TodayMonth)
                 }
             }
@@ -937,7 +1050,8 @@ private fun SharedTransitionScope.Toolbar(
             this.AnimatedVisibility(!isYearView) {
                 val todayButtonVisibility by viewModel.todayButtonVisibility.collectAsState()
                 TodayActionButton(todayButtonVisibility) {
-                    bringDate(viewModel, Jdn.today(), context, highlight = false)
+                    viewModel.changeYearViewCalendar(null)
+                    viewModel.bringDay(Jdn.today(), highlight = false)
                 }
             }
             this.AnimatedVisibility(!isYearView) {
@@ -955,10 +1069,11 @@ private fun SharedTransitionScope.Toolbar(
             AnimatedVisibility(!isYearView) {
                 Menu(
                     animatedContentScope = animatedContentScope,
-                    navigateToSchedule = navigateToSchedule,
                     viewModel = viewModel,
                     isLandscape = isLandscape,
-                    navigateToDays = navigateToDays,
+                    swipeUpActions = swipeUpActions,
+                    swipeDownActions = swipeDownActions,
+                    isTalkBackEnabled = isTalkBackEnabled,
                 )
             }
         },
@@ -969,19 +1084,21 @@ private fun SharedTransitionScope.Toolbar(
 @Composable
 private fun SharedTransitionScope.Menu(
     animatedContentScope: AnimatedContentScope,
-    navigateToSchedule: () -> Unit,
-    navigateToDays: (Jdn, Boolean) -> Unit,
+    swipeUpActions: Map<SwipeUpAction, () -> Unit>,
+    swipeDownActions: Map<SwipeDownAction, () -> Unit>,
     viewModel: CalendarViewModel,
     isLandscape: Boolean,
+    isTalkBackEnabled: Boolean,
     prayTimeProvider: PrayTimeProvider = koinInject()
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     var showDatePickerDialog by rememberSaveable { mutableStateOf(false) }
     if (showDatePickerDialog) {
         val selectedDay by viewModel.selectedDay.collectAsState()
         DatePickerDialog(selectedDay, { showDatePickerDialog = false }) { jdn ->
-            bringDate(viewModel, jdn, context)
+            viewModel.bringDay(jdn)
         }
     }
 
@@ -993,6 +1110,20 @@ private fun SharedTransitionScope.Menu(
             selectedDay,
             onDismissRequest = { viewModel.setShiftWorkViewModel(null) },
         ) { viewModel.refreshCalendar() }
+    }
+
+    val coordinates by coordinates.collectAsState()
+
+    var showPlanetaryHoursDialog by rememberSaveable { mutableStateOf(false) }
+    if (showPlanetaryHoursDialog) coordinates?.also {
+        val now by viewModel.now.collectAsState()
+        val today by viewModel.today.collectAsState()
+        val selectedDay by viewModel.selectedDay.collectAsState()
+        PlanetaryHoursDialog(
+            coordinates = it,
+            now = now + (selectedDay - today).days.inWholeMilliseconds,
+            isToday = today == selectedDay,
+        ) { showPlanetaryHoursDialog = false }
     }
 
     ThreeDotsDropdownMenu(animatedContentScope) { closeMenu ->
@@ -1009,7 +1140,6 @@ private fun SharedTransitionScope.Menu(
             viewModel.setShiftWorkViewModel(dialogViewModel)
         }
 
-        val coordinates by coordinates.collectAsState()
         if (coordinates != null) AppDropdownMenuItem(text = { Text(stringResource(R.string.month_pray_times)) }) {
             closeMenu()
             val selectedMonthOffset = viewModel.selectedMonthOffset.value
@@ -1017,77 +1147,71 @@ private fun SharedTransitionScope.Menu(
                 mainCalendar.getMonthStartFromMonthsDistance(Jdn.today(), selectedMonthOffset)
             context.openHtmlInBrowser(
                 prayTimeHtmlReport(
-                    context.resources, selectedMonth, context, prayTimeProvider
+                    resources, selectedMonth, context, prayTimeProvider
                 )
             )
+        }
+        val isAstronomicalExtraFeaturesEnabled by isAstronomicalExtraFeaturesEnabled.collectAsState()
+        if (coordinates != null && isAstronomicalExtraFeaturesEnabled) AppDropdownMenuItem({
+            Text(stringResource(R.string.planetary_hours))
+        }) {
+            showPlanetaryHoursDialog = true
+            closeMenu()
         }
 
         HorizontalDivider()
 
-        val preferredSwipeUpAction by preferredSwipeUpAction.collectAsState()
-        listOf(
-            SwipeUpAction.Schedule to { navigateToSchedule() },
-            SwipeUpAction.DayView to {
-                navigateToDays(viewModel.selectedDay.value, false)
-            },
-            SwipeUpAction.WeekView to {
-                navigateToDays(viewModel.selectedDay.value, true)
-            },
-        ).forEach { (item, action) ->
+        @Composable
+        fun <T> ActionItem(
+            item: T,
+            action: () -> Unit,
+            prefKey: String,
+            @StringRes title: Int,
+            preferredAction: T,
+            swipeIcon: ImageVector,
+            valueToStoreOnClick: () -> String,
+        ) {
             AppDropdownMenuItem(
-                text = { Text(stringResource(item.titleId)) },
+                text = { Text(stringResource(title)) },
                 trailingIcon = icon@{
                     if (isLandscape || isTalkBackEnabled) return@icon
                     Box(Modifier.clickable(null, ripple(bounded = false)) {
-                        context.preferences.edit {
-                            putString(
-                                PREF_SWIPE_UP_ACTION,
-                                when (preferredSwipeUpAction) {
-                                    item -> SwipeUpAction.None
-                                    else -> item
-                                }.name,
-                            )
-                        }
+                        context.preferences.edit { putString(prefKey, valueToStoreOnClick()) }
                     }) {
                         val alpha by animateFloatAsState(
-                            targetValue = if (preferredSwipeUpAction == item) 1f else .2f,
+                            targetValue = if (preferredAction == item) 1f else .2f,
                             label = "alpha",
                         )
                         val color = LocalContentColor.current.copy(alpha = alpha)
-                        Icon(Icons.TwoTone.SwipeUp, null, tint = color)
+                        Icon(swipeIcon, null, tint = color)
                     }
                 },
             ) { closeMenu(); action() }
         }
 
-        val preferredSwipeDownAction by preferredSwipeDownAction.collectAsState()
-        AppDropdownMenuItem(
-            text = { Text(stringResource(SwipeDownAction.YearView.titleId)) },
-            trailingIcon = icon@{
-                if (isLandscape || isTalkBackEnabled) return@icon
-                Box(Modifier.clickable(null, ripple(bounded = false)) {
-                    context.preferences.edit {
-                        putString(
-                            PREF_SWIPE_DOWN_ACTION,
-                            when (preferredSwipeDownAction) {
-                                SwipeDownAction.YearView -> SwipeUpAction.None
-                                else -> SwipeDownAction.YearView
-                            }.name,
-                        )
-                    }
-                }) {
-                    val alpha by animateFloatAsState(
-                        targetValue = if (preferredSwipeDownAction == SwipeDownAction.YearView) 1f else .2f,
-                        label = "alpha",
-                    )
-                    val color = LocalContentColor.current.copy(alpha = alpha)
-                    Icon(Icons.TwoTone.SwipeDown, null, tint = color)
-                }
-            },
-        ) { closeMenu(); viewModel.openYearView() }
+        val preferredSwipeUpAction by preferredSwipeUpAction.collectAsState()
+        swipeUpActions.forEach { (item, action) ->
+            if (item != SwipeUpAction.None) ActionItem(
+                item,
+                action,
+                PREF_SWIPE_UP_ACTION,
+                item.titleId,
+                preferredSwipeUpAction,
+                Icons.TwoTone.SwipeUp,
+            ) { (if (preferredSwipeUpAction == item) SwipeUpAction.None else item).name }
+        }
 
-        // It doesn't have any effect in talkback ui, let's disable it there to avoid the confusion
-        if (isTalkBackEnabled || enabledCalendars.size == 1) return@ThreeDotsDropdownMenu
+        val preferredSwipeDownAction by preferredSwipeDownAction.collectAsState()
+        swipeDownActions.forEach { (item, action) ->
+            if (item != SwipeDownAction.None) ActionItem(
+                item,
+                action,
+                PREF_SWIPE_DOWN_ACTION,
+                item.titleId,
+                preferredSwipeDownAction,
+                Icons.TwoTone.SwipeDown,
+            ) { (if (preferredSwipeDownAction == item) SwipeDownAction.None else item).name }
+        }
 
         HorizontalDivider()
 
@@ -1095,11 +1219,14 @@ private fun SharedTransitionScope.Menu(
         AppDropdownMenuCheckableItem(
             text = stringResource(R.string.week_number),
             isChecked = isShowWeekOfYearEnabled,
-            setChecked = {
+            onValueChange = {
                 context.preferences.edit { putBoolean(PREF_SHOW_WEEK_OF_YEAR_NUMBER, it) }
                 closeMenu()
             },
         )
+
+        // It doesn't have any effect in talkback ui, let's disable it there to avoid the confusion
+        if (isTalkBackEnabled || enabledCalendars.size == 1) return@ThreeDotsDropdownMenu
 
         var showSecondaryCalendarSubMenu by rememberSaveable { mutableStateOf(false) }
         AppDropdownMenuExpandableItem(
@@ -1112,7 +1239,7 @@ private fun SharedTransitionScope.Menu(
             this.AnimatedVisibility(showSecondaryCalendarSubMenu) {
                 AppDropdownMenuRadioItem(
                     stringResource(calendar?.title ?: R.string.none), calendar == secondaryCalendar
-                ) { _ ->
+                ) {
                     context.preferences.edit {
                         if (calendar == null) remove(PREF_SECONDARY_CALENDAR_IN_TABLE)
                         else {
@@ -1144,8 +1271,7 @@ data class AddEventData(
     fun asIntent(): Intent {
         return Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI).also {
             if (description != null) it.putExtra(
-                CalendarContract.Events.DESCRIPTION,
-                description
+                CalendarContract.Events.DESCRIPTION, description
             )
         }.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime.time)
             .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTime.time)
@@ -1204,7 +1330,7 @@ fun addEvent(
         AskForCalendarPermissionDialog { isGranted ->
             viewModel.refreshCalendar()
             if (isGranted) runCatching { addEvent.launch(data) }.onFailure(logException).onFailure {
-                if (language.value.isPersian) coroutineScope.launch {
+                if (language.value.isPersianOrDari) coroutineScope.launch {
                     if (snackbarHostState.showSnackbar(
                             "جهت افزودن رویداد نیاز است از نصب و فعال بودن تقویم گوگل اطمینان حاصل کنید",
                             duration = SnackbarDuration.Long,

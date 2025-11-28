@@ -4,6 +4,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
+import com.byagowi.persiancalendar.BuildConfig
 import com.byagowi.persiancalendar.IRAN_TIMEZONE_ID
 import com.byagowi.persiancalendar.LOG_TAG
 import com.byagowi.persiancalendar.R
@@ -30,8 +31,8 @@ fun Coordinates.calculatePrayTimes(calendar: GregorianCalendar = GregorianCalend
         calendar = calendar,
         calculationMethod = calculationMethod.value,
         asrMethod = asrMethod.value,
-        highLatitudesMethod = highLatitudesMethod,
-        midnightMethod = midnightMethod,
+        highLatitudesMethod = highLatitudesMethod.value,
+        midnightMethod = midnightMethod.value,
     )
 
 @VisibleForTesting
@@ -64,7 +65,7 @@ fun Coordinates.toObserver() = Observer(this.latitude, this.longitude, this.elev
 
 val logException = fun(e: Throwable) { Log.e(LOG_TAG, "Handled Exception", e) }
 
-// Thee same order as http://praytimes.org/code/v2/js/examples/monthly.htm
+// Thee same order as https://praytimes.org/code/v2/js/examples/monthly.htm
 val CalculationMethod.titleStringId
     @StringRes
     get(): Int = when (this) {
@@ -88,3 +89,10 @@ val HighLatitudesMethod.titleStringId
         HighLatitudesMethod.OneSeventh -> R.string.high_latitudes_one_seventh
         HighLatitudesMethod.None -> R.string.none
     }
+
+inline val <T> T.debugAssertNotNull: T
+    inline get() = if (BuildConfig.DEVELOPMENT) checkNotNull(this) else this
+
+fun debugLog(vararg message: Any?) {
+    if (BuildConfig.DEVELOPMENT) Log.d(LOG_TAG, message.joinToString(", "))
+}

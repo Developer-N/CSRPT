@@ -10,20 +10,19 @@ import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.global.isShowWeekOfYearEnabled
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.secondaryCalendar
-import com.byagowi.persiancalendar.global.secondaryCalendarDigits
 import com.byagowi.persiancalendar.global.spacedColon
+import com.byagowi.persiancalendar.global.weekEnds
+import com.byagowi.persiancalendar.global.weekStart
 import com.byagowi.persiancalendar.ui.utils.isRtl
-import com.byagowi.persiancalendar.utils.applyWeekStartOffsetToWeekDay
 import com.byagowi.persiancalendar.utils.calendar
 import com.byagowi.persiancalendar.utils.createMonthEventsList
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.getEventsTitle
+import com.byagowi.persiancalendar.utils.getSecondaryCalendarNumeral
 import com.byagowi.persiancalendar.utils.getShiftWorkTitle
-import com.byagowi.persiancalendar.utils.getWeekDayName
 import com.byagowi.persiancalendar.utils.monthFormatForSecondaryCalendar
 import com.byagowi.persiancalendar.utils.monthName
-import com.byagowi.persiancalendar.utils.revertWeekStartOffsetFromWeekDay
 import io.github.persiancalendar.calendar.AbstractDate
 import kotlinx.html.DIV
 import kotlinx.html.body
@@ -85,27 +84,28 @@ fun monthHtmlReport(context: Context, date: AbstractDate, wholeYear: Boolean) = 
 
 private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
     val events = createMonthEventsList(context, date)
+    val weekEnds = weekEnds.value
     fun generateDayClasses(jdn: Jdn, weekEndsAsHoliday: Boolean): String {
         val dayEvents = events[jdn] ?: emptyList()
         return listOf(
-            "holiday" to ((jdn.isWeekEnd && weekEndsAsHoliday) || dayEvents.any { it.isHoliday }),
+            "holiday" to ((jdn.weekDay in weekEnds && weekEndsAsHoliday) || dayEvents.any { it.isHoliday }),
             "hasEvents" to dayEvents.isNotEmpty()
         ).filter { it.second }.joinToString(" ") { it.first }
     }
     h1 {
-        +language.value.my.format(date.monthName, formatNumber(date.year))
+        +language.value.my.format(date.monthName, numeral.value.format(date.year))
         val title = monthFormatForSecondaryCalendar(date, secondaryCalendar ?: return@h1)
         small { +" ($title)" }
     }
     table("calendar") {
+        val weekStart = weekStart.value
         tr {
             if (isShowWeekOfYearEnabled.value) th {}
-            repeat(7) { th { +getWeekDayName(revertWeekStartOffsetFromWeekDay(it)) } }
+            repeat(7) { th { +(weekStart + it).title } }
         }
         val monthLength = date.calendar.getMonthLength(date.year, date.month)
         val monthStartJdn = Jdn(date)
-        val startingWeekDay = monthStartJdn.weekDay
-        val fixedStartingWeekDay = applyWeekStartOffsetToWeekDay(startingWeekDay)
+        val fixedStartingWeekDay = monthStartJdn.weekDay - weekStart
         val startOfYearJdn = Jdn(date.calendar, date.year, 1, 1)
         (0..<6 * 7).map {
             val index = it - fixedStartingWeekDay
@@ -115,20 +115,20 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
             val firstJdnInWeek = row.firstNotNullOfOrNull { it?.second/*jdn*/ } ?: return@forEach
             tr {
                 if (isShowWeekOfYearEnabled.value) {
-                    val weekOfYear = firstJdnInWeek.getWeekOfYear(startOfYearJdn)
-                    th { sub { small { +formatNumber(weekOfYear) } } }
+                    val weekOfYear = firstJdnInWeek.getWeekOfYear(startOfYearJdn, weekStart)
+                    th { sub { small { +numeral.value.format(weekOfYear) } } }
                 }
                 row.forEach { pair ->
                     td {
                         val (dayOfMonth, jdn) = pair ?: return@td
                         span(generateDayClasses(jdn, true)) {
-                            +formatNumber(dayOfMonth)
+                            +numeral.value.format(dayOfMonth)
                         }
                         listOfNotNull(
                             secondaryCalendar?.let {
-                                val secondaryDateDay = jdn.on(it).dayOfMonth
-                                val digits = secondaryCalendarDigits
-                                formatNumber(secondaryDateDay, digits)
+                                val secondaryDateDay = (jdn on it).dayOfMonth
+                                val numeral = getSecondaryCalendarNumeral(it)
+                                numeral.format(secondaryDateDay)
                             }, getShiftWorkTitle(jdn)
                         ).joinToString(" ").takeIf { it.isNotEmpty() }?.let { sup { +" $it" } }
                     }
@@ -149,7 +149,7 @@ private fun DIV.generateMonthPage(context: Context, date: AbstractDate) {
                     it.forEach { (jdn, title) ->
                         div {
                             span(generateDayClasses(jdn, false)) {
-                                +formatNumber(jdn.on(mainCalendar).dayOfMonth)
+                                +numeral.value.format((jdn on mainCalendar).dayOfMonth)
                             }
                             +spacedColon
                             +title.toString()
@@ -166,7 +166,6 @@ private fun formatPrintEventsList(events: Map<Jdn, List<CalendarEvent<*>>>): Lis
         val holidays = getEventsTitle(
             events,
             holiday = true,
-            compact = true,
             showDeviceCalendarEvents = false,
             insertRLM = false,
             addIsHoliday = true
@@ -174,7 +173,6 @@ private fun formatPrintEventsList(events: Map<Jdn, List<CalendarEvent<*>>>): Lis
         val nonHolidays = getEventsTitle(
             events,
             holiday = false,
-            compact = true,
             showDeviceCalendarEvents = true,
             insertRLM = false,
             addIsHoliday = true

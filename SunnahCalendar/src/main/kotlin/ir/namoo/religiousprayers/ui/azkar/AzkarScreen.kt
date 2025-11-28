@@ -11,6 +11,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +52,7 @@ import com.byagowi.persiancalendar.ui.common.AppDropdownMenuCheckableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuExpandableItem
 import com.byagowi.persiancalendar.ui.common.AppDropdownMenuRadioItem
 import com.byagowi.persiancalendar.ui.common.AppIconButton
-import com.byagowi.persiancalendar.ui.common.NavigationOpenDrawerIcon
+import com.byagowi.persiancalendar.ui.common.NavigationOpenNavigationRailIcon
 import com.byagowi.persiancalendar.ui.common.ThreeDotsDropdownMenu
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
@@ -65,7 +68,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.AzkarScreen(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     animatedContentScope: AnimatedContentScope,
     viewModel: AzkarViewModel = koinViewModel()
 ) {
@@ -108,7 +111,7 @@ fun SharedTransitionScope.AzkarScreen(
             !isSearchBoxIsOpen, enter = expandVertically(), exit = shrinkVertically()
         ) {
             DefaultAppBar(
-                openDrawer,
+                openNavigationRail,
                 isFavoriteShown,
                 openSearchBar = { viewModel.openSearch() },
                 onShowBookmarkClick = { show ->
@@ -174,7 +177,7 @@ fun SharedTransitionScope.AzkarScreen(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun SharedTransitionScope.DefaultAppBar(
-    openDrawer: () -> Unit,
+    openNavigationRail: () -> Unit,
     isFavoriteShown: Boolean,
     openSearchBar: () -> Unit,
     onShowBookmarkClick: (Boolean) -> Unit,
@@ -195,14 +198,34 @@ private fun SharedTransitionScope.DefaultAppBar(
             }
         },
         colors = appTopAppBarColors(),
-        navigationIcon = { NavigationOpenDrawerIcon(animatedContentScope, openDrawer) },
+        navigationIcon = {
+            NavigationOpenNavigationRailIcon(
+                animatedContentScope,
+                openNavigationRail
+            )
+        },
         actions = {
             AppIconButton(
                 icon = Icons.Default.Search, title = stringResource(id = R.string.search)
             ) {
                 openSearchBar()
             }
-            AnimatedContent(targetState = isFavoriteShown, label = "bookmark") {
+            AnimatedContent(targetState = isFavoriteShown, label = "bookmark", transitionSpec = {
+                if (isFavoriteShown)
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) { -it } togetherWith slideOutHorizontally { it }
+                else
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) { it } togetherWith slideOutHorizontally { -it }
+            }) {
                 AppIconButton(
                     icon = if (it) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     title = stringResource(id = R.string.favorite)
@@ -213,7 +236,7 @@ private fun SharedTransitionScope.DefaultAppBar(
                 AppDropdownMenuCheckableItem(
                     text = stringResource(id = R.string.azkar_reminder),
                     isChecked = context.appPrefsLite.getBoolean(PREF_AZKAR_REINDER, false),
-                    setChecked = {
+                    onValueChange = {
                         context.appPrefsLite.edit { putBoolean(PREF_AZKAR_REINDER, it) }
                         closeMenu()
                     })

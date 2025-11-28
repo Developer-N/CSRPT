@@ -12,10 +12,10 @@ import com.byagowi.persiancalendar.global.cityName
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.global.language
 import com.byagowi.persiancalendar.global.mainCalendar
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.global.spacedComma
 import com.byagowi.persiancalendar.ui.utils.isRtl
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
-import com.byagowi.persiancalendar.utils.formatNumber
 import com.byagowi.persiancalendar.utils.monthName
 import io.github.persiancalendar.calendar.AbstractDate
 import ir.namoo.commons.APP_LINK
@@ -40,10 +40,7 @@ import kotlinx.html.unsafe
 
 @CheckResult
 fun prayTimeHtmlReport(
-    resources: Resources,
-    date: AbstractDate,
-    context: Context,
-    prayTimeProvider: PrayTimeProvider
+    resources: Resources, date: AbstractDate, context: Context, prayTimeProvider: PrayTimeProvider
 ): String {
     return createHTML().html {
         val coordinates = coordinates.value ?: return@html
@@ -75,7 +72,7 @@ fun prayTimeHtmlReport(
             h1 {
                 +listOfNotNull(
                     cityName.value,
-                    language.value.my.format(date.monthName, formatNumber(date.year))
+                    language.value.my.format(date.monthName, numeral.value.format(date.year))
                 ).joinToString(spacedComma)
             }
             table {
@@ -97,21 +94,19 @@ fun prayTimeHtmlReport(
                                 prayTimes,
                                 Jdn(mainCalendar.createDate(date.year, date.month, day + 1))
                             )
-                            th { +formatNumber(day + 1) }
+                            th { +numeral.value.format(day + 1) }
                             timeNames.forEach {
                                 td { +prayTimes[it].toBasicFormatString() }
                             }
                         }
                     }
                 }
-                if (calculationMethod.value != language.value.preferredCalculationMethod) {
-                    tfoot {
-                        tr {
-                            td {
-                                colSpan = "10"
-                                a {
-                                    href = APP_LINK; +context.getString(R.string.app_name)
-                                }
+                if (calculationMethod.value != language.value.preferredCalculationMethod) tfoot {
+                    tr {
+                        td {
+                            colSpan = "10"
+                            a {
+                                href = APP_LINK; +context.getString(R.string.app_name)
                             }
                         }
                     }

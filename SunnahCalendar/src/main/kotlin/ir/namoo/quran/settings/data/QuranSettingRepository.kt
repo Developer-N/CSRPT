@@ -39,6 +39,9 @@ class QuranSettingRepository(private val quranSettingDB: QuranSettingDB) {
             .getOrElse { emit(DataState.Error(it.message ?: "Error")) }
     }.flowOn(Dispatchers.IO)
 
+    suspend fun getActiveTranslatesSettings() =
+        quranSettingDB.quranSettingDAO().getTranslatesSettings().filter { it.isActive }
+
     suspend fun updateTranslateSetting(translateSetting: TranslateSetting) {
         runCatching {
             quranSettingDB.quranSettingDAO().updateTranslateSetting(translateSetting)

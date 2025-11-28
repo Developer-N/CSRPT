@@ -1,10 +1,11 @@
 package com.byagowi.persiancalendar.entities
 
 import androidx.core.util.lruCache
+import com.byagowi.persiancalendar.generated.EventSource
 import com.byagowi.persiancalendar.generated.irregularRecurringEvents
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.utils.calendar
-import com.byagowi.persiancalendar.utils.formatNumber
-import com.byagowi.persiancalendar.variants.debugAssertNotNull
+import com.byagowi.persiancalendar.utils.debugAssertNotNull
 import io.github.persiancalendar.calendar.AbstractDate
 import io.github.persiancalendar.calendar.CivilDate
 import io.github.persiancalendar.calendar.IslamicDate
@@ -58,13 +59,15 @@ class IrregularCalendarEventsStore(private val eventsRepository: EventsRepositor
             }
         }.mapNotNull { event ->
             val date = getDateInstance(event, year, type) ?: return@mapNotNull null
-            val title = "${event["title"] ?: return@mapNotNull null} (${formatNumber(year)})"
+            val title =
+                "${event["title"] ?: return@mapNotNull null} (${numeral.value.format(year)})"
             val isHoliday = event["holiday"] == "true"
+            val source = EventSource.entries.firstOrNull { it.name == event["type"] }
             when (date) {
-                is PersianDate -> CalendarEvent.PersianCalendarEvent(title, isHoliday, date)
-                is IslamicDate -> CalendarEvent.IslamicCalendarEvent(title, isHoliday, date)
-                is CivilDate -> CalendarEvent.GregorianCalendarEvent(title, isHoliday, date)
-                is NepaliDate -> CalendarEvent.NepaliCalendarEvent(title, isHoliday, date)
+                is PersianDate -> CalendarEvent.PersianCalendarEvent(title, isHoliday, date, source)
+                is IslamicDate -> CalendarEvent.IslamicCalendarEvent(title, isHoliday, date, source)
+                is CivilDate -> CalendarEvent.GregorianCalendarEvent(title, isHoliday, date, source)
+                is NepaliDate -> CalendarEvent.NepaliCalendarEvent(title, isHoliday, date, source)
                 else -> null
             }.debugAssertNotNull
         }

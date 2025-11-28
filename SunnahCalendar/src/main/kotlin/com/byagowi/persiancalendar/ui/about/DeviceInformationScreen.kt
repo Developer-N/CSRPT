@@ -24,11 +24,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -63,6 +66,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -127,7 +133,7 @@ fun SharedTransitionScope.DeviceInformationScreen(
                     icon = Icons.Default.Print,
                     title = stringResource(R.string.print),
                 ) { context.openHtmlInBrowser(generateHtmlReport(items)) }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) AppIconButton(
+                AppIconButton(
                     icon = Icons.Default.SportsEsports,
                     title = "Game",
                 ) {
@@ -149,9 +155,20 @@ fun SharedTransitionScope.DeviceInformationScreen(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Box {
                     val listState = rememberLazyListState()
-                    LazyColumn(state = listState) {
-                        item { Spacer(Modifier.height(16.dp)) }
-                        item { OverviewTopBar(Modifier.padding(horizontal = 16.dp)) }
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.windowInsetsPadding(
+                            WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal)
+                        ),
+                    ) {
+                        item {
+                            Box(
+                                Modifier
+                                    .padding(top = 16.dp)
+                                    .semantics(mergeDescendants = true) { hideFromAccessibility() }
+                                    .clearAndSetSemantics {},
+                            ) { OverviewTopBar(Modifier.padding(horizontal = 16.dp)) }
+                        }
                         itemsIndexed(items) { i, item ->
                             if (i > 0) HorizontalDivider(
                                 Modifier.padding(horizontal = 20.dp),
@@ -177,8 +194,7 @@ fun SharedTransitionScope.DeviceInformationScreen(
                         }
                         item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.systemBars)) }
                     }
-                    ScrollShadow(listState = listState, top = true)
-                    ScrollShadow(listState = listState, top = false)
+                    ScrollShadow(listState)
                 }
             }
         }
@@ -373,22 +389,26 @@ private fun createItemsList(activity: Activity, primaryColor: Color) = listOf(
     Item("Display", Build.DISPLAY),
     Item("Device Fingerprints", Build.FINGERPRINT),
     Item(
-        "RAM", humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
-            activity.getSystemService<ActivityManager>()?.getMemoryInfo(it)
-        }.totalMem)
+        "RAM",
+        buildString {
+            val activityManager = activity.getSystemService<ActivityManager>()
+            appendLine(humanReadableByteCountBin(ActivityManager.MemoryInfo().also {
+                activityManager?.getMemoryInfo(it)
+            }.totalMem))
+            append("Is Low Ram Device: ${activityManager?.isLowRamDevice}")
+        }
     ),
     Item(
         "Battery",
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) activity.getSystemService<BatteryManager>()
-            ?.let {
-                listOf("Charging: ${it.isCharging}") + listOf(
-                    "Capacity" to BatteryManager.BATTERY_PROPERTY_CAPACITY,
-                    "Charge Counter" to BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER,
-                    "Current Avg" to BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,
-                    "Current Now" to BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,
-                    "Energy Counter" to BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER
-                ).map { (title: String, id: Int) -> "$title: ${it.getLongProperty(id)}" }
-            }?.joinToString("\n") else "",
+        activity.getSystemService<BatteryManager>()?.let {
+            listOf("Charging: ${it.isCharging}") + listOf(
+                "Capacity" to BatteryManager.BATTERY_PROPERTY_CAPACITY,
+                "Charge Counter" to BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER,
+                "Current Avg" to BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE,
+                "Current Now" to BatteryManager.BATTERY_PROPERTY_CURRENT_NOW,
+                "Energy Counter" to BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER
+            ).map { (title: String, id: Int) -> "$title: ${it.getLongProperty(id)}" }
+        }?.joinToString("\n"),
     ),
     Item("App Standby Bucket", appStandbyStatus(activity)),
     Item("Display Metrics", activity.resources?.displayMetrics?.toString().orEmpty()),
@@ -426,7 +446,7 @@ private fun createItemsList(activity: Activity, primaryColor: Color) = listOf(
         run {
             val configuration = activity.resources.configuration
             listOfNotNull(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) "Is Screen Round" to configuration.isScreenRound else null,
+                "Is Screen Round" to configuration.isScreenRound,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "Is Screen HDR" to configuration.isScreenHdr else null,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "Is Screen Wide Color Gamut" to configuration.isScreenWideColorGamut else null,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) "Is Night Mode Active" to configuration.isNightModeActive else null,

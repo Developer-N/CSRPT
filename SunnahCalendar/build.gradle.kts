@@ -28,19 +28,19 @@ android {
 
     defaultConfig {
         applicationId = "ir.namoo.religiousprayers"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
-        versionCode = 12200
-        versionName = "12.2.0"
+        versionCode = 12400
+        versionName = "12.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // It lowers the APK size and prevents crash in AboutScreen in API 21-23
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
         androidResources.localeFilters += listOf(
             "en", "fa", "ckb", "ar", "ur", "ps", "glk", "azb", "ja", "fr", "es", "tr", "kmr", "tg",
-            "ne", "zh-rCN", "ru", "pt", "it", "ta", "de",
+            "ne", "zh-rCN", "ru", "pt", "it", "ta", "de", "ota",
         )
-        setProperty("archivesBaseName", "SunnahCalendar-$versionName")
+        base.archivesName.set("SunnahCalendar-$versionName")
     }
 
     testOptions.unitTests.all { it.useJUnitPlatform() }
@@ -89,6 +89,8 @@ android {
     packaging {
         resources.excludes += "DebugProbesKt.bin"
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        // Maybe we can drop the only native dependency? At least it works and doesn't lead to crash
+        // jniLibs.excludes.add("lib/*/libandroidx.graphics.path.so")
         resources.excludes += "/META-INF/INDEX.LIST"
     }
 

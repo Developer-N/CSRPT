@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Level. If not, see <http://www.gnu.org/licenses/>
+ * along with Level. If not, see <https://www.gnu.org/licenses/>
  */
 package com.byagowi.persiancalendar.ui.level
 
@@ -40,7 +40,7 @@ import kotlin.math.sin
 
 class LevelView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
-    private val angleDisplay = AngleDisplay(resources)
+    private val angleDisplay = AngleDisplay(context)
     private val infoPaint = Paint(Paint.ANTI_ALIAS_FLAG).also {
         it.color = Color.BLACK
     }

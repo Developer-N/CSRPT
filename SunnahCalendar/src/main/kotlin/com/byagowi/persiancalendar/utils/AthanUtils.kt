@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RawRes
 import androidx.core.app.ActivityCompat
@@ -37,10 +36,10 @@ import com.byagowi.persiancalendar.entities.Clock
 import com.byagowi.persiancalendar.entities.Jdn
 import com.byagowi.persiancalendar.entities.PrayTime
 import com.byagowi.persiancalendar.entities.PrayTime.Companion.get
+import com.byagowi.persiancalendar.entities.WeekDay
 import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.AlarmWorker
 import com.byagowi.persiancalendar.service.BroadcastReceivers
-import com.byagowi.persiancalendar.variants.debugLog
 import ir.namoo.commons.DEFAULT_JUMMA_SILENT_MINUTE
 import ir.namoo.commons.LAST_PLAYED_AFTER_ATHAN_KEY
 import ir.namoo.commons.LAST_PLAYED_BEFORE_ATHAN_KEY
@@ -132,7 +131,9 @@ private fun startAthanBody(context: Context, prayTime: String) {
                         val time = Calendar.getInstance().also {
                             it.add(
                                 Calendar.MINUTE,
-                                if (Jdn.today().weekDay == 6 && prayTime.contains(PrayTime.DHUHR.name) &&
+                                if (Jdn.today().weekDay == WeekDay.FRIDAY && prayTime.contains(
+                                        PrayTime.DHUHR.name
+                                    ) &&
                                     context.appPrefsLite.getBoolean(PREF_JUMMA_SILENT, false)
                                 ) context.appPrefsLite.getInt(
                                     PREF_JUMMA_SILENT_MINUTE, DEFAULT_JUMMA_SILENT_MINUTE
@@ -210,7 +211,7 @@ fun getEnabledAlarms2(context: Context): Set<String> {
             if (athan.isAfterEnabled) result.add("A${athan.athanKey}")
             if (athan.isSilentEnabled) result.add("S_${athan.athanKey}")
             if (
-                athan.athanKey == PrayTime.DHUHR.name && Jdn.today().weekDay == 6 &&
+                athan.athanKey == PrayTime.DHUHR.name && Jdn.today().weekDay == WeekDay.FRIDAY &&
                 context.appPrefsLite.getBoolean(PREF_JUMMA_SILENT, false) &&
                 !result.contains("S_${athan.athanKey}")
             )
@@ -378,8 +379,7 @@ private fun scheduleAlarm(context: Context, prayTime: String, timeInMillis: Long
             .putExtra(KEY_EXTRA_PRAYER, prayTime)
             .putExtra(KEY_EXTRA_PRAYER_TIME, timeInMillis)
             .setAction(BROADCAST_ALARM),
-        PendingIntent.FLAG_UPDATE_CURRENT or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
     if (AlarmManagerCompat.canScheduleExactAlarms(am)) AlarmManagerCompat.setExactAndAllowWhileIdle(
         am,

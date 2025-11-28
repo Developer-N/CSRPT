@@ -31,8 +31,8 @@ import com.byagowi.persiancalendar.global.coordinates
 import com.byagowi.persiancalendar.service.BroadcastReceivers
 import com.byagowi.persiancalendar.utils.applyAppLanguage
 import com.byagowi.persiancalendar.utils.calculatePrayTimes
+import com.byagowi.persiancalendar.utils.debugLog
 import com.byagowi.persiancalendar.utils.logException
-import com.byagowi.persiancalendar.variants.debugLog
 import io.github.persiancalendar.praytimes.PrayTimes
 import ir.namoo.commons.BROADCAST_AZKAR
 import ir.namoo.commons.KEY_AZKAR_EXTRA_NAME
@@ -100,8 +100,7 @@ private fun scheduleAzkar(context: Context, azkarName: String, timeInMillis: Lon
             .putExtra(KEY_AZKAR_EXTRA_NAME, azkarName)
             .putExtra(KEY_AZKAR_EXTRA_TIME, timeInMillis)
             .setAction(BROADCAST_AZKAR),
-        PendingIntent.FLAG_UPDATE_CURRENT or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || am.canScheduleExactAlarms())
         AlarmManagerCompat.setExactAndAllowWhileIdle(
@@ -201,7 +200,7 @@ fun startAzkarBody(context: Context, name: String) = runCatching {
         context,
         0,
         azkarIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
     notificationBuilder.setAutoCancel(true).setWhen(System.currentTimeMillis())

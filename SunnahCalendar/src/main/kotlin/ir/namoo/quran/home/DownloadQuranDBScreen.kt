@@ -28,28 +28,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.byagowi.persiancalendar.R
+import com.byagowi.persiancalendar.global.numeral
 import com.byagowi.persiancalendar.ui.theme.appTopAppBarColors
 import com.byagowi.persiancalendar.ui.utils.materialCornerExtraLargeTop
-import com.byagowi.persiancalendar.utils.formatNumber
+import ir.namoo.commons.utils.isNetworkConnected
+import ir.namoo.commons.utils.toastMessage
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadQuranDBScreen(
-    download: () -> Unit,
-    viewModel: QuranDownloadViewModel
+    checkFile: () -> Unit,
+    viewModel: QuranDownloadViewModel = koinViewModel()
 ) {
+    val numeral by numeral.collectAsState()
     val p by viewModel.progress.collectAsState()
     val isDownloading by viewModel.isDownloading.collectAsState()
     val isUnzipping by viewModel.isUnzipping.collectAsState()
     val message by viewModel.message.collectAsState()
     val progress by animateFloatAsState(targetValue = p, label = "progress")
     val totalSize by viewModel.totalSize.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(topBar = {
         TopAppBar(
@@ -94,7 +100,11 @@ fun DownloadQuranDBScreen(
                             modifier = Modifier.padding(4.dp),
                             onClick = {
                                 viewModel.clearErrorMessage()
-                                download()
+                                if (isNetworkConnected(context)) {
+                                    viewModel.download(context, checkFile)
+                                } else {
+                                    context.toastMessage(context.getString(R.string.network_error_message))
+                                }
                             },
                             enabled = !isDownloading
                         ) {
@@ -136,12 +146,17 @@ fun DownloadQuranDBScreen(
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
                                         Text(
-                                            text = formatNumber("% ${(progress * 100).toInt()}"),
+                                            text = numeral.format("% ${(progress * 100).toInt()}"),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
-                                            text = formatNumber("${totalSize / 1024 / 1024} مگابایت"),
+                                            text = numeral.format(
+                                                stringResource(
+                                                    R.string.megabyte,
+                                                    totalSize / 1024 / 1024
+                                                )
+                                            ),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )
